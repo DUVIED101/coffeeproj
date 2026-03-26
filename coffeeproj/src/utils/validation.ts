@@ -1,0 +1,156 @@
+/**
+ * Validation utility functions
+ */
+
+/**
+ * Validate email format
+ */
+export const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+/**
+ * Validate email and return error message if invalid
+ */
+export const getEmailError = (email: string): string | null => {
+  if (!email) {
+    return 'Email is required';
+  }
+  if (!validateEmail(email)) {
+    return 'Please enter a valid email address';
+  }
+  return null;
+};
+
+/**
+ * Validate password strength
+ * Requirements: At least 8 characters, 1 uppercase, 1 lowercase, 1 number
+ */
+export const validatePassword = (password: string): boolean => {
+  if (password.length < 8) return false;
+
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+
+  return hasUpperCase && hasLowerCase && hasNumber;
+};
+
+/**
+ * Get password validation error message
+ */
+export const getPasswordError = (password: string): string | null => {
+  if (!password) {
+    return 'Password is required';
+  }
+  if (password.length < 8) {
+    return 'Password must be at least 8 characters';
+  }
+  if (!/[A-Z]/.test(password)) {
+    return 'Password must contain at least one uppercase letter';
+  }
+  if (!/[a-z]/.test(password)) {
+    return 'Password must contain at least one lowercase letter';
+  }
+  if (!/[0-9]/.test(password)) {
+    return 'Password must contain at least one number';
+  }
+  return null;
+};
+
+/**
+ * Validate Russian phone number
+ * Formats: +7XXXXXXXXXX, 8XXXXXXXXXX, 7XXXXXXXXXX
+ */
+export const validatePhone = (phone: string): boolean => {
+  const phoneRegex = /^(\+7|7|8)?[0-9]{10}$/;
+  return phoneRegex.test(phone.replace(/[\s-()]/g, ''));
+};
+
+/**
+ * Get phone validation error message
+ */
+export const getPhoneError = (phone: string): string | null => {
+  if (!phone) {
+    return null; // Phone is optional
+  }
+
+  const cleanPhone = phone.replace(/[\s-()]/g, '');
+
+  if (!validatePhone(cleanPhone)) {
+    return 'Please enter a valid Russian phone number';
+  }
+  return null;
+};
+
+/**
+ * Format phone number for display
+ * Converts to +7 (XXX) XXX-XX-XX format
+ */
+export const formatPhone = (phone: string): string => {
+  const cleaned = phone.replace(/[\s-()]/g, '');
+  let digits = cleaned;
+
+  // Remove leading +7, 7, or 8
+  if (digits.startsWith('+7')) {
+    digits = digits.substring(2);
+  } else if (digits.startsWith('7') || digits.startsWith('8')) {
+    digits = digits.substring(1);
+  }
+
+  if (digits.length !== 10) return phone;
+
+  return `+7 (${digits.substring(0, 3)}) ${digits.substring(3, 6)}-${digits.substring(6, 8)}-${digits.substring(8)}`;
+};
+
+/**
+ * Normalize phone number to +7XXXXXXXXXX format for storage
+ */
+export const normalizePhone = (phone: string): string => {
+  const cleaned = phone.replace(/[\s-()]/g, '');
+  let digits = cleaned;
+
+  // Remove leading +7, 7, or 8
+  if (digits.startsWith('+7')) {
+    digits = digits.substring(2);
+  } else if (digits.startsWith('7') || digits.startsWith('8')) {
+    digits = digits.substring(1);
+  }
+
+  return `+7${digits}`;
+};
+
+/**
+ * Validate required field
+ */
+export const validateRequired = (value: string): boolean => {
+  return value.trim().length > 0;
+};
+
+/**
+ * Get required field error message
+ */
+export const getRequiredError = (
+  value: string,
+  fieldName: string
+): string | null => {
+  if (!validateRequired(value)) {
+    return `${fieldName} is required`;
+  }
+  return null;
+};
+
+/**
+ * Validate min length
+ */
+export const validateMinLength = (value: string, minLength: number): boolean => {
+  return value.length >= minLength;
+};
+
+/**
+ * Validate max length
+ */
+export const validateMaxLength = (value: string, maxLength: number): boolean => {
+  return value.length <= maxLength;
+};
