@@ -45,6 +45,10 @@ export class AuthService {
       // 3. Create user profile
       // Session is now active (because email confirmation is disabled),
       // so this INSERT will use authenticated role with auth.uid() available
+
+      // Small delay to ensure auth state is fully synchronized
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const { data: userData, error: userError } = await supabase
         .from('users')
         .insert({
@@ -58,6 +62,11 @@ export class AuthService {
 
       if (userError) {
         console.error('Failed to create user profile:', userError);
+        console.error('Error details:', {
+          code: userError.code,
+          message: userError.message,
+          details: userError.details,
+        });
 
         // Try to fetch if it already exists
         const { data: existingUser, error: fetchError } = await supabase
@@ -103,7 +112,7 @@ export class AuthService {
 
       return { user: authData.user, profile };
     } catch (error) {
-      console.error('Error in signUpWithEmail:', error);
+      console.error('Signup error:', error);
       throw error;
     }
   }
@@ -122,11 +131,10 @@ export class AuthService {
       });
 
       if (error) {
+        console.error('Login error:', error);
         // Provide more helpful error messages
         if (error.message.includes('Invalid login credentials')) {
-          throw new Error(
-            'Invalid email or password'
-          );
+          throw new Error('Invalid email or password');
         }
         if (error.message.includes('Email not confirmed')) {
           throw new Error(
