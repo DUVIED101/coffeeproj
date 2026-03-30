@@ -28,6 +28,7 @@ export const COLORS = {
   secondary: '#D2691E', // Chocolate
   accent: '#FF6B35', // Bright orange
   background: '#FFFFFF',
+  backgroundSecondary: '#F5F5F5',
   text: '#2C3E50',
   textSecondary: '#7F8C8D',
   border: '#E0E0E0',

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuthStore } from '../stores/authStore';
 import { COLORS } from '../config/constants';
+import { BusinessStack } from './BusinessStack';
 
 // Placeholder screens for now
 const HomeScreen = () => {
@@ -26,21 +27,23 @@ const ProfileScreen = () => {
     <View style={styles.screen}>
       <Text style={styles.title}>Profile</Text>
       <Text style={styles.subtitle}>Account Type: {user?.accountType}</Text>
-      <Text style={styles.subtitle}>
-        Status: {user?.isVerified ? 'Verified' : 'Not Verified'}
-      </Text>
+      <Text style={styles.subtitle}>Status: {user?.isVerified ? 'Verified' : 'Not Verified'}</Text>
     </View>
   );
 };
 
 export type MainTabsParamList = {
   Home: undefined;
+  Business: undefined;
   Profile: undefined;
 };
 
 const Tab = createBottomTabNavigator<MainTabsParamList>();
 
 export const MainTabs: React.FC = () => {
+  const { user } = useAuthStore();
+  const isBusinessUser = user?.accountType === 'business';
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -63,6 +66,17 @@ export const MainTabs: React.FC = () => {
           tabBarLabel: 'Home',
         }}
       />
+      {isBusinessUser && (
+        <Tab.Screen
+          name="Business"
+          component={BusinessStack}
+          options={{
+            title: 'Business',
+            tabBarLabel: 'Business',
+            headerShown: false,
+          }}
+        />
+      )}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
