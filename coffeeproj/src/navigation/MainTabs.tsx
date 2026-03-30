@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuthStore } from '../stores/authStore';
 import { COLORS } from '../config/constants';
@@ -13,6 +13,10 @@ const HomeScreen = () => {
     <View style={styles.screen}>
       <Text style={styles.title}>Welcome, {user?.accountType}!</Text>
       <Text style={styles.subtitle}>Email: {user?.email}</Text>
+      <Text style={styles.subtitle}>User object: {JSON.stringify(user, null, 2)}</Text>
+      <Text style={styles.subtitle}>
+        Is Business: {user?.accountType === 'business' ? 'YES' : 'NO'}
+      </Text>
       <TouchableOpacity style={styles.button} onPress={signOut}>
         <Text style={styles.buttonText}>Sign Out</Text>
       </TouchableOpacity>
@@ -41,9 +45,75 @@ export type MainTabsParamList = {
 const Tab = createBottomTabNavigator<MainTabsParamList>();
 
 export const MainTabs: React.FC = () => {
-  const { user } = useAuthStore();
+  const { user, isLoading } = useAuthStore();
   const isBusinessUser = user?.accountType === 'business';
 
+  console.log('[MainTabs] render');
+  console.log('[MainTabs] isLoading:', isLoading);
+  console.log('[MainTabs] user:', JSON.stringify(user));
+  console.log('[MainTabs] isBusinessUser:', isBusinessUser);
+  console.log('[MainTabs] accountType:', user?.accountType);
+  console.log('[MainTabs] accountType type:', typeof user?.accountType);
+  console.log(
+    '[MainTabs] accountType comparison:',
+    user?.accountType === 'business',
+    user?.accountType == 'business'
+  );
+
+  if (isLoading || !user) {
+    return (
+      <View style={styles.screen}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  // Render different navigators based on account type
+  if (isBusinessUser) {
+    return (
+      <Tab.Navigator
+        screenOptions={{
+          tabBarActiveTintColor: COLORS.primary,
+          tabBarInactiveTintColor: COLORS.textSecondary,
+          tabBarStyle: {
+            borderTopColor: COLORS.border,
+          },
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: COLORS.background,
+          },
+          headerTintColor: COLORS.text,
+        }}>
+        <Tab.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{
+            title: 'Home',
+            tabBarLabel: 'Home',
+          }}
+        />
+        <Tab.Screen
+          name="Business"
+          component={BusinessStack}
+          options={{
+            title: 'Business',
+            tabBarLabel: 'Business',
+            headerShown: false,
+          }}
+        />
+        <Tab.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{
+            title: 'Profile',
+            tabBarLabel: 'Profile',
+          }}
+        />
+      </Tab.Navigator>
+    );
+  }
+
+  // Barista user navigator
   return (
     <Tab.Navigator
       screenOptions={{
@@ -66,17 +136,6 @@ export const MainTabs: React.FC = () => {
           tabBarLabel: 'Home',
         }}
       />
-      {isBusinessUser && (
-        <Tab.Screen
-          name="Business"
-          component={BusinessStack}
-          options={{
-            title: 'Business',
-            tabBarLabel: 'Business',
-            headerShown: false,
-          }}
-        />
-      )}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
