@@ -51,16 +51,13 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
   // Form state
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
-  const [city, setCity] = useState('Москва');
+  const [city, setCity] = useState('Санкт-Петербург');
   const [metroStation, setMetroStation] = useState('');
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment[]>([]);
 
   // Form errors
   const [nameError, setNameError] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
-  const [coordinatesError, setCoordinatesError] = useState<string | null>(null);
 
   const loadBranches = useCallback(async () => {
     try {
@@ -81,14 +78,11 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
   const resetForm = () => {
     setName('');
     setAddress('');
-    setCity('Москва');
+    setCity('Санкт-Петербург');
     setMetroStation('');
-    setLatitude('');
-    setLongitude('');
     setSelectedEquipment([]);
     setNameError(null);
     setAddressError(null);
-    setCoordinatesError(null);
   };
 
   const validateForm = (): boolean => {
@@ -108,20 +102,38 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
       setAddressError(null);
     }
 
-    const lat = parseFloat(latitude);
-    const lon = parseFloat(longitude);
-
-    if (!latitude || !longitude || isNaN(lat) || isNaN(lon)) {
-      setCoordinatesError('Valid coordinates are required');
-      isValid = false;
-    } else if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-      setCoordinatesError('Invalid coordinate range');
-      isValid = false;
-    } else {
-      setCoordinatesError(null);
-    }
-
     return isValid;
+  };
+
+  const geocodeAddress = async (address: string, city: string): Promise<GeoPoint | null> => {
+    try {
+      const fullAddress = `${address}, ${city}, Russia`;
+      const encodedAddress = encodeURIComponent(fullAddress);
+
+      // Using Nominatim (OpenStreetMap) geocoding service
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=1`,
+        {
+          headers: {
+            'User-Agent': 'CoffeeProj/1.0',
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data && data.length > 0) {
+        return {
+          latitude: parseFloat(data[0].lat),
+          longitude: parseFloat(data[0].lon),
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      return null;
+    }
   };
 
   const handleSaveBranch = async () => {
@@ -132,10 +144,17 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
     setIsSaving(true);
 
     try {
-      const coordinates: GeoPoint = {
-        latitude: parseFloat(latitude),
-        longitude: parseFloat(longitude),
-      };
+      // Geocode the address to get coordinates
+      const coordinates = await geocodeAddress(address.trim(), city.trim());
+
+      if (!coordinates) {
+        Alert.alert(
+          'Address not found',
+          'Could not find coordinates for this address. Please check the address and city.'
+        );
+        setIsSaving(false);
+        return;
+      }
 
       await BusinessService.createBranch({
         businessId,
@@ -283,46 +302,6 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Metro Station (Optional)</Text>
               <MetroSelector value={metroStation} onChange={setMetroStation} />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>
-                Coordinates <Text style={styles.required}>*</Text>
-              </Text>
-              <View style={styles.coordinatesRow}>
-                <TextInput
-                  style={[
-                    styles.input,
-                    styles.coordinateInput,
-                    coordinatesError ? styles.inputError : null,
-                  ]}
-                  placeholder="Latitude"
-                  value={latitude}
-                  onChangeText={text => {
-                    setLatitude(text);
-                    setCoordinatesError(null);
-                  }}
-                  keyboardType="numeric"
-                  editable={!isSaving}
-                />
-                <TextInput
-                  style={[
-                    styles.input,
-                    styles.coordinateInput,
-                    coordinatesError ? styles.inputError : null,
-                  ]}
-                  placeholder="Longitude"
-                  value={longitude}
-                  onChangeText={text => {
-                    setLongitude(text);
-                    setCoordinatesError(null);
-                  }}
-                  keyboardType="numeric"
-                  editable={!isSaving}
-                />
-              </View>
-              {coordinatesError && <Text style={styles.errorText}>{coordinatesError}</Text>}
-              <Text style={styles.hint}>Use Google Maps to find coordinates</Text>
             </View>
 
             <View style={styles.inputContainer}>

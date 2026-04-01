@@ -29,10 +29,15 @@ export const MetroSelector: React.FC<MetroSelectorProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredStations = useMemo(() => {
+    const allStations = MetroService.getAllStations();
+    console.log('[MetroSelector] Total stations available:', allStations.length);
+
     if (!searchQuery.trim()) {
-      return MetroService.getAllStations();
+      return allStations;
     }
-    return MetroService.searchStations(searchQuery);
+    const results = MetroService.searchStations(searchQuery);
+    console.log('[MetroSelector] Search results for', searchQuery, ':', results.length);
+    return results;
   }, [searchQuery]);
 
   const handleSelectStation = (station: MetroStation) => {
@@ -45,15 +50,18 @@ export const MetroSelector: React.FC<MetroSelectorProps> = ({
     onChange('');
   };
 
-  const renderStation = ({ item }: { item: MetroStation }) => (
-    <TouchableOpacity style={styles.stationItem} onPress={() => handleSelectStation(item)}>
-      <View style={[styles.lineIndicator, { backgroundColor: item.lineColor }]} />
-      <View style={styles.stationInfo}>
-        <Text style={styles.stationName}>{item.name}</Text>
-        <Text style={styles.stationLine}>{item.line}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderStation = ({ item }: { item: MetroStation }) => {
+    console.log('[MetroSelector] Rendering station:', item.name);
+    return (
+      <TouchableOpacity style={styles.stationItem} onPress={() => handleSelectStation(item)}>
+        <View style={[styles.lineIndicator, { backgroundColor: item.lineColor }]} />
+        <View style={styles.stationInfo}>
+          <Text style={styles.stationName}>{item.name}</Text>
+          <Text style={styles.stationLine}>{item.line}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -162,7 +170,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '80%',
+    height: '80%',
     paddingBottom: 20,
   },
   modalHeader: {

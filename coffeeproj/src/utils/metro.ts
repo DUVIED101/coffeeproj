@@ -14,13 +14,13 @@ export interface MetroStation {
 }
 
 export interface MetroStationsData {
-  moscow: MetroStation[];
+  stpetersburg: MetroStation[];
 }
 
 const typedMetroData = metroData as MetroStationsData;
 
 export class MetroService {
-  private static stations: MetroStation[] = typedMetroData.moscow;
+  private static stations: MetroStation[] = typedMetroData.stpetersburg;
 
   /**
    * Get all metro stations
@@ -57,8 +57,7 @@ export class MetroService {
    */
   static getStationsByLine(lineName: string): MetroStation[] {
     return this.stations.filter(
-      station =>
-        station.line === lineName || station.lineEn === lineName
+      station => station.line === lineName || station.lineEn === lineName
     );
   }
 
@@ -66,10 +65,7 @@ export class MetroService {
    * Get unique lines
    */
   static getUniqueLines(): Array<{ name: string; nameEn: string; color: string }> {
-    const linesMap = new Map<
-      string,
-      { name: string; nameEn: string; color: string }
-    >();
+    const linesMap = new Map<string, { name: string; nameEn: string; color: string }>();
 
     this.stations.forEach(station => {
       if (!linesMap.has(station.line)) {
@@ -102,21 +98,14 @@ export class MetroService {
       ),
     }));
 
-    return stationsWithDistance
-      .sort((a, b) => a.distance - b.distance)
-      .slice(0, maxResults);
+    return stationsWithDistance.sort((a, b) => a.distance - b.distance).slice(0, maxResults);
   }
 
   /**
    * Calculate distance between two coordinates (Haversine formula)
    * Returns distance in meters
    */
-  private static calculateDistance(
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number {
+  private static calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371e3; // Earth's radius in meters
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;

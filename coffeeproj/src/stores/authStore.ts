@@ -76,6 +76,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (userError) {
           console.error('Error fetching user profile:', userError);
         } else if (userData) {
+          console.log('[AuthStore] Raw userData from DB:', userData);
+          console.log('[AuthStore] account_type field:', userData.account_type);
+          console.log('[AuthStore] account_type type:', typeof userData.account_type);
           const user: User = {
             id: userData.id,
             uid: userData.id,
@@ -87,6 +90,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             createdAt: userData.created_at,
             updatedAt: userData.updated_at,
           };
+          console.log('[AuthStore] Mapped user object:', user);
+          console.log('[AuthStore] user.accountType:', user.accountType);
           get().setUser(user);
         }
       } else {

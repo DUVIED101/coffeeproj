@@ -23,7 +23,9 @@ export const AppNavigator: React.FC = () => {
   }
 
   return (
-    <NavigationContainer>{isAuthenticated ? <MainTabs /> : <AuthStack />}</NavigationContainer>
+    <NavigationContainer>
+      {isAuthenticated ? <MainTabs key="authenticated" /> : <AuthStack key="unauthenticated" />}
+    </NavigationContainer>
   );
 };
 
