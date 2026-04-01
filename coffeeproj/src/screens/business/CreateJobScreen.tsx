@@ -1,0 +1,911 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  Switch,
+} from 'react-native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { COLORS } from '../../config/constants';
+import { JobService } from '../../services/JobService';
+import { BusinessService } from '../../services/BusinessService';
+import { useAuthStore } from '../../stores/authStore';
+import type { Branch, Equipment } from '../../types/business';
+import type { JobType, CompensationType } from '../../types/job';
+
+type BusinessStackParamList = {
+  CreateJob: undefined;
+  ManageJobs: undefined;
+};
+
+type Props = {
+  navigation: NativeStackNavigationProp<BusinessStackParamList, 'CreateJob'>;
+};
+
+const EQUIPMENT_OPTIONS: Equipment[] = [
+  'La Marzocco',
+  'Victoria Arduino',
+  'Nuova Simonelli',
+  'Synesso',
+  'Slayer',
+];
+
+const TAG_OPTIONS = ['urgent', 'flexible', 'training-provided'];
+
+const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+
+export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
+  const { user } = useAuthStore();
+
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [isLoadingBranches, setIsLoadingBranches] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [jobType, setJobType] = useState<JobType>('temporary');
+  const [selectedBranchId, setSelectedBranchId] = useState<string>('');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [requirements, setRequirements] = useState<string[]>(['']);
+  const [selectedEquipment, setSelectedEquipment] = useState<Equipment[]>([]);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const [compensationType, setCompensationType] = useState<CompensationType>('hourly');
+  const [compensationAmount, setCompensationAmount] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    loadBranches();
+  }, []);
+
+  const loadBranches = async () => {
+    if (!user?.id) return;
+
+    try {
+      const business = await BusinessService.getBusinessByOwnerId(user.id);
+      if (business) {
+        const branchesData = await BusinessService.getBranches(business.id);
+        setBranches(branchesData);
+        if (branchesData.length > 0) {
+          setSelectedBranchId(branchesData[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading branches:', error);
+      Alert.alert('Error', 'Failed to load branches');
+    } finally {
+      setIsLoadingBranches(false);
+    }
+  };
+
+  const toggleEquipment = (equipment: Equipment) => {
+    setSelectedEquipment(prev =>
+      prev.includes(equipment) ? prev.filter(e => e !== equipment) : [...prev, equipment]
+    );
+  };
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]));
+  };
+
+  const toggleDay = (dayIndex: number) => {
+    setSelectedDays(prev =>
+      prev.includes(dayIndex) ? prev.filter(d => d !== dayIndex) : [...prev, dayIndex]
+    );
+  };
+
+  const addRequirement = () => {
+    setRequirements([...requirements, '']);
+  };
+
+  const removeRequirement = (index: number) => {
+    setRequirements(requirements.filter((_, i) => i !== index));
+  };
+
+  const updateRequirement = (index: number, value: string) => {
+    const newRequirements = [...requirements];
+    newRequirements[index] = value;
+    setRequirements(newRequirements);
+  };
+
+  const calculateTotalHours = (): number => {
+    if (!startTime || !endTime) return 0;
+
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const [endHour, endMinute] = endTime.split(':').map(Number);
+
+    const startMinutes = startHour * 60 + startMinute;
+    const endMinutes = endHour * 60 + endMinute;
+
+    return (endMinutes - startMinutes) / 60;
+  };
+
+  const calculatePayment = () => {
+    const amount = parseFloat(compensationAmount) || 0;
+
+    if (compensationType === 'hourly') {
+      const totalHours = calculateTotalHours();
+      const totalAmount = amount * totalHours;
+      const platformFee = totalAmount * 0.15;
+      const totalWithFee = totalAmount + platformFee;
+
+      return { totalHours, totalAmount, platformFee, totalWithFee };
+    } else {
+      const totalAmount = amount;
+      const platformFee = totalAmount * 0.15;
+      const totalWithFee = totalAmount + platformFee;
+
+      return { totalHours: 0, totalAmount, platformFee, totalWithFee };
+    }
+  };
+
+  const validate = (): boolean => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!selectedBranchId) {
+      newErrors.branch = 'Branch is required';
+    }
+    if (!title.trim()) {
+      newErrors.title = 'Title is required';
+    }
+    if (!startDate) {
+      newErrors.startDate = 'Start date is required';
+    }
+    if (!startTime) {
+      newErrors.startTime = 'Start time is required';
+    }
+    if (!endTime) {
+      newErrors.endTime = 'End time is required';
+    }
+    if (!compensationAmount || parseFloat(compensationAmount) <= 0) {
+      newErrors.compensation = 'Valid compensation amount is required';
+    }
+    if (isRecurring && selectedDays.length === 0) {
+      newErrors.recurringDays = 'Select at least one day for recurring shifts';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validate()) {
+      Alert.alert('Validation Error', 'Please fill in all required fields');
+      return;
+    }
+
+    if (!user?.id) {
+      Alert.alert('Error', 'User not authenticated');
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const business = await BusinessService.getBusinessByOwnerId(user.id);
+      if (!business) {
+        throw new Error('Business not found');
+      }
+
+      const selectedBranch = branches.find(b => b.id === selectedBranchId);
+      if (!selectedBranch) {
+        throw new Error('Branch not found');
+      }
+
+      const payment = calculatePayment();
+
+      const dayNames = [
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday',
+      ];
+      const recurringDays = isRecurring ? selectedDays.map(index => dayNames[index]) : undefined;
+
+      const filteredRequirements = requirements.filter(r => r.trim() !== '');
+
+      const jobData = {
+        businessId: business.id,
+        businessOwnerId: user.id,
+        branchId: selectedBranchId,
+        jobType,
+        title: title.trim(),
+        description: description.trim() || undefined,
+        requirements: filteredRequirements,
+        requiredEquipmentExperience: selectedEquipment,
+        location: {
+          address: selectedBranch.address,
+          city: selectedBranch.city,
+          coordinates: selectedBranch.coordinates,
+        },
+        shiftDetails: {
+          startDate: new Date(startDate).toISOString(),
+          endDate: endDate ? new Date(endDate).toISOString() : undefined,
+          startTime,
+          endTime,
+          isRecurring,
+          recurringDays,
+        },
+        compensation: {
+          type: compensationType,
+          amount: parseFloat(compensationAmount),
+          currency: 'RUB',
+        },
+        payment: {
+          hourlyRate: compensationType === 'hourly' ? parseFloat(compensationAmount) : undefined,
+          totalHours: compensationType === 'hourly' ? payment.totalHours : undefined,
+          totalAmount: payment.totalAmount,
+          platformFee: payment.platformFee,
+          totalWithFee: payment.totalWithFee,
+        },
+        tags: selectedTags,
+      };
+
+      await JobService.createJob(jobData);
+
+      Alert.alert('Success', 'Job created successfully', [
+        {
+          text: 'OK',
+          onPress: () => navigation.goBack(),
+        },
+      ]);
+    } catch (error) {
+      console.error('Error creating job:', error);
+      Alert.alert('Error', 'Failed to create job');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoadingBranches) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (branches.length === 0) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No branches found</Text>
+          <Text style={styles.emptySubtext}>Please add a branch before creating a job</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const payment = calculatePayment();
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.content}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Job Type</Text>
+          <View style={styles.segmentedControl}>
+            <TouchableOpacity
+              style={[styles.segmentButton, jobType === 'temporary' && styles.segmentButtonActive]}
+              onPress={() => setJobType('temporary')}>
+              <Text
+                style={[
+                  styles.segmentButtonText,
+                  jobType === 'temporary' && styles.segmentButtonTextActive,
+                ]}>
+                Temporary
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.segmentButton, jobType === 'permanent' && styles.segmentButtonActive]}
+              onPress={() => setJobType('permanent')}>
+              <Text
+                style={[
+                  styles.segmentButtonText,
+                  jobType === 'permanent' && styles.segmentButtonTextActive,
+                ]}>
+                Permanent
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>
+            Branch <Text style={styles.required}>*</Text>
+          </Text>
+          <View style={styles.branchList}>
+            {branches.map(branch => (
+              <TouchableOpacity
+                key={branch.id}
+                style={[
+                  styles.branchOption,
+                  selectedBranchId === branch.id && styles.branchOptionSelected,
+                ]}
+                onPress={() => setSelectedBranchId(branch.id)}>
+                <Text
+                  style={[
+                    styles.branchOptionText,
+                    selectedBranchId === branch.id && styles.branchOptionTextSelected,
+                  ]}>
+                  {branch.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          {errors.branch && <Text style={styles.errorText}>{errors.branch}</Text>}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>
+            Title <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={[styles.input, errors.title ? styles.inputError : null]}
+            placeholder="e.g. Experienced Barista"
+            value={title}
+            onChangeText={text => {
+              setTitle(text);
+              const { title: _, ...rest } = errors;
+              setErrors(rest);
+            }}
+          />
+          {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>Description</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="Job description..."
+            value={description}
+            onChangeText={setDescription}
+            multiline
+            numberOfLines={4}
+          />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>Requirements</Text>
+          {requirements.map((requirement, index) => (
+            <View key={index} style={styles.requirementRow}>
+              <TextInput
+                style={[styles.input, styles.requirementInput]}
+                placeholder={`Requirement ${index + 1}`}
+                value={requirement}
+                onChangeText={text => updateRequirement(index, text)}
+              />
+              {requirements.length > 1 && (
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => removeRequirement(index)}>
+                  <Text style={styles.removeButtonText}>Remove</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+          <TouchableOpacity style={styles.addButton} onPress={addRequirement}>
+            <Text style={styles.addButtonText}>+ Add Requirement</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>Equipment Experience</Text>
+          <View style={styles.equipmentGrid}>
+            {EQUIPMENT_OPTIONS.map(equipment => (
+              <TouchableOpacity
+                key={equipment}
+                style={[
+                  styles.equipmentChip,
+                  selectedEquipment.includes(equipment) && styles.equipmentChipSelected,
+                ]}
+                onPress={() => toggleEquipment(equipment)}>
+                <Text
+                  style={[
+                    styles.equipmentChipText,
+                    selectedEquipment.includes(equipment) && styles.equipmentChipTextSelected,
+                  ]}>
+                  {equipment}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Shift Details</Text>
+
+          <Text style={styles.label}>
+            Start Date <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={[styles.input, errors.startDate ? styles.inputError : null]}
+            placeholder="YYYY-MM-DD"
+            value={startDate}
+            onChangeText={text => {
+              setStartDate(text);
+              const { startDate: _, ...rest } = errors;
+              setErrors(rest);
+            }}
+          />
+          {errors.startDate && <Text style={styles.errorText}>{errors.startDate}</Text>}
+
+          <Text style={styles.label}>End Date (Optional)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="YYYY-MM-DD"
+            value={endDate}
+            onChangeText={setEndDate}
+          />
+
+          <View style={styles.timeRow}>
+            <View style={styles.timeInput}>
+              <Text style={styles.label}>
+                Start Time <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={[styles.input, errors.startTime ? styles.inputError : null]}
+                placeholder="HH:MM"
+                value={startTime}
+                onChangeText={text => {
+                  setStartTime(text);
+                  const { startTime: _, ...rest } = errors;
+                  setErrors(rest);
+                }}
+              />
+              {errors.startTime && <Text style={styles.errorText}>{errors.startTime}</Text>}
+            </View>
+
+            <View style={styles.timeInput}>
+              <Text style={styles.label}>
+                End Time <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={[styles.input, errors.endTime ? styles.inputError : null]}
+                placeholder="HH:MM"
+                value={endTime}
+                onChangeText={text => {
+                  setEndTime(text);
+                  const { endTime: _, ...rest } = errors;
+                  setErrors(rest);
+                }}
+              />
+              {errors.endTime && <Text style={styles.errorText}>{errors.endTime}</Text>}
+            </View>
+          </View>
+
+          <View style={styles.switchRow}>
+            <Text style={styles.label}>Is Recurring</Text>
+            <Switch
+              value={isRecurring}
+              onValueChange={setIsRecurring}
+              trackColor={{ false: COLORS.border, true: COLORS.primary }}
+            />
+          </View>
+
+          {isRecurring && (
+            <View>
+              <Text style={styles.label}>
+                Recurring Days <Text style={styles.required}>*</Text>
+              </Text>
+              <View style={styles.daysGrid}>
+                {WEEKDAYS.map((day, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[styles.dayChip, selectedDays.includes(index) && styles.dayChipSelected]}
+                    onPress={() => toggleDay(index)}>
+                    <Text
+                      style={[
+                        styles.dayChipText,
+                        selectedDays.includes(index) && styles.dayChipTextSelected,
+                      ]}>
+                      {day}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              {errors.recurringDays && <Text style={styles.errorText}>{errors.recurringDays}</Text>}
+            </View>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Compensation</Text>
+
+          <Text style={styles.label}>
+            Type <Text style={styles.required}>*</Text>
+          </Text>
+          <View style={styles.compensationTypes}>
+            {(['hourly', 'daily', 'fixed'] as CompensationType[]).map(type => (
+              <TouchableOpacity
+                key={type}
+                style={[
+                  styles.compensationChip,
+                  compensationType === type && styles.compensationChipSelected,
+                ]}
+                onPress={() => setCompensationType(type)}>
+                <Text
+                  style={[
+                    styles.compensationChipText,
+                    compensationType === type && styles.compensationChipTextSelected,
+                  ]}>
+                  {type === 'hourly' ? 'Hourly' : type === 'daily' ? 'Daily' : 'Fixed'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={styles.label}>
+            Amount (RUB) <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={[styles.input, errors.compensation ? styles.inputError : null]}
+            placeholder="0"
+            keyboardType="numeric"
+            value={compensationAmount}
+            onChangeText={text => {
+              setCompensationAmount(text);
+              const { compensation: _, ...rest } = errors;
+              setErrors(rest);
+            }}
+          />
+          {errors.compensation && <Text style={styles.errorText}>{errors.compensation}</Text>}
+
+          <View style={styles.paymentSummary}>
+            <Text style={styles.sectionTitle}>Payment Summary</Text>
+            {compensationType === 'hourly' && (
+              <Text style={styles.paymentLine}>Total Hours: {payment.totalHours.toFixed(2)}</Text>
+            )}
+            <Text style={styles.paymentLine}>Total Amount: ₽{payment.totalAmount.toFixed(2)}</Text>
+            <Text style={styles.paymentLine}>
+              Platform Fee (15%): ₽{payment.platformFee.toFixed(2)}
+            </Text>
+            <Text style={styles.paymentLineTotal}>
+              Total With Fee: ₽{payment.totalWithFee.toFixed(2)}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>Tags</Text>
+          <View style={styles.tagsGrid}>
+            {TAG_OPTIONS.map(tag => (
+              <TouchableOpacity
+                key={tag}
+                style={[styles.tagChip, selectedTags.includes(tag) && styles.tagChipSelected]}
+                onPress={() => toggleTag(tag)}>
+                <Text
+                  style={[
+                    styles.tagChipText,
+                    selectedTags.includes(tag) && styles.tagChipTextSelected,
+                  ]}>
+                  {tag}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+          onPress={handleSave}
+          disabled={isSaving}>
+          {isSaving ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.saveButtonText}>Create Job</Text>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  content: {
+    flex: 1,
+  },
+  section: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 8,
+  },
+  required: {
+    color: COLORS.error,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: '#fff',
+    marginBottom: 8,
+  },
+  inputError: {
+    borderColor: COLORS.error,
+  },
+  textArea: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  errorText: {
+    color: COLORS.error,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  segmentedControl: {
+    flexDirection: 'row',
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  segmentButtonActive: {
+    backgroundColor: COLORS.primary,
+  },
+  segmentButtonText: {
+    fontSize: 16,
+    color: COLORS.text,
+  },
+  segmentButtonTextActive: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  branchList: {
+    gap: 8,
+  },
+  branchOption: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: '#fff',
+  },
+  branchOptionSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  branchOptionText: {
+    fontSize: 16,
+    color: COLORS.text,
+  },
+  branchOptionTextSelected: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  requirementRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  requirementInput: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  removeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: COLORS.error,
+    borderRadius: 6,
+  },
+  removeButtonText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  addButton: {
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  addButtonText: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  equipmentGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  equipmentChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: '#fff',
+  },
+  equipmentChipSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  equipmentChipText: {
+    fontSize: 14,
+    color: COLORS.text,
+  },
+  equipmentChipTextSelected: {
+    color: '#fff',
+  },
+  timeRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  timeInput: {
+    flex: 1,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  dayChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: '#fff',
+  },
+  dayChipSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  dayChipText: {
+    fontSize: 14,
+    color: COLORS.text,
+  },
+  dayChipTextSelected: {
+    color: '#fff',
+  },
+  compensationTypes: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  compensationChip: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: '#fff',
+  },
+  compensationChipSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  compensationChipText: {
+    fontSize: 14,
+    color: COLORS.text,
+  },
+  compensationChipTextSelected: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  paymentSummary: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: COLORS.backgroundSecondary,
+    borderRadius: 8,
+  },
+  paymentLine: {
+    fontSize: 14,
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  paymentLineTotal: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  tagsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  tagChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: '#fff',
+  },
+  tagChipSelected: {
+    backgroundColor: COLORS.accent,
+    borderColor: COLORS.accent,
+  },
+  tagChipText: {
+    fontSize: 14,
+    color: COLORS.text,
+  },
+  tagChipTextSelected: {
+    color: '#fff',
+  },
+  saveButton: {
+    margin: 16,
+    backgroundColor: COLORS.primary,
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

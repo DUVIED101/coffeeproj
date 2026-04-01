@@ -3,6 +3,9 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { CreateBusinessScreen } from '../screens/business/CreateBusinessScreen';
 import { BranchManagementScreen } from '../screens/business/BranchManagementScreen';
+import { CreateJobScreen } from '../screens/business/CreateJobScreen';
+import { ManageJobsScreen } from '../screens/business/ManageJobsScreen';
+import { JobDetailsScreen } from '../screens/business/JobDetailsScreen';
 import { BusinessService } from '../services/BusinessService';
 import { useAuthStore } from '../stores/authStore';
 import { COLORS } from '../config/constants';
@@ -11,6 +14,9 @@ import type { Business } from '../types';
 export type BusinessStackParamList = {
   CreateBusiness: undefined;
   BranchManagement: { businessId: string };
+  CreateJob: undefined;
+  ManageJobs: undefined;
+  JobDetails: { jobId: string };
 };
 
 const Stack = createNativeStackNavigator<BusinessStackParamList>();
@@ -51,7 +57,7 @@ export const BusinessStack: React.FC = () => {
 
   return (
     <Stack.Navigator
-      initialRouteName={business ? 'BranchManagement' : 'CreateBusiness'}
+      initialRouteName={business ? 'ManageJobs' : 'CreateBusiness'}
       screenOptions={{
         headerShown: true,
         headerBackTitleVisible: false,
@@ -66,6 +72,21 @@ export const BusinessStack: React.FC = () => {
         component={BranchManagementScreen}
         options={{ title: 'Branch Management' }}
         initialParams={business ? { businessId: business.id } : undefined}
+      />
+      <Stack.Screen
+        name="ManageJobs"
+        component={ManageJobsScreen}
+        options={{ title: 'Manage Jobs' }}
+      />
+      <Stack.Screen
+        name="CreateJob"
+        component={CreateJobScreen}
+        options={{ title: 'Create Job' }}
+      />
+      <Stack.Screen
+        name="JobDetails"
+        component={JobDetailsScreen}
+        options={{ title: 'Job Details' }}
       />
     </Stack.Navigator>
   );
