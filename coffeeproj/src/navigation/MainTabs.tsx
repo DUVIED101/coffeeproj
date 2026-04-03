@@ -5,6 +5,7 @@ import { Pressable } from 'react-native';
 import { useAuthStore } from '../stores/authStore';
 import { COLORS } from '../config/constants';
 import { BusinessStack } from './BusinessStack';
+import { BaristaStack } from './BaristaStack';
 
 // Placeholder screens for now
 const HomeScreen = () => {
@@ -35,6 +36,7 @@ const ProfileScreen = () => {
 
 export type MainTabsParamList = {
   Home: undefined;
+  Jobs: undefined;
   Business: undefined;
   Profile: undefined;
 };
@@ -72,6 +74,28 @@ export const MainTabs: React.FC = () => {
         options={{
           title: 'Home',
           tabBarLabel: 'Home',
+        }}
+      />
+      <Tab.Screen
+        name="Jobs"
+        component={BaristaStack}
+        options={{
+          title: 'Jobs',
+          tabBarLabel: 'Jobs',
+          headerShown: false,
+          // Hide this tab for non-barista users by rendering nothing
+          tabBarButton: (props: BottomTabBarButtonProps) => {
+            const { user } = useAuthStore.getState();
+            const isBaristaUser = user?.accountType === 'barista';
+
+            // If not barista user, don't render the tab button
+            if (!isBaristaUser) {
+              return null;
+            }
+
+            // Otherwise, render default Pressable button
+            return <Pressable {...props} />;
+          },
         }}
       />
       <Tab.Screen
