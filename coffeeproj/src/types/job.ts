@@ -3,12 +3,7 @@ import type { GeoPoint, Equipment } from './business';
 // Job Types
 export type JobType = 'temporary' | 'permanent';
 export type JobStatus = 'open' | 'in_review' | 'filled' | 'expired' | 'cancelled';
-export type PaymentStatus =
-  | 'not_required'
-  | 'pending'
-  | 'escrowed'
-  | 'completed'
-  | 'refunded';
+export type PaymentStatus = 'not_required' | 'pending' | 'escrowed' | 'completed' | 'refunded';
 export type CompensationType = 'hourly' | 'daily' | 'fixed';
 
 export interface Job {
@@ -102,12 +97,10 @@ export interface UpdateJobData {
 
 export interface JobFilters {
   jobType?: JobType;
+  equipment?: string[];
   metroStation?: string;
+  maxDistance?: number; // meters, default 50000
   city?: string;
-  equipment?: Equipment[];
-  userLocation?: GeoPoint;
-  maxDistance?: number; // in meters
-  tags?: string[];
 }
 
 export interface JobSearchParams extends JobFilters {

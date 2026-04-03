@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase';
-import type { Job, CreateJobData, JobStatus } from '../types/job';
+import type { Job, CreateJobData, JobStatus, JobFilters } from '../types/job';
+import type { GeoPoint } from '../types/business';
 
 export class JobService {
   /**
@@ -168,6 +169,64 @@ export class JobService {
       return (data || []).map(job => this.mapJobWithJoins(job));
     } catch (error) {
       console.error('Error in getJobsByBusinessId:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Search jobs with filters and geolocation
+   */
+  static async searchJobs(
+    filters: JobFilters,
+    userLocation?: GeoPoint,
+    limit = 20,
+    offset = 0
+  ): Promise<Job[]> {
+    try {
+      const { data, error } = await supabase.rpc('search_jobs', {
+        user_lat: userLocation?.latitude ?? null,
+        user_lon: userLocation?.longitude ?? null,
+        max_distance_meters: filters.maxDistance ?? 50000,
+        metro_station_filter: filters.metroStation ?? null,
+        job_type_filter: filters.jobType ?? null,
+        equipment_filter: filters.equipment ?? null,
+        city_filter: filters.city ?? null,
+        limit_count: limit,
+        offset_count: offset,
+      });
+
+      if (error) throw error;
+
+      return (data || []).map((job: any) => ({
+        id: job.job_id,
+        businessId: job.business_id,
+        businessOwnerId: job.business_owner_id,
+        branchId: job.branch_id,
+        jobType: job.job_type,
+        title: job.title,
+        description: job.description,
+        requirements: job.requirements || [],
+        requiredEquipmentExperience: job.required_equipment_experience || [],
+        location: job.location,
+        shiftDetails: job.shift_details,
+        compensation: job.compensation,
+        payment: job.payment,
+        paymentStatus: job.payment_status,
+        status: job.status,
+        tags: job.tags || [],
+        applicationCount: job.application_count,
+        views: job.views,
+        postedAt: job.posted_at,
+        expiresAt: job.expires_at,
+        createdAt: job.created_at,
+        updatedAt: job.updated_at,
+        businessName: job.business_name,
+        branchName: job.branch_name,
+        metroStation: job.metro_station,
+        distance: job.distance_meters,
+      }));
+    } catch (error) {
+      console.error('Error in searchJobs:', error);
       throw error;
     }
   }

@@ -1,129 +1,54 @@
 import Geolocation from 'react-native-geolocation-service';
-import { Platform, PermissionsAndroid, Alert } from 'react-native';
+import { Platform } from 'react-native';
 import type { GeoPoint } from '../types';
 
-/**
- * Request location permission from user
- */
-export const requestLocationPermission = async (): Promise<boolean> => {
-  try {
-    if (Platform.OS === 'ios') {
-      // iOS permissions are handled via Info.plist
-      // Request authorization
-      const auth = await Geolocation.requestAuthorization('whenInUse');
-      return auth === 'granted';
-    } else {
-      // Android (not needed for iOS-only app, but keeping for reference)
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          title: 'Location Permission',
-          message: 'CoffeeProj needs access to your location to show nearby jobs',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        }
-      );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    }
-  } catch (error) {
-    console.error('Error requesting location permission:', error);
+export async function requestLocationPermission(): Promise<boolean> {
+  if (Platform.OS !== 'ios') {
     return false;
   }
-};
 
-/**
- * Get current user location
- */
-export const getCurrentLocation = (): Promise<GeoPoint> => {
-  return new Promise((resolve, reject) => {
+  try {
+    const authorization = await Geolocation.requestAuthorization('whenInUse');
+    return authorization === 'granted';
+  } catch {
+    return false;
+  }
+}
+
+export async function getCurrentLocation(): Promise<GeoPoint | null> {
+  return new Promise(resolve => {
     Geolocation.getCurrentPosition(
       position => {
-        const { latitude, longitude } = position.coords;
-        resolve({ latitude, longitude });
+        resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
       },
-      error => {
-        console.error('Error getting current location:', error);
-        reject(error);
+      () => {
+        resolve(null);
       },
       {
         enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 10000,
+        timeout: 10000,
+        maximumAge: 0,
       }
     );
   });
-};
+}
 
-/**
- * Get current location with permission handling
- */
-export const getLocationWithPermission = async (): Promise<GeoPoint | null> => {
-  try {
-    const hasPermission = await requestLocationPermission();
+export function calculateDistance(point1: GeoPoint, point2: GeoPoint): number {
+  const earthRadiusMeters = 6371000;
 
-    if (!hasPermission) {
-      Alert.alert(
-        'Location Permission Denied',
-        'Please enable location services in your device settings to find jobs near you.',
-        [{ text: 'OK' }]
-      );
-      return null;
-    }
-
-    const location = await getCurrentLocation();
-    return location;
-  } catch (error) {
-    console.error('Error getting location with permission:', error);
-    return null;
-  }
-};
-
-/**
- * Calculate distance between two coordinates using Haversine formula
- * Returns distance in meters
- */
-export const calculateDistance = (
-  point1: GeoPoint,
-  point2: GeoPoint
-): number => {
-  const R = 6371e3; // Earth's radius in meters
-  const φ1 = (point1.latitude * Math.PI) / 180;
-  const φ2 = (point2.latitude * Math.PI) / 180;
-  const Δφ = ((point2.latitude - point1.latitude) * Math.PI) / 180;
-  const Δλ = ((point2.longitude - point1.longitude) * Math.PI) / 180;
+  const lat1Rad = (point1.latitude * Math.PI) / 180;
+  const lat2Rad = (point2.latitude * Math.PI) / 180;
+  const deltaLatRad = ((point2.latitude - point1.latitude) * Math.PI) / 180;
+  const deltaLonRad = ((point2.longitude - point1.longitude) * Math.PI) / 180;
 
   const a =
-    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    Math.sin(deltaLatRad / 2) * Math.sin(deltaLatRad / 2) +
+    Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(deltaLonRad / 2) * Math.sin(deltaLonRad / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-  return R * c; // Distance in meters
-};
-
-/**
- * Format distance for display
- * - Under 1km: show in meters
- * - Over 1km: show in kilometers
- */
-export const formatDistance = (meters: number): string => {
-  if (meters < 1000) {
-    return `${Math.round(meters)} м`;
-  }
-  const km = meters / 1000;
-  return `${km.toFixed(1)} км`;
-};
-
-/**
- * Check if location services are enabled
- */
-export const isLocationEnabled = async (): Promise<boolean> => {
-  try {
-    const status = await Geolocation.requestAuthorization('whenInUse');
-    return status === 'granted';
-  } catch (error) {
-    console.error('Error checking location status:', error);
-    return false;
-  }
-};
+  return earthRadiusMeters * c;
+}
