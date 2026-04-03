@@ -1,0 +1,12 @@
+{
+  "filters": {
+    "jobType": {
+      "all": "Все",
+      "temporary": "Временная",
+      "permanent": "Постоянная"
+    },
+    "equipment": "Оборудование",
+    "metroStation": "Метро",
+    "distance": "Расстояние"
+  }
+}

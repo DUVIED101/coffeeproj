@@ -1,0 +1,12 @@
+{
+  "filters": {
+    "jobType": {
+      "all": "All",
+      "temporary": "Temporary",
+      "permanent": "Permanent"
+    },
+    "equipment": "Equipment",
+    "metroStation": "Metro Station",
+    "distance": "Distance"
+  }
+}
