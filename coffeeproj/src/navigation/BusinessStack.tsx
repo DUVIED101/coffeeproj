@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { CreateBusinessScreen } from '../screens/business/CreateBusinessScreen';
-import { BranchManagementScreen } from '../screens/business/BranchManagementScreen';
+import { BusinessHomeScreen } from '../screens/business/BusinessHomeScreen';
 import { CreateJobScreen } from '../screens/business/CreateJobScreen';
-import { ManageJobsScreen } from '../screens/business/ManageJobsScreen';
 import { JobDetailsScreen } from '../screens/business/JobDetailsScreen';
 import { BusinessService } from '../services/BusinessService';
 import { useAuthStore } from '../stores/authStore';
@@ -13,9 +12,8 @@ import type { Business } from '../types';
 
 export type BusinessStackParamList = {
   CreateBusiness: undefined;
-  BranchManagement: { businessId: string };
+  BusinessHome: { businessId: string };
   CreateJob: undefined;
-  ManageJobs: undefined;
   JobDetails: { jobId: string };
 };
 
@@ -57,7 +55,7 @@ export const BusinessStack: React.FC = () => {
 
   return (
     <Stack.Navigator
-      initialRouteName={business ? 'ManageJobs' : 'CreateBusiness'}
+      initialRouteName={business ? 'BusinessHome' : 'CreateBusiness'}
       screenOptions={{
         headerShown: true,
         headerBackTitleVisible: false,
@@ -68,15 +66,10 @@ export const BusinessStack: React.FC = () => {
         options={{ title: 'Create Business' }}
       />
       <Stack.Screen
-        name="BranchManagement"
-        component={BranchManagementScreen}
-        options={{ title: 'Branch Management' }}
+        name="BusinessHome"
+        component={BusinessHomeScreen}
+        options={{ title: 'My Business' }}
         initialParams={business ? { businessId: business.id } : undefined}
-      />
-      <Stack.Screen
-        name="ManageJobs"
-        component={ManageJobsScreen}
-        options={{ title: 'Manage Jobs' }}
       />
       <Stack.Screen
         name="CreateJob"

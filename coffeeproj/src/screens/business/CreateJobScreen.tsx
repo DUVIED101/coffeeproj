@@ -10,7 +10,9 @@ import {
   ActivityIndicator,
   Alert,
   Switch,
+  Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
@@ -53,15 +55,20 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
   const [description, setDescription] = useState('');
   const [requirements, setRequirements] = useState<string[]>(['']);
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment[]>([]);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [startTime, setStartTime] = useState<Date>(new Date());
+  const [endTime, setEndTime] = useState<Date>(new Date());
   const [isRecurring, setIsRecurring] = useState(false);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [compensationType, setCompensationType] = useState<CompensationType>('hourly');
   const [compensationAmount, setCompensationAmount] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -119,15 +126,22 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
     setRequirements(newRequirements);
   };
 
+  const formatTime = (date: Date): string => {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  const formatDate = (date: Date): string => {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}.${month}.${year}`;
+  };
+
   const calculateTotalHours = (): number => {
-    if (!startTime || !endTime) return 0;
-
-    const [startHour, startMinute] = startTime.split(':').map(Number);
-    const [endHour, endMinute] = endTime.split(':').map(Number);
-
-    const startMinutes = startHour * 60 + startMinute;
-    const endMinutes = endHour * 60 + endMinute;
-
+    const startMinutes = startTime.getHours() * 60 + startTime.getMinutes();
+    const endMinutes = endTime.getHours() * 60 + endTime.getMinutes();
     return (endMinutes - startMinutes) / 60;
   };
 
@@ -158,15 +172,6 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
     }
     if (!title.trim()) {
       newErrors.title = 'Title is required';
-    }
-    if (!startDate) {
-      newErrors.startDate = 'Start date is required';
-    }
-    if (!startTime) {
-      newErrors.startTime = 'Start time is required';
-    }
-    if (!endTime) {
-      newErrors.endTime = 'End time is required';
     }
     if (!compensationAmount || parseFloat(compensationAmount) <= 0) {
       newErrors.compensation = 'Valid compensation amount is required';
@@ -233,10 +238,10 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
           coordinates: selectedBranch.coordinates,
         },
         shiftDetails: {
-          startDate: new Date(startDate).toISOString(),
-          endDate: endDate ? new Date(endDate).toISOString() : undefined,
-          startTime,
-          endTime,
+          startDate: startDate.toISOString(),
+          endDate: endDate ? endDate.toISOString() : undefined,
+          startTime: formatTime(startTime),
+          endTime: formatTime(endTime),
           isRecurring,
           recurringDays,
         },
@@ -433,41 +438,72 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.label}>
             Start Date <Text style={styles.required}>*</Text>
           </Text>
-          <TextInput
-            style={[styles.input, errors.startDate ? styles.inputError : null]}
-            placeholder="YYYY-MM-DD"
-            value={startDate}
-            onChangeText={text => {
-              setStartDate(text);
-              const { startDate: _, ...rest } = errors;
-              setErrors(rest);
-            }}
-          />
+          <TouchableOpacity style={styles.dateButton} onPress={() => setShowStartDatePicker(true)}>
+            <Text style={styles.dateButtonText}>{formatDate(startDate)}</Text>
+          </TouchableOpacity>
+          {showStartDatePicker && (
+            <DateTimePicker
+              value={startDate}
+              mode="date"
+              display="spinner"
+              onChange={(event, selectedDate) => {
+                setShowStartDatePicker(false);
+                if (selectedDate) {
+                  setStartDate(selectedDate);
+                  const { startDate: _, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
+            />
+          )}
           {errors.startDate && <Text style={styles.errorText}>{errors.startDate}</Text>}
 
           <Text style={styles.label}>End Date (Optional)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="YYYY-MM-DD"
-            value={endDate}
-            onChangeText={setEndDate}
-          />
+          <TouchableOpacity style={styles.dateButton} onPress={() => setShowEndDatePicker(true)}>
+            <Text style={styles.dateButtonText}>
+              {endDate ? formatDate(endDate) : 'Select date'}
+            </Text>
+          </TouchableOpacity>
+          {showEndDatePicker && (
+            <DateTimePicker
+              value={endDate || new Date()}
+              mode="date"
+              display="spinner"
+              onChange={(event, selectedDate) => {
+                setShowEndDatePicker(false);
+                if (selectedDate) {
+                  setEndDate(selectedDate);
+                }
+              }}
+            />
+          )}
 
           <View style={styles.timeRow}>
             <View style={styles.timeInput}>
               <Text style={styles.label}>
                 Start Time <Text style={styles.required}>*</Text>
               </Text>
-              <TextInput
-                style={[styles.input, errors.startTime ? styles.inputError : null]}
-                placeholder="HH:MM"
-                value={startTime}
-                onChangeText={text => {
-                  setStartTime(text);
-                  const { startTime: _, ...rest } = errors;
-                  setErrors(rest);
-                }}
-              />
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setShowStartTimePicker(true)}>
+                <Text style={styles.dateButtonText}>{formatTime(startTime)}</Text>
+              </TouchableOpacity>
+              {showStartTimePicker && (
+                <DateTimePicker
+                  value={startTime}
+                  mode="time"
+                  is24Hour={true}
+                  display="spinner"
+                  onChange={(event, selectedTime) => {
+                    setShowStartTimePicker(false);
+                    if (selectedTime) {
+                      setStartTime(selectedTime);
+                      const { startTime: _, ...rest } = errors;
+                      setErrors(rest);
+                    }
+                  }}
+                />
+              )}
               {errors.startTime && <Text style={styles.errorText}>{errors.startTime}</Text>}
             </View>
 
@@ -475,16 +511,27 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.label}>
                 End Time <Text style={styles.required}>*</Text>
               </Text>
-              <TextInput
-                style={[styles.input, errors.endTime ? styles.inputError : null]}
-                placeholder="HH:MM"
-                value={endTime}
-                onChangeText={text => {
-                  setEndTime(text);
-                  const { endTime: _, ...rest } = errors;
-                  setErrors(rest);
-                }}
-              />
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setShowEndTimePicker(true)}>
+                <Text style={styles.dateButtonText}>{formatTime(endTime)}</Text>
+              </TouchableOpacity>
+              {showEndTimePicker && (
+                <DateTimePicker
+                  value={endTime}
+                  mode="time"
+                  is24Hour={true}
+                  display="spinner"
+                  onChange={(event, selectedTime) => {
+                    setShowEndTimePicker(false);
+                    if (selectedTime) {
+                      setEndTime(selectedTime);
+                      const { endTime: _, ...rest } = errors;
+                      setErrors(rest);
+                    }
+                  }}
+                />
+              )}
               {errors.endTime && <Text style={styles.errorText}>{errors.endTime}</Text>}
             </View>
           </View>
@@ -792,6 +839,18 @@ const styles = StyleSheet.create({
   },
   timeInput: {
     flex: 1,
+  },
+  dateButton: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#fff',
+    marginBottom: 8,
+  },
+  dateButtonText: {
+    fontSize: 16,
+    color: COLORS.text,
   },
   switchRow: {
     flexDirection: 'row',
