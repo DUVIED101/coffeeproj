@@ -5,6 +5,7 @@ import { CreateBusinessScreen } from '../screens/business/CreateBusinessScreen';
 import { BusinessHomeScreen } from '../screens/business/BusinessHomeScreen';
 import { CreateJobScreen } from '../screens/business/CreateJobScreen';
 import { JobDetailsScreen } from '../screens/business/JobDetailsScreen';
+import { ApplicantsScreen } from '../screens/business/ApplicantsScreen';
 import { BusinessService } from '../services/BusinessService';
 import { useAuthStore } from '../stores/authStore';
 import { COLORS } from '../config/constants';
@@ -15,6 +16,7 @@ export type BusinessStackParamList = {
   BusinessHome: { businessId: string };
   CreateJob: undefined;
   JobDetails: { jobId: string };
+  Applicants: { jobId: string };
 };
 
 const Stack = createNativeStackNavigator<BusinessStackParamList>();
@@ -80,6 +82,11 @@ export const BusinessStack: React.FC = () => {
         name="JobDetails"
         component={JobDetailsScreen}
         options={{ title: 'Job Details' }}
+      />
+      <Stack.Screen
+        name="Applicants"
+        component={ApplicantsScreen}
+        options={{ title: 'Applicants' }}
       />
     </Stack.Navigator>
   );
