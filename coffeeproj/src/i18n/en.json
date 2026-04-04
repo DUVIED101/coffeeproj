@@ -8,5 +8,30 @@
     "equipment": "Equipment",
     "metroStation": "Metro Station",
     "distance": "Distance"
+  },
+  "applications": {
+    "title": "My Applications",
+    "empty": "No applications yet",
+    "status": {
+      "pending": "Pending",
+      "underReview": "Under Review",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "withdrawn": "Withdrawn"
+    }
+  },
+  "apply": {
+    "title": "Apply for Job",
+    "coverLetter": "Cover Letter (optional)",
+    "submit": "Submit Application",
+    "success": "Application submitted!",
+    "duplicate": "You have already applied to this job"
+  },
+  "applicants": {
+    "title": "Applicants",
+    "empty": "No applicants yet",
+    "accept": "Accept",
+    "reject": "Reject",
+    "coverLetter": "Cover Letter"
   }
 }
