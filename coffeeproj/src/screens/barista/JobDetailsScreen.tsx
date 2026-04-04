@@ -13,7 +13,10 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
+import { ApplicationService } from '../../services/ApplicationService';
+import { useAuthStore } from '../../stores/authStore';
 import type { Job } from '../../types/job';
+import type { Application } from '../../types/application';
 
 type BaristaStackParamList = {
   JobFeed: undefined;
@@ -28,14 +31,17 @@ type Props = {
 
 export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { jobId, distance } = route.params;
+  const user = useAuthStore(state => state.user);
 
   const [job, setJob] = useState<Job | null>(null);
+  const [existingApplication, setExistingApplication] = useState<Application | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadJob();
-  }, [jobId]);
+    checkExistingApplication();
+  }, [jobId, user?.id]);
 
   const loadJob = async () => {
     try {
@@ -51,9 +57,53 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
+  const checkExistingApplication = async () => {
+    if (!user?.id) return;
+
+    try {
+      const application = await ApplicationService.checkApplicationExists(jobId, user.id);
+      setExistingApplication(application);
+    } catch (error) {
+      console.error('Error checking existing application:', error);
+    }
+  };
+
   const handleApply = () => {
     if (job) {
       navigation.navigate('Apply', { job });
+    }
+  };
+
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case 'accepted':
+        return '#10B981';
+      case 'rejected':
+        return '#EF4444';
+      case 'pending':
+      case 'under_review':
+        return '#F59E0B';
+      case 'withdrawn':
+        return '#6B7280';
+      default:
+        return COLORS.textSecondary;
+    }
+  };
+
+  const getStatusText = (status: string): string => {
+    switch (status) {
+      case 'pending':
+        return 'Pending';
+      case 'under_review':
+        return 'Under Review';
+      case 'accepted':
+        return 'Accepted';
+      case 'rejected':
+        return 'Rejected';
+      case 'withdrawn':
+        return 'Withdrawn';
+      default:
+        return status;
     }
   };
 
@@ -226,11 +276,29 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
-          <Text style={styles.applyButtonText}>Apply for this Job</Text>
-        </TouchableOpacity>
-      </View>
+      {existingApplication ? (
+        <View style={styles.footer}>
+          <View style={styles.applicationStatus}>
+            <Text style={styles.applicationStatusLabel}>Application Status:</Text>
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: getStatusColor(existingApplication.status) },
+              ]}>
+              <Text style={styles.statusText}>{getStatusText(existingApplication.status)}</Text>
+            </View>
+          </View>
+          <Text style={styles.applicationDate}>
+            Applied: {new Date(existingApplication.createdAt).toLocaleDateString('ru-RU')}
+          </Text>
+        </View>
+      ) : (
+        <View style={styles.footer}>
+          <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
+            <Text style={styles.applyButtonText}>Apply for this Job</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -392,5 +460,32 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
+  },
+  applicationStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  applicationStatusLabel: {
+    fontSize: 16,
+    color: COLORS.text,
+    fontWeight: '600',
+    marginRight: 12,
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  statusText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  applicationDate: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
   },
 });

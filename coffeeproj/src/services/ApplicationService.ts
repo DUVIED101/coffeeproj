@@ -199,4 +199,35 @@ export class ApplicationService {
       throw error;
     }
   }
+
+  /**
+   * Check if barista has already applied to a job
+   * Returns the application if exists, null otherwise
+   */
+  static async checkApplicationExists(
+    jobId: string,
+    baristaId: string
+  ): Promise<Application | null> {
+    try {
+      const { data, error } = await supabase
+        .from('applications')
+        .select('*')
+        .eq('job_id', jobId)
+        .eq('barista_id', baristaId)
+        .single();
+
+      if (error) {
+        // PGRST116 means no rows found, which is fine
+        if (error.code === 'PGRST116') {
+          return null;
+        }
+        throw error;
+      }
+
+      return data ? this.mapApplication(data) : null;
+    } catch (error) {
+      console.error('Error in checkApplicationExists:', error);
+      throw error;
+    }
+  }
 }
