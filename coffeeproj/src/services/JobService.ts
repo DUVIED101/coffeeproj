@@ -183,7 +183,7 @@ export class JobService {
     offset = 0
   ): Promise<Job[]> {
     try {
-      const { data, error } = await supabase.rpc('search_jobs', {
+      const params = {
         user_lat: userLocation?.latitude ?? null,
         user_lon: userLocation?.longitude ?? null,
         max_distance_meters: filters.maxDistance ?? 50000,
@@ -193,7 +193,14 @@ export class JobService {
         city_filter: filters.city ?? null,
         limit_count: limit,
         offset_count: offset,
-      });
+      };
+
+      console.log('🔧 JobService.searchJobs params:', JSON.stringify(params, null, 2));
+
+      const { data, error } = await supabase.rpc('search_jobs', params);
+
+      console.log('📡 RPC error:', error);
+      console.log('📡 RPC data count:', data?.length);
 
       if (error) throw error;
 

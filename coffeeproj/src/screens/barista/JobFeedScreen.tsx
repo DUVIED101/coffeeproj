@@ -88,10 +88,14 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
 
   const loadJobs = async () => {
     try {
+      console.log('🔍 Loading jobs with filters:', filters);
+      console.log('📍 User location:', userLocation);
       const jobsData = await JobService.searchJobs(filters, userLocation);
+      console.log('✅ Jobs loaded:', jobsData.length);
+      console.log('📋 Jobs data:', JSON.stringify(jobsData, null, 2));
       setJobs(jobsData);
     } catch (error) {
-      console.error('Error loading jobs:', error);
+      console.error('❌ Error loading jobs:', error);
       Alert.alert('Ошибка', 'Не удалось загрузить вакансии. Попробуйте еще раз.');
     } finally {
       setIsLoading(false);
