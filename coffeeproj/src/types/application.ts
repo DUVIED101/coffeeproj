@@ -1,12 +1,7 @@
 import type { Job } from './job';
 
 // Application Types
-export type ApplicationStatus =
-  | 'pending'
-  | 'under_review'
-  | 'accepted'
-  | 'rejected'
-  | 'withdrawn';
+export type ApplicationStatus = 'pending' | 'under_review' | 'accepted' | 'rejected' | 'withdrawn';
 
 export interface Application {
   id: string;
@@ -19,6 +14,7 @@ export interface Application {
 
   // Joined fields (from database queries)
   job?: Job;
+  baristaEmail?: string; // For business view of applicants
 }
 
 export interface CreateApplicationData {
