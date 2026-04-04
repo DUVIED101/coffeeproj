@@ -198,7 +198,7 @@ export class JobService {
       if (error) throw error;
 
       return (data || []).map((job: any) => ({
-        id: job.job_id,
+        id: job.id,
         businessId: job.business_id,
         businessOwnerId: job.business_owner_id,
         branchId: job.branch_id,
