@@ -5,14 +5,17 @@ import { JobFeedScreen } from '../screens/barista/JobFeedScreen';
 import { JobDetailsScreen } from '../screens/barista/JobDetailsScreen';
 import { ApplyScreen } from '../screens/barista/ApplyScreen';
 import { ApplicationsScreen } from '../screens/barista/ApplicationsScreen';
+import { ApplicationDetailsScreen } from '../screens/barista/ApplicationDetailsScreen';
 import { COLORS } from '../config/constants';
 import type { Job } from '../types';
+import type { Application } from '../types/application';
 
 export type BaristaStackParamList = {
   JobFeed: undefined;
   JobDetails: { jobId: string; distance?: number };
   Apply: { job: Job };
   Applications: undefined;
+  ApplicationDetails: { application: Application };
 };
 
 const Stack = createNativeStackNavigator<BaristaStackParamList>();
@@ -50,6 +53,11 @@ export const BaristaStack: React.FC = () => {
         component={ApplicationsScreen}
         options={{ title: 'My Applications' }}
       />
+      <Stack.Screen
+        name="ApplicationDetails"
+        component={ApplicationDetailsScreen}
+        options={{ title: 'Application Details' }}
+      />
     </Stack.Navigator>
   );
 };
@@ -57,14 +65,10 @@ export const BaristaStack: React.FC = () => {
 const styles = StyleSheet.create({
   headerButton: {
     marginRight: 16,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: COLORS.primary,
-    borderRadius: 6,
   },
   headerButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
+    color: COLORS.primary,
+    fontSize: 16,
     fontWeight: '600',
   },
 });
