@@ -18,7 +18,7 @@ import type { Job } from '../../types/job';
 type BaristaStackParamList = {
   JobFeed: undefined;
   JobDetails: { jobId: string; distance?: number };
-  Apply: { jobId: string };
+  Apply: { job: Job };
 };
 
 type Props = {
@@ -52,7 +52,9 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const handleApply = () => {
-    Alert.alert('Coming Soon', 'Job application feature will be available soon');
+    if (job) {
+      navigation.navigate('Apply', { job });
+    }
   };
 
   const formatDistance = (meters: number | undefined): string => {
