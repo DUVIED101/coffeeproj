@@ -5,13 +5,13 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  TextInput,
   Modal,
   Pressable,
 } from 'react-native';
 import type { JobFilters, JobType } from '../types/job';
 import type { Equipment, GeoPoint } from '../types/business';
 import { COLORS } from '../config/constants';
+import { MetroSelector } from './MetroSelector';
 
 interface FilterBarProps {
   onFilterChange: (filters: JobFilters) => void;
@@ -38,7 +38,6 @@ export const FilterBar = React.memo<FilterBarProps>(
   ({ onFilterChange, currentFilters, userLocation }) => {
     const [showEquipmentModal, setShowEquipmentModal] = useState(false);
     const [showDistanceModal, setShowDistanceModal] = useState(false);
-    const [metroInput, setMetroInput] = useState(currentFilters.metroStation || '');
 
     const handleJobTypeChange = useCallback(
       (jobType?: JobType) => {
@@ -65,15 +64,25 @@ export const FilterBar = React.memo<FilterBarProps>(
       [currentFilters, onFilterChange]
     );
 
-    const handleMetroChange = useCallback(() => {
-      onFilterChange({
-        ...currentFilters,
-        metroStation: metroInput || undefined,
-      });
-    }, [currentFilters, metroInput, onFilterChange]);
+    const handleMetroChange = useCallback(
+      (stationNames: string | string[]) => {
+        const metroStations = Array.isArray(stationNames)
+          ? stationNames.length > 0
+            ? stationNames
+            : undefined
+          : stationNames
+            ? [stationNames]
+            : undefined;
+        onFilterChange({
+          ...currentFilters,
+          metroStations,
+        });
+      },
+      [currentFilters, onFilterChange]
+    );
 
     const handleDistanceChange = useCallback(
-      (distance: number) => {
+      (distance?: number) => {
         onFilterChange({
           ...currentFilters,
           maxDistance: distance,
@@ -82,6 +91,14 @@ export const FilterBar = React.memo<FilterBarProps>(
       },
       [currentFilters, onFilterChange]
     );
+
+    const handleClearEquipment = useCallback(() => {
+      onFilterChange({
+        ...currentFilters,
+        equipment: undefined,
+      });
+      setShowEquipmentModal(false);
+    }, [currentFilters, onFilterChange]);
 
     const getJobTypeLabel = (type?: JobType): string => {
       if (!type) return 'Все';
@@ -157,15 +174,12 @@ export const FilterBar = React.memo<FilterBarProps>(
             </Text>
           </TouchableOpacity>
 
-          <View style={styles.metroInputContainer}>
-            <TextInput
-              style={styles.metroInput}
+          <View style={styles.metroSelectorContainer}>
+            <MetroSelector
+              value={currentFilters.metroStations}
+              onChange={handleMetroChange}
               placeholder="Метро"
-              value={metroInput}
-              onChangeText={setMetroInput}
-              onSubmitEditing={handleMetroChange}
-              onBlur={handleMetroChange}
-              returnKeyType="done"
+              multiSelect={true}
             />
           </View>
 
@@ -222,11 +236,20 @@ export const FilterBar = React.memo<FilterBarProps>(
                 })}
               </View>
 
-              <TouchableOpacity
-                style={styles.doneButton}
-                onPress={() => setShowEquipmentModal(false)}>
-                <Text style={styles.doneButtonText}>Готово</Text>
-              </TouchableOpacity>
+              <View style={styles.modalButtonsRow}>
+                {selectedEquipmentCount > 0 && (
+                  <TouchableOpacity
+                    style={[styles.doneButton, styles.clearButton]}
+                    onPress={handleClearEquipment}>
+                    <Text style={[styles.doneButtonText, styles.clearButtonText]}>Очистить</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={[styles.doneButton, selectedEquipmentCount > 0 && styles.doneButtonHalf]}
+                  onPress={() => setShowEquipmentModal(false)}>
+                  <Text style={styles.doneButtonText}>Готово</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </Pressable>
         </Modal>
@@ -265,6 +288,14 @@ export const FilterBar = React.memo<FilterBarProps>(
                   );
                 })}
               </View>
+
+              {currentFilters.maxDistance && (
+                <TouchableOpacity
+                  style={styles.resetButton}
+                  onPress={() => handleDistanceChange(undefined)}>
+                  <Text style={styles.resetButtonText}>Сбросить фильтр</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </Pressable>
         </Modal>
@@ -303,18 +334,6 @@ const styles = StyleSheet.create({
   },
   filterChipTextActive: {
     color: COLORS.background,
-  },
-  metroInputContainer: {
-    minWidth: 120,
-  },
-  metroInput: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: COLORS.backgroundSecondary,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    fontSize: 14,
   },
   modalOverlay: {
     flex: 1,
@@ -407,5 +426,41 @@ const styles = StyleSheet.create({
   distanceItemTextSelected: {
     color: COLORS.background,
     fontWeight: '600',
+  },
+  metroSelectorContainer: {
+    minWidth: 120,
+  },
+  modalButtonsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginHorizontal: 16,
+  },
+  doneButtonHalf: {
+    flex: 1,
+    margin: 0,
+  },
+  clearButton: {
+    flex: 1,
+    backgroundColor: COLORS.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    margin: 0,
+  },
+  clearButtonText: {
+    color: COLORS.text,
+  },
+  resetButton: {
+    margin: 16,
+    padding: 16,
+    borderRadius: 8,
+    backgroundColor: COLORS.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+  },
+  resetButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
   },
 });

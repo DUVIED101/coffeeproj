@@ -301,7 +301,10 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
 
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Metro Station (Optional)</Text>
-              <MetroSelector value={metroStation} onChange={setMetroStation} />
+              <MetroSelector
+                value={metroStation}
+                onChange={value => setMetroStation(Array.isArray(value) ? value[0] || '' : value)}
+              />
             </View>
 
             <View style={styles.inputContainer}>

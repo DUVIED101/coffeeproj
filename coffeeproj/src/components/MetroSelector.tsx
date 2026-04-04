@@ -11,12 +11,14 @@ import {
 } from 'react-native';
 import { MetroService } from '../utils/metro';
 import type { MetroStation } from '../utils/metro';
+import { COLORS } from '../config/constants';
 
 interface MetroSelectorProps {
-  value?: string;
-  onChange: (stationName: string) => void;
+  value?: string | string[]; // Support both single and multiple values
+  onChange: (stationNames: string | string[]) => void;
   placeholder?: string;
   error?: string;
+  multiSelect?: boolean; // Enable multi-select mode
 }
 
 export const MetroSelector: React.FC<MetroSelectorProps> = ({
@@ -24,9 +26,15 @@ export const MetroSelector: React.FC<MetroSelectorProps> = ({
   onChange,
   placeholder = 'Select metro station',
   error,
+  multiSelect = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const selectedStations = useMemo(() => {
+    if (!value) return [];
+    return Array.isArray(value) ? value : [value];
+  }, [value]);
 
   const filteredStations = useMemo(() => {
     const allStations = MetroService.getAllStations();
@@ -41,17 +49,42 @@ export const MetroSelector: React.FC<MetroSelectorProps> = ({
   }, [searchQuery]);
 
   const handleSelectStation = (station: MetroStation) => {
-    onChange(station.name);
+    if (multiSelect) {
+      // Multi-select mode: toggle selection
+      const newSelection = selectedStations.includes(station.name)
+        ? selectedStations.filter(s => s !== station.name)
+        : [...selectedStations, station.name];
+      onChange(newSelection);
+      setSearchQuery(''); // Clear search to show all stations again
+    } else {
+      // Single-select mode: close modal after selection
+      onChange(station.name);
+      setIsOpen(false);
+      setSearchQuery('');
+    }
+  };
+
+  const handleClear = () => {
+    onChange(multiSelect ? [] : '');
+  };
+
+  const handleDone = () => {
     setIsOpen(false);
     setSearchQuery('');
   };
 
-  const handleClear = () => {
-    onChange('');
+  const isStationSelected = (stationName: string): boolean => {
+    return selectedStations.includes(stationName);
+  };
+
+  const getDisplayText = (): string => {
+    if (selectedStations.length === 0) return placeholder;
+    if (selectedStations.length === 1) return selectedStations[0];
+    return `${selectedStations.length} станций`;
   };
 
   const renderStation = ({ item }: { item: MetroStation }) => {
-    console.log('[MetroSelector] Rendering station:', item.name);
+    const isSelected = isStationSelected(item.name);
     return (
       <TouchableOpacity style={styles.stationItem} onPress={() => handleSelectStation(item)}>
         <View style={[styles.lineIndicator, { backgroundColor: item.lineColor }]} />
@@ -59,6 +92,7 @@ export const MetroSelector: React.FC<MetroSelectorProps> = ({
           <Text style={styles.stationName}>{item.name}</Text>
           <Text style={styles.stationLine}>{item.line}</Text>
         </View>
+        {multiSelect && isSelected && <Text style={styles.checkmark}>✓</Text>}
       </TouchableOpacity>
     );
   };
@@ -68,12 +102,14 @@ export const MetroSelector: React.FC<MetroSelectorProps> = ({
       <TouchableOpacity
         style={[styles.selector, error ? styles.selectorError : null]}
         onPress={() => setIsOpen(true)}>
-        <Text style={[styles.selectorText, !value && styles.placeholder]}>
-          {value || placeholder}
+        <Text
+          style={[styles.selectorText, selectedStations.length === 0 && styles.placeholder]}
+          numberOfLines={1}>
+          {getDisplayText()}
         </Text>
       </TouchableOpacity>
 
-      {value && (
+      {selectedStations.length > 0 && (
         <TouchableOpacity style={styles.clearButton} onPress={handleClear}>
           <Text style={styles.clearButtonText}>✕</Text>
         </TouchableOpacity>
@@ -81,23 +117,21 @@ export const MetroSelector: React.FC<MetroSelectorProps> = ({
 
       {error && <Text style={styles.errorText}>{error}</Text>}
 
-      <Modal
-        visible={isOpen}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setIsOpen(false)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setIsOpen(false)}>
+      <Modal visible={isOpen} animationType="slide" transparent onRequestClose={handleDone}>
+        <Pressable style={styles.modalOverlay} onPress={handleDone}>
           <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Metro Station</Text>
-              <TouchableOpacity onPress={() => setIsOpen(false)}>
+              <Text style={styles.modalTitle}>
+                {multiSelect ? 'Выберите станции метро' : 'Выберите станцию метро'}
+              </Text>
+              <TouchableOpacity onPress={handleDone}>
                 <Text style={styles.closeButton}>✕</Text>
               </TouchableOpacity>
             </View>
 
             <TextInput
               style={styles.searchInput}
-              placeholder="Search station..."
+              placeholder="Поиск станции..."
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoFocus
@@ -111,10 +145,20 @@ export const MetroSelector: React.FC<MetroSelectorProps> = ({
               keyboardShouldPersistTaps="handled"
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>No stations found</Text>
+                  <Text style={styles.emptyText}>Станции не найдены</Text>
                 </View>
               }
             />
+
+            {multiSelect && (
+              <View style={styles.doneButtonContainer}>
+                <TouchableOpacity style={styles.doneButton} onPress={handleDone}>
+                  <Text style={styles.doneButtonText}>
+                    Готово {selectedStations.length > 0 && `(${selectedStations.length})`}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </Pressable>
       </Modal>
@@ -128,36 +172,37 @@ const styles = StyleSheet.create({
   },
   selector: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: '#fff',
+    borderColor: COLORS.border,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: COLORS.backgroundSecondary,
   },
   selectorError: {
-    borderColor: '#ff3b30',
+    borderColor: COLORS.error,
   },
   selectorText: {
-    fontSize: 16,
-    color: '#000',
+    fontSize: 14,
+    color: COLORS.text,
   },
   placeholder: {
-    color: '#999',
+    color: COLORS.textSecondary,
   },
   clearButton: {
     position: 'absolute',
     right: 12,
-    top: 12,
+    top: 8,
     width: 24,
     height: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
   clearButtonText: {
-    fontSize: 18,
-    color: '#999',
+    fontSize: 16,
+    color: COLORS.textSecondary,
   },
   errorText: {
-    color: '#ff3b30',
+    color: COLORS.error,
     fontSize: 12,
     marginTop: 4,
   },
@@ -232,5 +277,28 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: '#999',
+  },
+  checkmark: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: COLORS.primary,
+    marginLeft: 8,
+  },
+  doneButtonContainer: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    backgroundColor: COLORS.background,
+  },
+  doneButton: {
+    backgroundColor: COLORS.primary,
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  doneButtonText: {
+    color: COLORS.background,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

@@ -98,7 +98,7 @@ export interface UpdateJobData {
 export interface JobFilters {
   jobType?: JobType;
   equipment?: string[];
-  metroStation?: string;
+  metroStations?: string[]; // Changed from metroStation (singular) to metroStations (plural array)
   maxDistance?: number; // meters, default 50000
   city?: string;
 }
