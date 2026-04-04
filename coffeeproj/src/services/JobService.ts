@@ -186,7 +186,7 @@ export class JobService {
       const params = {
         user_lat: userLocation?.latitude ?? null,
         user_lon: userLocation?.longitude ?? null,
-        max_distance_meters: filters.maxDistance ?? 50000,
+        max_distance_meters: filters.maxDistance ?? 100000, // Default 100km radius
         metro_station_filter: filters.metroStation ?? null,
         job_type_filter: filters.jobType ?? null,
         equipment_filter: filters.equipment ?? null,
