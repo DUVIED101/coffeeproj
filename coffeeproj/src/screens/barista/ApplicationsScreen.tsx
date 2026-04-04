@@ -20,6 +20,7 @@ type BaristaStackParamList = {
   JobDetails: { jobId: string; distance?: number };
   Apply: { jobId: string };
   Applications: undefined;
+  ApplicationDetails: { application: Application };
 };
 
 type Props = {
@@ -132,9 +133,7 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleApplicationPress = useCallback(
     (application: Application) => {
-      if (application.job?.id) {
-        navigation.navigate('JobDetails', { jobId: application.job.id });
-      }
+      navigation.navigate('ApplicationDetails', { application });
     },
     [navigation]
   );
