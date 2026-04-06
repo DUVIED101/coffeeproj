@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Alert,
+  Image,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -21,6 +22,7 @@ type BusinessStackParamList = {
   CreateJob: undefined;
   JobDetails: { jobId: string };
   Applicants: { jobId: string };
+  ViewBaristaProfile: { baristaId: string };
 };
 
 type Props = {
@@ -65,12 +67,17 @@ interface ApplicantItemProps {
   application: Application;
   onAccept: () => void;
   onReject: () => void;
+  onViewProfile: () => void;
   isProcessing: boolean;
 }
 
 const ApplicantItem = React.memo<ApplicantItemProps>(
-  ({ application, onAccept, onReject, isProcessing }) => {
+  ({ application, onAccept, onReject, onViewProfile, isProcessing }) => {
+    const baristaProfile = application.baristaProfile;
     const baristaEmail = application.baristaEmail || 'Unknown';
+    const displayName = baristaProfile
+      ? `${baristaProfile.firstName} ${baristaProfile.lastName}`
+      : baristaEmail;
 
     const statusColor = getStatusColor(application.status);
     const statusText = getStatusText(application.status);
@@ -79,11 +86,27 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     return (
       <View style={styles.applicantCard}>
         <View style={styles.applicantHeader}>
-          <View style={styles.applicantInfo}>
-            <Text style={styles.baristaEmail}>{baristaEmail}</Text>
-            <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-              <Text style={styles.statusText}>{statusText}</Text>
+          <View style={styles.applicantHeaderLeft}>
+            {baristaProfile?.avatarUrl ? (
+              <Image source={{ uri: baristaProfile.avatarUrl }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarPlaceholderText}>
+                  {displayName.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+            <View style={styles.applicantInfo}>
+              <Text style={styles.baristaName}>{displayName}</Text>
+              {baristaProfile && baristaProfile.yearsOfExperience !== undefined && (
+                <Text style={styles.experienceText}>
+                  {baristaProfile.yearsOfExperience} years experience
+                </Text>
+              )}
             </View>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+            <Text style={styles.statusText}>{statusText}</Text>
           </View>
         </View>
 
@@ -97,6 +120,12 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
         <Text style={styles.appliedDate}>
           Applied: {new Date(application.createdAt).toLocaleDateString('ru-RU')}
         </Text>
+
+        {baristaProfile && (
+          <TouchableOpacity style={styles.viewProfileButton} onPress={onViewProfile}>
+            <Text style={styles.viewProfileButtonText}>View Profile</Text>
+          </TouchableOpacity>
+        )}
 
         {isActionable && (
           <View style={styles.actionButtons}>
@@ -127,7 +156,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
   }
 );
 
-export const ApplicantsScreen: React.FC<Props> = ({ route }) => {
+export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { jobId } = route.params;
 
   const [applications, setApplications] = useState<Application[]>([]);
@@ -179,16 +208,24 @@ export const ApplicantsScreen: React.FC<Props> = ({ route }) => {
     }
   }, []);
 
+  const handleViewProfile = useCallback(
+    (baristaId: string) => {
+      navigation.navigate('ViewBaristaProfile', { baristaId });
+    },
+    [navigation]
+  );
+
   const renderApplicant = useCallback(
     ({ item }: { item: Application }) => (
       <ApplicantItem
         application={item}
         onAccept={() => handleAccept(item.id)}
         onReject={() => handleReject(item.id)}
+        onViewProfile={() => handleViewProfile(item.baristaId)}
         isProcessing={processingId === item.id}
       />
     ),
-    [handleAccept, handleReject, processingId]
+    [handleAccept, handleReject, handleViewProfile, processingId]
   );
 
   const renderEmpty = () => (
@@ -266,18 +303,48 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
   },
   applicantHeader: {
-    marginBottom: 12,
-  },
-  applicantInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 12,
   },
-  baristaEmail: {
+  applicantHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
+  },
+  avatarPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  avatarPlaceholderText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  applicantInfo: {
+    flex: 1,
+  },
+  baristaName: {
     fontSize: 16,
     fontWeight: '600',
     color: COLORS.text,
-    flex: 1,
+    marginBottom: 2,
+  },
+  experienceText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
   },
   statusBadge: {
     paddingHorizontal: 12,
@@ -311,6 +378,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textSecondary,
     marginBottom: 12,
+  },
+  viewProfileButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  viewProfileButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary,
   },
   actionButtons: {
     flexDirection: 'row',

@@ -136,7 +136,7 @@ export class ApplicationService {
 
   /**
    * Get all applications for a specific job (business view)
-   * Includes barista email for display
+   * Includes barista email and profile information
    */
   static async getApplicationsByJob(jobId: string): Promise<Application[]> {
     try {
@@ -145,7 +145,15 @@ export class ApplicationService {
         .select(
           `
           *,
-          users!barista_id(email)
+          users!barista_id(email),
+          barista_profiles!barista_id(
+            first_name,
+            last_name,
+            avatar_url,
+            bio,
+            equipment_experience,
+            years_of_experience
+          )
         `
         )
         .eq('job_id', jobId)
@@ -156,6 +164,16 @@ export class ApplicationService {
       return (data || []).map(app => ({
         ...this.mapApplication(app),
         baristaEmail: app.users?.email,
+        baristaProfile: app.barista_profiles
+          ? {
+              firstName: app.barista_profiles.first_name,
+              lastName: app.barista_profiles.last_name,
+              avatarUrl: app.barista_profiles.avatar_url,
+              bio: app.barista_profiles.bio,
+              equipmentExperience: app.barista_profiles.equipment_experience || [],
+              yearsOfExperience: app.barista_profiles.years_of_experience,
+            }
+          : undefined,
       }));
     } catch (error) {
       console.error('Error in getApplicationsByJob:', error);

@@ -105,12 +105,18 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
       // Auth state will be updated automatically by authStore listener
       setUser(profile);
 
-      // Show success message
-      Alert.alert(
-        'Account Created',
-        'Your account has been created successfully!',
-        [{ text: 'OK' }]
-      );
+      // Show success message based on account type
+      if (accountType === 'barista') {
+        Alert.alert(
+          'Account Created',
+          'Your account has been created! Complete your profile to start applying for jobs.',
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert('Account Created', 'Your account has been created successfully!', [
+          { text: 'OK' },
+        ]);
+      }
     } catch (error: any) {
       console.error('Signup error:', error);
 
@@ -225,9 +231,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
                 secureTextEntry
                 autoCapitalize="none"
               />
-              {confirmPasswordError && (
-                <Text style={styles.errorText}>{confirmPasswordError}</Text>
-              )}
+              {confirmPasswordError && <Text style={styles.errorText}>{confirmPasswordError}</Text>}
             </View>
 
             {/* Signup Button */}

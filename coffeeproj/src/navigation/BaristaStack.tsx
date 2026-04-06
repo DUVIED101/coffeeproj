@@ -6,6 +6,8 @@ import { JobDetailsScreen } from '../screens/barista/JobDetailsScreen';
 import { ApplyScreen } from '../screens/barista/ApplyScreen';
 import { ApplicationsScreen } from '../screens/barista/ApplicationsScreen';
 import { ApplicationDetailsScreen } from '../screens/barista/ApplicationDetailsScreen';
+import { BaristaProfileScreen } from '../screens/barista/BaristaProfileScreen';
+import { BaristaProfileSetupScreen } from '../screens/barista/BaristaProfileSetupScreen';
 import { COLORS } from '../config/constants';
 import type { Job } from '../types';
 import type { Application } from '../types/application';
@@ -16,6 +18,8 @@ export type BaristaStackParamList = {
   Apply: { job: Job };
   Applications: undefined;
   ApplicationDetails: { application: Application };
+  BaristaProfile: undefined;
+  BaristaProfileSetup: undefined;
 };
 
 const Stack = createNativeStackNavigator<BaristaStackParamList>();
@@ -57,6 +61,16 @@ export const BaristaStack: React.FC = () => {
         name="ApplicationDetails"
         component={ApplicationDetailsScreen}
         options={{ title: 'Application Details' }}
+      />
+      <Stack.Screen
+        name="BaristaProfile"
+        component={BaristaProfileScreen}
+        options={{ title: 'My Profile' }}
+      />
+      <Stack.Screen
+        name="BaristaProfileSetup"
+        component={BaristaProfileSetupScreen}
+        options={{ title: 'Complete Your Profile' }}
       />
     </Stack.Navigator>
   );

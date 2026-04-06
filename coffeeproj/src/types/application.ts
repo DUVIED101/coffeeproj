@@ -15,6 +15,14 @@ export interface Application {
   // Joined fields (from database queries)
   job?: Job;
   baristaEmail?: string; // For business view of applicants
+  baristaProfile?: {
+    firstName: string;
+    lastName: string;
+    avatarUrl?: string;
+    bio?: string;
+    equipmentExperience: string[];
+    yearsOfExperience?: number;
+  };
 }
 
 export interface CreateApplicationData {

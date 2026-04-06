@@ -1,0 +1,60 @@
+// Barista Profile Types
+
+export type ShiftTime = 'morning' | 'afternoon' | 'evening' | 'night';
+
+export interface BaristaProfile {
+  id: string;
+  userId: string;
+
+  // Personal Info
+  firstName: string;
+  lastName: string;
+  dateOfBirth?: string;
+  city: string;
+  avatarUrl?: string;
+
+  // Professional Info
+  bio?: string;
+  yearsOfExperience?: number;
+  equipmentExperience: string[];
+  certifications: string[];
+  languages: string[];
+
+  // Work Preferences
+  preferredMetroStations: string[];
+  preferredShiftTimes: ShiftTime[];
+  hourlyRateMin?: number;
+  hourlyRateMax?: number;
+  availableFromDate?: string;
+
+  // Portfolio
+  portfolioPhotos: string[];
+
+  // Status
+  isActivelyLooking: boolean;
+  profileCompleteness: number;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateBaristaProfileData {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  city: string;
+  dateOfBirth?: string;
+  bio?: string;
+  yearsOfExperience?: number;
+  equipmentExperience?: string[];
+  certifications?: string[];
+  languages?: string[];
+  preferredMetroStations?: string[];
+  preferredShiftTimes?: ShiftTime[];
+  hourlyRateMin?: number;
+  hourlyRateMax?: number;
+}
+
+export interface UpdateBaristaProfileData extends Partial<
+  Omit<BaristaProfile, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'profileCompleteness'>
+> {}

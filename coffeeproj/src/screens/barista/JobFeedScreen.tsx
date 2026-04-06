@@ -8,19 +8,24 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
+import { BaristaProfileService } from '../../services/BaristaProfileService';
+import { useAuthStore } from '../../stores/authStore';
 import { FilterBar } from '../../components/FilterBar';
 import { JobCard } from '../../components/JobCard';
 import { requestLocationPermission, getCurrentLocation } from '../../utils/geolocation';
 import type { Job, JobFilters } from '../../types/job';
 import type { GeoPoint } from '../../types/business';
+import type { BaristaProfile } from '../../types/baristaProfile';
 
 type BaristaStackParamList = {
   JobFeed: undefined;
   JobDetails: { jobId: string };
+  BaristaProfileSetup: undefined;
 };
 
 type Props = {
@@ -45,15 +50,19 @@ const JobCardWithDistance = React.memo<{ job: Job; onPress: () => void }>(({ job
 });
 
 export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
+  const { user } = useAuthStore();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [userLocation, setUserLocation] = useState<GeoPoint | undefined>(undefined);
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   const [filters, setFilters] = useState<JobFilters>({});
+  const [baristaProfile, setBaristaProfile] = useState<BaristaProfile | null>(null);
+  const [showProfileBanner, setShowProfileBanner] = useState(false);
 
   useEffect(() => {
     initializeLocation();
+    loadBaristaProfile();
   }, []);
 
   useEffect(() => {
@@ -83,6 +92,21 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
     } catch (error) {
       console.error('Error initializing location:', error);
       setLocationPermissionDenied(true);
+    }
+  };
+
+  const loadBaristaProfile = async () => {
+    if (!user?.id) return;
+
+    try {
+      const profile = await BaristaProfileService.getProfileByUserId(user.id);
+      setBaristaProfile(profile);
+
+      if (!profile || profile.profileCompleteness < 50) {
+        setShowProfileBanner(true);
+      }
+    } catch (error) {
+      console.error('Error loading barista profile:', error);
     }
   };
 
@@ -152,6 +176,22 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.header}>
         <Text style={styles.title}>Поиск работы</Text>
       </View>
+
+      {showProfileBanner && (
+        <TouchableOpacity
+          style={styles.profileBanner}
+          onPress={() => navigation.navigate('BaristaProfileSetup')}>
+          <View style={styles.bannerContent}>
+            <Text style={styles.bannerTitle}>Complete Your Profile</Text>
+            <Text style={styles.bannerSubtitle}>
+              {!baristaProfile
+                ? 'Create your profile to stand out to employers'
+                : `Your profile is ${baristaProfile.profileCompleteness}% complete`}
+            </Text>
+          </View>
+          <Text style={styles.bannerArrow}>›</Text>
+        </TouchableOpacity>
+      )}
 
       <FilterBar
         onFilterChange={handleFilterChange}
@@ -223,5 +263,33 @@ const styles = StyleSheet.create({
     marginTop: -8,
     marginBottom: 12,
     marginLeft: 16,
+  },
+  profileBanner: {
+    backgroundColor: '#FEF3C7',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#FCD34D',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  bannerContent: {
+    flex: 1,
+  },
+  bannerTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#92400E',
+    marginBottom: 4,
+  },
+  bannerSubtitle: {
+    fontSize: 14,
+    color: '#92400E',
+  },
+  bannerArrow: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#92400E',
   },
 });

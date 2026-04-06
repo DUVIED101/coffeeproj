@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/authStore';
 import { COLORS } from '../config/constants';
 import { BusinessStack } from './BusinessStack';
 import { BaristaStack } from './BaristaStack';
+import { ProfileStack } from './ProfileStack';
 
 // Placeholder screens for now
 const HomeScreen = () => {
@@ -22,12 +23,12 @@ const HomeScreen = () => {
   );
 };
 
-const ProfileScreen = () => {
+const BusinessProfilePlaceholder = () => {
   const { user } = useAuthStore();
 
   return (
     <View style={styles.screen}>
-      <Text style={styles.title}>Profile</Text>
+      <Text style={styles.title}>Business Profile</Text>
       <Text style={styles.subtitle}>Account Type: {user?.accountType}</Text>
       <Text style={styles.subtitle}>Status: {user?.isVerified ? 'Verified' : 'Not Verified'}</Text>
     </View>
@@ -122,10 +123,11 @@ export const MainTabs: React.FC = () => {
       />
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={user.accountType === 'barista' ? ProfileStack : BusinessProfilePlaceholder}
         options={{
           title: 'Profile',
           tabBarLabel: 'Profile',
+          headerShown: false,
         }}
       />
     </Tab.Navigator>
