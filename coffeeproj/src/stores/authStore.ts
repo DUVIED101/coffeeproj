@@ -1,7 +1,10 @@
 import { create } from 'zustand';
 import type { Session } from '@supabase/supabase-js';
 import type { User } from '../types';
+import type { UserId } from '../types/ids';
 import { supabase } from '../config/supabase';
+import { AuthService } from '../services/AuthService';
+import { NotificationService } from '../services/NotificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AuthState {
@@ -17,6 +20,7 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
   initialize: () => Promise<void>;
   signOut: () => Promise<void>;
+  deleteAccount: (params: { password: string; force?: boolean }) => Promise<void>;
   clearAuth: () => void;
 }
 
@@ -110,6 +114,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isLoading: true });
 
+      const currentUserId = get().user?.id;
+      if (currentUserId) {
+        try {
+          await NotificationService.unregisterDevice(currentUserId as UserId);
+        } catch (err) {
+          console.warn('Error unregistering device on sign out:', err);
+        }
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Error signing out:', error);
@@ -120,6 +133,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await AsyncStorage.removeItem('supabase.auth.token');
     } catch (error) {
       console.error('Error during sign out:', error);
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  // Delete the current user's account and clear local session state.
+  deleteAccount: async (params: { password: string; force?: boolean }) => {
+    try {
+      set({ isLoading: true });
+
+      const currentUserId = get().user?.id;
+      if (currentUserId) {
+        try {
+          await NotificationService.unregisterDevice(currentUserId as UserId);
+        } catch (err) {
+          console.warn('Error unregistering device on delete:', err);
+        }
+      }
+
+      await AuthService.deleteAccount(params);
+
+      get().clearAuth();
+      await AsyncStorage.removeItem('supabase.auth.token');
+    } catch (error) {
+      console.error('Error during deleteAccount:', error);
       throw error;
     } finally {
       set({ isLoading: false });

@@ -1,27 +1,15 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { createBottomTabNavigator, BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
 import { Pressable } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAuthStore } from '../stores/authStore';
 import { COLORS } from '../config/constants';
 import { BusinessStack } from './BusinessStack';
 import { BaristaStack } from './BaristaStack';
 import { ProfileStack } from './ProfileStack';
-
-// Placeholder screens for now
-const HomeScreen = () => {
-  const { user, signOut } = useAuthStore();
-
-  return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>Welcome!</Text>
-      <Text style={styles.subtitle}>Email: {user?.email}</Text>
-      <TouchableOpacity style={styles.button} onPress={signOut}>
-        <Text style={styles.buttonText}>Sign Out</Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
+import { SettingsStack } from './SettingsStack';
 
 const BusinessProfilePlaceholder = () => {
   const { user } = useAuthStore();
@@ -36,7 +24,7 @@ const BusinessProfilePlaceholder = () => {
 };
 
 export type MainTabsParamList = {
-  Home: undefined;
+  Settings: undefined;
   Jobs: undefined;
   Business: undefined;
   Profile: undefined;
@@ -46,6 +34,7 @@ const Tab = createBottomTabNavigator<MainTabsParamList>();
 
 export const MainTabs: React.FC = () => {
   const { user, isLoading } = useAuthStore();
+  const { t } = useTranslation();
 
   if (isLoading || !user) {
     return (
@@ -70,11 +59,15 @@ export const MainTabs: React.FC = () => {
         headerTintColor: COLORS.text,
       }}>
       <Tab.Screen
-        name="Home"
-        component={HomeScreen}
+        name="Settings"
+        component={SettingsStack}
         options={{
-          title: 'Home',
-          tabBarLabel: 'Home',
+          title: t('settings.title'),
+          tabBarLabel: t('settings.title'),
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="cog" color={color} size={size} />
+          ),
         }}
       />
       <Tab.Screen
@@ -152,16 +145,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.textSecondary,
     marginBottom: 24,
-  },
-  button: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: COLORS.background,
-    fontSize: 16,
-    fontWeight: '600',
   },
 });

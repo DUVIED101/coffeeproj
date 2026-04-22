@@ -33,5 +33,92 @@
     "accept": "Принять",
     "reject": "Отклонить",
     "coverLetter": "Сопроводительное письмо"
+  },
+  "common": {
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "confirm": "Подтвердить",
+    "back": "Назад",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "success": "Готово",
+    "close": "Закрыть",
+    "retry": "Повторить"
+  },
+  "settings": {
+    "title": "Настройки",
+    "sections": {
+      "account": "Аккаунт",
+      "preferences": "Параметры",
+      "privacy": "Приватность",
+      "about": "О приложении",
+      "dangerZone": "Опасная зона"
+    },
+    "items": {
+      "email": "Email",
+      "phone": "Телефон",
+      "changePassword": "Изменить пароль",
+      "verificationStatus": "Статус верификации",
+      "language": "Язык",
+      "notifications": "Уведомления",
+      "visibility": "Видимость профиля",
+      "terms": "Условия использования",
+      "privacyPolicy": "Политика конфиденциальности",
+      "support": "Поддержка",
+      "appVersion": "Версия приложения",
+      "signOut": "Выйти",
+      "deleteAccount": "Удалить аккаунт"
+    },
+    "language": {
+      "title": "Язык",
+      "russian": "Русский",
+      "english": "English"
+    },
+    "password": {
+      "title": "Изменить пароль",
+      "current": "Текущий пароль",
+      "new": "Новый пароль",
+      "confirm": "Подтвердите пароль",
+      "submit": "Сохранить",
+      "minLength": "Пароль должен быть не менее 8 символов",
+      "mismatch": "Пароли не совпадают",
+      "sameAsCurrent": "Новый пароль совпадает с текущим",
+      "invalidCurrent": "Неверный текущий пароль",
+      "success": "Пароль изменён"
+    },
+    "notifications": {
+      "title": "Уведомления",
+      "newMessage": "Новые сообщения",
+      "applicationAccepted": "Отклик принят",
+      "applicationRejected": "Отклик отклонён",
+      "deliveryPending": "Push-уведомления будут включены в ближайшем обновлении"
+    },
+    "visibility": {
+      "title": "Видимость",
+      "baristaToggle": "Активно ищу работу",
+      "baristaHint": "Когда выключено, вы не отображаетесь в поиске бизнеса",
+      "businessToggle": "Принимаем заявки",
+      "businessHint": "Когда выключено, ваши вакансии скрыты из ленты бариста"
+    },
+    "delete": {
+      "title": "Удалить аккаунт",
+      "warning": "Это действие необратимо. Все данные, вакансии, отклики и сообщения будут удалены навсегда.",
+      "typeToConfirm": "Введите УДАЛИТЬ для подтверждения",
+      "confirmKeyword": "УДАЛИТЬ",
+      "passwordLabel": "Введите пароль",
+      "activeJobsWarning": "У вас есть {{count}} активных вакансий. Они будут отменены.",
+      "forceCheckbox": "Я понимаю и хочу удалить аккаунт",
+      "submit": "Удалить аккаунт навсегда",
+      "invalidPassword": "Неверный пароль"
+    },
+    "legal": {
+      "termsTitle": "Условия использования",
+      "privacyTitle": "Политика конфиденциальности",
+      "supportTitle": "Поддержка",
+      "supportEmail": "support@coffendozz.ru",
+      "supportContactHint": "Свяжитесь с нами:",
+      "appVersion": "Версия приложения"
+    }
   }
 }

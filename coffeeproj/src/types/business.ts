@@ -24,6 +24,7 @@ export interface Business {
   description?: string;
   businessType: BusinessType;
   isVerified: boolean;
+  isAcceptingApplications?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -62,6 +63,7 @@ export interface UpdateBusinessData {
   name?: string;
   description?: string;
   businessType?: BusinessType;
+  isAcceptingApplications?: boolean;
 }
 
 export interface CreateBranchData {

@@ -20,6 +20,7 @@ export class BusinessService {
       description: db.description,
       businessType: db.business_type,
       isVerified: db.is_verified,
+      isAcceptingApplications: db.is_accepting_applications ?? true,
       createdAt: db.created_at,
       updatedAt: db.updated_at,
     };
@@ -133,6 +134,9 @@ export class BusinessService {
       }
       if (updates.businessType !== undefined) {
         dbUpdates.business_type = updates.businessType;
+      }
+      if (updates.isAcceptingApplications !== undefined) {
+        dbUpdates.is_accepting_applications = updates.isAcceptingApplications;
       }
 
       const { data, error } = await supabase

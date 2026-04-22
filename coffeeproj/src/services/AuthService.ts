@@ -235,4 +235,103 @@ export class AuthService {
       throw error;
     }
   }
+
+  /**
+   * Change password by re-authenticating with current password first.
+   * Does NOT sign the user out on success.
+   */
+  static async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) throw sessionError;
+      if (!session?.user?.email) {
+        throw new Error('No active session');
+      }
+
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: session.user.email,
+        password: currentPassword,
+      });
+
+      if (reauthError) {
+        throw new Error('invalid_current_password');
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (updateError) throw updateError;
+    } catch (error) {
+      console.error('Error in changePassword:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete the current user's account via the `delete-user` Edge Function.
+   * On success, clears the local session.
+   */
+  static async deleteAccount(params: { password: string; force?: boolean }): Promise<void> {
+    try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) throw sessionError;
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: {
+          password: params.password,
+          force: params.force ?? false,
+        },
+      });
+
+      if (error) {
+        const ctx = (error as { context?: Response }).context;
+        const status = ctx?.status;
+        let rawBody = '';
+        let payload: { error?: string; count?: number } = {};
+        if (ctx && typeof ctx.text === 'function') {
+          try {
+            rawBody = await ctx.text();
+            try {
+              payload = JSON.parse(rawBody) as typeof payload;
+            } catch {
+              payload = {};
+            }
+          } catch {
+            rawBody = '';
+          }
+        }
+        console.error('[deleteAccount] edge function error', {
+          status,
+          rawBody,
+          errorName: (error as Error).name,
+          errorMessage: error.message,
+        });
+        if (status === 403) {
+          throw new Error('invalid_password');
+        }
+        if (status === 409) {
+          throw new Error(`active_jobs:${payload.count ?? 0}`);
+        }
+        throw new Error(payload.error ?? error.message ?? 'delete_account_failed');
+      }
+      void data;
+
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error in deleteAccount:', error);
+      throw error;
+    }
+  }
 }

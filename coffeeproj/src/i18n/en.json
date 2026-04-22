@@ -33,5 +33,92 @@
     "accept": "Accept",
     "reject": "Reject",
     "coverLetter": "Cover Letter"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "close": "Close",
+    "retry": "Retry"
+  },
+  "settings": {
+    "title": "Settings",
+    "sections": {
+      "account": "Account",
+      "preferences": "Preferences",
+      "privacy": "Privacy",
+      "about": "About",
+      "dangerZone": "Danger Zone"
+    },
+    "items": {
+      "email": "Email",
+      "phone": "Phone",
+      "changePassword": "Change Password",
+      "verificationStatus": "Verification Status",
+      "language": "Language",
+      "notifications": "Notifications",
+      "visibility": "Profile Visibility",
+      "terms": "Terms of Service",
+      "privacyPolicy": "Privacy Policy",
+      "support": "Support",
+      "appVersion": "App Version",
+      "signOut": "Sign Out",
+      "deleteAccount": "Delete Account"
+    },
+    "language": {
+      "title": "Language",
+      "russian": "Русский",
+      "english": "English"
+    },
+    "password": {
+      "title": "Change Password",
+      "current": "Current Password",
+      "new": "New Password",
+      "confirm": "Confirm Password",
+      "submit": "Save",
+      "minLength": "Password must be at least 8 characters",
+      "mismatch": "Passwords do not match",
+      "sameAsCurrent": "New password matches current password",
+      "invalidCurrent": "Incorrect current password",
+      "success": "Password changed"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "newMessage": "New messages",
+      "applicationAccepted": "Application accepted",
+      "applicationRejected": "Application rejected",
+      "deliveryPending": "Push notifications will be enabled in an upcoming update"
+    },
+    "visibility": {
+      "title": "Visibility",
+      "baristaToggle": "Actively looking for work",
+      "baristaHint": "When off, you won't appear in business searches",
+      "businessToggle": "Accepting applications",
+      "businessHint": "When off, your jobs are hidden from the barista feed"
+    },
+    "delete": {
+      "title": "Delete Account",
+      "warning": "This action is irreversible. All your data, jobs, applications, and messages will be permanently removed.",
+      "typeToConfirm": "Type DELETE to confirm",
+      "confirmKeyword": "DELETE",
+      "passwordLabel": "Enter your password",
+      "activeJobsWarning": "You have {{count}} active jobs. They will be cancelled.",
+      "forceCheckbox": "I understand and want to delete my account",
+      "submit": "Delete account permanently",
+      "invalidPassword": "Incorrect password"
+    },
+    "legal": {
+      "termsTitle": "Terms of Service",
+      "privacyTitle": "Privacy Policy",
+      "supportTitle": "Support",
+      "supportEmail": "support@coffendozz.ru",
+      "supportContactHint": "Contact us:",
+      "appVersion": "App Version"
+    }
   }
 }
