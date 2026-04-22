@@ -8,6 +8,10 @@
 .idea/
 .vscode/
 .zed/
+.cursor/
+
+# TypeScript incremental build cache
+*.tsbuildinfo
 
 # Environment / secrets (defense in depth — coffeeproj/.gitignore already covers that subdir)
 .env
@@ -18,6 +22,14 @@
 *.p8
 *.p12
 *.mobileprovision
+
+# Generic private keys / certificates — NEVER commit
+*.pem
+*.key
+*.crt
+*.cer
+secrets/
+credentials/
 
 # Supabase CLI local state
 supabase/.temp/
