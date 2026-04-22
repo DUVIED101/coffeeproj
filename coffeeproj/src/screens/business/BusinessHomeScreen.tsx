@@ -13,6 +13,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import { JobCard } from '../../components/JobCard';
+import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { JobService } from '../../services/JobService';
 import { BusinessService } from '../../services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
@@ -38,6 +39,17 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isLoadingBranches, setIsLoadingBranches] = useState(false);
   const [isRefreshingBranches, setIsRefreshingBranches] = useState(false);
+
+  useEffect(() => {
+    navigation.setOptions({
+      header: () => (
+        <ScreenHeaderWithActions
+          title="My Business"
+          actions={[{ label: 'Chats', onPress: () => navigation.navigate('ConversationsList') }]}
+        />
+      ),
+    });
+  }, [navigation]);
 
   useEffect(() => {
     if (activeTab === 'jobs') {
@@ -102,6 +114,10 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
 
   const handleCreateJob = () => {
     navigation.navigate('CreateJob');
+  };
+
+  const handleManageBranches = () => {
+    navigation.navigate('BranchManagement', { businessId });
   };
 
   const filteredJobs = jobs.filter(job => job.status === selectedStatus);
@@ -192,10 +208,17 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateText}>No branches yet</Text>
+              <TouchableOpacity style={styles.emptyStateButton} onPress={handleManageBranches}>
+                <Text style={styles.emptyStateButtonText}>Add Branch</Text>
+              </TouchableOpacity>
             </View>
           }
         />
       )}
+
+      <TouchableOpacity style={styles.fab} onPress={handleManageBranches}>
+        <Text style={styles.fabText}>+</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -312,6 +335,18 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 16,
     color: COLORS.textSecondary,
+    marginBottom: 16,
+  },
+  emptyStateButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: COLORS.primary,
+  },
+  emptyStateButtonText: {
+    fontSize: 14,
+    color: COLORS.background,
+    fontWeight: '600',
   },
   fab: {
     position: 'absolute',

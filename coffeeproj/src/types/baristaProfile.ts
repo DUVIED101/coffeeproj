@@ -1,5 +1,7 @@
 // Barista Profile Types
 
+import type { Equipment } from './business';
+
 export type ShiftTime = 'morning' | 'afternoon' | 'evening' | 'night';
 
 export interface BaristaProfile {
@@ -58,3 +60,15 @@ export interface CreateBaristaProfileData {
 export interface UpdateBaristaProfileData extends Partial<
   Omit<BaristaProfile, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'profileCompleteness'>
 > {}
+
+export type BaristaFilters = {
+  city?: string;
+  equipment?: Equipment[];
+  metroStations?: string[];
+  minYearsExperience?: number;
+  hourlyRateMax?: number;
+  shiftTimes?: ShiftTime[];
+  languages?: string[];
+  certifications?: string[];
+  minCompleteness?: number;
+};

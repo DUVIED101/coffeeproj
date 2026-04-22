@@ -174,6 +174,39 @@ export class JobService {
   }
 
   /**
+   * Get jobs for a business by the owner's user id.
+   * Defaults to open jobs only (activeOnly=true) for discovery use cases.
+   */
+  static async getJobsByOwnerId(ownerUserId: string, activeOnly = true): Promise<Job[]> {
+    try {
+      let query = supabase
+        .from('jobs')
+        .select(
+          `
+          *,
+          businesses (name),
+          branches (name, metro_station)
+        `
+        )
+        .eq('business_owner_id', ownerUserId)
+        .order('posted_at', { ascending: false });
+
+      if (activeOnly) {
+        query = query.eq('status', 'open');
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      return (data || []).map(job => this.mapJobWithJoins(job));
+    } catch (error) {
+      console.error('Error in getJobsByOwnerId:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Search jobs with filters and geolocation
    */
   static async searchJobs(

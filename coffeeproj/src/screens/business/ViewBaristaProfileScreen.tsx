@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,15 +8,19 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  TouchableOpacity,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
+import { ChatService } from '../../services/ChatService';
+import { useAuthStore } from '../../stores/authStore';
 import type { BaristaProfile, ShiftTime } from '../../types/baristaProfile';
 
 type BusinessStackParamList = {
   ViewBaristaProfile: { baristaId: string };
+  Chat: { applicationId?: string; conversationId?: string };
 };
 
 type Props = {
@@ -33,13 +37,39 @@ const SHIFT_TIMES: { value: ShiftTime; label: string }[] = [
 
 export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route }) => {
   const { baristaId } = route.params;
+  const currentUser = useAuthStore(state => state.user);
 
   const [profile, setProfile] = useState<BaristaProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isStartingConversation, setIsStartingConversation] = useState(false);
 
   useEffect(() => {
     loadProfile();
   }, []);
+
+  const handleStartConversation = useCallback(async () => {
+    if (!currentUser?.id || !profile || isStartingConversation) return;
+
+    setIsStartingConversation(true);
+    try {
+      const conversation = await ChatService.getOrCreateConversation(
+        currentUser.id,
+        profile.userId,
+        null
+      );
+      navigation.navigate('Chat', { conversationId: conversation.id });
+    } catch (error: any) {
+      console.error('Error starting conversation:', error);
+      const message: string = error?.message ?? '';
+      if (message.includes('Rate limit exceeded')) {
+        Alert.alert('Ограничение', 'Слишком много новых диалогов за последний час.');
+      } else {
+        Alert.alert('Ошибка', 'Не удалось открыть диалог. Попробуйте еще раз.');
+      }
+    } finally {
+      setIsStartingConversation(false);
+    }
+  }, [currentUser?.id, profile, isStartingConversation, navigation]);
 
   const loadProfile = async () => {
     try {
@@ -172,6 +202,22 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
           </View>
         )}
 
+        {currentUser?.accountType === 'business' && profile.isActivelyLooking && (
+          <View style={styles.messageButtonContainer}>
+            <TouchableOpacity
+              style={[styles.messageButton, isStartingConversation && styles.messageButtonDisabled]}
+              onPress={handleStartConversation}
+              disabled={isStartingConversation}
+              activeOpacity={0.7}>
+              {isStartingConversation ? (
+                <ActivityIndicator color={COLORS.background} />
+              ) : (
+                <Text style={styles.messageButtonText}>Написать</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View style={styles.section}>
           <Text style={styles.noteTitle}>Note</Text>
           <Text style={styles.noteText}>
@@ -296,6 +342,25 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 8,
+  },
+  messageButtonContainer: {
+    paddingHorizontal: 20,
+    marginTop: 16,
+  },
+  messageButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  messageButtonDisabled: {
+    opacity: 0.6,
+  },
+  messageButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
   noteTitle: {
     fontSize: 14,

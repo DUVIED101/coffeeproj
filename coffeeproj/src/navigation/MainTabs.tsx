@@ -7,6 +7,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useAuthStore } from '../stores/authStore';
 import { COLORS } from '../config/constants';
 import { BusinessStack } from './BusinessStack';
+import { BusinessSearchStack } from './BusinessSearchStack';
 import { BaristaStack } from './BaristaStack';
 import { ProfileStack } from './ProfileStack';
 import { SettingsStack } from './SettingsStack';
@@ -27,6 +28,7 @@ export type MainTabsParamList = {
   Settings: undefined;
   Jobs: undefined;
   Business: undefined;
+  Baristas: undefined;
   Profile: undefined;
 };
 
@@ -110,6 +112,28 @@ export const MainTabs: React.FC = () => {
             }
 
             // Otherwise, render default Pressable button
+            return <Pressable {...props} />;
+          },
+        }}
+      />
+      <Tab.Screen
+        name="Baristas"
+        component={BusinessSearchStack}
+        options={{
+          title: 'Baristas',
+          tabBarLabel: 'Baristas',
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="coffee" color={color} size={size} />
+          ),
+          tabBarButton: (props: BottomTabBarButtonProps) => {
+            const { user } = useAuthStore.getState();
+            const isBusinessUser = user?.accountType === 'business';
+
+            if (!isBusinessUser) {
+              return null;
+            }
+
             return <Pressable {...props} />;
           },
         }}

@@ -21,6 +21,7 @@ import type { BusinessType } from '../../types';
 
 type BusinessStackParamList = {
   CreateBusiness: undefined;
+  BusinessHome: { businessId: string };
   BranchManagement: { businessId: string };
 };
 
@@ -67,6 +68,12 @@ export const CreateBusinessScreen: React.FC<Props> = ({ navigation }) => {
     setIsLoading(true);
 
     try {
+      const existing = await BusinessService.getBusinessByOwnerId(user.id);
+      if (existing) {
+        navigation.replace('BusinessHome', { businessId: existing.id });
+        return;
+      }
+
       const business = await BusinessService.createBusiness({
         ownerId: user.id,
         name: name.trim(),

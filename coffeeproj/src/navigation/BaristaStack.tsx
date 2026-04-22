@@ -1,7 +1,7 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { JobFeedScreen } from '../screens/barista/JobFeedScreen';
+import { ScreenHeaderWithActions } from '../components/ScreenHeaderWithActions';
 import { JobDetailsScreen } from '../screens/barista/JobDetailsScreen';
 import { ApplyScreen } from '../screens/barista/ApplyScreen';
 import { ApplicationsScreen } from '../screens/barista/ApplicationsScreen';
@@ -10,7 +10,7 @@ import { BaristaProfileScreen } from '../screens/barista/BaristaProfileScreen';
 import { BaristaProfileSetupScreen } from '../screens/barista/BaristaProfileSetupScreen';
 import { ChatScreen } from '../screens/chat/ChatScreen';
 import { ConversationsListScreen } from '../screens/chat/ConversationsListScreen';
-import { COLORS } from '../config/constants';
+import { BusinessJobsScreen } from '../screens/barista/BusinessJobsScreen';
 import type { Job } from '../types';
 import type { Application } from '../types/application';
 
@@ -22,8 +22,9 @@ export type BaristaStackParamList = {
   ApplicationDetails: { application: Application };
   BaristaProfile: undefined;
   BaristaProfileSetup: undefined;
-  Chat: { applicationId: string; conversationId?: string };
+  Chat: { applicationId?: string; conversationId?: string };
   ConversationsList: undefined;
+  BusinessJobs: { businessOwnerId: string; businessName?: string };
 };
 
 const Stack = createNativeStackNavigator<BaristaStackParamList>();
@@ -40,13 +41,17 @@ export const BaristaStack: React.FC = () => {
         name="JobFeed"
         component={JobFeedScreen}
         options={({ navigation }) => ({
-          title: 'Find Jobs',
-          headerRight: () => (
-            <TouchableOpacity
-              style={styles.headerButton}
-              onPress={() => navigation.navigate('Applications')}>
-              <Text style={styles.headerButtonText}>My Applications</Text>
-            </TouchableOpacity>
+          header: () => (
+            <ScreenHeaderWithActions
+              title="Find Jobs"
+              actions={[
+                { label: 'Chats', onPress: () => navigation.navigate('ConversationsList') },
+                {
+                  label: 'My Applications',
+                  onPress: () => navigation.navigate('Applications'),
+                },
+              ]}
+            />
           ),
         })}
       />
@@ -82,17 +87,11 @@ export const BaristaStack: React.FC = () => {
         component={ConversationsListScreen}
         options={{ title: 'Conversations' }}
       />
+      <Stack.Screen
+        name="BusinessJobs"
+        component={BusinessJobsScreen}
+        options={{ title: 'Jobs' }}
+      />
     </Stack.Navigator>
   );
 };
-
-const styles = StyleSheet.create({
-  headerButton: {
-    marginRight: 16,
-  },
-  headerButtonText: {
-    color: COLORS.primary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

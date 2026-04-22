@@ -17,6 +17,8 @@ import type { RouteProp } from '@react-navigation/native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { COLORS } from '../../config/constants';
 import { ChatService } from '../../services/ChatService';
+import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
+import type { HeaderAction } from '../../components/ScreenHeaderWithActions';
 import { useAuthStore } from '../../stores/authStore';
 import type { Message, ConversationId, Conversation } from '../../types/chat';
 import { formatDateHeader, isSameDay } from '../../utils/dateUtils';
@@ -82,12 +84,21 @@ export function ChatScreen({ navigation, route }: any) {
     }
 
     try {
-      let conv = await ChatService.getConversationByApplication(applicationId);
+      let conv: Conversation | null = null;
 
-      // If conversation doesn't exist (old application), create it automatically
+      if (initialConversationId && !applicationId) {
+        conv = await ChatService.getConversationById(initialConversationId as ConversationId);
+      } else {
+        conv = await ChatService.getConversationByApplication(applicationId);
+
+        if (!conv) {
+          console.log('Conversation not found, creating one for application:', applicationId);
+          conv = await ChatService.createConversation(applicationId);
+        }
+      }
+
       if (!conv) {
-        console.log('Conversation not found, creating one for application:', applicationId);
-        conv = await ChatService.createConversation(applicationId);
+        return;
       }
 
       setConversation(conv);
@@ -101,11 +112,44 @@ export function ChatScreen({ navigation, route }: any) {
     } finally {
       setIsLoading(false);
     }
-  }, [applicationId, user?.id]);
+  }, [applicationId, initialConversationId, user?.id]);
 
   useEffect(() => {
     loadConversationAndMessages();
   }, [loadConversationAndMessages]);
+
+  useEffect(() => {
+    const businessOwnerId = conversation?.businessId;
+    const businessName = conversation?.businessName;
+    const actions: HeaderAction[] | undefined =
+      user?.accountType === 'barista' && businessOwnerId
+        ? [
+            {
+              label: 'Вакансии',
+              onPress: () => navigation.navigate('BusinessJobs', { businessOwnerId, businessName }),
+            },
+          ]
+        : undefined;
+    const otherPartyName =
+      user?.accountType === 'barista' ? businessName : conversation?.baristaName;
+    const title = conversation?.jobTitle || otherPartyName || 'Chat';
+    navigation.setOptions({
+      header: () => (
+        <ScreenHeaderWithActions
+          title={title}
+          onBack={() => navigation.goBack()}
+          actions={actions}
+        />
+      ),
+    });
+  }, [
+    navigation,
+    user?.accountType,
+    conversation?.businessId,
+    conversation?.businessName,
+    conversation?.baristaName,
+    conversation?.jobTitle,
+  ]);
 
   useEffect(() => {
     if (!conversation || !user?.id) return;

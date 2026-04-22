@@ -7,3 +7,4 @@ export * from './application';
 export * from './chat';
 export * from './notification';
 export * from './notificationPreferences';
+export * from './baristaProfile';

@@ -40,6 +40,8 @@ const ConversationItem = React.memo<{
     : conversation.unreadCountBusiness;
 
   const otherPartyName = isBarista ? conversation.businessName : conversation.baristaName;
+  const title = conversation.jobTitle || otherPartyName || 'Chat';
+  const showSubtitle = !!otherPartyName && title !== otherPartyName;
 
   const statusColor = getStatusColor(conversation.applicationStatus);
 
@@ -48,9 +50,9 @@ const ConversationItem = React.memo<{
       <View style={styles.conversationHeader}>
         <View style={styles.conversationInfo}>
           <Text style={styles.jobTitle} numberOfLines={1}>
-            {conversation.jobTitle || 'Chat'}
+            {title}
           </Text>
-          {otherPartyName && (
+          {showSubtitle && (
             <Text style={styles.otherPartyName} numberOfLines={1}>
               {otherPartyName}
             </Text>

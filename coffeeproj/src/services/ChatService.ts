@@ -48,7 +48,7 @@ export class ChatService {
         .select(
           `
           *,
-          applications!inner(
+          applications(
             status,
             jobs!inner(
               title,
@@ -73,11 +73,14 @@ export class ChatService {
       if (!data) return null;
 
       const baristaProfile = data.users?.barista_profiles;
+      const joinedBusinessName = data.applications?.jobs?.businesses?.name;
+      const businessName =
+        joinedBusinessName ?? (await this.fetchBusinessNameByOwnerId(data.business_id));
 
       return {
         ...this.mapConversation(data),
         jobTitle: data.applications?.jobs?.title,
-        businessName: data.applications?.jobs?.businesses?.name,
+        businessName,
         baristaName: baristaProfile
           ? `${baristaProfile.first_name} ${baristaProfile.last_name}`
           : undefined,
@@ -85,6 +88,61 @@ export class ChatService {
       };
     } catch (error) {
       console.error('Error in getConversationByApplication:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get conversation by its own id. Uses outer joins so manual (application_id IS NULL)
+   * conversations still resolve. Returns null when no row matches.
+   */
+  static async getConversationById(id: ConversationId): Promise<Conversation | null> {
+    try {
+      const { data, error } = await supabase
+        .from('conversations')
+        .select(
+          `
+          *,
+          applications(
+            status,
+            jobs!inner(
+              title,
+              businesses!inner(name)
+            )
+          ),
+          users!barista_id(
+            barista_profiles(first_name, last_name)
+          )
+        `
+        )
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null;
+        }
+        throw error;
+      }
+
+      if (!data) return null;
+
+      const baristaProfile = data.users?.barista_profiles;
+      const joinedBusinessName = data.applications?.jobs?.businesses?.name;
+      const businessName =
+        joinedBusinessName ?? (await this.fetchBusinessNameByOwnerId(data.business_id));
+
+      return {
+        ...this.mapConversation(data),
+        jobTitle: data.applications?.jobs?.title,
+        businessName,
+        baristaName: baristaProfile
+          ? `${baristaProfile.first_name} ${baristaProfile.last_name}`
+          : undefined,
+        applicationStatus: data.applications?.status,
+      };
+    } catch (error) {
+      console.error('Error in getConversationById:', error);
       throw error;
     }
   }
@@ -142,6 +200,198 @@ export class ChatService {
   }
 
   /**
+   * Get or create a conversation between a business and a barista.
+   * When jobId is null, reuses or creates a manual (application-less) conversation.
+   * When jobId is provided, delegates to application-linked helpers.
+   */
+  static async getOrCreateConversation(
+    businessUserId: string,
+    baristaUserId: string,
+    jobId: string | null
+  ): Promise<Conversation> {
+    try {
+      if (jobId !== null) {
+        const { data: application, error: appError } = await supabase
+          .from('applications')
+          .select('id')
+          .eq('job_id', jobId)
+          .eq('barista_id', baristaUserId)
+          .maybeSingle();
+
+        if (appError) throw appError;
+        if (!application) throw new Error('Application not found for job and barista');
+
+        const existing = await this.getConversationByApplication(application.id);
+        if (existing) return existing;
+        return await this.createConversation(application.id);
+      }
+
+      const existing = await this.findManualConversation(businessUserId, baristaUserId);
+      if (existing) return existing;
+
+      await this.enforceManualConversationRateLimit(businessUserId);
+
+      try {
+        const { data: conversation, error: convError } = await supabase
+          .from('conversations')
+          .insert({
+            application_id: null,
+            business_id: businessUserId,
+            barista_id: baristaUserId,
+          })
+          .select()
+          .single();
+
+        if (convError) throw convError;
+        if (!conversation) throw new Error('Failed to create manual conversation');
+
+        const baristaName = await this.fetchBaristaDisplayName(baristaUserId);
+
+        return {
+          ...this.mapConversation(conversation),
+          baristaName,
+        };
+      } catch (err: any) {
+        if (err?.code === '23505') {
+          const raced = await this.findManualConversation(businessUserId, baristaUserId);
+          if (raced) return raced;
+        }
+        throw err;
+      }
+    } catch (error) {
+      console.error('Error in getOrCreateConversation:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Look up an existing manual (application-less) conversation between
+   * a business and a barista. Returns null when none exists.
+   */
+  private static async findManualConversation(
+    businessUserId: string,
+    baristaUserId: string
+  ): Promise<Conversation | null> {
+    const { data, error } = await supabase
+      .from('conversations')
+      .select(
+        `
+          *,
+          users!barista_id(
+            barista_profiles(first_name, last_name)
+          )
+`
+      )
+      .eq('business_id', businessUserId)
+      .eq('barista_id', baristaUserId)
+      .is('application_id', null)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return null;
+
+    const baristaProfile = data.users?.barista_profiles;
+    const businessName = await this.fetchBusinessNameByOwnerId(businessUserId);
+    return {
+      ...this.mapConversation(data),
+      baristaName: baristaProfile
+        ? `${baristaProfile.first_name} ${baristaProfile.last_name}`
+        : undefined,
+      businessName,
+    };
+  }
+
+  /**
+   * Throws when a business has started 10+ manual conversations in the last hour.
+   * Only counts manual (application_id IS NULL) conversations.
+   */
+  private static async enforceManualConversationRateLimit(businessUserId: string): Promise<void> {
+    const oneHourAgoIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+
+    const { count, error } = await supabase
+      .from('conversations')
+      .select('id', { count: 'exact', head: true })
+      .eq('business_id', businessUserId)
+      .is('application_id', null)
+      .gte('created_at', oneHourAgoIso);
+
+    if (error) throw error;
+
+    if ((count ?? 0) >= 10) {
+      throw new Error(
+        'Rate limit exceeded: too many manual conversations started in the last hour'
+      );
+    }
+  }
+
+  /**
+   * Fetch business name for a single owner user id. Returns undefined if none.
+   */
+  private static async fetchBusinessNameByOwnerId(
+    ownerUserId: string
+  ): Promise<string | undefined> {
+    const { data, error } = await supabase
+      .from('businesses')
+      .select('name')
+      .eq('owner_id', ownerUserId)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error in fetchBusinessNameByOwnerId:', error);
+      return undefined;
+    }
+    return data?.name ?? undefined;
+  }
+
+  /**
+   * Batch-fetch business names for multiple owner user ids.
+   * Returns a map of ownerUserId → business name.
+   */
+  private static async fetchBusinessNamesByOwnerIds(
+    ownerUserIds: string[]
+  ): Promise<Record<string, string>> {
+    if (ownerUserIds.length === 0) return {};
+
+    const { data, error } = await supabase
+      .from('businesses')
+      .select('owner_id, name')
+      .in('owner_id', ownerUserIds);
+
+    if (error) {
+      console.error('Error in fetchBusinessNamesByOwnerIds:', error);
+      return {};
+    }
+
+    const map: Record<string, string> = {};
+    for (const row of data ?? []) {
+      if (row.owner_id && row.name && !(row.owner_id in map)) {
+        map[row.owner_id] = row.name;
+      }
+    }
+    return map;
+  }
+
+  /**
+   * Fetch "First Last" display name for a barista user from barista_profiles.
+   * Returns undefined if no profile exists.
+   */
+  private static async fetchBaristaDisplayName(baristaUserId: string): Promise<string | undefined> {
+    const { data, error } = await supabase
+      .from('barista_profiles')
+      .select('first_name, last_name')
+      .eq('user_id', baristaUserId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error in fetchBaristaDisplayName:', error);
+      return undefined;
+    }
+    if (!data) return undefined;
+    return `${data.first_name} ${data.last_name}`;
+  }
+
+  /**
    * Get all conversations for a user (barista or business)
    */
   static async getConversations(
@@ -156,7 +406,7 @@ export class ChatService {
         .select(
           `
           *,
-          applications!inner(
+          applications(
             status,
             jobs!inner(
               title,
@@ -173,7 +423,7 @@ export class ChatService {
 
       if (error) throw error;
 
-      return (data || []).map(conv => {
+      const mapped = (data || []).map(conv => {
         const baristaProfile = conv.users?.barista_profiles;
         return {
           ...this.mapConversation(conv),
@@ -185,6 +435,20 @@ export class ChatService {
           applicationStatus: conv.applications?.status,
         };
       });
+
+      const ownerIdsNeedingName = Array.from(
+        new Set(mapped.filter(c => !c.businessName).map(c => c.businessId))
+      );
+      if (ownerIdsNeedingName.length > 0) {
+        const nameMap = await this.fetchBusinessNamesByOwnerIds(ownerIdsNeedingName);
+        for (const conv of mapped) {
+          if (!conv.businessName) {
+            conv.businessName = nameMap[conv.businessId];
+          }
+        }
+      }
+
+      return mapped;
     } catch (error) {
       console.error('Error in getConversations:', error);
       throw error;

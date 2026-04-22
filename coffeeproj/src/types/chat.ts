@@ -8,7 +8,7 @@ export type MessageId = Brand<string, 'MessageId'>;
 
 export interface Conversation {
   id: ConversationId;
-  applicationId: string;
+  applicationId: string | null;
   baristaId: string;
   businessId: string;
   lastMessageAt?: string;
