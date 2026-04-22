@@ -1,2 +1,39 @@
-test-db-query.js
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Editors
+.idea/
+.vscode/
+.zed/
+
+# Environment / secrets (defense in depth — coffeeproj/.gitignore already covers that subdir)
+.env
+.env.local
+.env.*.local
+
+# iOS signing — NEVER commit
+*.p8
+*.p12
+*.mobileprovision
+
+# Supabase CLI local state
 supabase/.temp/
+supabase/.branches/
+
+# Claude Code personal settings (shared .claude/settings.json is OK to track)
+.claude/settings.local.json
+.claude/projects/
+
+# Test coverage
+coverage/
+
+# Ad-hoc dev/debug scripts (not meant to live in the repo)
+/check_jobs.sql
+/dev.sh
+/test-db-query.js
+coffeeproj/test-rls-check.js
+coffeeproj/test-search-jobs.js
+coffeeproj/test-search-detailed.js
