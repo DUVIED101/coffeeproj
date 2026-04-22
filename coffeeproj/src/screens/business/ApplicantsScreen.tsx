@@ -74,10 +74,17 @@ interface ApplicantItemProps {
 const ApplicantItem = React.memo<ApplicantItemProps>(
   ({ application, onAccept, onReject, onViewProfile, isProcessing }) => {
     const baristaProfile = application.baristaProfile;
-    const baristaEmail = application.baristaEmail || 'Unknown';
-    const displayName = baristaProfile
-      ? `${baristaProfile.firstName} ${baristaProfile.lastName}`
-      : baristaEmail;
+    const baristaEmail = application.baristaEmail || 'No email';
+
+    // Get display name - prefer firstName+lastName if both exist and are non-empty
+    let displayName = baristaEmail;
+    if (baristaProfile?.firstName?.trim() && baristaProfile?.lastName?.trim()) {
+      displayName = `${baristaProfile.firstName.trim()} ${baristaProfile.lastName.trim()}`;
+    } else if (baristaProfile?.firstName?.trim()) {
+      displayName = baristaProfile.firstName.trim();
+    } else if (baristaProfile?.lastName?.trim()) {
+      displayName = baristaProfile.lastName.trim();
+    }
 
     const statusColor = getStatusColor(application.status);
     const statusText = getStatusText(application.status);

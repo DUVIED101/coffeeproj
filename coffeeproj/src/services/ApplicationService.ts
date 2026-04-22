@@ -140,13 +140,27 @@ export class ApplicationService {
    */
   static async getApplicationsByJob(jobId: string): Promise<Application[]> {
     try {
-      const { data, error } = await supabase
+      // First, get applications
+      const { data: applications, error: appsError } = await supabase
         .from('applications')
+        .select('*')
+        .eq('job_id', jobId)
+        .order('created_at', { ascending: false });
+
+      if (appsError) throw appsError;
+      if (!applications || applications.length === 0) return [];
+
+      // Get unique barista IDs
+      const baristaIds = [...new Set(applications.map(app => app.barista_id))];
+
+      // Fetch barista data separately (bypasses RLS issues with JOINs)
+      const { data: users, error: usersError } = await supabase
+        .from('users')
         .select(
           `
-          *,
-          users!barista_id(email),
-          barista_profiles!barista_id(
+          id,
+          email,
+          barista_profiles(
             first_name,
             last_name,
             avatar_url,
@@ -156,25 +170,46 @@ export class ApplicationService {
           )
         `
         )
-        .eq('job_id', jobId)
-        .order('created_at', { ascending: false });
+        .in('id', baristaIds);
 
-      if (error) throw error;
+      if (usersError) throw usersError;
 
-      return (data || []).map(app => ({
-        ...this.mapApplication(app),
-        baristaEmail: app.users?.email,
-        baristaProfile: app.barista_profiles
-          ? {
-              firstName: app.barista_profiles.first_name,
-              lastName: app.barista_profiles.last_name,
-              avatarUrl: app.barista_profiles.avatar_url,
-              bio: app.barista_profiles.bio,
-              equipmentExperience: app.barista_profiles.equipment_experience || [],
-              yearsOfExperience: app.barista_profiles.years_of_experience,
-            }
-          : undefined,
-      }));
+      // Create a map of user data by ID.
+      // PostgREST returns barista_profiles as an array even though user_id is UNIQUE (1:0..1),
+      // so normalise to a single row here.
+      const usersMap = new Map(
+        (users || []).map(user => {
+          const profileRow = Array.isArray(user.barista_profiles)
+            ? user.barista_profiles[0]
+            : user.barista_profiles;
+          return [
+            user.id,
+            {
+              email: user.email,
+              profile: profileRow,
+            },
+          ];
+        })
+      );
+
+      // Map applications with user data
+      return applications.map(app => {
+        const userData = usersMap.get(app.barista_id);
+        return {
+          ...this.mapApplication(app),
+          baristaEmail: userData?.email,
+          baristaProfile: userData?.profile
+            ? {
+                firstName: userData.profile.first_name,
+                lastName: userData.profile.last_name,
+                avatarUrl: userData.profile.avatar_url,
+                bio: userData.profile.bio,
+                equipmentExperience: userData.profile.equipment_experience || [],
+                yearsOfExperience: userData.profile.years_of_experience,
+              }
+            : undefined,
+        };
+      });
     } catch (error) {
       console.error('Error in getApplicationsByJob:', error);
       throw error;
