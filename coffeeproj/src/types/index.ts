@@ -3,3 +3,4 @@ export * from './user';
 export * from './business';
 export * from './job';
 export * from './application';
+export * from './chat';

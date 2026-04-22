@@ -14,7 +14,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
+import { ChatService } from '../../services/ChatService';
 import type { Application, ApplicationStatus } from '../../types/application';
+import type { ConversationId } from '../../types/chat';
 
 type BusinessStackParamList = {
   CreateBusiness: undefined;
@@ -23,6 +25,7 @@ type BusinessStackParamList = {
   JobDetails: { jobId: string };
   Applicants: { jobId: string };
   ViewBaristaProfile: { baristaId: string };
+  Chat: { applicationId: string; conversationId?: ConversationId };
 };
 
 type Props = {
@@ -68,11 +71,13 @@ interface ApplicantItemProps {
   onAccept: () => void;
   onReject: () => void;
   onViewProfile: () => void;
+  onChatPress: () => void;
   isProcessing: boolean;
+  unreadCount: number;
 }
 
 const ApplicantItem = React.memo<ApplicantItemProps>(
-  ({ application, onAccept, onReject, onViewProfile, isProcessing }) => {
+  ({ application, onAccept, onReject, onViewProfile, onChatPress, isProcessing, unreadCount }) => {
     const baristaProfile = application.baristaProfile;
     const baristaEmail = application.baristaEmail || 'No email';
 
@@ -128,11 +133,18 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
           Applied: {new Date(application.createdAt).toLocaleDateString('ru-RU')}
         </Text>
 
-        {baristaProfile && (
-          <TouchableOpacity style={styles.viewProfileButton} onPress={onViewProfile}>
-            <Text style={styles.viewProfileButtonText}>View Profile</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity style={styles.viewProfileButton} onPress={onViewProfile}>
+          <Text style={styles.viewProfileButtonText}>View Profile</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.chatButton} onPress={onChatPress}>
+          <Text style={styles.chatButtonText}>💬 Chat</Text>
+          {unreadCount > 0 && (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadBadgeText}>{unreadCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
 
         {isActionable && (
           <View style={styles.actionButtons}>
@@ -169,6 +181,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     loadApplicants();
@@ -179,6 +192,21 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
       setIsLoading(true);
       const data = await ApplicationService.getApplicationsByJob(jobId);
       setApplications(data);
+
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        data.map(async app => {
+          try {
+            const conversation = await ChatService.getConversationByApplication(app.id);
+            if (conversation) {
+              counts[app.id] = conversation.unreadCountBusiness;
+            }
+          } catch (error) {
+            console.error('Error fetching conversation for application:', app.id, error);
+          }
+        })
+      );
+      setUnreadCounts(counts);
     } catch (error) {
       console.error('Error loading applicants:', error);
       Alert.alert('Error', 'Failed to load applicants');
@@ -222,6 +250,13 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
     [navigation]
   );
 
+  const handleChatPress = useCallback(
+    (applicationId: string) => {
+      navigation.navigate('Chat', { applicationId });
+    },
+    [navigation]
+  );
+
   const renderApplicant = useCallback(
     ({ item }: { item: Application }) => (
       <ApplicantItem
@@ -229,10 +264,12 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         onAccept={() => handleAccept(item.id)}
         onReject={() => handleReject(item.id)}
         onViewProfile={() => handleViewProfile(item.baristaId)}
+        onChatPress={() => handleChatPress(item.id)}
         isProcessing={processingId === item.id}
+        unreadCount={unreadCounts[item.id] || 0}
       />
     ),
-    [handleAccept, handleReject, handleViewProfile, processingId]
+    [handleAccept, handleReject, handleViewProfile, handleChatPress, processingId, unreadCounts]
   );
 
   const renderEmpty = () => (
@@ -437,5 +474,37 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'center',
     paddingHorizontal: 32,
+  },
+  chatButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    marginBottom: 12,
+  },
+  chatButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  unreadBadge: {
+    position: 'absolute',
+    right: 12,
+    backgroundColor: '#EF4444',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  unreadBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

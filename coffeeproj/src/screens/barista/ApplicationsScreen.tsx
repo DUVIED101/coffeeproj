@@ -12,8 +12,10 @@ import {
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
+import { ChatService } from '../../services/ChatService';
 import { useAuthStore } from '../../stores/authStore';
 import type { Application, ApplicationStatus } from '../../types/application';
+import type { ConversationId } from '../../types/chat';
 
 type BaristaStackParamList = {
   JobFeed: undefined;
@@ -21,6 +23,7 @@ type BaristaStackParamList = {
   Apply: { jobId: string };
   Applications: undefined;
   ApplicationDetails: { application: Application };
+  Chat: { applicationId: string; conversationId?: ConversationId };
 };
 
 type Props = {
@@ -63,7 +66,9 @@ const getStatusText = (status: ApplicationStatus): string => {
 const ApplicationItem = React.memo<{
   application: Application;
   onPress: () => void;
-}>(({ application, onPress }) => {
+  onChatPress: () => void;
+  unreadCount: number;
+}>(({ application, onPress, onChatPress, unreadCount }) => {
   const statusColor = getStatusColor(application.status);
   const statusText = getStatusText(application.status);
 
@@ -94,6 +99,15 @@ const ApplicationItem = React.memo<{
       <Text style={styles.appliedDate}>
         Applied: {new Date(application.createdAt).toLocaleDateString('ru-RU')}
       </Text>
+
+      <TouchableOpacity style={styles.chatButton} onPress={onChatPress}>
+        <Text style={styles.chatButtonText}>💬 Message Business</Text>
+        {unreadCount > 0 && (
+          <View style={styles.unreadBadge}>
+            <Text style={styles.unreadBadgeText}>{unreadCount}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 });
@@ -104,6 +118,7 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   const loadApplications = useCallback(async () => {
     if (!user?.id) {
@@ -114,6 +129,21 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
     try {
       const data = await ApplicationService.getApplicationsByBarista(user.id);
       setApplications(data);
+
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        data.map(async app => {
+          try {
+            const conversation = await ChatService.getConversationByApplication(app.id);
+            if (conversation) {
+              counts[app.id] = conversation.unreadCountBarista;
+            }
+          } catch (error) {
+            console.error('Error fetching conversation for application:', app.id, error);
+          }
+        })
+      );
+      setUnreadCounts(counts);
     } catch (error) {
       console.error('Error loading applications:', error);
     } finally {
@@ -138,11 +168,23 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
     [navigation]
   );
 
+  const handleChatPress = useCallback(
+    (applicationId: string) => {
+      navigation.navigate('Chat', { applicationId });
+    },
+    [navigation]
+  );
+
   const renderApplication = useCallback(
     ({ item }: { item: Application }) => (
-      <ApplicationItem application={item} onPress={() => handleApplicationPress(item)} />
+      <ApplicationItem
+        application={item}
+        onPress={() => handleApplicationPress(item)}
+        onChatPress={() => handleChatPress(item.id)}
+        unreadCount={unreadCounts[item.id] || 0}
+      />
     ),
-    [handleApplicationPress]
+    [handleApplicationPress, handleChatPress, unreadCounts]
   );
 
   const renderEmpty = () => (
@@ -276,5 +318,37 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'center',
     paddingHorizontal: 32,
+  },
+  chatButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  chatButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  unreadBadge: {
+    position: 'absolute',
+    right: 12,
+    backgroundColor: '#EF4444',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  unreadBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

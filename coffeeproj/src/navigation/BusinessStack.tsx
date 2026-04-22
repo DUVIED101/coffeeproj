@@ -7,6 +7,8 @@ import { CreateJobScreen } from '../screens/business/CreateJobScreen';
 import { JobDetailsScreen } from '../screens/business/JobDetailsScreen';
 import { ApplicantsScreen } from '../screens/business/ApplicantsScreen';
 import { ViewBaristaProfileScreen } from '../screens/business/ViewBaristaProfileScreen';
+import { ChatScreen } from '../screens/chat/ChatScreen';
+import { ConversationsListScreen } from '../screens/chat/ConversationsListScreen';
 import { BusinessService } from '../services/BusinessService';
 import { useAuthStore } from '../stores/authStore';
 import { COLORS } from '../config/constants';
@@ -19,6 +21,8 @@ export type BusinessStackParamList = {
   JobDetails: { jobId: string };
   Applicants: { jobId: string };
   ViewBaristaProfile: { baristaId: string };
+  Chat: { applicationId: string; conversationId?: string };
+  ConversationsList: undefined;
 };
 
 const Stack = createNativeStackNavigator<BusinessStackParamList>();
@@ -94,6 +98,12 @@ export const BusinessStack: React.FC = () => {
         name="ViewBaristaProfile"
         component={ViewBaristaProfileScreen}
         options={{ title: 'Barista Profile' }}
+      />
+      <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
+      <Stack.Screen
+        name="ConversationsList"
+        component={ConversationsListScreen}
+        options={{ title: 'Conversations' }}
       />
     </Stack.Navigator>
   );
