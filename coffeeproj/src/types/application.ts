@@ -1,7 +1,13 @@
 import type { Job } from './job';
 
 // Application Types
-export type ApplicationStatus = 'pending' | 'under_review' | 'accepted' | 'rejected' | 'withdrawn';
+export type ApplicationStatus =
+  | 'pending'
+  | 'under_review'
+  | 'accepted'
+  | 'rejected'
+  | 'withdrawn'
+  | 'completed';
 
 export interface Application {
   id: string;
@@ -9,6 +15,9 @@ export interface Application {
   baristaId: string;
   status: ApplicationStatus;
   coverLetter?: string;
+  completedByBarista: boolean;
+  completedByBusiness: boolean;
+  completedAt?: string;
   createdAt: string;
   updatedAt: string;
 

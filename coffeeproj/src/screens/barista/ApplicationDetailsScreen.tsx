@@ -30,7 +30,10 @@ type Props = {
 export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { application } = route.params;
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [isMarkingComplete, setIsMarkingComplete] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(application.status);
+  const [completedByBarista, setCompletedByBarista] = useState(application.completedByBarista);
+  const [completedByBusiness, setCompletedByBusiness] = useState(application.completedByBusiness);
 
   const job = application.job;
 
@@ -98,7 +101,23 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
     );
   };
 
+  const handleMarkComplete = async () => {
+    try {
+      setIsMarkingComplete(true);
+      await ApplicationService.markCompletedByBarista(application.id);
+      setCompletedByBarista(true);
+      Alert.alert('Success', 'Work marked as completed');
+    } catch (error) {
+      console.error('Error marking work complete:', error);
+      Alert.alert('Error', 'Failed to mark work as completed. Please try again.');
+    } finally {
+      setIsMarkingComplete(false);
+    }
+  };
+
   const canWithdraw = currentStatus === 'pending' || currentStatus === 'under_review';
+  const canMarkComplete = currentStatus === 'accepted' && !completedByBarista;
+  const showCompletionStatus = currentStatus === 'accepted' || currentStatus === 'completed';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -140,21 +159,54 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
             <Text style={styles.coverLetter}>{application.coverLetter}</Text>
           </View>
         )}
+
+        {/* Work Completion Status */}
+        {showCompletionStatus && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Work Completion</Text>
+            {completedByBarista && completedByBusiness && (
+              <View style={styles.completionBanner}>
+                <Text style={styles.completionText}>✅ Work completed</Text>
+              </View>
+            )}
+            {completedByBarista && !completedByBusiness && (
+              <View style={[styles.completionBanner, { backgroundColor: '#FEF3C7' }]}>
+                <Text style={[styles.completionText, { color: '#92400E' }]}>
+                  ✅ Work completed, waiting for business confirmation
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
       </ScrollView>
 
-      {/* Withdraw Button */}
-      {canWithdraw && (
+      {/* Action Buttons */}
+      {(canWithdraw || canMarkComplete) && (
         <View style={styles.footer}>
-          <TouchableOpacity
-            style={styles.withdrawButton}
-            onPress={handleWithdraw}
-            disabled={isWithdrawing}>
-            {isWithdrawing ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.withdrawButtonText}>Withdraw Application</Text>
-            )}
-          </TouchableOpacity>
+          {canMarkComplete && (
+            <TouchableOpacity
+              style={styles.completeButton}
+              onPress={handleMarkComplete}
+              disabled={isMarkingComplete}>
+              {isMarkingComplete ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.completeButtonText}>Mark Work as Completed</Text>
+              )}
+            </TouchableOpacity>
+          )}
+          {canWithdraw && (
+            <TouchableOpacity
+              style={[styles.withdrawButton, canMarkComplete && { marginTop: 12 }]}
+              onPress={handleWithdraw}
+              disabled={isWithdrawing}>
+              {isWithdrawing ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.withdrawButtonText}>Withdraw Application</Text>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </SafeAreaView>
@@ -265,5 +317,27 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  completeButton: {
+    backgroundColor: '#10B981',
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  completeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  completionBanner: {
+    backgroundColor: '#D1FAE5',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  completionText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#065F46',
   },
 });

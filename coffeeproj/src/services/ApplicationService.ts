@@ -12,6 +12,9 @@ export class ApplicationService {
       baristaId: db.barista_id,
       status: db.status,
       coverLetter: db.cover_letter,
+      completedByBarista: db.completed_by_barista || false,
+      completedByBusiness: db.completed_by_business || false,
+      completedAt: db.completed_at,
       createdAt: db.created_at,
       updatedAt: db.updated_at,
     };
@@ -27,6 +30,9 @@ export class ApplicationService {
       baristaId: db.barista_id,
       status: db.status,
       coverLetter: db.cover_letter,
+      completedByBarista: db.completed_by_barista || false,
+      completedByBusiness: db.completed_by_business || false,
+      completedAt: db.completed_at,
       createdAt: db.created_at,
       updatedAt: db.updated_at,
       job: db.jobs
@@ -280,6 +286,42 @@ export class ApplicationService {
       return data ? this.mapApplication(data) : null;
     } catch (error) {
       console.error('Error in checkApplicationExists:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark work as completed by barista
+   * When both parties mark completed, status auto-updates to 'completed' via trigger
+   */
+  static async markCompletedByBarista(applicationId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('applications')
+        .update({ completed_by_barista: true })
+        .eq('id', applicationId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error in markCompletedByBarista:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark work as completed by business
+   * When both parties mark completed, status auto-updates to 'completed' via trigger
+   */
+  static async markCompletedByBusiness(applicationId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('applications')
+        .update({ completed_by_business: true })
+        .eq('id', applicationId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error in markCompletedByBusiness:', error);
       throw error;
     }
   }

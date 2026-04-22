@@ -72,12 +72,22 @@ interface ApplicantItemProps {
   onReject: () => void;
   onViewProfile: () => void;
   onChatPress: () => void;
+  onConfirmCompletion: () => void;
   isProcessing: boolean;
   unreadCount: number;
 }
 
 const ApplicantItem = React.memo<ApplicantItemProps>(
-  ({ application, onAccept, onReject, onViewProfile, onChatPress, isProcessing, unreadCount }) => {
+  ({
+    application,
+    onAccept,
+    onReject,
+    onViewProfile,
+    onChatPress,
+    onConfirmCompletion,
+    isProcessing,
+    unreadCount,
+  }) => {
     const baristaProfile = application.baristaProfile;
     const baristaEmail = application.baristaEmail || 'No email';
 
@@ -94,6 +104,8 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     const statusColor = getStatusColor(application.status);
     const statusText = getStatusText(application.status);
     const isActionable = application.status === 'pending' || application.status === 'under_review';
+    const canConfirmCompletion =
+      application.status === 'accepted' && !application.completedByBusiness;
 
     return (
       <View style={styles.applicantCard}>
@@ -145,6 +157,19 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
             </View>
           )}
         </TouchableOpacity>
+
+        {canConfirmCompletion && (
+          <TouchableOpacity
+            style={styles.confirmCompletionButton}
+            onPress={onConfirmCompletion}
+            disabled={isProcessing}>
+            {isProcessing ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.confirmCompletionButtonText}>Confirm Completion</Text>
+            )}
+          </TouchableOpacity>
+        )}
 
         {isActionable && (
           <View style={styles.actionButtons}>
@@ -257,6 +282,20 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
     [navigation]
   );
 
+  const handleConfirmCompletion = useCallback(async (applicationId: string) => {
+    try {
+      setProcessingId(applicationId);
+      await ApplicationService.markCompletedByBusiness(applicationId);
+      await loadApplicants();
+      Alert.alert('Success', 'Work completion confirmed');
+    } catch (error) {
+      console.error('Error confirming completion:', error);
+      Alert.alert('Error', 'Failed to confirm completion');
+    } finally {
+      setProcessingId(null);
+    }
+  }, []);
+
   const renderApplicant = useCallback(
     ({ item }: { item: Application }) => (
       <ApplicantItem
@@ -265,11 +304,20 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         onReject={() => handleReject(item.id)}
         onViewProfile={() => handleViewProfile(item.baristaId)}
         onChatPress={() => handleChatPress(item.id)}
+        onConfirmCompletion={() => handleConfirmCompletion(item.id)}
         isProcessing={processingId === item.id}
         unreadCount={unreadCounts[item.id] || 0}
       />
     ),
-    [handleAccept, handleReject, handleViewProfile, handleChatPress, processingId, unreadCounts]
+    [
+      handleAccept,
+      handleReject,
+      handleViewProfile,
+      handleChatPress,
+      handleConfirmCompletion,
+      processingId,
+      unreadCounts,
+    ]
   );
 
   const renderEmpty = () => (
@@ -505,6 +553,18 @@ const styles = StyleSheet.create({
   unreadBadgeText: {
     color: '#fff',
     fontSize: 12,
+    fontWeight: '600',
+  },
+  confirmCompletionButton: {
+    backgroundColor: '#10B981',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  confirmCompletionButtonText: {
+    color: '#fff',
+    fontSize: 14,
     fontWeight: '600',
   },
 });
