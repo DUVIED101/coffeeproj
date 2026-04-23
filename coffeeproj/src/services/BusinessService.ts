@@ -8,6 +8,16 @@ import type {
   UpdateBranchData,
 } from '../types';
 
+export class BranchHasActiveJobsError extends Error {
+  public readonly count: number;
+
+  constructor(count: number, message?: string) {
+    super(message ?? `${count} active jobs exist on this branch`);
+    this.name = 'BranchHasActiveJobsError';
+    this.count = count;
+  }
+}
+
 export class BusinessService {
   /**
    * Map database business object to Business type
@@ -282,6 +292,16 @@ export class BusinessService {
    */
   static async deleteBranch(branchId: string): Promise<void> {
     try {
+      const { count, error: countError } = await supabase
+        .from('jobs')
+        .select('id', { count: 'exact', head: true })
+        .eq('branch_id', branchId)
+        .in('status', ['open', 'in_review']);
+      if (countError) throw countError;
+      if ((count ?? 0) > 0) {
+        throw new BranchHasActiveJobsError(count ?? 0);
+      }
+
       const { error } = await supabase
         .from('branches')
         .update({ is_active: false })

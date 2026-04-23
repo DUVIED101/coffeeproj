@@ -6,9 +6,13 @@ import {
   StyleSheet,
   SafeAreaView,
   FlatList,
+  ScrollView,
   RefreshControl,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
@@ -20,6 +24,9 @@ import { useAuthStore } from '../../stores/authStore';
 import { COLORS } from '../../config/constants';
 import type { Job, Branch, JobStatus } from '../../types';
 
+const SHOW_ARCHIVED_KEY = 'business.showArchivedJobs';
+const ARCHIVED_STATUSES: JobStatus[] = ['filled', 'expired', 'cancelled'];
+
 type BusinessHomeScreenProps = NativeStackScreenProps<BusinessStackParamList, 'BusinessHome'>;
 
 type TabType = 'jobs' | 'branches';
@@ -28,12 +35,35 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
   const [activeTab, setActiveTab] = useState<TabType>('jobs');
   const { businessId } = route.params;
   const { user } = useAuthStore();
+  const { t } = useTranslation();
 
   // Jobs tab state
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
   const [isRefreshingJobs, setIsRefreshingJobs] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<JobStatus>('open');
+  const [showArchived, setShowArchived] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem(SHOW_ARCHIVED_KEY)
+      .then(value => {
+        if (value === 'true') setShowArchived(true);
+      })
+      .catch(err => console.error('Error loading showArchived pref:', err));
+  }, []);
+
+  const toggleShowArchived = async () => {
+    const next = !showArchived;
+    setShowArchived(next);
+    if (next === false && ARCHIVED_STATUSES.includes(selectedStatus)) {
+      setSelectedStatus('open');
+    }
+    try {
+      await AsyncStorage.setItem(SHOW_ARCHIVED_KEY, next ? 'true' : 'false');
+    } catch (err) {
+      console.error('Error persisting showArchived pref:', err);
+    }
+  };
 
   // Branches tab state
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -122,43 +152,53 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
 
   const filteredJobs = jobs.filter(job => job.status === selectedStatus);
 
-  const STATUS_TABS: Array<{ label: string; value: JobStatus }> = [
+  const ALL_STATUS_TABS: Array<{ label: string; value: JobStatus }> = [
     { label: 'Open', value: 'open' },
     { label: 'In Review', value: 'in_review' },
     { label: 'Filled', value: 'filled' },
     { label: 'Expired', value: 'expired' },
     { label: 'Cancelled', value: 'cancelled' },
   ];
+  const visibleStatusTabs = showArchived
+    ? ALL_STATUS_TABS
+    : ALL_STATUS_TABS.filter(tab => !ARCHIVED_STATUSES.includes(tab.value));
 
   const renderJobsTab = () => (
     <View style={styles.tabContent}>
-      {/* Status filter tabs */}
-      <View style={styles.statusTabs}>
-        <FlatList
-          horizontal
-          data={STATUS_TABS}
-          keyExtractor={item => item.value}
-          showsHorizontalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[styles.statusTab, selectedStatus === item.value && styles.statusTabActive]}
-              onPress={() => setSelectedStatus(item.value)}>
-              <Text
-                style={[
-                  styles.statusTabText,
-                  selectedStatus === item.value && styles.statusTabTextActive,
-                ]}>
-                {item.label}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.statusTabs}
+        contentContainerStyle={styles.statusTabsContent}>
+        {visibleStatusTabs.map(item => (
+          <TouchableOpacity
+            key={item.value}
+            style={[styles.statusTab, selectedStatus === item.value && styles.statusTabActive]}
+            onPress={() => setSelectedStatus(item.value)}>
+            <Text
+              style={[
+                styles.statusTabText,
+                selectedStatus === item.value && styles.statusTabTextActive,
+              ]}>
+              {item.label}
+            </Text>
+            <View style={styles.countBadge}>
+              <Text style={styles.countText}>
+                {jobs.filter(j => j.status === item.value).length}
               </Text>
-              <View style={styles.countBadge}>
-                <Text style={styles.countText}>
-                  {jobs.filter(j => j.status === item.value).length}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          )}
-        />
-      </View>
+            </View>
+          </TouchableOpacity>
+        ))}
+        <View style={styles.archiveToggle}>
+          <Text style={styles.archiveToggleText}>{t('business.jobs.showArchived')}</Text>
+          <Switch
+            value={showArchived}
+            onValueChange={toggleShowArchived}
+            trackColor={{ false: COLORS.border, true: COLORS.primary }}
+            thumbColor="#fff"
+          />
+        </View>
+      </ScrollView>
 
       {isLoadingJobs ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
@@ -279,11 +319,25 @@ const styles = StyleSheet.create({
   tabContent: {
     flex: 1,
   },
+  archiveToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingLeft: 12,
+  },
+  archiveToggleText: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+  },
   statusTabs: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+    flexGrow: 0,
+  },
+  statusTabsContent: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
   },
   statusTab: {
     flexDirection: 'row',

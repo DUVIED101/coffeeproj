@@ -7,12 +7,14 @@ import {
   ScrollView,
   ActivityIndicator,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
-import type { Job } from '../../types/job';
+import type { Job, JobStatus } from '../../types/job';
 
 type BusinessStackParamList = {
   CreateBusiness: undefined;
@@ -29,10 +31,12 @@ type Props = {
 
 export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { jobId } = route.params;
+  const { t } = useTranslation();
 
   const [job, setJob] = useState<Job | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   useEffect(() => {
     loadJob();
@@ -55,6 +59,65 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const handleViewApplicants = () => {
     navigation.navigate('Applicants', { jobId });
   };
+
+  const transitionStatus = async (
+    nextStatus: JobStatus,
+    successKey: 'job.markFilled.success' | 'job.cancel.success' | 'job.reopen.success'
+  ) => {
+    try {
+      setIsUpdatingStatus(true);
+      await JobService.updateJobStatus(jobId, nextStatus);
+      await loadJob();
+      Alert.alert(t('common.success'), t(successKey));
+    } catch (err) {
+      console.error('Error updating job status:', err);
+      Alert.alert(t('common.error'), t('job.errors.updateFailed'));
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  const confirmTransition = (
+    titleKey: 'job.markFilled.confirmTitle' | 'job.cancel.confirmTitle' | 'job.reopen.confirmTitle',
+    bodyKey: 'job.markFilled.confirmBody' | 'job.cancel.confirmBody' | 'job.reopen.confirmBody',
+    nextStatus: JobStatus,
+    successKey: 'job.markFilled.success' | 'job.cancel.success' | 'job.reopen.success',
+    destructive = false
+  ) => {
+    Alert.alert(t(titleKey), t(bodyKey), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('common.confirm'),
+        style: destructive ? 'destructive' : 'default',
+        onPress: () => transitionStatus(nextStatus, successKey),
+      },
+    ]);
+  };
+
+  const handleMarkFilled = () =>
+    confirmTransition(
+      'job.markFilled.confirmTitle',
+      'job.markFilled.confirmBody',
+      'filled',
+      'job.markFilled.success'
+    );
+
+  const handleCancelJob = () =>
+    confirmTransition(
+      'job.cancel.confirmTitle',
+      'job.cancel.confirmBody',
+      'cancelled',
+      'job.cancel.success',
+      true
+    );
+
+  const handleReopenJob = () =>
+    confirmTransition(
+      'job.reopen.confirmTitle',
+      'job.reopen.confirmBody',
+      'open',
+      'job.reopen.success'
+    );
 
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('ru-RU');
@@ -88,6 +151,9 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   }
 
   const hasApplicants = job.applicationCount > 0;
+  const canClose = job.status === 'open' || job.status === 'in_review';
+  const canReopen = job.status === 'filled' || job.status === 'cancelled';
+  const showFooter = hasApplicants || canClose || canReopen;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -231,14 +297,39 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
       </ScrollView>
 
-      {/* View Applicants Button */}
-      {hasApplicants && (
+      {showFooter && (
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.viewApplicantsButton} onPress={handleViewApplicants}>
-            <Text style={styles.viewApplicantsButtonText}>
-              View {job.applicationCount} Applicant{job.applicationCount !== 1 ? 's' : ''}
-            </Text>
-          </TouchableOpacity>
+          {hasApplicants && (
+            <TouchableOpacity style={styles.viewApplicantsButton} onPress={handleViewApplicants}>
+              <Text style={styles.viewApplicantsButtonText}>
+                View {job.applicationCount} Applicant{job.applicationCount !== 1 ? 's' : ''}
+              </Text>
+            </TouchableOpacity>
+          )}
+          {canClose && (
+            <>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.primaryAction]}
+                onPress={handleMarkFilled}
+                disabled={isUpdatingStatus}>
+                <Text style={styles.primaryActionText}>{t('job.actions.markFilled')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.destructiveAction]}
+                onPress={handleCancelJob}
+                disabled={isUpdatingStatus}>
+                <Text style={styles.destructiveActionText}>{t('job.actions.cancel')}</Text>
+              </TouchableOpacity>
+            </>
+          )}
+          {canReopen && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.outlineAction]}
+              onPress={handleReopenJob}
+              disabled={isUpdatingStatus}>
+              <Text style={styles.outlineActionText}>{t('job.actions.reopen')}</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </SafeAreaView>
@@ -426,6 +517,38 @@ const styles = StyleSheet.create({
   viewApplicantsButtonText: {
     color: '#fff',
     fontSize: 18,
+    fontWeight: '600',
+  },
+  actionButton: {
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  primaryAction: {
+    backgroundColor: COLORS.primary,
+  },
+  primaryActionText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  destructiveAction: {
+    backgroundColor: COLORS.error,
+  },
+  destructiveActionText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  outlineAction: {
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    backgroundColor: 'transparent',
+  },
+  outlineActionText: {
+    color: COLORS.primary,
+    fontSize: 16,
     fontWeight: '600',
   },
 });

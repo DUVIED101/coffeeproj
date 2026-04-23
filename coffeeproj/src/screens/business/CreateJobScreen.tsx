@@ -13,6 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
@@ -24,6 +25,7 @@ import type { JobType, CompensationType } from '../../types/job';
 type BusinessStackParamList = {
   CreateJob: undefined;
   ManageJobs: undefined;
+  BranchManagement: { businessId: string };
 };
 
 type Props = {
@@ -43,9 +45,11 @@ const TAG_OPTIONS = ['urgent', 'flexible', 'training-provided'];
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
 export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
 
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [businessId, setBusinessId] = useState<string | null>(null);
   const [isLoadingBranches, setIsLoadingBranches] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -82,6 +86,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
     try {
       const business = await BusinessService.getBusinessByOwnerId(user.id);
       if (business) {
+        setBusinessId(business.id);
         const branchesData = await BusinessService.getBranches(business.id);
         setBranches(branchesData);
         if (branchesData.length > 0) {
@@ -292,6 +297,16 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>No branches found</Text>
           <Text style={styles.emptySubtext}>Please add a branch before creating a job</Text>
+          <TouchableOpacity
+            style={[styles.emptyCta, !businessId && styles.saveButtonDisabled]}
+            onPress={() => {
+              if (businessId) {
+                navigation.navigate('BranchManagement', { businessId });
+              }
+            }}
+            disabled={!businessId}>
+            <Text style={styles.emptyCtaText}>{t('branches.add')}</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -689,6 +704,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
     textAlign: 'center',
+    marginBottom: 24,
+  },
+  emptyCta: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  emptyCtaText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   content: {
     flex: 1,

@@ -34,10 +34,81 @@
     "reject": "Отклонить",
     "coverLetter": "Сопроводительное письмо"
   },
+  "branches": {
+    "title": "Branch Management",
+    "add": "+ Add Branch",
+    "addFirst": "Add your first branch to start posting jobs",
+    "cancel": "Cancel",
+    "empty": "No branches yet",
+    "sectionTitle": "Your Branches ({{count}})",
+    "form": {
+      "addTitle": "Add New Branch",
+      "editTitle": "Edit Branch",
+      "save": "Save Branch",
+      "update": "Update Branch",
+      "name": "Branch Name",
+      "nameRequired": "Branch name is required",
+      "namePlaceholder": "e.g. Arbat Branch",
+      "address": "Address",
+      "addressRequired": "Address is required",
+      "addressPlaceholder": "e.g. Arbat St, 10",
+      "city": "City",
+      "metro": "Metro Station (Optional)",
+      "equipment": "Equipment (Optional)"
+    },
+    "errors": {
+      "loadFailed": "Failed to load branches",
+      "saveFailed": "Failed to save branch",
+      "deleteFailed": "Failed to delete branch",
+      "addressNotFound": "Could not find coordinates for this address. Please check the address and city.",
+      "addressNotFoundTitle": "Address not found",
+      "hasActiveJobs": "Close {{count}} active jobs before deleting this branch."
+    },
+    "delete": {
+      "title": "Delete Branch",
+      "confirm": "Are you sure you want to delete \"{{name}}\"?",
+      "success": "Branch deleted successfully"
+    },
+    "save": {
+      "success": "Branch added successfully",
+      "updateSuccess": "Branch updated successfully"
+    }
+  },
+  "job": {
+    "actions": {
+      "markFilled": "Mark as filled",
+      "cancel": "Cancel job",
+      "reopen": "Reopen job"
+    },
+    "markFilled": {
+      "confirmTitle": "Mark as filled",
+      "confirmBody": "Is the job filled? It will be hidden from the barista feed.",
+      "success": "Job marked as filled"
+    },
+    "cancel": {
+      "confirmTitle": "Cancel job",
+      "confirmBody": "Cancel this job?",
+      "success": "Job cancelled"
+    },
+    "reopen": {
+      "confirmTitle": "Reopen job",
+      "confirmBody": "Return this job to active? It will appear in the barista feed again.",
+      "success": "Job reopened"
+    },
+    "errors": {
+      "updateFailed": "Failed to update job status"
+    }
+  },
+  "business": {
+    "jobs": {
+      "showArchived": "Show archived"
+    }
+  },
   "common": {
     "save": "Сохранить",
     "cancel": "Отмена",
     "delete": "Удалить",
+    "edit": "Edit",
     "confirm": "Подтвердить",
     "back": "Назад",
     "loading": "Загрузка...",

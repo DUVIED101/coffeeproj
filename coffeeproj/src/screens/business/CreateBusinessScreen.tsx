@@ -85,7 +85,7 @@ export const CreateBusinessScreen: React.FC<Props> = ({ navigation }) => {
         {
           text: 'OK',
           onPress: () => {
-            navigation.replace('BranchManagement', { businessId: business.id });
+            navigation.navigate('BranchManagement', { businessId: business.id });
           },
         },
       ]);

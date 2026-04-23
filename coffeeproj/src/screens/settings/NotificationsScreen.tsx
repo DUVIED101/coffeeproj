@@ -95,7 +95,12 @@ export const NotificationsScreen: React.FC = () => {
         <View style={styles.card}>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>{t('settings.notifications.newMessage')}</Text>
-            <Switch value={prefs.newMessage} onValueChange={v => handleToggle('newMessage', v)} />
+            <Switch
+              value={prefs.newMessage}
+              onValueChange={v => handleToggle('newMessage', v)}
+              trackColor={{ false: COLORS.border, true: COLORS.primary }}
+              thumbColor="#fff"
+            />
           </View>
           <View style={styles.separator} />
           <View style={styles.row}>
@@ -103,6 +108,8 @@ export const NotificationsScreen: React.FC = () => {
             <Switch
               value={prefs.applicationAccepted}
               onValueChange={v => handleToggle('applicationAccepted', v)}
+              trackColor={{ false: COLORS.border, true: COLORS.primary }}
+              thumbColor="#fff"
             />
           </View>
           <View style={styles.separator} />
@@ -111,6 +118,8 @@ export const NotificationsScreen: React.FC = () => {
             <Switch
               value={prefs.applicationRejected}
               onValueChange={v => handleToggle('applicationRejected', v)}
+              trackColor={{ false: COLORS.border, true: COLORS.primary }}
+              thumbColor="#fff"
             />
           </View>
         </View>

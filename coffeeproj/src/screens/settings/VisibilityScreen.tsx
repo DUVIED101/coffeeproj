@@ -91,7 +91,12 @@ export const VisibilityScreen: React.FC = () => {
         <View style={styles.card}>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>{toggleLabel}</Text>
-            <Switch value={enabled} onValueChange={handleToggle} />
+            <Switch
+              value={enabled}
+              onValueChange={handleToggle}
+              trackColor={{ false: COLORS.border, true: COLORS.primary }}
+              thumbColor="#fff"
+            />
           </View>
         </View>
         <Text style={styles.hint}>{hint}</Text>

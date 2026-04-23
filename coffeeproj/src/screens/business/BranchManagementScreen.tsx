@@ -12,10 +12,11 @@ import {
   Alert,
   FlatList,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
-import { BusinessService } from '../../services/BusinessService';
+import { BusinessService, BranchHasActiveJobsError } from '../../services/BusinessService';
 import { MetroSelector } from '../../components/MetroSelector';
 import type { Branch, Equipment, GeoPoint } from '../../types';
 
@@ -40,22 +41,58 @@ const EQUIPMENT_OPTIONS: Equipment[] = [
   'Rocket Espresso',
 ];
 
-export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) => {
+type BranchRowProps = {
+  branch: Branch;
+  onEdit: (branch: Branch) => void;
+  onDelete: (branchId: string, branchName: string) => void;
+};
+
+const BranchRow = React.memo<BranchRowProps>(({ branch, onEdit, onDelete }) => {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.branchCard}>
+      <View style={styles.branchHeader}>
+        <Text style={styles.branchName}>{branch.name}</Text>
+        <View style={styles.branchActions}>
+          <TouchableOpacity onPress={() => onEdit(branch)}>
+            <Text style={styles.editButton}>{t('common.edit')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => onDelete(branch.id, branch.name)}>
+            <Text style={styles.deleteButton}>{t('common.delete')}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      <Text style={styles.branchAddress}>{branch.address}</Text>
+      {branch.metroStation && <Text style={styles.branchMetro}>🚇 {branch.metroStation}</Text>}
+      {branch.equipment.length > 0 && (
+        <View style={styles.equipmentContainer}>
+          {branch.equipment.map(eq => (
+            <View key={eq} style={styles.equipmentBadge}>
+              <Text style={styles.equipmentText}>{eq}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+});
+
+export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
   const { businessId } = route.params;
+  const { t } = useTranslation();
 
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingBranch, setIsAddingBranch] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
 
-  // Form state
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('Санкт-Петербург');
   const [metroStation, setMetroStation] = useState('');
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment[]>([]);
 
-  // Form errors
   const [nameError, setNameError] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
 
@@ -65,17 +102,17 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
       setBranches(data);
     } catch (error) {
       console.error('Error loading branches:', error);
-      Alert.alert('Error', 'Failed to load branches');
+      Alert.alert(t('common.error'), t('branches.errors.loadFailed'));
     } finally {
       setIsLoading(false);
     }
-  }, [businessId]);
+  }, [businessId, t]);
 
   useEffect(() => {
     loadBranches();
   }, [loadBranches]);
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setName('');
     setAddress('');
     setCity('Санкт-Петербург');
@@ -83,20 +120,52 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
     setSelectedEquipment([]);
     setNameError(null);
     setAddressError(null);
-  };
+  }, []);
+
+  const closeForm = useCallback(() => {
+    setIsAddingBranch(false);
+    setEditingBranch(null);
+    resetForm();
+  }, [resetForm]);
+
+  const openCreateForm = useCallback(() => {
+    setEditingBranch(null);
+    resetForm();
+    setIsAddingBranch(true);
+  }, [resetForm]);
+
+  const openEditForm = useCallback((branch: Branch) => {
+    setEditingBranch(branch);
+    setName(branch.name);
+    setAddress(branch.address);
+    setCity(branch.city);
+    setMetroStation(branch.metroStation ?? '');
+    setSelectedEquipment(branch.equipment);
+    setNameError(null);
+    setAddressError(null);
+    setIsAddingBranch(true);
+  }, []);
+
+  const toggleHeaderForm = useCallback(() => {
+    if (isAddingBranch) {
+      closeForm();
+    } else {
+      openCreateForm();
+    }
+  }, [isAddingBranch, closeForm, openCreateForm]);
 
   const validateForm = (): boolean => {
     let isValid = true;
 
     if (!name.trim()) {
-      setNameError('Branch name is required');
+      setNameError(t('branches.form.nameRequired'));
       isValid = false;
     } else {
       setNameError(null);
     }
 
     if (!address.trim()) {
-      setAddressError('Address is required');
+      setAddressError(t('branches.form.addressRequired'));
       isValid = false;
     } else {
       setAddressError(null);
@@ -105,12 +174,14 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
     return isValid;
   };
 
-  const geocodeAddress = async (address: string, city: string): Promise<GeoPoint | null> => {
+  const geocodeAddress = async (
+    addressLine: string,
+    cityLine: string
+  ): Promise<GeoPoint | null> => {
     try {
-      const fullAddress = `${address}, ${city}, Russia`;
+      const fullAddress = `${addressLine}, ${cityLine}, Russia`;
       const encodedAddress = encodeURIComponent(fullAddress);
 
-      // Using Nominatim (OpenStreetMap) geocoding service
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=1`,
         {
@@ -144,59 +215,94 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
     setIsSaving(true);
 
     try {
-      // Geocode the address to get coordinates
-      const coordinates = await geocodeAddress(address.trim(), city.trim());
+      const trimmedAddress = address.trim();
+      const trimmedCity = city.trim();
+
+      let coordinates: GeoPoint | null;
+
+      if (
+        editingBranch &&
+        trimmedAddress === editingBranch.address &&
+        trimmedCity === editingBranch.city
+      ) {
+        coordinates = editingBranch.coordinates;
+      } else {
+        coordinates = await geocodeAddress(trimmedAddress, trimmedCity);
+      }
 
       if (!coordinates) {
         Alert.alert(
-          'Address not found',
-          'Could not find coordinates for this address. Please check the address and city.'
+          t('branches.errors.addressNotFoundTitle'),
+          t('branches.errors.addressNotFound')
         );
         setIsSaving(false);
         return;
       }
 
-      await BusinessService.createBranch({
-        businessId,
-        name: name.trim(),
-        address: address.trim(),
-        city: city.trim(),
-        coordinates,
-        metroStation: metroStation || undefined,
-        equipment: selectedEquipment,
-      });
+      if (editingBranch) {
+        await BusinessService.updateBranch(editingBranch.id, {
+          name: name.trim(),
+          address: trimmedAddress,
+          city: trimmedCity,
+          coordinates,
+          metroStation: metroStation || undefined,
+          equipment: selectedEquipment,
+        });
 
-      Alert.alert('Success', 'Branch added successfully');
-      resetForm();
-      setIsAddingBranch(false);
+        Alert.alert(t('common.success'), t('branches.save.updateSuccess'));
+      } else {
+        await BusinessService.createBranch({
+          businessId,
+          name: name.trim(),
+          address: trimmedAddress,
+          city: trimmedCity,
+          coordinates,
+          metroStation: metroStation || undefined,
+          equipment: selectedEquipment,
+        });
+
+        Alert.alert(t('common.success'), t('branches.save.success'));
+      }
+
+      closeForm();
       loadBranches();
     } catch (error) {
       console.error('Error saving branch:', error);
-      Alert.alert('Error', 'Failed to save branch');
+      Alert.alert(t('common.error'), t('branches.errors.saveFailed'));
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteBranch = (branchId: string, branchName: string) => {
-    Alert.alert('Delete Branch', `Are you sure you want to delete "${branchName}"?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await BusinessService.deleteBranch(branchId);
-            Alert.alert('Success', 'Branch deleted successfully');
-            loadBranches();
-          } catch (error) {
-            console.error('Error deleting branch:', error);
-            Alert.alert('Error', 'Failed to delete branch');
-          }
+  const handleDeleteBranch = useCallback(
+    (branchId: string, branchName: string) => {
+      Alert.alert(t('branches.delete.title'), t('branches.delete.confirm', { name: branchName }), [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await BusinessService.deleteBranch(branchId);
+              Alert.alert(t('common.success'), t('branches.delete.success'));
+              loadBranches();
+            } catch (error) {
+              if (error instanceof BranchHasActiveJobsError) {
+                Alert.alert(
+                  t('common.error'),
+                  t('branches.errors.hasActiveJobs', { count: error.count })
+                );
+                return;
+              }
+              console.error('Error deleting branch:', error);
+              Alert.alert(t('common.error'), t('branches.errors.deleteFailed'));
+            }
+          },
         },
-      },
-    ]);
-  };
+      ]);
+    },
+    [loadBranches, t]
+  );
 
   const toggleEquipment = (equipment: Equipment) => {
     setSelectedEquipment(prev =>
@@ -204,26 +310,11 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
     );
   };
 
-  const renderBranch = ({ item }: { item: Branch }) => (
-    <View style={styles.branchCard}>
-      <View style={styles.branchHeader}>
-        <Text style={styles.branchName}>{item.name}</Text>
-        <TouchableOpacity onPress={() => handleDeleteBranch(item.id, item.name)}>
-          <Text style={styles.deleteButton}>Delete</Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.branchAddress}>{item.address}</Text>
-      {item.metroStation && <Text style={styles.branchMetro}>🚇 {item.metroStation}</Text>}
-      {item.equipment.length > 0 && (
-        <View style={styles.equipmentContainer}>
-          {item.equipment.map(eq => (
-            <View key={eq} style={styles.equipmentBadge}>
-              <Text style={styles.equipmentText}>{eq}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-    </View>
+  const renderBranch = useCallback(
+    ({ item }: { item: Branch }) => (
+      <BranchRow branch={item} onEdit={openEditForm} onDelete={handleDeleteBranch} />
+    ),
+    [openEditForm, handleDeleteBranch]
   );
 
   if (isLoading) {
@@ -236,30 +327,34 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
     );
   }
 
+  const isEditing = editingBranch !== null;
+  const formTitle = isEditing ? t('branches.form.editTitle') : t('branches.form.addTitle');
+  const saveLabel = isEditing ? t('branches.form.update') : t('branches.form.save');
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <View style={styles.header}>
-        <Text style={styles.title}>Branch Management</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setIsAddingBranch(!isAddingBranch)}>
-          <Text style={styles.addButtonText}>{isAddingBranch ? 'Cancel' : '+ Add Branch'}</Text>
+        <Text style={styles.title}>{t('branches.title')}</Text>
+        <TouchableOpacity style={styles.addButton} onPress={toggleHeaderForm}>
+          <Text style={styles.addButtonText}>
+            {isAddingBranch ? t('common.cancel') : t('branches.add')}
+          </Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content}>
         {isAddingBranch && (
           <View style={styles.formContainer}>
-            <Text style={styles.formTitle}>Add New Branch</Text>
+            <Text style={styles.formTitle}>{formTitle}</Text>
 
             <View style={styles.inputContainer}>
               <Text style={styles.label}>
-                Branch Name <Text style={styles.required}>*</Text>
+                {t('branches.form.name')} <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
                 style={[styles.input, nameError ? styles.inputError : null]}
-                placeholder="e.g. Arbat Branch"
+                placeholder={t('branches.form.namePlaceholder')}
                 value={name}
                 onChangeText={text => {
                   setName(text);
@@ -272,11 +367,11 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
 
             <View style={styles.inputContainer}>
               <Text style={styles.label}>
-                Address <Text style={styles.required}>*</Text>
+                {t('branches.form.address')} <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
                 style={[styles.input, addressError ? styles.inputError : null]}
-                placeholder="e.g. Arbat St, 10"
+                placeholder={t('branches.form.addressPlaceholder')}
                 value={address}
                 onChangeText={text => {
                   setAddress(text);
@@ -289,7 +384,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
 
             <View style={styles.inputContainer}>
               <Text style={styles.label}>
-                City <Text style={styles.required}>*</Text>
+                {t('branches.form.city')} <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
                 style={styles.input}
@@ -300,7 +395,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Metro Station (Optional)</Text>
+              <Text style={styles.label}>{t('branches.form.metro')}</Text>
               <MetroSelector
                 value={metroStation}
                 onChange={value => setMetroStation(Array.isArray(value) ? value[0] || '' : value)}
@@ -308,7 +403,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Equipment (Optional)</Text>
+              <Text style={styles.label}>{t('branches.form.equipment')}</Text>
               <View style={styles.equipmentGrid}>
                 {EQUIPMENT_OPTIONS.map(equipment => (
                   <TouchableOpacity
@@ -338,18 +433,23 @@ export const BranchManagementScreen: React.FC<Props> = ({ navigation, route }) =
               {isSaving ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.saveButtonText}>Save Branch</Text>
+                <Text style={styles.saveButtonText}>{saveLabel}</Text>
               )}
             </TouchableOpacity>
           </View>
         )}
 
         <View style={styles.branchesSection}>
-          <Text style={styles.sectionTitle}>Your Branches ({branches.length})</Text>
+          <Text style={styles.sectionTitle}>
+            {t('branches.sectionTitle', { count: branches.length })}
+          </Text>
           {branches.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No branches yet</Text>
-              <Text style={styles.emptySubtext}>Add your first branch to start posting jobs</Text>
+              <Text style={styles.emptyText}>{t('branches.empty')}</Text>
+              <Text style={styles.emptySubtext}>{t('branches.addFirst')}</Text>
+              <TouchableOpacity style={styles.emptyCta} onPress={openCreateForm}>
+                <Text style={styles.emptyCtaText}>{t('branches.add')}</Text>
+              </TouchableOpacity>
             </View>
           ) : (
             <FlatList
@@ -379,9 +479,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+    backgroundColor: '#fff',
   },
   title: {
     fontSize: 24,
@@ -514,6 +615,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
     textAlign: 'center',
+    marginBottom: 20,
+  },
+  emptyCta: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  emptyCtaText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   branchCard: {
     backgroundColor: '#fff',
@@ -533,6 +647,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: COLORS.text,
+    flex: 1,
+  },
+  branchActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  editButton: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: '600',
   },
   deleteButton: {
     color: COLORS.error,
