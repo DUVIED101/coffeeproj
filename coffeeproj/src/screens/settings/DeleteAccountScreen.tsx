@@ -83,6 +83,8 @@ export const DeleteAccountScreen: React.FC = () => {
         }
         setForceConfirmed(false);
         setPasswordError(t('settings.delete.activeJobsWarning', { count: activeJobsCount }));
+      } else if (message === 'cascade_incomplete' || message === 'auth_delete_failed') {
+        setPasswordError(t('settings.delete.partialDeletion'));
       } else {
         setPasswordError(message || t('common.error'));
       }

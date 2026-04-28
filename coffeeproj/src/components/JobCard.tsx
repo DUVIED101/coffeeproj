@@ -1,21 +1,24 @@
 import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { Job } from '../types/job';
 import { COLORS } from '../config/constants';
 
 interface JobCardProps {
   job: Job;
   onPress?: (jobId: string) => void;
+  onLongPress?: (job: Job) => void;
 }
 
-const formatCurrency = (amount: number): string => {
-  return `₽${amount.toLocaleString('ru-RU')}`;
+const formatCurrency = (amount: number, locale: string): string => {
+  return `₽${amount.toLocaleString(locale)}`;
 };
 
-const formatShiftDate = (date: string): string => {
+const formatShiftDate = (date: string, locale: string): string => {
   const dateObj = new Date(date);
   const day = dateObj.getDate();
-  const month = dateObj.toLocaleString('ru-RU', { month: 'short' });
+  const month = dateObj.toLocaleString(locale, { month: 'short' });
   return `${day} ${month}`;
 };
 
@@ -40,34 +43,30 @@ const getStatusColor = (status: Job['status']): string => {
   }
 };
 
-const getStatusText = (status: Job['status']): string => {
+const getStatusText = (status: Job['status'], t: TFunction): string => {
   switch (status) {
     case 'open':
-      return 'Открыто';
+      return t('jobStatus.open');
     case 'in_review':
-      return 'На рассмотрении';
+      return t('jobStatus.inReview');
     case 'filled':
-      return 'Заполнено';
+      return t('jobStatus.filled');
     case 'expired':
-      return 'Истекло';
+      return t('jobStatus.expired');
     case 'cancelled':
-      return 'Отменено';
+      return t('jobStatus.cancelled');
     default:
       return status;
   }
 };
 
-const getJobTypeText = (jobType: Job['jobType']): string => {
-  return jobType === 'temporary' ? 'Временная' : 'Постоянная';
-};
-
-const getCompensationText = (job: Job): string => {
-  const formattedAmount = formatCurrency(job.compensation.amount);
+const getCompensationText = (job: Job, t: TFunction, locale: string): string => {
+  const formattedAmount = formatCurrency(job.compensation.amount, locale);
   switch (job.compensation.type) {
     case 'hourly':
-      return `${formattedAmount}/час`;
+      return t('compensation.hourly', { amount: formattedAmount });
     case 'daily':
-      return `${formattedAmount}/день`;
+      return t('compensation.daily', { amount: formattedAmount });
     case 'fixed':
       return formattedAmount;
     default:
@@ -75,16 +74,22 @@ const getCompensationText = (job: Job): string => {
   }
 };
 
-export const JobCard = React.memo<JobCardProps>(({ job, onPress }) => {
+export const JobCard = React.memo<JobCardProps>(({ job, onPress, onLongPress }) => {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
   const handlePress = useCallback(() => {
     if (onPress) onPress(job.id);
   }, [onPress, job.id]);
+  const handleLongPress = useCallback(() => {
+    if (onLongPress) onLongPress(job);
+  }, [onLongPress, job]);
 
   const statusColor = getStatusColor(job.status);
-  const statusText = getStatusText(job.status);
-  const jobTypeText = getJobTypeText(job.jobType);
-  const compensationText = getCompensationText(job);
-  const shiftDate = formatShiftDate(job.shiftDetails.startDate);
+  const statusText = getStatusText(job.status, t);
+  const jobTypeText =
+    job.jobType === 'temporary' ? t('filters.jobType.temporary') : t('filters.jobType.permanent');
+  const compensationText = getCompensationText(job, t, locale);
+  const shiftDate = formatShiftDate(job.shiftDetails.startDate, locale);
   const shiftTime = formatShiftTime(job.shiftDetails.startTime, job.shiftDetails.endTime);
 
   const visibleEquipment = job.requiredEquipmentExperience.slice(0, 3);
@@ -96,8 +101,10 @@ export const JobCard = React.memo<JobCardProps>(({ job, onPress }) => {
     <TouchableOpacity
       style={styles.card}
       onPress={handlePress}
+      onLongPress={onLongPress ? handleLongPress : undefined}
+      delayLongPress={400}
       activeOpacity={0.7}
-      disabled={!onPress}>
+      disabled={!onPress && !onLongPress}>
       <View style={styles.header}>
         <Text style={styles.title}>{job.title}</Text>
         <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
@@ -118,7 +125,7 @@ export const JobCard = React.memo<JobCardProps>(({ job, onPress }) => {
         </View>
         {hasUrgentTag && (
           <View style={[styles.badge, styles.urgentBadge]}>
-            <Text style={[styles.badgeText, styles.urgentText]}>Срочно</Text>
+            <Text style={[styles.badgeText, styles.urgentText]}>{t('jobs.urgent')}</Text>
           </View>
         )}
       </View>
@@ -157,7 +164,7 @@ export const JobCard = React.memo<JobCardProps>(({ job, onPress }) => {
 
       <View style={styles.footer}>
         <Text style={styles.applicationCount}>
-          {job.applicationCount} {job.applicationCount === 1 ? 'заявка' : 'заявок'}
+          {t('jobs.applicationsCount', { count: job.applicationCount })}
         </Text>
       </View>
     </TouchableOpacity>

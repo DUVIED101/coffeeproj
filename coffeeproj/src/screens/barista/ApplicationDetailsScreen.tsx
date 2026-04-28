@@ -9,6 +9,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
@@ -28,6 +29,8 @@ type Props = {
 };
 
 export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
   const { application } = route.params;
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [isMarkingComplete, setIsMarkingComplete] = useState(false);
@@ -56,15 +59,17 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
   const getStatusText = (status: string): string => {
     switch (status) {
       case 'pending':
-        return 'Pending';
+        return t('applications.status.pending');
       case 'under_review':
-        return 'Under Review';
+        return t('applications.status.underReview');
       case 'accepted':
-        return 'Accepted';
+        return t('applications.status.accepted');
       case 'rejected':
-        return 'Rejected';
+        return t('applications.status.rejected');
       case 'withdrawn':
-        return 'Withdrawn';
+        return t('applications.status.withdrawn');
+      case 'completed':
+        return t('applications.status.completed');
       default:
         return status;
     }
@@ -72,26 +77,26 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
 
   const handleWithdraw = () => {
     Alert.alert(
-      'Withdraw Application',
-      'Are you sure you want to withdraw this application? This action cannot be undone.',
+      t('applications.details.withdrawConfirmTitle'),
+      t('applications.details.withdrawConfirmBody'),
       [
         {
-          text: 'Cancel',
+          text: t('common.cancel'),
           style: 'cancel',
         },
         {
-          text: 'Withdraw',
+          text: t('applications.details.withdrawAction'),
           style: 'destructive',
           onPress: async () => {
             try {
               setIsWithdrawing(true);
               await ApplicationService.withdrawApplication(application.id);
               setCurrentStatus('withdrawn');
-              Alert.alert('Success', 'Application withdrawn successfully');
+              Alert.alert(t('common.success'), t('applications.details.withdrawSuccess'));
               navigation.goBack();
             } catch (error) {
               console.error('Error withdrawing application:', error);
-              Alert.alert('Error', 'Failed to withdraw application. Please try again.');
+              Alert.alert(t('common.error'), t('applications.details.withdrawFailure'));
             } finally {
               setIsWithdrawing(false);
             }
@@ -106,10 +111,10 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
       setIsMarkingComplete(true);
       await ApplicationService.markCompletedByBarista(application.id);
       setCompletedByBarista(true);
-      Alert.alert('Success', 'Work marked as completed');
+      Alert.alert(t('common.success'), t('applications.details.markCompleteSuccess'));
     } catch (error) {
       console.error('Error marking work complete:', error);
-      Alert.alert('Error', 'Failed to mark work as completed. Please try again.');
+      Alert.alert(t('common.error'), t('applications.details.markCompleteFailure'));
     } finally {
       setIsMarkingComplete(false);
     }
@@ -124,30 +129,36 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {/* Status Badge */}
         <View style={styles.statusContainer}>
-          <Text style={styles.statusLabel}>Application Status</Text>
+          <Text style={styles.statusLabel}>{t('applications.details.applicationStatus')}</Text>
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(currentStatus) }]}>
             <Text style={styles.statusText}>{getStatusText(currentStatus)}</Text>
           </View>
           <Text style={styles.appliedDate}>
-            Applied: {new Date(application.createdAt).toLocaleDateString('ru-RU')}
+            {t('applications.details.appliedOn', {
+              date: new Date(application.createdAt).toLocaleDateString(locale),
+            })}
           </Text>
         </View>
 
         {/* Job Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Job Details</Text>
-          <Text style={styles.jobTitle}>{job?.title || 'Job'}</Text>
-          <Text style={styles.businessName}>{job?.businessName || 'Business'}</Text>
+          <Text style={styles.sectionTitle}>{t('applications.details.jobDetails')}</Text>
+          <Text style={styles.jobTitle}>{job?.title || ''}</Text>
+          <Text style={styles.businessName}>{job?.businessName || ''}</Text>
           {job?.branchName && <Text style={styles.branchName}>{job.branchName}</Text>}
-          {job?.metroStation && <Text style={styles.metroStation}>Metro: {job.metroStation}</Text>}
+          {job?.metroStation && (
+            <Text style={styles.metroStation}>
+              {t('applications.details.metroPrefix', { station: job.metroStation })}
+            </Text>
+          )}
           {job?.compensation && (
             <Text style={styles.compensation}>
-              {job.compensation.amount.toLocaleString('ru-RU')} ₽{' · '}
+              {job.compensation.amount.toLocaleString(locale)} ₽{' · '}
               {job.compensation.type === 'hourly'
-                ? 'per hour'
+                ? t('applications.details.perHour')
                 : job.compensation.type === 'daily'
-                  ? 'per day'
-                  : 'fixed'}
+                  ? t('applications.details.perDay')
+                  : t('applications.details.fixed')}
             </Text>
           )}
         </View>
@@ -155,7 +166,7 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
         {/* Cover Letter */}
         {application.coverLetter && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Your Cover Letter</Text>
+            <Text style={styles.sectionTitle}>{t('applications.details.yourCoverLetter')}</Text>
             <Text style={styles.coverLetter}>{application.coverLetter}</Text>
           </View>
         )}
@@ -163,16 +174,16 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
         {/* Work Completion Status */}
         {showCompletionStatus && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Work Completion</Text>
+            <Text style={styles.sectionTitle}>{t('applications.details.workCompletion')}</Text>
             {completedByBarista && completedByBusiness && (
               <View style={styles.completionBanner}>
-                <Text style={styles.completionText}>✅ Work completed</Text>
+                <Text style={styles.completionText}>{t('applications.details.completedBoth')}</Text>
               </View>
             )}
             {completedByBarista && !completedByBusiness && (
               <View style={[styles.completionBanner, { backgroundColor: '#FEF3C7' }]}>
                 <Text style={[styles.completionText, { color: '#92400E' }]}>
-                  ✅ Work completed, waiting for business confirmation
+                  {t('applications.details.completedAwaitingBusiness')}
                 </Text>
               </View>
             )}
@@ -191,7 +202,9 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
               {isMarkingComplete ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.completeButtonText}>Mark Work as Completed</Text>
+                <Text style={styles.completeButtonText}>
+                  {t('applications.details.markCompleteAction')}
+                </Text>
               )}
             </TouchableOpacity>
           )}
@@ -203,7 +216,9 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
               {isWithdrawing ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.withdrawButtonText}>Withdraw Application</Text>
+                <Text style={styles.withdrawButtonText}>
+                  {t('applications.details.withdrawAction')}
+                </Text>
               )}
             </TouchableOpacity>
           )}

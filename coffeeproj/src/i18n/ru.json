@@ -7,7 +7,47 @@
     },
     "equipment": "Оборудование",
     "metroStation": "Метро",
-    "distance": "Расстояние"
+    "distance": "Расстояние",
+    "distanceKm": "{{km}} км",
+    "chooseEquipment": "Выберите оборудование",
+    "chooseDistance": "Выберите расстояние",
+    "clear": "Очистить",
+    "reset": "Сбросить фильтр"
+  },
+  "metro": {
+    "placeholderSingle": "Выберите станцию метро",
+    "titleSingle": "Выберите станцию метро",
+    "titleMulti": "Выберите станции метро",
+    "searchPlaceholder": "Поиск станции...",
+    "noResults": "Станции не найдены",
+    "selectedCount": "{{count}} станций"
+  },
+  "jobStatus": {
+    "open": "Открыто",
+    "inReview": "На рассмотрении",
+    "filled": "Заполнено",
+    "expired": "Истекло",
+    "cancelled": "Отменено"
+  },
+  "compensation": {
+    "hourly": "{{amount}}/час",
+    "daily": "{{amount}}/день"
+  },
+  "jobs": {
+    "urgent": "Срочно",
+    "applicationsCount_one": "{{count}} заявка",
+    "applicationsCount_few": "{{count}} заявки",
+    "applicationsCount_many": "{{count}} заявок",
+    "applicationsCount_other": "{{count}} заявок"
+  },
+  "barista": {
+    "experienceYears_one": "{{count}} год опыта",
+    "experienceYears_few": "{{count}} года опыта",
+    "experienceYears_many": "{{count}} лет опыта",
+    "experienceYears_other": "{{count}} лет опыта",
+    "hourlyRange": "{{min}}–{{max}}/час",
+    "hourlyMax": "до {{max}}/час",
+    "profileCompleteness": "Заполнено на {{percent}}%"
   },
   "applications": {
     "title": "Мои отклики",
@@ -17,7 +57,29 @@
       "underReview": "Рассматривается",
       "accepted": "Принято",
       "rejected": "Отклонено",
-      "withdrawn": "Отозвано"
+      "withdrawn": "Отозвано",
+      "completed": "Завершено"
+    },
+    "details": {
+      "applicationStatus": "Статус отклика",
+      "appliedOn": "Откликнулись: {{date}}",
+      "jobDetails": "О вакансии",
+      "metroPrefix": "Метро: {{station}}",
+      "perHour": "за час",
+      "perDay": "за день",
+      "fixed": "фиксированная оплата",
+      "yourCoverLetter": "Ваше сопроводительное письмо",
+      "workCompletion": "Завершение работы",
+      "completedBoth": "✅ Работа завершена",
+      "completedAwaitingBusiness": "✅ Работа завершена, ждём подтверждения от бизнеса",
+      "withdrawConfirmTitle": "Отозвать отклик?",
+      "withdrawConfirmBody": "Вы уверены, что хотите отозвать отклик? Это действие нельзя отменить.",
+      "withdrawSuccess": "Отклик отозван",
+      "withdrawFailure": "Не удалось отозвать отклик. Попробуйте ещё раз.",
+      "markCompleteSuccess": "Работа отмечена как завершённая",
+      "markCompleteFailure": "Не удалось отметить работу как завершённую. Попробуйте ещё раз.",
+      "markCompleteAction": "Отметить работу завершённой",
+      "withdrawAction": "Отозвать отклик"
     }
   },
   "apply": {
@@ -104,18 +166,28 @@
       "showArchived": "Show archived"
     }
   },
+  "manageJobs": {
+    "title": "Управление вакансиями",
+    "create": "+ Создать",
+    "empty": "Нет {{status}} вакансий",
+    "emptyHint": "Здесь появятся вакансии с этим статусом.\nДолгое нажатие на карточку — действия со статусом."
+  },
   "common": {
     "save": "Сохранить",
     "cancel": "Отмена",
     "delete": "Удалить",
-    "edit": "Edit",
+    "edit": "Изменить",
     "confirm": "Подтвердить",
     "back": "Назад",
     "loading": "Загрузка...",
     "error": "Ошибка",
     "success": "Готово",
     "close": "Закрыть",
-    "retry": "Повторить"
+    "retry": "Повторить",
+    "done": "Готово",
+    "ok": "ОК",
+    "yes": "Да",
+    "no": "Нет"
   },
   "settings": {
     "title": "Настройки",
@@ -181,7 +253,8 @@
       "activeJobsWarning": "У вас есть {{count}} активных вакансий. Они будут отменены.",
       "forceCheckbox": "Я понимаю и хочу удалить аккаунт",
       "submit": "Удалить аккаунт навсегда",
-      "invalidPassword": "Неверный пароль"
+      "invalidPassword": "Неверный пароль",
+      "partialDeletion": "Не удалось удалить все данные. Аккаунт не удалён. Свяжитесь с поддержкой."
     },
     "legal": {
       "termsTitle": "Условия использования",

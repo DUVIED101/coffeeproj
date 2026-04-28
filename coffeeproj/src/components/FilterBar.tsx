@@ -8,6 +8,7 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { JobFilters, JobType } from '../types/job';
 import type { Equipment, GeoPoint } from '../types/business';
 import { COLORS } from '../config/constants';
@@ -27,15 +28,11 @@ const EQUIPMENT_OPTIONS: Equipment[] = [
   'Slayer',
 ];
 
-const DISTANCE_OPTIONS = [
-  { value: 5000, label: '5 км' },
-  { value: 10000, label: '10 км' },
-  { value: 25000, label: '25 км' },
-  { value: 50000, label: '50 км' },
-];
+const DISTANCE_OPTIONS_KM = [5, 10, 25, 50] as const;
 
 export const FilterBar = React.memo<FilterBarProps>(
   ({ onFilterChange, currentFilters, userLocation }) => {
+    const { t } = useTranslation();
     const [showEquipmentModal, setShowEquipmentModal] = useState(false);
     const [showDistanceModal, setShowDistanceModal] = useState(false);
 
@@ -93,15 +90,10 @@ export const FilterBar = React.memo<FilterBarProps>(
       setShowEquipmentModal(false);
     }, [currentFilters, onFilterChange]);
 
-    const getJobTypeLabel = (type?: JobType): string => {
-      if (!type) return 'Все';
-      return type === 'temporary' ? 'Временная' : 'Постоянная';
-    };
-
     const getDistanceLabel = (distance?: number): string => {
-      if (!distance) return 'Расстояние';
+      if (!distance) return t('filters.distance');
       const km = distance / 1000;
-      return `${km} км`;
+      return t('filters.distanceKm', { km });
     };
 
     const selectedEquipmentCount = currentFilters.equipment?.length || 0;
@@ -120,7 +112,7 @@ export const FilterBar = React.memo<FilterBarProps>(
                 styles.filterChipText,
                 !currentFilters.jobType && styles.filterChipTextActive,
               ]}>
-              Все
+              {t('filters.jobType.all')}
             </Text>
           </TouchableOpacity>
 
@@ -135,7 +127,7 @@ export const FilterBar = React.memo<FilterBarProps>(
                 styles.filterChipText,
                 currentFilters.jobType === 'temporary' && styles.filterChipTextActive,
               ]}>
-              Временная
+              {t('filters.jobType.temporary')}
             </Text>
           </TouchableOpacity>
 
@@ -150,7 +142,7 @@ export const FilterBar = React.memo<FilterBarProps>(
                 styles.filterChipText,
                 currentFilters.jobType === 'permanent' && styles.filterChipTextActive,
               ]}>
-              Постоянная
+              {t('filters.jobType.permanent')}
             </Text>
           </TouchableOpacity>
 
@@ -162,7 +154,7 @@ export const FilterBar = React.memo<FilterBarProps>(
                 styles.filterChipText,
                 selectedEquipmentCount > 0 && styles.filterChipTextActive,
               ]}>
-              Оборудование
+              {t('filters.equipment')}
               {selectedEquipmentCount > 0 && ` (${selectedEquipmentCount})`}
             </Text>
           </TouchableOpacity>
@@ -172,7 +164,7 @@ export const FilterBar = React.memo<FilterBarProps>(
               multiSelect
               value={currentFilters.metroStations ?? []}
               onChange={handleMetroChange}
-              placeholder="Метро"
+              placeholder={t('filters.metroStation')}
             />
           </View>
 
@@ -202,7 +194,7 @@ export const FilterBar = React.memo<FilterBarProps>(
           <Pressable style={styles.modalOverlay} onPress={() => setShowEquipmentModal(false)}>
             <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Выберите оборудование</Text>
+                <Text style={styles.modalTitle}>{t('filters.chooseEquipment')}</Text>
                 <TouchableOpacity onPress={() => setShowEquipmentModal(false)}>
                   <Text style={styles.closeButton}>✕</Text>
                 </TouchableOpacity>
@@ -234,13 +226,15 @@ export const FilterBar = React.memo<FilterBarProps>(
                   <TouchableOpacity
                     style={[styles.doneButton, styles.clearButton]}
                     onPress={handleClearEquipment}>
-                    <Text style={[styles.doneButtonText, styles.clearButtonText]}>Очистить</Text>
+                    <Text style={[styles.doneButtonText, styles.clearButtonText]}>
+                      {t('filters.clear')}
+                    </Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity
                   style={[styles.doneButton, selectedEquipmentCount > 0 && styles.doneButtonHalf]}
                   onPress={() => setShowEquipmentModal(false)}>
-                  <Text style={styles.doneButtonText}>Готово</Text>
+                  <Text style={styles.doneButtonText}>{t('common.done')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -255,26 +249,27 @@ export const FilterBar = React.memo<FilterBarProps>(
           <Pressable style={styles.modalOverlay} onPress={() => setShowDistanceModal(false)}>
             <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Выберите расстояние</Text>
+                <Text style={styles.modalTitle}>{t('filters.chooseDistance')}</Text>
                 <TouchableOpacity onPress={() => setShowDistanceModal(false)}>
                   <Text style={styles.closeButton}>✕</Text>
                 </TouchableOpacity>
               </View>
 
               <View style={styles.distanceList}>
-                {DISTANCE_OPTIONS.map(option => {
-                  const isSelected = currentFilters.maxDistance === option.value;
+                {DISTANCE_OPTIONS_KM.map(km => {
+                  const value = km * 1000;
+                  const isSelected = currentFilters.maxDistance === value;
                   return (
                     <TouchableOpacity
-                      key={option.value}
+                      key={value}
                       style={[styles.distanceItem, isSelected && styles.distanceItemSelected]}
-                      onPress={() => handleDistanceChange(option.value)}>
+                      onPress={() => handleDistanceChange(value)}>
                       <Text
                         style={[
                           styles.distanceItemText,
                           isSelected && styles.distanceItemTextSelected,
                         ]}>
-                        {option.label}
+                        {t('filters.distanceKm', { km })}
                       </Text>
                       {isSelected && <Text style={styles.checkmark}>✓</Text>}
                     </TouchableOpacity>
@@ -286,7 +281,7 @@ export const FilterBar = React.memo<FilterBarProps>(
                 <TouchableOpacity
                   style={styles.resetButton}
                   onPress={() => handleDistanceChange(undefined)}>
-                  <Text style={styles.resetButtonText}>Сбросить фильтр</Text>
+                  <Text style={styles.resetButtonText}>{t('filters.reset')}</Text>
                 </TouchableOpacity>
               )}
             </View>

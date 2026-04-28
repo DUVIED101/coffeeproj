@@ -10,6 +10,8 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -257,326 +259,341 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <View style={styles.avatarContainer}>
-            {profile.avatarUrl ? (
-              <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarInitials}>
-                  {profile.firstName[0]}
-                  {profile.lastName[0]}
-                </Text>
-              </View>
-            )}
-            <TouchableOpacity
-              style={styles.avatarUploadButton}
-              onPress={handleAvatarUpload}
-              disabled={isSaving}>
-              <Text style={styles.avatarUploadButtonText}>
-                {profile.avatarUrl ? 'Change' : 'Add Photo'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.headerInfo}>
-            <Text style={styles.name}>
-              {profile.firstName} {profile.lastName}
-            </Text>
-            <Text style={styles.city}>{profile.city}</Text>
-
-            <View style={styles.completenessContainer}>
-              <View style={styles.completenessBar}>
-                <View
-                  style={[
-                    styles.completenessBarFill,
-                    {
-                      width: `${profile.profileCompleteness}%`,
-                      backgroundColor: completenessColor,
-                    },
-                  ]}
-                />
-              </View>
-              <Text style={[styles.completenessText, { color: completenessColor }]}>
-                {profile.profileCompleteness}% complete
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Personal Info</Text>
-            {!isEditing ? (
-              <TouchableOpacity onPress={handleEdit}>
-                <Text style={styles.editButton}>Edit</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.editActions}>
-                <TouchableOpacity onPress={handleCancel}>
-                  <Text style={styles.cancelButton}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={handleSave} disabled={isSaving}>
-                  <Text style={styles.saveButton}>{isSaving ? 'Saving...' : 'Save'}</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-
-          {isEditing ? (
-            <>
-              <Text style={styles.label}>First Name</Text>
-              <TextInput
-                style={styles.input}
-                value={firstName}
-                onChangeText={setFirstName}
-                editable={isEditing}
-              />
-
-              <Text style={styles.label}>Last Name</Text>
-              <TextInput
-                style={styles.input}
-                value={lastName}
-                onChangeText={setLastName}
-                editable={isEditing}
-              />
-
-              <Text style={styles.label}>City</Text>
-              <TextInput
-                style={styles.input}
-                value={city}
-                onChangeText={setCity}
-                editable={isEditing}
-              />
-
-              <Text style={styles.label}>Date of Birth</Text>
-              <TouchableOpacity
-                style={styles.datePickerButton}
-                onPress={() => setShowDatePicker(true)}>
-                <Text style={[styles.datePickerText, !dateOfBirth && styles.datePickerPlaceholder]}>
-                  {dateOfBirth ? formatDisplayDate(dateOfBirth) : 'Select date'}
-                </Text>
-              </TouchableOpacity>
-              {showDatePicker && (
-                <>
-                  <DateTimePicker
-                    value={selectedDate}
-                    mode="date"
-                    display="spinner"
-                    onValueChange={handleDateChange}
-                    maximumDate={new Date()}
-                    minimumDate={new Date(1940, 0, 1)}
-                  />
-                  <TouchableOpacity
-                    style={styles.datePickerDoneButton}
-                    onPress={() => setShowDatePicker(false)}>
-                    <Text style={styles.datePickerDoneText}>Done</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              {profile.dateOfBirth && (
-                <Text style={styles.infoText}>Born: {profile.dateOfBirth}</Text>
-              )}
-            </>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Professional Info</Text>
-
-          {isEditing ? (
-            <>
-              <Text style={styles.label}>Bio</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={bio}
-                onChangeText={setBio}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-                maxLength={500}
-                editable={isEditing}
-              />
-
-              <Text style={styles.label}>Years of Experience</Text>
-              <TextInput
-                style={styles.input}
-                value={yearsOfExperience}
-                onChangeText={setYearsOfExperience}
-                keyboardType="numeric"
-                editable={isEditing}
-              />
-
-              <Text style={styles.label}>Equipment Experience</Text>
-              <View style={styles.chipsContainer}>
-                {EQUIPMENT_TYPES.map(equipment => (
-                  <TouchableOpacity
-                    key={equipment}
-                    style={[
-                      styles.chip,
-                      selectedEquipment.includes(equipment) && styles.chipSelected,
-                    ]}
-                    onPress={() => toggleEquipment(equipment)}>
-                    <Text
-                      style={[
-                        styles.chipText,
-                        selectedEquipment.includes(equipment) && styles.chipTextSelected,
-                      ]}>
-                      {equipment}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </>
-          ) : (
-            <>
-              {profile.bio && <Text style={styles.bioText}>{profile.bio}</Text>}
-              {profile.yearsOfExperience !== undefined && (
-                <Text style={styles.infoText}>Experience: {profile.yearsOfExperience} years</Text>
-              )}
-              {profile.equipmentExperience.length > 0 && (
-                <>
-                  <Text style={styles.label}>Equipment</Text>
-                  <View style={styles.chipsContainer}>
-                    {profile.equipmentExperience.map(equipment => (
-                      <View key={equipment} style={[styles.chip, styles.chipSelected]}>
-                        <Text style={[styles.chipText, styles.chipTextSelected]}>{equipment}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </>
-              )}
-            </>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Work Preferences</Text>
-
-          {isEditing ? (
-            <>
-              <Text style={styles.label}>Preferred Metro Stations</Text>
-              <MetroSelector
-                multiSelect
-                value={preferredMetroStations}
-                onChange={setPreferredMetroStations}
-              />
-
-              <Text style={styles.label}>Preferred Shift Times</Text>
-              <View style={styles.chipsContainer}>
-                {SHIFT_TIMES.map(({ value, label }) => (
-                  <TouchableOpacity
-                    key={value}
-                    style={[styles.chip, selectedShiftTimes.includes(value) && styles.chipSelected]}
-                    onPress={() => toggleShiftTime(value)}>
-                    <Text
-                      style={[
-                        styles.chipText,
-                        selectedShiftTimes.includes(value) && styles.chipTextSelected,
-                      ]}>
-                      {label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={styles.label}>Hourly Rate Range (RUB)</Text>
-              <View style={styles.row}>
-                <TextInput
-                  style={[styles.input, styles.halfInput]}
-                  value={hourlyRateMin}
-                  onChangeText={setHourlyRateMin}
-                  keyboardType="numeric"
-                  placeholder="Min"
-                  editable={isEditing}
-                />
-                <Text style={styles.separator}>-</Text>
-                <TextInput
-                  style={[styles.input, styles.halfInput]}
-                  value={hourlyRateMax}
-                  onChangeText={setHourlyRateMax}
-                  keyboardType="numeric"
-                  placeholder="Max"
-                  editable={isEditing}
-                />
-              </View>
-            </>
-          ) : (
-            <>
-              {profile.preferredMetroStations.length > 0 && (
-                <>
-                  <Text style={styles.label}>Metro Stations</Text>
-                  <Text style={styles.infoText}>{profile.preferredMetroStations.join(', ')}</Text>
-                </>
-              )}
-              {profile.preferredShiftTimes.length > 0 && (
-                <>
-                  <Text style={styles.label}>Shift Times</Text>
-                  <View style={styles.chipsContainer}>
-                    {profile.preferredShiftTimes.map(shift => (
-                      <View key={shift} style={[styles.chip, styles.chipSelected]}>
-                        <Text style={[styles.chipText, styles.chipTextSelected]}>
-                          {SHIFT_TIMES.find(s => s.value === shift)?.label}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                </>
-              )}
-              {(profile.hourlyRateMin || profile.hourlyRateMax) && (
-                <>
-                  <Text style={styles.label}>Hourly Rate</Text>
-                  <Text style={styles.infoText}>
-                    {profile.hourlyRateMin && `${profile.hourlyRateMin} RUB`}
-                    {profile.hourlyRateMin && profile.hourlyRateMax && ' - '}
-                    {profile.hourlyRateMax && `${profile.hourlyRateMax} RUB`}
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled">
+          <View style={styles.header}>
+            <View style={styles.avatarContainer}>
+              {profile.avatarUrl ? (
+                <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Text style={styles.avatarInitials}>
+                    {profile.firstName[0]}
+                    {profile.lastName[0]}
                   </Text>
-                </>
+                </View>
               )}
-            </>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Portfolio</Text>
-
-          {profile.portfolioPhotos.length > 0 ? (
-            <View style={styles.portfolioGrid}>
-              {profile.portfolioPhotos.map((photo, index) => (
-                <Image key={index} source={{ uri: photo }} style={styles.portfolioPhoto} />
-              ))}
+              <TouchableOpacity
+                style={styles.avatarUploadButton}
+                onPress={handleAvatarUpload}
+                disabled={isSaving}>
+                <Text style={styles.avatarUploadButtonText}>
+                  {profile.avatarUrl ? 'Change' : 'Add Photo'}
+                </Text>
+              </TouchableOpacity>
             </View>
-          ) : (
-            <Text style={styles.emptyText}>No portfolio photos yet</Text>
-          )}
 
-          <TouchableOpacity
-            style={styles.uploadButton}
-            onPress={handlePortfolioPhotoUpload}
-            disabled={isSaving}>
-            <Text style={styles.uploadButtonText}>
-              {isSaving ? 'Uploading...' : '+ Add Portfolio Photo'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+            <View style={styles.headerInfo}>
+              <Text style={styles.name}>
+                {profile.firstName} {profile.lastName}
+              </Text>
+              <Text style={styles.city}>{profile.city}</Text>
 
-        {isEditing && (
-          <View style={styles.section}>
-            <TouchableOpacity
-              style={styles.toggleButton}
-              onPress={() => setIsActivelyLooking(!isActivelyLooking)}>
-              <Text style={styles.toggleLabel}>Actively Looking for Work</Text>
-              <View style={[styles.toggleSwitch, isActivelyLooking && styles.toggleSwitchActive]}>
-                <View style={[styles.toggleThumb, isActivelyLooking && styles.toggleThumbActive]} />
+              <View style={styles.completenessContainer}>
+                <View style={styles.completenessBar}>
+                  <View
+                    style={[
+                      styles.completenessBarFill,
+                      {
+                        width: `${profile.profileCompleteness}%`,
+                        backgroundColor: completenessColor,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text style={[styles.completenessText, { color: completenessColor }]}>
+                  {profile.profileCompleteness}% complete
+                </Text>
               </View>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Personal Info</Text>
+              {!isEditing ? (
+                <TouchableOpacity onPress={handleEdit}>
+                  <Text style={styles.editButton}>Edit</Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.editActions}>
+                  <TouchableOpacity onPress={handleCancel}>
+                    <Text style={styles.cancelButton}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={handleSave} disabled={isSaving}>
+                    <Text style={styles.saveButton}>{isSaving ? 'Saving...' : 'Save'}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+
+            {isEditing ? (
+              <>
+                <Text style={styles.label}>First Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  editable={isEditing}
+                />
+
+                <Text style={styles.label}>Last Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={lastName}
+                  onChangeText={setLastName}
+                  editable={isEditing}
+                />
+
+                <Text style={styles.label}>City</Text>
+                <TextInput
+                  style={styles.input}
+                  value={city}
+                  onChangeText={setCity}
+                  editable={isEditing}
+                />
+
+                <Text style={styles.label}>Date of Birth</Text>
+                <TouchableOpacity
+                  style={styles.datePickerButton}
+                  onPress={() => setShowDatePicker(true)}>
+                  <Text
+                    style={[styles.datePickerText, !dateOfBirth && styles.datePickerPlaceholder]}>
+                    {dateOfBirth ? formatDisplayDate(dateOfBirth) : 'Select date'}
+                  </Text>
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <>
+                    <DateTimePicker
+                      value={selectedDate}
+                      mode="date"
+                      display="spinner"
+                      onValueChange={handleDateChange}
+                      maximumDate={new Date()}
+                      minimumDate={new Date(1940, 0, 1)}
+                    />
+                    <TouchableOpacity
+                      style={styles.datePickerDoneButton}
+                      onPress={() => setShowDatePicker(false)}>
+                      <Text style={styles.datePickerDoneText}>Done</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                {profile.dateOfBirth && (
+                  <Text style={styles.infoText}>Born: {profile.dateOfBirth}</Text>
+                )}
+              </>
+            )}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Professional Info</Text>
+
+            {isEditing ? (
+              <>
+                <Text style={styles.label}>Bio</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={bio}
+                  onChangeText={setBio}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                  maxLength={500}
+                  editable={isEditing}
+                />
+
+                <Text style={styles.label}>Years of Experience</Text>
+                <TextInput
+                  style={styles.input}
+                  value={yearsOfExperience}
+                  onChangeText={setYearsOfExperience}
+                  keyboardType="numeric"
+                  editable={isEditing}
+                />
+
+                <Text style={styles.label}>Equipment Experience</Text>
+                <View style={styles.chipsContainer}>
+                  {EQUIPMENT_TYPES.map(equipment => (
+                    <TouchableOpacity
+                      key={equipment}
+                      style={[
+                        styles.chip,
+                        selectedEquipment.includes(equipment) && styles.chipSelected,
+                      ]}
+                      onPress={() => toggleEquipment(equipment)}>
+                      <Text
+                        style={[
+                          styles.chipText,
+                          selectedEquipment.includes(equipment) && styles.chipTextSelected,
+                        ]}>
+                        {equipment}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            ) : (
+              <>
+                {profile.bio && <Text style={styles.bioText}>{profile.bio}</Text>}
+                {profile.yearsOfExperience !== undefined && (
+                  <Text style={styles.infoText}>Experience: {profile.yearsOfExperience} years</Text>
+                )}
+                {profile.equipmentExperience.length > 0 && (
+                  <>
+                    <Text style={styles.label}>Equipment</Text>
+                    <View style={styles.chipsContainer}>
+                      {profile.equipmentExperience.map(equipment => (
+                        <View key={equipment} style={[styles.chip, styles.chipSelected]}>
+                          <Text style={[styles.chipText, styles.chipTextSelected]}>
+                            {equipment}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  </>
+                )}
+              </>
+            )}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Work Preferences</Text>
+
+            {isEditing ? (
+              <>
+                <Text style={styles.label}>Preferred Metro Stations</Text>
+                <MetroSelector
+                  multiSelect
+                  value={preferredMetroStations}
+                  onChange={setPreferredMetroStations}
+                />
+
+                <Text style={styles.label}>Preferred Shift Times</Text>
+                <View style={styles.chipsContainer}>
+                  {SHIFT_TIMES.map(({ value, label }) => (
+                    <TouchableOpacity
+                      key={value}
+                      style={[
+                        styles.chip,
+                        selectedShiftTimes.includes(value) && styles.chipSelected,
+                      ]}
+                      onPress={() => toggleShiftTime(value)}>
+                      <Text
+                        style={[
+                          styles.chipText,
+                          selectedShiftTimes.includes(value) && styles.chipTextSelected,
+                        ]}>
+                        {label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={styles.label}>Hourly Rate Range (RUB)</Text>
+                <View style={styles.row}>
+                  <TextInput
+                    style={[styles.input, styles.halfInput]}
+                    value={hourlyRateMin}
+                    onChangeText={setHourlyRateMin}
+                    keyboardType="numeric"
+                    placeholder="Min"
+                    editable={isEditing}
+                  />
+                  <Text style={styles.separator}>-</Text>
+                  <TextInput
+                    style={[styles.input, styles.halfInput]}
+                    value={hourlyRateMax}
+                    onChangeText={setHourlyRateMax}
+                    keyboardType="numeric"
+                    placeholder="Max"
+                    editable={isEditing}
+                  />
+                </View>
+              </>
+            ) : (
+              <>
+                {profile.preferredMetroStations.length > 0 && (
+                  <>
+                    <Text style={styles.label}>Metro Stations</Text>
+                    <Text style={styles.infoText}>{profile.preferredMetroStations.join(', ')}</Text>
+                  </>
+                )}
+                {profile.preferredShiftTimes.length > 0 && (
+                  <>
+                    <Text style={styles.label}>Shift Times</Text>
+                    <View style={styles.chipsContainer}>
+                      {profile.preferredShiftTimes.map(shift => (
+                        <View key={shift} style={[styles.chip, styles.chipSelected]}>
+                          <Text style={[styles.chipText, styles.chipTextSelected]}>
+                            {SHIFT_TIMES.find(s => s.value === shift)?.label}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  </>
+                )}
+                {(profile.hourlyRateMin || profile.hourlyRateMax) && (
+                  <>
+                    <Text style={styles.label}>Hourly Rate</Text>
+                    <Text style={styles.infoText}>
+                      {profile.hourlyRateMin && `${profile.hourlyRateMin} RUB`}
+                      {profile.hourlyRateMin && profile.hourlyRateMax && ' - '}
+                      {profile.hourlyRateMax && `${profile.hourlyRateMax} RUB`}
+                    </Text>
+                  </>
+                )}
+              </>
+            )}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Portfolio</Text>
+
+            {profile.portfolioPhotos.length > 0 ? (
+              <View style={styles.portfolioGrid}>
+                {profile.portfolioPhotos.map((photo, index) => (
+                  <Image key={index} source={{ uri: photo }} style={styles.portfolioPhoto} />
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.emptyText}>No portfolio photos yet</Text>
+            )}
+
+            <TouchableOpacity
+              style={styles.uploadButton}
+              onPress={handlePortfolioPhotoUpload}
+              disabled={isSaving}>
+              <Text style={styles.uploadButtonText}>
+                {isSaving ? 'Uploading...' : '+ Add Portfolio Photo'}
+              </Text>
             </TouchableOpacity>
           </View>
-        )}
-      </ScrollView>
+
+          {isEditing && (
+            <View style={styles.section}>
+              <TouchableOpacity
+                style={styles.toggleButton}
+                onPress={() => setIsActivelyLooking(!isActivelyLooking)}>
+                <Text style={styles.toggleLabel}>Actively Looking for Work</Text>
+                <View style={[styles.toggleSwitch, isActivelyLooking && styles.toggleSwitchActive]}>
+                  <View
+                    style={[styles.toggleThumb, isActivelyLooking && styles.toggleThumbActive]}
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -590,6 +607,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  flex: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,

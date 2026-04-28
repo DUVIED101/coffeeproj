@@ -1,5 +1,7 @@
 import React, { useCallback } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { BaristaProfile } from '../types/baristaProfile';
 import { COLORS } from '../config/constants';
 import { getInitials } from '../utils/getInitials';
@@ -9,24 +11,29 @@ type BaristaCardProps = {
   onPress?: (userId: string) => void;
 };
 
-const getExperienceText = (years: number): string => {
-  const suffix = years === 1 ? 'год' : years >= 2 && years <= 4 ? 'года' : 'лет';
-  return `${years} ${suffix} опыта`;
-};
+const formatRate = (amount: number, locale: string): string => `₽${amount.toLocaleString(locale)}`;
 
-const formatRate = (amount: number): string => `₽${amount.toLocaleString('ru-RU')}`;
-
-const getHourlyRateText = (min?: number, max?: number): string | undefined => {
+const getHourlyRateText = (
+  min: number | undefined,
+  max: number | undefined,
+  t: TFunction,
+  locale: string
+): string | undefined => {
   if (min !== undefined && max !== undefined) {
-    return `${formatRate(min)}–${formatRate(max)}/час`;
+    return t('barista.hourlyRange', {
+      min: formatRate(min, locale),
+      max: formatRate(max, locale),
+    });
   }
   if (max !== undefined) {
-    return `до ${formatRate(max)}/час`;
+    return t('barista.hourlyMax', { max: formatRate(max, locale) });
   }
   return undefined;
 };
 
 export const BaristaCard = React.memo<BaristaCardProps>(({ profile, onPress }) => {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
   const {
     userId,
     firstName,
@@ -42,7 +49,7 @@ export const BaristaCard = React.memo<BaristaCardProps>(({ profile, onPress }) =
 
   const visibleEquipment = equipmentExperience.slice(0, 3);
   const remainingEquipmentCount = equipmentExperience.length - 3;
-  const hourlyRateText = getHourlyRateText(hourlyRateMin, hourlyRateMax);
+  const hourlyRateText = getHourlyRateText(hourlyRateMin, hourlyRateMax, t, locale);
   const clampedCompleteness = Math.max(0, Math.min(100, profileCompleteness));
 
   const handlePress = useCallback(() => {
@@ -73,7 +80,9 @@ export const BaristaCard = React.memo<BaristaCardProps>(({ profile, onPress }) =
 
       {yearsOfExperience !== undefined && (
         <View style={styles.experienceRow}>
-          <Text style={styles.experienceText}>{getExperienceText(yearsOfExperience)}</Text>
+          <Text style={styles.experienceText}>
+            {t('barista.experienceYears', { count: yearsOfExperience })}
+          </Text>
         </View>
       )}
 
@@ -102,7 +111,9 @@ export const BaristaCard = React.memo<BaristaCardProps>(({ profile, onPress }) =
         <View style={styles.completenessTrack}>
           <View style={[styles.completenessFill, { width: `${clampedCompleteness}%` }]} />
         </View>
-        <Text style={styles.completenessLabel}>Заполнено на {clampedCompleteness}%</Text>
+        <Text style={styles.completenessLabel}>
+          {t('barista.profileCompleteness', { percent: clampedCompleteness })}
+        </Text>
       </View>
     </TouchableOpacity>
   );

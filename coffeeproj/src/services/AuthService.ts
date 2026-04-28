@@ -13,14 +13,22 @@ export class AuthService {
     phoneNumber?: string
   ): Promise<{ user: any; profile: User }> {
     try {
-      // 1. Sign up with Supabase Auth
+      // The `handle_new_user` trigger reads account_type/phone_number from
+      // auth.users.raw_user_meta_data and creates the public.users profile in
+      // the same transaction. If the profile INSERT fails, the auth.users
+      // INSERT is rolled back too — no orphan auth users (BUG-08).
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            account_type: accountType,
+            ...(phoneNumber !== undefined ? { phone_number: phoneNumber } : {}),
+          },
+        },
       });
 
       if (authError) {
-        // Provide more helpful error messages
         if (authError.message.includes('invalid')) {
           throw new Error(
             'This email address cannot be used. Please try a different email address or contact support.'
@@ -34,70 +42,27 @@ export class AuthService {
         throw authError;
       }
       if (!authData.user) throw new Error('No user returned from signup');
-
-      // 2. Check if session was created (email confirmation disabled)
       if (!authData.session) {
         throw new Error(
           'Email confirmation is required. Please check your email and contact support if this continues.'
         );
       }
 
-      // 3. Create user profile
-      // Session is now active (because email confirmation is disabled),
-      // so this INSERT will use authenticated role with auth.uid() available
-
-      // Small delay to ensure auth state is fully synchronized
-      await new Promise(resolve => setTimeout(resolve, 100));
-
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .insert({
-          id: authData.user.id,
-          email,
-          phone_number: phoneNumber,
-          account_type: accountType,
-        })
-        .select()
+        .select('*')
+        .eq('id', authData.user.id)
         .single();
 
-      if (userError) {
-        console.error('Failed to create user profile:', userError);
-        console.error('Error details:', {
-          code: userError.code,
-          message: userError.message,
-          details: userError.details,
-        });
-
-        // Try to fetch if it already exists
-        const { data: existingUser, error: fetchError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', authData.user.id)
-          .single();
-
-        if (existingUser) {
-          // Profile exists, return it
-          const profile: User = {
-            id: existingUser.id,
-            uid: existingUser.id,
-            email: existingUser.email,
-            phoneNumber: existingUser.phone_number,
-            accountType: existingUser.account_type,
-            isActive: existingUser.is_active,
-            isVerified: existingUser.is_verified,
-            createdAt: existingUser.created_at,
-            updatedAt: existingUser.updated_at,
-          };
-          return { user: authData.user, profile };
-        }
-
-        // Could not create or fetch profile
+      if (userError || !userData) {
+        // Trigger ran but profile not found — sign back out so the user can
+        // retry instead of being stuck in a half-authenticated state.
+        await supabase.auth.signOut();
         throw new Error(
-          `Failed to create user profile: ${userError.message}. Please contact support.`
+          `Failed to load user profile after signup: ${userError?.message ?? 'profile missing'}. Please try again.`
         );
       }
 
-      // 4. Map database user to User type
       const profile: User = {
         id: userData.id,
         uid: userData.id,

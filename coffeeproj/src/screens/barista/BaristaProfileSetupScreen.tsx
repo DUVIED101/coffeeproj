@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -473,9 +475,16 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
       {renderProgressIndicator()}
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {renderStepContent()}
-      </ScrollView>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled">
+          {renderStepContent()}
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <View style={styles.footer}>
         <View style={styles.buttonRow}>
@@ -587,6 +596,9 @@ const styles = StyleSheet.create({
   },
   progressLineActive: {
     backgroundColor: COLORS.success,
+  },
+  flex: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,

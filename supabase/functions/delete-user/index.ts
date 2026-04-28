@@ -169,13 +169,88 @@ async function handleRequest(req: Request): Promise<Response> {
     return jsonResponse(500, { error: "db_delete_failed" });
   }
 
+  const cascadeReport = await verifyCascade(adminClient, userId);
+  const orphanTotal = Object.values(cascadeReport).reduce((s, n) => s + n, 0);
+  if (orphanTotal > 0) {
+    console.warn("cascade verification found orphans", { userId, cascadeReport });
+    return jsonResponse(500, {
+      error: "cascade_incomplete",
+      orphans: cascadeReport,
+    });
+  }
+
   const { error: authDeleteError } =
     await adminClient.auth.admin.deleteUser(userId);
   if (authDeleteError !== null) {
     console.warn("auth delete failed", { message: authDeleteError.message });
+    return jsonResponse(500, { error: "auth_delete_failed" });
   }
 
-  return jsonResponse(200, { ok: true });
+  return jsonResponse(200, { ok: true, deleted: cascadeReport });
+}
+
+type CascadeReport = {
+  applications: number;
+  jobs: number;
+  businesses: number;
+  conversations_as_barista: number;
+  conversations_as_business: number;
+  messages: number;
+  barista_profiles: number;
+  apns_tokens: number;
+  notification_preferences: number;
+};
+
+async function countRows(
+  supabase: SupabaseClient,
+  table: string,
+  column: string,
+  userId: UserId,
+): Promise<number> {
+  const { count, error } = await supabase
+    .from(table)
+    .select("*", { count: "exact", head: true })
+    .eq(column, userId);
+  if (error) throw new Error(`${table} count failed: ${error.message}`);
+  return count ?? 0;
+}
+
+async function verifyCascade(
+  supabase: SupabaseClient,
+  userId: UserId,
+): Promise<CascadeReport> {
+  const [
+    applications,
+    jobs,
+    businesses,
+    conversationsAsBarista,
+    conversationsAsBusiness,
+    messages,
+    baristaProfiles,
+    apnsTokens,
+    notificationPrefs,
+  ] = await Promise.all([
+    countRows(supabase, "applications", "barista_id", userId),
+    countRows(supabase, "jobs", "business_owner_id", userId),
+    countRows(supabase, "businesses", "owner_id", userId),
+    countRows(supabase, "conversations", "barista_id", userId),
+    countRows(supabase, "conversations", "business_id", userId),
+    countRows(supabase, "messages", "sender_id", userId),
+    countRows(supabase, "barista_profiles", "user_id", userId),
+    countRows(supabase, "apns_tokens", "user_id", userId),
+    countRows(supabase, "notification_preferences", "user_id", userId),
+  ]);
+  return {
+    applications,
+    jobs,
+    businesses,
+    conversations_as_barista: conversationsAsBarista,
+    conversations_as_business: conversationsAsBusiness,
+    messages,
+    barista_profiles: baristaProfiles,
+    apns_tokens: apnsTokens,
+    notification_preferences: notificationPrefs,
+  };
 }
 
 Deno.serve(handleRequest);

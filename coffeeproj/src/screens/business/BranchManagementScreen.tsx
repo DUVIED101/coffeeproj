@@ -11,6 +11,8 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -348,124 +350,128 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content}>
-        {isAddingBranch && (
-          <View style={styles.formContainer}>
-            <Text style={styles.formTitle}>{formTitle}</Text>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+          {isAddingBranch && (
+            <View style={styles.formContainer}>
+              <Text style={styles.formTitle}>{formTitle}</Text>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>
-                {t('branches.form.name')} <Text style={styles.required}>*</Text>
-              </Text>
-              <TextInput
-                style={[styles.input, nameError ? styles.inputError : null]}
-                placeholder={t('branches.form.namePlaceholder')}
-                value={name}
-                onChangeText={text => {
-                  setName(text);
-                  setNameError(null);
-                }}
-                editable={!isSaving}
-              />
-              {nameError && <Text style={styles.errorText}>{nameError}</Text>}
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>
-                {t('branches.form.address')} <Text style={styles.required}>*</Text>
-              </Text>
-              <TextInput
-                style={[styles.input, addressError ? styles.inputError : null]}
-                placeholder={t('branches.form.addressPlaceholder')}
-                value={address}
-                onChangeText={text => {
-                  setAddress(text);
-                  setAddressError(null);
-                }}
-                editable={!isSaving}
-              />
-              {addressError && <Text style={styles.errorText}>{addressError}</Text>}
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>
-                {t('branches.form.city')} <Text style={styles.required}>*</Text>
-              </Text>
-              <TextInput
-                style={styles.input}
-                value={city}
-                onChangeText={setCity}
-                editable={!isSaving}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>{t('branches.form.metro')}</Text>
-              <MetroSelector
-                value={metroStation || null}
-                onChange={value => setMetroStation(value ?? '')}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>{t('branches.form.equipment')}</Text>
-              <View style={styles.equipmentGrid}>
-                {EQUIPMENT_OPTIONS.map(equipment => (
-                  <TouchableOpacity
-                    key={equipment}
-                    style={[
-                      styles.equipmentChip,
-                      selectedEquipment.includes(equipment) && styles.equipmentChipSelected,
-                    ]}
-                    onPress={() => toggleEquipment(equipment)}
-                    disabled={isSaving}>
-                    <Text
-                      style={[
-                        styles.equipmentChipText,
-                        selectedEquipment.includes(equipment) && styles.equipmentChipTextSelected,
-                      ]}>
-                      {equipment}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>
+                  {t('branches.form.name')} <Text style={styles.required}>*</Text>
+                </Text>
+                <TextInput
+                  style={[styles.input, nameError ? styles.inputError : null]}
+                  placeholder={t('branches.form.namePlaceholder')}
+                  value={name}
+                  onChangeText={text => {
+                    setName(text);
+                    setNameError(null);
+                  }}
+                  editable={!isSaving}
+                />
+                {nameError && <Text style={styles.errorText}>{nameError}</Text>}
               </View>
-            </View>
 
-            <TouchableOpacity
-              style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-              onPress={handleSaveBranch}
-              disabled={isSaving}>
-              {isSaving ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.saveButtonText}>{saveLabel}</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        )}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>
+                  {t('branches.form.address')} <Text style={styles.required}>*</Text>
+                </Text>
+                <TextInput
+                  style={[styles.input, addressError ? styles.inputError : null]}
+                  placeholder={t('branches.form.addressPlaceholder')}
+                  value={address}
+                  onChangeText={text => {
+                    setAddress(text);
+                    setAddressError(null);
+                  }}
+                  editable={!isSaving}
+                />
+                {addressError && <Text style={styles.errorText}>{addressError}</Text>}
+              </View>
 
-        <View style={styles.branchesSection}>
-          <Text style={styles.sectionTitle}>
-            {t('branches.sectionTitle', { count: branches.length })}
-          </Text>
-          {branches.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>{t('branches.empty')}</Text>
-              <Text style={styles.emptySubtext}>{t('branches.addFirst')}</Text>
-              <TouchableOpacity style={styles.emptyCta} onPress={openCreateForm}>
-                <Text style={styles.emptyCtaText}>{t('branches.add')}</Text>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>
+                  {t('branches.form.city')} <Text style={styles.required}>*</Text>
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  value={city}
+                  onChangeText={setCity}
+                  editable={!isSaving}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>{t('branches.form.metro')}</Text>
+                <MetroSelector
+                  value={metroStation || null}
+                  onChange={value => setMetroStation(value ?? '')}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>{t('branches.form.equipment')}</Text>
+                <View style={styles.equipmentGrid}>
+                  {EQUIPMENT_OPTIONS.map(equipment => (
+                    <TouchableOpacity
+                      key={equipment}
+                      style={[
+                        styles.equipmentChip,
+                        selectedEquipment.includes(equipment) && styles.equipmentChipSelected,
+                      ]}
+                      onPress={() => toggleEquipment(equipment)}
+                      disabled={isSaving}>
+                      <Text
+                        style={[
+                          styles.equipmentChipText,
+                          selectedEquipment.includes(equipment) && styles.equipmentChipTextSelected,
+                        ]}>
+                        {equipment}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+                onPress={handleSaveBranch}
+                disabled={isSaving}>
+                {isSaving ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.saveButtonText}>{saveLabel}</Text>
+                )}
               </TouchableOpacity>
             </View>
-          ) : (
-            <FlatList
-              data={branches}
-              renderItem={renderBranch}
-              keyExtractor={item => item.id}
-              scrollEnabled={false}
-            />
           )}
-        </View>
-      </ScrollView>
+
+          <View style={styles.branchesSection}>
+            <Text style={styles.sectionTitle}>
+              {t('branches.sectionTitle', { count: branches.length })}
+            </Text>
+            {branches.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>{t('branches.empty')}</Text>
+                <Text style={styles.emptySubtext}>{t('branches.addFirst')}</Text>
+                <TouchableOpacity style={styles.emptyCta} onPress={openCreateForm}>
+                  <Text style={styles.emptyCtaText}>{t('branches.add')}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <FlatList
+                data={branches}
+                renderItem={renderBranch}
+                keyExtractor={item => item.id}
+                scrollEnabled={false}
+              />
+            )}
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -504,6 +510,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  flex: {
+    flex: 1,
   },
   content: {
     flex: 1,

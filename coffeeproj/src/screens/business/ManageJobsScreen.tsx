@@ -9,7 +9,11 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  ActionSheetIOS,
+  Alert,
+  Platform,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
@@ -28,14 +32,27 @@ type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'ManageJobs'>;
 };
 
-const STATUS_TABS: { label: string; value: JobStatus }[] = [
-  { label: 'Open', value: 'open' },
-  { label: 'Filled', value: 'filled' },
-  { label: 'Cancelled', value: 'cancelled' },
-  { label: 'Expired', value: 'expired' },
-];
+const STATUS_TABS: JobStatus[] = ['open', 'filled', 'cancelled', 'expired'];
+
+const getTabLabelKey = (status: JobStatus): string => {
+  switch (status) {
+    case 'open':
+      return 'jobStatus.open';
+    case 'filled':
+      return 'jobStatus.filled';
+    case 'cancelled':
+      return 'jobStatus.cancelled';
+    case 'expired':
+      return 'jobStatus.expired';
+    case 'in_review':
+      return 'jobStatus.inReview';
+    default:
+      return status;
+  }
+};
 
 export const ManageJobsScreen: React.FC<Props> = ({ navigation }) => {
+  const { t } = useTranslation();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -77,17 +94,142 @@ export const ManageJobsScreen: React.FC<Props> = ({ navigation }) => {
     [navigation]
   );
 
+  const transitionStatus = useCallback(
+    async (
+      job: Job,
+      nextStatus: JobStatus,
+      successKey: 'job.markFilled.success' | 'job.cancel.success' | 'job.reopen.success'
+    ) => {
+      const userId = useAuthStore.getState().user?.id;
+      if (!userId) return;
+      try {
+        await JobService.updateJobStatus(job.id, nextStatus, userId);
+        await loadJobs();
+        Alert.alert(t('common.success'), t(successKey));
+      } catch (err) {
+        console.error('Error updating job status:', err);
+        Alert.alert(t('common.error'), t('job.errors.updateFailed'));
+      }
+    },
+    [loadJobs, t]
+  );
+
+  const confirmTransition = useCallback(
+    (
+      job: Job,
+      titleKey:
+        | 'job.markFilled.confirmTitle'
+        | 'job.cancel.confirmTitle'
+        | 'job.reopen.confirmTitle',
+      bodyKey: 'job.markFilled.confirmBody' | 'job.cancel.confirmBody' | 'job.reopen.confirmBody',
+      nextStatus: JobStatus,
+      successKey: 'job.markFilled.success' | 'job.cancel.success' | 'job.reopen.success',
+      destructive = false
+    ) => {
+      Alert.alert(t(titleKey), t(bodyKey), [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.confirm'),
+          style: destructive ? 'destructive' : 'default',
+          onPress: () => transitionStatus(job, nextStatus, successKey),
+        },
+      ]);
+    },
+    [t, transitionStatus]
+  );
+
+  const handleJobLongPress = useCallback(
+    (job: Job) => {
+      const actions: { label: string; run: () => void; destructive?: boolean }[] = [];
+      if (job.status === 'open' || job.status === 'in_review') {
+        actions.push({
+          label: t('job.actions.markFilled'),
+          run: () =>
+            confirmTransition(
+              job,
+              'job.markFilled.confirmTitle',
+              'job.markFilled.confirmBody',
+              'filled',
+              'job.markFilled.success'
+            ),
+        });
+        actions.push({
+          label: t('job.actions.cancel'),
+          destructive: true,
+          run: () =>
+            confirmTransition(
+              job,
+              'job.cancel.confirmTitle',
+              'job.cancel.confirmBody',
+              'cancelled',
+              'job.cancel.success',
+              true
+            ),
+        });
+      } else if (
+        job.status === 'filled' ||
+        job.status === 'cancelled' ||
+        job.status === 'expired'
+      ) {
+        actions.push({
+          label: t('job.actions.reopen'),
+          run: () =>
+            confirmTransition(
+              job,
+              'job.reopen.confirmTitle',
+              'job.reopen.confirmBody',
+              'open',
+              'job.reopen.success'
+            ),
+        });
+      }
+      if (actions.length === 0) return;
+
+      if (Platform.OS === 'ios') {
+        const options = [...actions.map(a => a.label), t('common.cancel')];
+        const cancelButtonIndex = options.length - 1;
+        const destructiveButtonIndex = actions.findIndex(a => a.destructive);
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            options,
+            cancelButtonIndex,
+            destructiveButtonIndex:
+              destructiveButtonIndex >= 0 ? destructiveButtonIndex : undefined,
+          },
+          buttonIndex => {
+            if (buttonIndex === cancelButtonIndex) return;
+            actions[buttonIndex]?.run();
+          }
+        );
+      } else {
+        Alert.alert(job.title, undefined, [
+          ...actions.map(a => ({
+            text: a.label,
+            style: a.destructive ? ('destructive' as const) : ('default' as const),
+            onPress: a.run,
+          })),
+          { text: t('common.cancel'), style: 'cancel' as const },
+        ]);
+      }
+    },
+    [confirmTransition, t]
+  );
+
   const filteredJobs = jobs.filter(job => job.status === selectedStatus);
 
   const renderJob = useCallback(
-    ({ item }: { item: Job }) => <JobCard job={item} onPress={handleJobPress} />,
-    [handleJobPress]
+    ({ item }: { item: Job }) => (
+      <JobCard job={item} onPress={handleJobPress} onLongPress={handleJobLongPress} />
+    ),
+    [handleJobPress, handleJobLongPress]
   );
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>No {selectedStatus} jobs</Text>
-      <Text style={styles.emptySubtext}>Jobs with this status will appear here</Text>
+      <Text style={styles.emptyText}>
+        {t('manageJobs.empty', { status: t(getTabLabelKey(selectedStatus)).toLowerCase() })}
+      </Text>
+      <Text style={styles.emptySubtext}>{t('manageJobs.emptyHint')}</Text>
     </View>
   );
 
@@ -104,35 +246,29 @@ export const ManageJobsScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Manage Jobs</Text>
+        <Text style={styles.title}>{t('manageJobs.title')}</Text>
         <TouchableOpacity
           style={styles.createButton}
           onPress={() => navigation.navigate('CreateJob')}>
-          <Text style={styles.createButtonText}>+ Create Job</Text>
+          <Text style={styles.createButtonText}>{t('manageJobs.create')}</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.tabsContainer}>
-        {STATUS_TABS.map(tab => {
-          const count = jobs.filter(job => job.status === tab.value).length;
+        {STATUS_TABS.map(status => {
+          const count = jobs.filter(job => job.status === status).length;
           return (
             <TouchableOpacity
-              key={tab.value}
-              style={[styles.tab, selectedStatus === tab.value && styles.tabActive]}
-              onPress={() => setSelectedStatus(tab.value)}>
-              <Text style={[styles.tabText, selectedStatus === tab.value && styles.tabTextActive]}>
-                {tab.label}
+              key={status}
+              style={[styles.tab, selectedStatus === status && styles.tabActive]}
+              onPress={() => setSelectedStatus(status)}>
+              <Text style={[styles.tabText, selectedStatus === status && styles.tabTextActive]}>
+                {t(getTabLabelKey(status))}
               </Text>
               <View
-                style={[
-                  styles.countBadge,
-                  selectedStatus === tab.value && styles.countBadgeActive,
-                ]}>
+                style={[styles.countBadge, selectedStatus === status && styles.countBadgeActive]}>
                 <Text
-                  style={[
-                    styles.countText,
-                    selectedStatus === tab.value && styles.countTextActive,
-                  ]}>
+                  style={[styles.countText, selectedStatus === status && styles.countTextActive]}>
                   {count}
                 </Text>
               </View>

@@ -7,7 +7,43 @@
     },
     "equipment": "Equipment",
     "metroStation": "Metro Station",
-    "distance": "Distance"
+    "distance": "Distance",
+    "distanceKm": "{{km}} km",
+    "chooseEquipment": "Choose equipment",
+    "chooseDistance": "Choose distance",
+    "clear": "Clear",
+    "reset": "Reset filter"
+  },
+  "metro": {
+    "placeholderSingle": "Select metro station",
+    "titleSingle": "Select metro station",
+    "titleMulti": "Select metro stations",
+    "searchPlaceholder": "Search station...",
+    "noResults": "No stations found",
+    "selectedCount": "{{count}} stations"
+  },
+  "jobStatus": {
+    "open": "Open",
+    "inReview": "In review",
+    "filled": "Filled",
+    "expired": "Expired",
+    "cancelled": "Cancelled"
+  },
+  "compensation": {
+    "hourly": "{{amount}}/hour",
+    "daily": "{{amount}}/day"
+  },
+  "jobs": {
+    "urgent": "Urgent",
+    "applicationsCount_one": "{{count}} application",
+    "applicationsCount_other": "{{count}} applications"
+  },
+  "barista": {
+    "experienceYears_one": "{{count}} year of experience",
+    "experienceYears_other": "{{count}} years of experience",
+    "hourlyRange": "{{min}}–{{max}}/hour",
+    "hourlyMax": "up to {{max}}/hour",
+    "profileCompleteness": "{{percent}}% complete"
   },
   "applications": {
     "title": "My Applications",
@@ -17,7 +53,29 @@
       "underReview": "Under Review",
       "accepted": "Accepted",
       "rejected": "Rejected",
-      "withdrawn": "Withdrawn"
+      "withdrawn": "Withdrawn",
+      "completed": "Completed"
+    },
+    "details": {
+      "applicationStatus": "Application Status",
+      "appliedOn": "Applied: {{date}}",
+      "jobDetails": "Job Details",
+      "metroPrefix": "Metro: {{station}}",
+      "perHour": "per hour",
+      "perDay": "per day",
+      "fixed": "fixed",
+      "yourCoverLetter": "Your Cover Letter",
+      "workCompletion": "Work Completion",
+      "completedBoth": "✅ Work completed",
+      "completedAwaitingBusiness": "✅ Work completed, waiting for business confirmation",
+      "withdrawConfirmTitle": "Withdraw Application",
+      "withdrawConfirmBody": "Are you sure you want to withdraw this application? This action cannot be undone.",
+      "withdrawSuccess": "Application withdrawn successfully",
+      "withdrawFailure": "Failed to withdraw application. Please try again.",
+      "markCompleteSuccess": "Work marked as completed",
+      "markCompleteFailure": "Failed to mark work as completed. Please try again.",
+      "markCompleteAction": "Mark Work as Completed",
+      "withdrawAction": "Withdraw Application"
     }
   },
   "apply": {
@@ -104,6 +162,12 @@
       "showArchived": "Show archived"
     }
   },
+  "manageJobs": {
+    "title": "Manage Jobs",
+    "create": "+ Create",
+    "empty": "No {{status}} jobs",
+    "emptyHint": "Jobs with this status will appear here.\nLong-press a card for status actions."
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -115,7 +179,11 @@
     "error": "Error",
     "success": "Success",
     "close": "Close",
-    "retry": "Retry"
+    "retry": "Retry",
+    "done": "Done",
+    "ok": "OK",
+    "yes": "Yes",
+    "no": "No"
   },
   "settings": {
     "title": "Settings",
@@ -181,7 +249,8 @@
       "activeJobsWarning": "You have {{count}} active jobs. They will be cancelled.",
       "forceCheckbox": "I understand and want to delete my account",
       "submit": "Delete account permanently",
-      "invalidPassword": "Incorrect password"
+      "invalidPassword": "Incorrect password",
+      "partialDeletion": "Could not delete all your data. Account not deleted. Please contact support."
     },
     "legal": {
       "termsTitle": "Terms of Service",

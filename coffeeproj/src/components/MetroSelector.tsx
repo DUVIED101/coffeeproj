@@ -9,6 +9,7 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { MetroService } from '../utils/metro';
 import type { MetroStation } from '../utils/metro';
 import { COLORS } from '../config/constants';
@@ -33,7 +34,8 @@ type MultiMetroSelectorProps = CommonProps & {
 type MetroSelectorProps = SingleMetroSelectorProps | MultiMetroSelectorProps;
 
 export const MetroSelector: React.FC<MetroSelectorProps> = props => {
-  const { placeholder = 'Select metro station', error, multiSelect } = props;
+  const { t } = useTranslation();
+  const { placeholder = t('metro.placeholderSingle'), error, multiSelect } = props;
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -91,7 +93,7 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
   const getDisplayText = (): string => {
     if (selectedStations.length === 0) return placeholder;
     if (selectedStations.length === 1) return selectedStations[0];
-    return `${selectedStations.length} станций`;
+    return t('metro.selectedCount', { count: selectedStations.length });
   };
 
   const renderStation = ({ item }: { item: MetroStation }) => {
@@ -133,7 +135,7 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
           <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                {multiSelect ? 'Выберите станции метро' : 'Выберите станцию метро'}
+                {multiSelect ? t('metro.titleMulti') : t('metro.titleSingle')}
               </Text>
               <TouchableOpacity onPress={handleDone}>
                 <Text style={styles.closeButton}>✕</Text>
@@ -142,7 +144,7 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
 
             <TextInput
               style={styles.searchInput}
-              placeholder="Поиск станции..."
+              placeholder={t('metro.searchPlaceholder')}
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoFocus
@@ -156,7 +158,7 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
               keyboardShouldPersistTaps="handled"
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>Станции не найдены</Text>
+                  <Text style={styles.emptyText}>{t('metro.noResults')}</Text>
                 </View>
               }
             />
@@ -165,7 +167,8 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
               <View style={styles.doneButtonContainer}>
                 <TouchableOpacity style={styles.doneButton} onPress={handleDone}>
                   <Text style={styles.doneButtonText}>
-                    Готово {selectedStations.length > 0 && `(${selectedStations.length})`}
+                    {t('common.done')}{' '}
+                    {selectedStations.length > 0 && `(${selectedStations.length})`}
                   </Text>
                 </TouchableOpacity>
               </View>
