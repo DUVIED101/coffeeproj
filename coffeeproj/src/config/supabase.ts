@@ -6,9 +6,7 @@ const supabaseUrl = SUPABASE_URL;
 const supabaseAnonKey = SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Missing Supabase credentials. Please check your .env file.'
-  );
+  throw new Error('Missing Supabase credentials. Please check your .env file.');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {

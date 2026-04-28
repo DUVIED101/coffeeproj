@@ -16,12 +16,10 @@ import { COLORS } from '../../config/constants';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
 import { ChatService } from '../../services/ChatService';
 import { useAuthStore } from '../../stores/authStore';
+import { getErrorMessage } from '../../utils/getErrorMessage';
+import { getInitials } from '../../utils/getInitials';
 import type { BaristaProfile, ShiftTime } from '../../types/baristaProfile';
-
-type BusinessStackParamList = {
-  ViewBaristaProfile: { baristaId: string };
-  Chat: { applicationId?: string; conversationId?: string };
-};
+import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'ViewBaristaProfile'>;
@@ -58,9 +56,9 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
         null
       );
       navigation.navigate('Chat', { conversationId: conversation.id });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error starting conversation:', error);
-      const message: string = error?.message ?? '';
+      const message = getErrorMessage(error);
       if (message.includes('Rate limit exceeded')) {
         Alert.alert('Ограничение', 'Слишком много новых диалогов за последний час.');
       } else {
@@ -84,7 +82,7 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
       }
 
       setProfile(profileData);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading profile:', error);
       Alert.alert('Error', 'Failed to load barista profile', [
         { text: 'OK', onPress: () => navigation.goBack() },
@@ -118,8 +116,7 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarInitials}>
-                  {profile.firstName[0]}
-                  {profile.lastName[0]}
+                  {getInitials(profile.firstName, profile.lastName)}
                 </Text>
               </View>
             )}

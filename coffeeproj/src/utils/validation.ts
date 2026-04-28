@@ -2,11 +2,13 @@
  * Validation utility functions
  */
 
+export const MAX_PASSWORD_LENGTH = 72;
+
 /**
- * Validate email format
+ * Validate email format. Rejects consecutive dots in the local part.
  */
 export const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^(?!.*\.\.)[^\s@.][^\s@]*@[^\s@.]+(?:\.[^\s@.]+)+$/;
   return emailRegex.test(email);
 };
 
@@ -25,10 +27,10 @@ export const getEmailError = (email: string): string | null => {
 
 /**
  * Validate password strength
- * Requirements: At least 8 characters, 1 uppercase, 1 lowercase, 1 number
+ * Requirements: 8–72 chars (bcrypt limit), 1 uppercase, 1 lowercase, 1 number
  */
 export const validatePassword = (password: string): boolean => {
-  if (password.length < 8) return false;
+  if (password.length < 8 || password.length > MAX_PASSWORD_LENGTH) return false;
 
   const hasUpperCase = /[A-Z]/.test(password);
   const hasLowerCase = /[a-z]/.test(password);
@@ -46,6 +48,9 @@ export const getPasswordError = (password: string): string | null => {
   }
   if (password.length < 8) {
     return 'Password must be at least 8 characters';
+  }
+  if (password.length > MAX_PASSWORD_LENGTH) {
+    return `Password must be at most ${MAX_PASSWORD_LENGTH} characters`;
   }
   if (!/[A-Z]/.test(password)) {
     return 'Password must contain at least one uppercase letter';
@@ -131,10 +136,7 @@ export const validateRequired = (value: string): boolean => {
 /**
  * Get required field error message
  */
-export const getRequiredError = (
-  value: string,
-  fieldName: string
-): string | null => {
+export const getRequiredError = (value: string, fieldName: string): string | null => {
   if (!validateRequired(value)) {
     return `${fieldName} is required`;
   }

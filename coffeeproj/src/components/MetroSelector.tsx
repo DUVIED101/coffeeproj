@@ -13,28 +13,37 @@ import { MetroService } from '../utils/metro';
 import type { MetroStation } from '../utils/metro';
 import { COLORS } from '../config/constants';
 
-interface MetroSelectorProps {
-  value?: string | string[]; // Support both single and multiple values
-  onChange: (stationNames: string | string[]) => void;
+type CommonProps = {
   placeholder?: string;
   error?: string;
-  multiSelect?: boolean; // Enable multi-select mode
-}
+};
 
-export const MetroSelector: React.FC<MetroSelectorProps> = ({
-  value,
-  onChange,
-  placeholder = 'Select metro station',
-  error,
-  multiSelect = false,
-}) => {
+type SingleMetroSelectorProps = CommonProps & {
+  multiSelect?: false;
+  value: string | null;
+  onChange: (stationName: string | null) => void;
+};
+
+type MultiMetroSelectorProps = CommonProps & {
+  multiSelect: true;
+  value: string[];
+  onChange: (stationNames: string[]) => void;
+};
+
+type MetroSelectorProps = SingleMetroSelectorProps | MultiMetroSelectorProps;
+
+export const MetroSelector: React.FC<MetroSelectorProps> = props => {
+  const { placeholder = 'Select metro station', error, multiSelect } = props;
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const selectedStations = useMemo(() => {
-    if (!value) return [];
-    return Array.isArray(value) ? value : [value];
-  }, [value]);
+    if (props.multiSelect) {
+      return props.value;
+    }
+    return props.value ? [props.value] : [];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.value, props.multiSelect]);
 
   const filteredStations = useMemo(() => {
     const allStations = MetroService.getAllStations();
@@ -49,23 +58,25 @@ export const MetroSelector: React.FC<MetroSelectorProps> = ({
   }, [searchQuery]);
 
   const handleSelectStation = (station: MetroStation) => {
-    if (multiSelect) {
-      // Multi-select mode: toggle selection
-      const newSelection = selectedStations.includes(station.name)
-        ? selectedStations.filter(s => s !== station.name)
-        : [...selectedStations, station.name];
-      onChange(newSelection);
-      setSearchQuery(''); // Clear search to show all stations again
+    if (props.multiSelect) {
+      const newSelection = props.value.includes(station.name)
+        ? props.value.filter(s => s !== station.name)
+        : [...props.value, station.name];
+      props.onChange(newSelection);
+      setSearchQuery('');
     } else {
-      // Single-select mode: close modal after selection
-      onChange(station.name);
+      props.onChange(station.name);
       setIsOpen(false);
       setSearchQuery('');
     }
   };
 
   const handleClear = () => {
-    onChange(multiSelect ? [] : '');
+    if (props.multiSelect) {
+      props.onChange([]);
+    } else {
+      props.onChange(null);
+    }
   };
 
   const handleDone = () => {

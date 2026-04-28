@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -15,18 +16,9 @@ import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ChatService } from '../../services/ChatService';
+import { useAuthStore } from '../../stores/authStore';
 import type { Application, ApplicationStatus } from '../../types/application';
-import type { ConversationId } from '../../types/chat';
-
-type BusinessStackParamList = {
-  CreateBusiness: undefined;
-  BusinessHome: { businessId: string };
-  CreateJob: undefined;
-  JobDetails: { jobId: string };
-  Applicants: { jobId: string };
-  ViewBaristaProfile: { baristaId: string };
-  Chat: { applicationId: string; conversationId?: ConversationId };
-};
+import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'Applicants'>;
@@ -68,11 +60,13 @@ const getStatusText = (status: ApplicationStatus): string => {
 
 interface ApplicantItemProps {
   application: Application;
-  onAccept: () => void;
-  onReject: () => void;
-  onViewProfile: () => void;
-  onChatPress: () => void;
-  onConfirmCompletion: () => void;
+  applicationId: string;
+  baristaId: string;
+  onAccept: (applicationId: string) => void;
+  onReject: (applicationId: string) => void;
+  onViewProfile: (baristaId: string) => void;
+  onChatPress: (applicationId: string) => void;
+  onConfirmCompletion: (applicationId: string) => void;
   isProcessing: boolean;
   unreadCount: number;
 }
@@ -80,6 +74,8 @@ interface ApplicantItemProps {
 const ApplicantItem = React.memo<ApplicantItemProps>(
   ({
     application,
+    applicationId,
+    baristaId,
     onAccept,
     onReject,
     onViewProfile,
@@ -88,6 +84,20 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     isProcessing,
     unreadCount,
   }) => {
+    const handleAccept = useCallback(() => onAccept(applicationId), [onAccept, applicationId]);
+    const handleReject = useCallback(() => onReject(applicationId), [onReject, applicationId]);
+    const handleViewProfile = useCallback(
+      () => onViewProfile(baristaId),
+      [onViewProfile, baristaId]
+    );
+    const handleChatPress = useCallback(
+      () => onChatPress(applicationId),
+      [onChatPress, applicationId]
+    );
+    const handleConfirmCompletion = useCallback(
+      () => onConfirmCompletion(applicationId),
+      [onConfirmCompletion, applicationId]
+    );
     const baristaProfile = application.baristaProfile;
     const baristaEmail = application.baristaEmail || 'No email';
 
@@ -145,11 +155,11 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
           Applied: {new Date(application.createdAt).toLocaleDateString('ru-RU')}
         </Text>
 
-        <TouchableOpacity style={styles.viewProfileButton} onPress={onViewProfile}>
+        <TouchableOpacity style={styles.viewProfileButton} onPress={handleViewProfile}>
           <Text style={styles.viewProfileButtonText}>View Profile</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.chatButton} onPress={onChatPress}>
+        <TouchableOpacity style={styles.chatButton} onPress={handleChatPress}>
           <Text style={styles.chatButtonText}>💬 Chat</Text>
           {unreadCount > 0 && (
             <View style={styles.unreadBadge}>
@@ -161,7 +171,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
         {canConfirmCompletion && (
           <TouchableOpacity
             style={styles.confirmCompletionButton}
-            onPress={onConfirmCompletion}
+            onPress={handleConfirmCompletion}
             disabled={isProcessing}>
             {isProcessing ? (
               <ActivityIndicator size="small" color="#fff" />
@@ -175,7 +185,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
           <View style={styles.actionButtons}>
             <TouchableOpacity
               style={[styles.actionButton, styles.acceptButton]}
-              onPress={onAccept}
+              onPress={handleAccept}
               disabled={isProcessing}>
               {isProcessing ? (
                 <ActivityIndicator size="small" color="#fff" />
@@ -185,7 +195,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionButton, styles.rejectButton]}
-              onPress={onReject}
+              onPress={handleReject}
               disabled={isProcessing}>
               {isProcessing ? (
                 <ActivityIndicator size="small" color="#fff" />
@@ -202,71 +212,85 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
 
 export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { jobId } = route.params;
+  const user = useAuthStore(s => s.user);
 
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
-  useEffect(() => {
-    loadApplicants();
-  }, [jobId]);
+  const markProcessing = useCallback((id: string, on: boolean) => {
+    setProcessingIds(prev => {
+      const next = new Set(prev);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
 
-  const loadApplicants = async () => {
+  const loadApplicants = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await ApplicationService.getApplicationsByJob(jobId);
       setApplications(data);
 
-      const counts: Record<string, number> = {};
-      await Promise.all(
-        data.map(async app => {
-          try {
-            const conversation = await ChatService.getConversationByApplication(app.id);
-            if (conversation) {
-              counts[app.id] = conversation.unreadCountBusiness;
-            }
-          } catch (error) {
-            console.error('Error fetching conversation for application:', app.id, error);
-          }
-        })
-      );
-      setUnreadCounts(counts);
+      const ids = data.map(a => a.id);
+      try {
+        const counts = await ChatService.getUnreadCountsByApplicationIds(ids, 'business');
+        setUnreadCounts(counts);
+      } catch (err) {
+        console.error('Error fetching unread counts:', err);
+        setUnreadCounts({});
+      }
     } catch (error) {
       console.error('Error loading applicants:', error);
       Alert.alert('Error', 'Failed to load applicants');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [jobId]);
 
-  const handleAccept = useCallback(async (applicationId: string) => {
-    try {
-      setProcessingId(applicationId);
-      await ApplicationService.updateApplicationStatus(applicationId, 'accepted');
-      await loadApplicants();
-      Alert.alert('Success', 'Application accepted');
-    } catch (error) {
-      console.error('Error accepting application:', error);
-      Alert.alert('Error', 'Failed to accept application');
-    } finally {
-      setProcessingId(null);
-    }
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadApplicants();
+    }, [loadApplicants])
+  );
 
-  const handleReject = useCallback(async (applicationId: string) => {
-    try {
-      setProcessingId(applicationId);
-      await ApplicationService.updateApplicationStatus(applicationId, 'rejected');
-      await loadApplicants();
-      Alert.alert('Success', 'Application rejected');
-    } catch (error) {
-      console.error('Error rejecting application:', error);
-      Alert.alert('Error', 'Failed to reject application');
-    } finally {
-      setProcessingId(null);
-    }
-  }, []);
+  const handleAccept = useCallback(
+    async (applicationId: string) => {
+      if (!user) return;
+      try {
+        markProcessing(applicationId, true);
+        await ApplicationService.updateApplicationStatus(applicationId, 'accepted', user.id);
+        await loadApplicants();
+        Alert.alert('Success', 'Application accepted');
+      } catch (error) {
+        console.error('Error accepting application:', error);
+        Alert.alert('Error', 'Failed to accept application');
+      } finally {
+        markProcessing(applicationId, false);
+      }
+    },
+    [user, markProcessing, loadApplicants]
+  );
+
+  const handleReject = useCallback(
+    async (applicationId: string) => {
+      if (!user) return;
+      try {
+        markProcessing(applicationId, true);
+        await ApplicationService.updateApplicationStatus(applicationId, 'rejected', user.id);
+        await loadApplicants();
+        Alert.alert('Success', 'Application rejected');
+      } catch (error) {
+        console.error('Error rejecting application:', error);
+        Alert.alert('Error', 'Failed to reject application');
+      } finally {
+        markProcessing(applicationId, false);
+      }
+    },
+    [user, markProcessing, loadApplicants]
+  );
 
   const handleViewProfile = useCallback(
     (baristaId: string) => {
@@ -282,30 +306,36 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
     [navigation]
   );
 
-  const handleConfirmCompletion = useCallback(async (applicationId: string) => {
-    try {
-      setProcessingId(applicationId);
-      await ApplicationService.markCompletedByBusiness(applicationId);
-      await loadApplicants();
-      Alert.alert('Success', 'Work completion confirmed');
-    } catch (error) {
-      console.error('Error confirming completion:', error);
-      Alert.alert('Error', 'Failed to confirm completion');
-    } finally {
-      setProcessingId(null);
-    }
-  }, []);
+  const handleConfirmCompletion = useCallback(
+    async (applicationId: string) => {
+      if (!user) return;
+      try {
+        markProcessing(applicationId, true);
+        await ApplicationService.markCompletedByBusiness(applicationId, user.id);
+        await loadApplicants();
+        Alert.alert('Success', 'Work completion confirmed');
+      } catch (error) {
+        console.error('Error confirming completion:', error);
+        Alert.alert('Error', 'Failed to confirm completion');
+      } finally {
+        markProcessing(applicationId, false);
+      }
+    },
+    [user, markProcessing, loadApplicants]
+  );
 
   const renderApplicant = useCallback(
     ({ item }: { item: Application }) => (
       <ApplicantItem
         application={item}
-        onAccept={() => handleAccept(item.id)}
-        onReject={() => handleReject(item.id)}
-        onViewProfile={() => handleViewProfile(item.baristaId)}
-        onChatPress={() => handleChatPress(item.id)}
-        onConfirmCompletion={() => handleConfirmCompletion(item.id)}
-        isProcessing={processingId === item.id}
+        applicationId={item.id}
+        baristaId={item.baristaId}
+        onAccept={handleAccept}
+        onReject={handleReject}
+        onViewProfile={handleViewProfile}
+        onChatPress={handleChatPress}
+        onConfirmCompletion={handleConfirmCompletion}
+        isProcessing={processingIds.has(item.id)}
         unreadCount={unreadCounts[item.id] || 0}
       />
     ),
@@ -315,7 +345,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
       handleViewProfile,
       handleChatPress,
       handleConfirmCompletion,
-      processingId,
+      processingIds,
       unreadCounts,
     ]
   );

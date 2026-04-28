@@ -35,12 +35,40 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const [job, setJob] = useState<Job | null>(null);
   const [existingApplication, setExistingApplication] = useState<Application | null>(null);
+  const [hasCheckedApplication, setHasCheckedApplication] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNavigating, setIsNavigating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadJob();
-    checkExistingApplication();
+    let cancelled = false;
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const jobData = await JobService.getJobById(jobId);
+        if (cancelled) return;
+        setJob(jobData);
+
+        if (user?.id) {
+          const application = await ApplicationService.checkApplicationExists(jobId, user.id);
+          if (cancelled) return;
+          setExistingApplication(application);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        console.error('Error loading job details:', err);
+        setError('Failed to load job details');
+      } finally {
+        if (cancelled) return;
+        setHasCheckedApplication(true);
+        setIsLoading(false);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [jobId, user?.id]);
 
   const loadJob = async () => {
@@ -57,21 +85,11 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const checkExistingApplication = async () => {
-    if (!user?.id) return;
-
-    try {
-      const application = await ApplicationService.checkApplicationExists(jobId, user.id);
-      setExistingApplication(application);
-    } catch (error) {
-      console.error('Error checking existing application:', error);
-    }
-  };
-
   const handleApply = () => {
-    if (job) {
-      navigation.navigate('Apply', { job });
-    }
+    if (!job || isNavigating) return;
+    setIsNavigating(true);
+    navigation.navigate('Apply', { job });
+    setTimeout(() => setIsNavigating(false), 500);
   };
 
   const getStatusColor = (status: string): string => {
@@ -294,7 +312,13 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
       ) : (
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
+          <TouchableOpacity
+            style={[
+              styles.applyButton,
+              (!hasCheckedApplication || isNavigating) && styles.applyButtonDisabled,
+            ]}
+            onPress={handleApply}
+            disabled={!hasCheckedApplication || isNavigating}>
             <Text style={styles.applyButtonText}>Apply for this Job</Text>
           </TouchableOpacity>
         </View>
@@ -455,6 +479,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
+  },
+  applyButtonDisabled: {
+    opacity: 0.5,
   },
   applyButtonText: {
     color: '#fff',

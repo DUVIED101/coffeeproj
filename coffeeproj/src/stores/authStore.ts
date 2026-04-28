@@ -54,7 +54,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isLoading: true });
 
-      // Get current session from Supabase
       const {
         data: { session },
         error,
@@ -66,41 +65,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return;
       }
 
-      if (session) {
-        get().setSession(session);
-
-        // Fetch user profile if we have a session
-        const userId = session.user.id;
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', userId)
-          .single();
-
-        if (userError) {
-          console.error('Error fetching user profile:', userError);
-        } else if (userData) {
-          console.log('[AuthStore] Raw userData from DB:', userData);
-          console.log('[AuthStore] account_type field:', userData.account_type);
-          console.log('[AuthStore] account_type type:', typeof userData.account_type);
-          const user: User = {
-            id: userData.id,
-            uid: userData.id,
-            email: userData.email,
-            phoneNumber: userData.phone_number,
-            accountType: userData.account_type,
-            isActive: userData.is_active,
-            isVerified: userData.is_verified,
-            createdAt: userData.created_at,
-            updatedAt: userData.updated_at,
-          };
-          console.log('[AuthStore] Mapped user object:', user);
-          console.log('[AuthStore] user.accountType:', user.accountType);
-          get().setUser(user);
-        }
-      } else {
+      if (!session) {
         get().clearAuth();
+        return;
       }
+
+      const user = await fetchUserProfile(session.user.id);
+      if (!user || !user.isActive) {
+        await supabase.auth.signOut();
+        get().clearAuth();
+        return;
+      }
+
+      get().setUser(user);
+      get().setSession(session);
     } catch (error) {
       console.error('Error initializing auth:', error);
       get().clearAuth();
@@ -175,43 +153,57 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 }));
 
-// Setup auth state listener
+async function fetchUserProfile(userId: string): Promise<User | null> {
+  const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
+  if (error || !data) {
+    if (error) console.error('Error fetching user profile:', error);
+    return null;
+  }
+  return {
+    id: data.id,
+    uid: data.id,
+    email: data.email,
+    phoneNumber: data.phone_number,
+    accountType: data.account_type,
+    isActive: data.is_active,
+    isVerified: data.is_verified,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  };
+}
+
+// IMPORTANT: supabase-js docs forbid awaiting other supabase calls inside
+// onAuthStateChange — it deadlocks the auth SDK lock. Defer work via setTimeout(0).
 supabase.auth.onAuthStateChange((event, session) => {
   console.log('Auth state changed:', event);
 
   const store = useAuthStore.getState();
 
-  if (event === 'SIGNED_IN' && session) {
+  if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
     store.setSession(session);
-
-    // Fetch user profile
-    const userId = session.user.id;
-    supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single()
-      .then(({ data, error }) => {
-        if (error) {
-          console.error('Error fetching user profile:', error);
-        } else if (data) {
-          const user: User = {
-            id: data.id,
-            uid: data.id,
-            email: data.email,
-            phoneNumber: data.phone_number,
-            accountType: data.account_type,
-            isActive: data.is_active,
-            isVerified: data.is_verified,
-            createdAt: data.created_at,
-            updatedAt: data.updated_at,
-          };
-          store.setUser(user);
-        }
-      });
+    setTimeout(() => {
+      fetchUserProfile(session.user.id)
+        .then(user => {
+          if (!user) {
+            console.warn('User profile not found after auth event');
+            return;
+          }
+          if (!user.isActive) {
+            useAuthStore
+              .getState()
+              .signOut()
+              .catch(err => {
+                console.error('Error signing out inactive user:', err);
+              });
+            return;
+          }
+          useAuthStore.getState().setUser(user);
+        })
+        .catch(err => {
+          console.error('Error fetching user profile on auth event:', err);
+        });
+    }, 0);
   } else if (event === 'SIGNED_OUT') {
     store.clearAuth();
-  } else if (event === 'TOKEN_REFRESHED' && session) {
-    store.setSession(session);
   }
 });

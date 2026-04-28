@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -138,9 +138,12 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     setIsRefreshingBranches(false);
   };
 
-  const handleJobPress = (jobId: string) => {
-    navigation.navigate('JobDetails', { jobId });
-  };
+  const handleJobPress = useCallback(
+    (jobId: string) => {
+      navigation.navigate('JobDetails', { jobId });
+    },
+    [navigation]
+  );
 
   const handleCreateJob = () => {
     navigation.navigate('CreateJob');
@@ -150,7 +153,22 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     navigation.navigate('BranchManagement', { businessId });
   };
 
-  const filteredJobs = jobs.filter(job => job.status === selectedStatus);
+  const filteredJobs = useMemo(
+    () => jobs.filter(job => job.status === selectedStatus),
+    [jobs, selectedStatus]
+  );
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<JobStatus, number> = {
+      open: 0,
+      in_review: 0,
+      filled: 0,
+      expired: 0,
+      cancelled: 0,
+    };
+    for (const job of jobs) counts[job.status] = (counts[job.status] ?? 0) + 1;
+    return counts;
+  }, [jobs]);
 
   const ALL_STATUS_TABS: Array<{ label: string; value: JobStatus }> = [
     { label: 'Open', value: 'open' },
@@ -183,9 +201,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
               {item.label}
             </Text>
             <View style={styles.countBadge}>
-              <Text style={styles.countText}>
-                {jobs.filter(j => j.status === item.value).length}
-              </Text>
+              <Text style={styles.countText}>{statusCounts[item.value]}</Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -206,7 +222,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
         <FlatList
           data={filteredJobs}
           keyExtractor={item => item.id}
-          renderItem={({ item }) => <JobCard job={item} onPress={() => handleJobPress(item.id)} />}
+          renderItem={({ item }) => <JobCard job={item} onPress={handleJobPress} />}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={isRefreshingJobs} onRefresh={handleRefreshJobs} />

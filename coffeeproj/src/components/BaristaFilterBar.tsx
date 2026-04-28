@@ -106,15 +106,11 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
     }, [currentFilters, onFilterChange]);
 
     const handleMetroChange = useCallback(
-      (stationNames: string | string[]) => {
-        const metroStations = Array.isArray(stationNames)
-          ? stationNames.length > 0
-            ? stationNames
-            : undefined
-          : stationNames
-            ? [stationNames]
-            : undefined;
-        onFilterChange({ ...currentFilters, metroStations });
+      (stationNames: string[]) => {
+        onFilterChange({
+          ...currentFilters,
+          metroStations: stationNames.length > 0 ? stationNames : undefined,
+        });
       },
       [currentFilters, onFilterChange]
     );
@@ -222,10 +218,10 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
 
           <View style={styles.metroSelectorContainer}>
             <MetroSelector
-              value={currentFilters.metroStations}
+              multiSelect
+              value={currentFilters.metroStations ?? []}
               onChange={handleMetroChange}
               placeholder="Метро"
-              multiSelect={true}
             />
           </View>
 

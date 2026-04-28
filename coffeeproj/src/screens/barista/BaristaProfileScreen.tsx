@@ -83,7 +83,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
 
       setProfile(profileData);
       populateFields(profileData);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading profile:', error);
       Alert.alert('Error', 'Failed to load profile');
     } finally {
@@ -161,7 +161,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
       await BaristaProfileService.uploadAvatar(user.id, result.assets[0].uri);
       await loadProfile();
       Alert.alert('Success', 'Avatar uploaded successfully!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading avatar:', error);
       Alert.alert('Error', 'Failed to upload avatar. Please try again.');
     } finally {
@@ -184,7 +184,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
       await BaristaProfileService.uploadPortfolioPhoto(user.id, result.assets[0].uri);
       await loadProfile();
       Alert.alert('Success', 'Portfolio photo uploaded successfully!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading portfolio photo:', error);
       Alert.alert('Error', 'Failed to upload photo. Please try again.');
     } finally {
@@ -231,7 +231,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
       setProfile(updatedProfile);
       setIsEditing(false);
       Alert.alert('Success', 'Profile updated successfully!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating profile:', error);
       Alert.alert('Error', 'Failed to update profile. Please try again.');
     } finally {
@@ -461,11 +461,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
             <>
               <Text style={styles.label}>Preferred Metro Stations</Text>
               <MetroSelector
+                multiSelect
                 value={preferredMetroStations}
-                onChange={value =>
-                  setPreferredMetroStations(Array.isArray(value) ? value : [value])
-                }
-                multiSelect={true}
+                onChange={setPreferredMetroStations}
               />
 
               <Text style={styles.label}>Preferred Shift Times</Text>

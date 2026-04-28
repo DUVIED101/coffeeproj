@@ -21,7 +21,7 @@ type Props = NativeStackScreenProps<BaristaStackParamList, 'BusinessJobs'>;
 const JobCardItem = React.memo<{
   job: Job;
   onPressJobId: (jobId: string) => void;
-}>(({ job, onPressJobId }) => <JobCard job={job} onPress={() => onPressJobId(job.id)} />);
+}>(({ job, onPressJobId }) => <JobCard job={job} onPress={onPressJobId} />);
 
 export const BusinessJobsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { businessOwnerId, businessName } = route.params;

@@ -14,15 +14,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
+import { useAuthStore } from '../../stores/authStore';
 import type { Job, JobStatus } from '../../types/job';
-
-type BusinessStackParamList = {
-  CreateBusiness: undefined;
-  BusinessHome: { businessId: string };
-  CreateJob: undefined;
-  JobDetails: { jobId: string };
-  Applicants: { jobId: string };
-};
+import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'JobDetails'>;
@@ -32,6 +26,7 @@ type Props = {
 export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { jobId } = route.params;
   const { t } = useTranslation();
+  const user = useAuthStore(s => s.user);
 
   const [job, setJob] = useState<Job | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,9 +59,10 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     nextStatus: JobStatus,
     successKey: 'job.markFilled.success' | 'job.cancel.success' | 'job.reopen.success'
   ) => {
+    if (!user) return;
     try {
       setIsUpdatingStatus(true);
-      await JobService.updateJobStatus(jobId, nextStatus);
+      await JobService.updateJobStatus(jobId, nextStatus, user.id);
       await loadJob();
       Alert.alert(t('common.success'), t(successKey));
     } catch (err) {

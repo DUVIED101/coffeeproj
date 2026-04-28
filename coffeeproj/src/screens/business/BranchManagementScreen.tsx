@@ -178,6 +178,8 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
     addressLine: string,
     cityLine: string
   ): Promise<GeoPoint | null> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
     try {
       const fullAddress = `${addressLine}, ${cityLine}, Russia`;
       const encodedAddress = encodeURIComponent(fullAddress);
@@ -188,6 +190,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
           headers: {
             'User-Agent': 'CoffeeProj/1.0',
           },
+          signal: controller.signal,
         }
       );
 
@@ -204,6 +207,8 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
     } catch (error) {
       console.error('Geocoding error:', error);
       return null;
+    } finally {
+      clearTimeout(timeoutId);
     }
   };
 
@@ -397,8 +402,8 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
             <View style={styles.inputContainer}>
               <Text style={styles.label}>{t('branches.form.metro')}</Text>
               <MetroSelector
-                value={metroStation}
-                onChange={value => setMetroStation(Array.isArray(value) ? value[0] || '' : value)}
+                value={metroStation || null}
+                onChange={value => setMetroStation(value ?? '')}
               />
             </View>
 

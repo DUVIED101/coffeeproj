@@ -220,7 +220,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
           },
         ]);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating profile:', error);
       Alert.alert('Error', 'Failed to create profile. Please try again.');
     } finally {
@@ -384,9 +384,9 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
             <Text style={styles.label}>Preferred Metro Stations (optional)</Text>
             <MetroSelector
+              multiSelect
               value={preferredMetroStations}
-              onChange={value => setPreferredMetroStations(Array.isArray(value) ? value : [value])}
-              multiSelect={true}
+              onChange={setPreferredMetroStations}
             />
 
             <Text style={styles.label}>Preferred Shift Times (optional)</Text>

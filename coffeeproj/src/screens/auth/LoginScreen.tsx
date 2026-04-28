@@ -17,6 +17,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { AuthService } from '../../services/AuthService';
 import { getEmailError } from '../../utils/validation';
+import { getErrorMessage } from '../../utils/getErrorMessage';
 
 type AuthStackParamList = {
   AccountType: undefined;
@@ -71,19 +72,18 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       console.log('Login successful:', user.id);
 
       // Auth state will be updated automatically by authStore listener
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
 
+      const message = getErrorMessage(error);
       let errorMessage = 'Failed to log in. Please try again.';
 
-      if (error.message) {
-        if (error.message.includes('Invalid login credentials')) {
-          errorMessage = 'Invalid email or password. Please try again.';
-        } else if (error.message.includes('Email not confirmed')) {
-          errorMessage = 'Please confirm your email address before logging in.';
-        } else if (error.message.includes('Invalid email')) {
-          errorMessage = 'Please enter a valid email address.';
-        }
+      if (message.includes('Invalid login credentials')) {
+        errorMessage = 'Invalid email or password. Please try again.';
+      } else if (message.includes('Email not confirmed')) {
+        errorMessage = 'Please confirm your email address before logging in.';
+      } else if (message.includes('Invalid email')) {
+        errorMessage = 'Please enter a valid email address.';
       }
 
       Alert.alert('Login Failed', errorMessage, [{ text: 'OK' }]);
@@ -94,11 +94,9 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleForgotPassword = async () => {
     if (!email) {
-      Alert.alert(
-        'Enter Email',
-        'Please enter your email address to reset your password.',
-        [{ text: 'OK' }]
-      );
+      Alert.alert('Enter Email', 'Please enter your email address to reset your password.', [
+        { text: 'OK' },
+      ]);
       return;
     }
 
@@ -111,18 +109,14 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await AuthService.resetPassword(email.trim().toLowerCase());
 
-      Alert.alert(
-        'Password Reset',
-        'A password reset link has been sent to your email address.',
-        [{ text: 'OK' }]
-      );
-    } catch (error: any) {
+      Alert.alert('Password Reset', 'A password reset link has been sent to your email address.', [
+        { text: 'OK' },
+      ]);
+    } catch (error: unknown) {
       console.error('Password reset error:', error);
-      Alert.alert(
-        'Error',
-        'Failed to send password reset email. Please try again.',
-        [{ text: 'OK' }]
-      );
+      Alert.alert('Error', 'Failed to send password reset email. Please try again.', [
+        { text: 'OK' },
+      ]);
     }
   };
 
@@ -181,9 +175,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             {/* Forgot Password */}
-            <TouchableOpacity
-              onPress={handleForgotPassword}
-              style={styles.forgotPassword}>
+            <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPassword}>
               <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </TouchableOpacity>
 

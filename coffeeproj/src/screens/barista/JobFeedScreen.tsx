@@ -38,10 +38,13 @@ const formatDistance = (distanceMeters?: number): string => {
   return `${km} км от вас`;
 };
 
-const JobCardWithDistance = React.memo<{ job: Job; onPress: () => void }>(({ job, onPress }) => {
+const JobCardWithDistance = React.memo<{
+  job: Job;
+  onPressJobId: (jobId: string) => void;
+}>(({ job, onPressJobId }) => {
   return (
     <View>
-      <JobCard job={job} onPress={onPress} />
+      <JobCard job={job} onPress={onPressJobId} />
       {job.distance !== undefined && (
         <Text style={styles.distanceText}>{formatDistance(job.distance)}</Text>
       )}
@@ -144,9 +147,7 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   const renderJob = useCallback(
-    ({ item }: { item: Job }) => (
-      <JobCardWithDistance job={item} onPress={() => handleJobPress(item.id)} />
-    ),
+    ({ item }: { item: Job }) => <JobCardWithDistance job={item} onPressJobId={handleJobPress} />,
     [handleJobPress]
   );
 

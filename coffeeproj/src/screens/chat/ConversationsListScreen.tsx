@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,11 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { ChatService } from '../../services/ChatService';
 import { useAuthStore } from '../../stores/authStore';
-import type { Conversation, ConversationId } from '../../types/chat';
+import type { Conversation } from '../../types/chat';
 
 const getStatusColor = (status?: string): string => {
   switch (status) {
@@ -32,7 +33,7 @@ const getStatusColor = (status?: string): string => {
 
 const ConversationItem = React.memo<{
   conversation: Conversation;
-  onPress: () => void;
+  onPress: (conversation: Conversation) => void;
   isBarista: boolean;
 }>(({ conversation, onPress, isBarista }) => {
   const unreadCount = isBarista
@@ -44,9 +45,10 @@ const ConversationItem = React.memo<{
   const showSubtitle = !!otherPartyName && title !== otherPartyName;
 
   const statusColor = getStatusColor(conversation.applicationStatus);
+  const handlePress = useCallback(() => onPress(conversation), [onPress, conversation]);
 
   return (
-    <TouchableOpacity style={styles.conversationCard} onPress={onPress}>
+    <TouchableOpacity style={styles.conversationCard} onPress={handlePress}>
       <View style={styles.conversationHeader}>
         <View style={styles.conversationInfo}>
           <Text style={styles.jobTitle} numberOfLines={1}>
@@ -111,9 +113,11 @@ export function ConversationsListScreen({ navigation }: any) {
     }
   }, [user?.id, user?.accountType]);
 
-  useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
+  useFocusEffect(
+    useCallback(() => {
+      loadConversations();
+    }, [loadConversations])
+  );
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -134,7 +138,7 @@ export function ConversationsListScreen({ navigation }: any) {
     ({ item }: { item: Conversation }) => (
       <ConversationItem
         conversation={item}
-        onPress={() => handleConversationPress(item)}
+        onPress={handleConversationPress}
         isBarista={user?.accountType === 'barista'}
       />
     ),

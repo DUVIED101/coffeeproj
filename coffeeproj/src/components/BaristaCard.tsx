@@ -1,17 +1,12 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import type { BaristaProfile } from '../types/baristaProfile';
 import { COLORS } from '../config/constants';
+import { getInitials } from '../utils/getInitials';
 
 type BaristaCardProps = {
   profile: BaristaProfile;
-  onPress?: () => void;
-};
-
-const getInitials = (firstName: string, lastName: string): string => {
-  const first = firstName.trim().charAt(0).toUpperCase();
-  const last = lastName.trim().charAt(0).toUpperCase();
-  return `${first}${last}`;
+  onPress?: (userId: string) => void;
 };
 
 const getExperienceText = (years: number): string => {
@@ -33,6 +28,7 @@ const getHourlyRateText = (min?: number, max?: number): string | undefined => {
 
 export const BaristaCard = React.memo<BaristaCardProps>(({ profile, onPress }) => {
   const {
+    userId,
     firstName,
     lastName,
     city,
@@ -49,8 +45,16 @@ export const BaristaCard = React.memo<BaristaCardProps>(({ profile, onPress }) =
   const hourlyRateText = getHourlyRateText(hourlyRateMin, hourlyRateMax);
   const clampedCompleteness = Math.max(0, Math.min(100, profileCompleteness));
 
+  const handlePress = useCallback(() => {
+    if (onPress) onPress(userId);
+  }, [onPress, userId]);
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7} disabled={!onPress}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={handlePress}
+      activeOpacity={0.7}
+      disabled={!onPress}>
       <View style={styles.headerRow}>
         {avatarUrl ? (
           <Image source={{ uri: avatarUrl }} style={styles.avatar} />

@@ -1,5 +1,12 @@
 import React, { useLayoutEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -22,6 +29,7 @@ export const LanguageScreen: React.FC = () => {
   const navigation = useNavigation<Navigation>();
   const { t } = useTranslation();
   const [selected, setSelected] = useState<SupportedLanguage>(getCurrentLanguage());
+  const [isChanging, setIsChanging] = useState(false);
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: t('settings.language.title') });
@@ -29,15 +37,19 @@ export const LanguageScreen: React.FC = () => {
 
   const handleSelect = useCallback(
     async (lang: SupportedLanguage) => {
+      if (isChanging) return;
       setSelected(lang);
+      setIsChanging(true);
       try {
         await changeLanguage(lang);
+        navigation.goBack();
       } catch (err) {
         console.error('Error in changeLanguage:', err);
+      } finally {
+        setIsChanging(false);
       }
-      navigation.goBack();
     },
-    [navigation]
+    [navigation, isChanging]
   );
 
   return (
@@ -51,9 +63,14 @@ export const LanguageScreen: React.FC = () => {
                 <TouchableOpacity
                   activeOpacity={0.6}
                   style={styles.row}
-                  onPress={() => handleSelect(option.value)}>
+                  onPress={() => handleSelect(option.value)}
+                  disabled={isChanging}>
                   <Text style={styles.rowLabel}>{t(option.labelKey)}</Text>
-                  {isSelected ? <Text style={styles.checkmark}>{'✓'}</Text> : null}
+                  {isSelected && isChanging ? (
+                    <ActivityIndicator size="small" color={COLORS.primary} />
+                  ) : isSelected ? (
+                    <Text style={styles.checkmark}>{'✓'}</Text>
+                  ) : null}
                 </TouchableOpacity>
                 {idx < OPTIONS.length - 1 ? <View style={styles.separator} /> : null}
               </React.Fragment>

@@ -151,21 +151,25 @@ export function ChatScreen({ navigation, route }: any) {
     conversation?.jobTitle,
   ]);
 
-  useEffect(() => {
-    if (!conversation || !user?.id) return;
+  const conversationId = conversation?.id;
+  const userId = user?.id;
 
-    const channel = ChatService.subscribeToMessages(conversation.id, newMessage => {
+  useEffect(() => {
+    if (!conversationId || !userId) return;
+
+    if (realtimeChannelRef.current) {
+      ChatService.unsubscribeFromMessages(realtimeChannelRef.current);
+      realtimeChannelRef.current = null;
+    }
+
+    const channel = ChatService.subscribeToMessages(conversationId, newMessage => {
       setMessages(prevMessages => [...prevMessages, newMessage]);
 
-      if (newMessage.senderId !== user.id) {
-        ChatService.markAsRead(conversation.id, user.id).catch(error => {
+      if (newMessage.senderId !== userId) {
+        ChatService.markAsRead(conversationId, userId).catch(error => {
           console.error('Error marking message as read:', error);
         });
       }
-
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
     });
 
     realtimeChannelRef.current = channel;
@@ -173,9 +177,10 @@ export function ChatScreen({ navigation, route }: any) {
     return () => {
       if (realtimeChannelRef.current) {
         ChatService.unsubscribeFromMessages(realtimeChannelRef.current);
+        realtimeChannelRef.current = null;
       }
     };
-  }, [conversation, user?.id]);
+  }, [conversationId, userId]);
 
   const handleSendMessage = useCallback(async () => {
     if (!messageText.trim() || !conversation || !user?.id || isSending) {
@@ -193,12 +198,9 @@ export function ChatScreen({ navigation, route }: any) {
         messageText: textToSend,
       });
 
-      // Add the sent message to local state immediately
+      // Add the sent message to local state immediately.
+      // FlatList onContentSizeChange below will scroll to end.
       setMessages(prevMessages => [...prevMessages, sentMessage]);
-
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
     } catch (error) {
       console.error('Error sending message:', error);
       setMessageText(textToSend);
@@ -262,7 +264,7 @@ export function ChatScreen({ navigation, route }: any) {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
         <View style={styles.header}>
           <Text style={styles.title} numberOfLines={1}>

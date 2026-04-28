@@ -460,12 +460,17 @@ export class ChatService {
    */
   static async sendMessage(data: SendMessageData): Promise<Message> {
     try {
+      const trimmed = data.messageText.trim();
+      if (trimmed.length === 0) {
+        throw new Error('Message cannot be empty');
+      }
+
       const { data: message, error } = await supabase
         .from('messages')
         .insert({
           conversation_id: data.conversationId,
           sender_id: data.senderId,
-          message_text: data.messageText,
+          message_text: trimmed,
         })
         .select()
         .single();
@@ -476,6 +481,36 @@ export class ChatService {
       return this.mapMessage(message);
     } catch (error) {
       console.error('Error in sendMessage:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Batch fetch unread counts for a business user across many applications.
+   * Returns a map keyed by applicationId; missing entries default to 0 on the client.
+   */
+  static async getUnreadCountsByApplicationIds(
+    applicationIds: string[],
+    side: 'business' | 'barista'
+  ): Promise<Record<string, number>> {
+    if (applicationIds.length === 0) return {};
+    try {
+      const column = side === 'business' ? 'unread_count_business' : 'unread_count_barista';
+      const { data, error } = await supabase
+        .from('conversations')
+        .select(`application_id, ${column}`)
+        .in('application_id', applicationIds);
+
+      if (error) throw error;
+      const result: Record<string, number> = {};
+      for (const row of data || []) {
+        const appId = (row as any).application_id as string | null;
+        if (!appId) continue;
+        result[appId] = (row as any)[column] ?? 0;
+      }
+      return result;
+    } catch (error) {
+      console.error('Error in getUnreadCountsByApplicationIds:', error);
       throw error;
     }
   }

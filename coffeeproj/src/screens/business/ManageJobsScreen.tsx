@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -35,22 +36,17 @@ const STATUS_TABS: { label: string; value: JobStatus }[] = [
 ];
 
 export const ManageJobsScreen: React.FC<Props> = ({ navigation }) => {
-  const { user } = useAuthStore();
-
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<JobStatus>('open');
 
-  useEffect(() => {
-    loadJobs();
-  }, []);
-
   const loadJobs = useCallback(async () => {
-    if (!user?.id) return;
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) return;
 
     try {
-      const business = await BusinessService.getBusinessByOwnerId(user.id);
+      const business = await BusinessService.getBusinessByOwnerId(userId);
       if (business) {
         const jobsData = await JobService.getJobsByBusinessId(business.id);
         setJobs(jobsData);
@@ -61,7 +57,13 @@ export const ManageJobsScreen: React.FC<Props> = ({ navigation }) => {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [user?.id]);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadJobs();
+    }, [loadJobs])
+  );
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -78,7 +80,7 @@ export const ManageJobsScreen: React.FC<Props> = ({ navigation }) => {
   const filteredJobs = jobs.filter(job => job.status === selectedStatus);
 
   const renderJob = useCallback(
-    ({ item }: { item: Job }) => <JobCard job={item} onPress={() => handleJobPress(item.id)} />,
+    ({ item }: { item: Job }) => <JobCard job={item} onPress={handleJobPress} />,
     [handleJobPress]
   );
 

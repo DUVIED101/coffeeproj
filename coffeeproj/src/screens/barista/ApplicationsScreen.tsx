@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -65,15 +66,21 @@ const getStatusText = (status: ApplicationStatus): string => {
 
 const ApplicationItem = React.memo<{
   application: Application;
-  onPress: () => void;
-  onChatPress: () => void;
+  onPress: (application: Application) => void;
+  onChatPress: (applicationId: string) => void;
   unreadCount: number;
 }>(({ application, onPress, onChatPress, unreadCount }) => {
   const statusColor = getStatusColor(application.status);
   const statusText = getStatusText(application.status);
 
+  const handlePress = useCallback(() => onPress(application), [onPress, application]);
+  const handleChatPress = useCallback(
+    () => onChatPress(application.id),
+    [onChatPress, application.id]
+  );
+
   return (
-    <TouchableOpacity style={styles.applicationCard} onPress={onPress}>
+    <TouchableOpacity style={styles.applicationCard} onPress={handlePress}>
       <View style={styles.applicationHeader}>
         <Text style={styles.jobTitle} numberOfLines={1}>
           {application.job?.title || 'Job'}
@@ -100,7 +107,7 @@ const ApplicationItem = React.memo<{
         Applied: {new Date(application.createdAt).toLocaleDateString('ru-RU')}
       </Text>
 
-      <TouchableOpacity style={styles.chatButton} onPress={onChatPress}>
+      <TouchableOpacity style={styles.chatButton} onPress={handleChatPress}>
         <Text style={styles.chatButtonText}>💬 Message Business</Text>
         {unreadCount > 0 && (
           <View style={styles.unreadBadge}>
@@ -130,20 +137,14 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
       const data = await ApplicationService.getApplicationsByBarista(user.id);
       setApplications(data);
 
-      const counts: Record<string, number> = {};
-      await Promise.all(
-        data.map(async app => {
-          try {
-            const conversation = await ChatService.getConversationByApplication(app.id);
-            if (conversation) {
-              counts[app.id] = conversation.unreadCountBarista;
-            }
-          } catch (error) {
-            console.error('Error fetching conversation for application:', app.id, error);
-          }
-        })
-      );
-      setUnreadCounts(counts);
+      const ids = data.map(a => a.id);
+      try {
+        const counts = await ChatService.getUnreadCountsByApplicationIds(ids, 'barista');
+        setUnreadCounts(counts);
+      } catch (err) {
+        console.error('Error fetching unread counts:', err);
+        setUnreadCounts({});
+      }
     } catch (error) {
       console.error('Error loading applications:', error);
     } finally {
@@ -152,9 +153,11 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [user?.id]);
 
-  useEffect(() => {
-    loadApplications();
-  }, [loadApplications]);
+  useFocusEffect(
+    useCallback(() => {
+      loadApplications();
+    }, [loadApplications])
+  );
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -179,8 +182,8 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
     ({ item }: { item: Application }) => (
       <ApplicationItem
         application={item}
-        onPress={() => handleApplicationPress(item)}
-        onChatPress={() => handleChatPress(item.id)}
+        onPress={handleApplicationPress}
+        onChatPress={handleChatPress}
         unreadCount={unreadCounts[item.id] || 0}
       />
     ),

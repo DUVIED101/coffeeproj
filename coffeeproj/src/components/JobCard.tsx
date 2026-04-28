@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { Job } from '../types/job';
 import { COLORS } from '../config/constants';
 
 interface JobCardProps {
   job: Job;
-  onPress?: () => void;
+  onPress?: (jobId: string) => void;
 }
 
 const formatCurrency = (amount: number): string => {
@@ -76,6 +76,10 @@ const getCompensationText = (job: Job): string => {
 };
 
 export const JobCard = React.memo<JobCardProps>(({ job, onPress }) => {
+  const handlePress = useCallback(() => {
+    if (onPress) onPress(job.id);
+  }, [onPress, job.id]);
+
   const statusColor = getStatusColor(job.status);
   const statusText = getStatusText(job.status);
   const jobTypeText = getJobTypeText(job.jobType);
@@ -89,7 +93,11 @@ export const JobCard = React.memo<JobCardProps>(({ job, onPress }) => {
   const hasUrgentTag = job.tags.includes('urgent');
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7} disabled={!onPress}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={handlePress}
+      activeOpacity={0.7}
+      disabled={!onPress}>
       <View style={styles.header}>
         <Text style={styles.title}>{job.title}</Text>
         <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>

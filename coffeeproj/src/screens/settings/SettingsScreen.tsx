@@ -8,8 +8,7 @@ import { COLORS } from '../../config/constants';
 import { useAuthStore } from '../../stores/authStore';
 import { getCurrentLanguage } from '../../i18n';
 import type { SettingsStackParamList } from '../../navigation/SettingsStack';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const pkg = require('../../../package.json') as { version: string };
+import { APP_VERSION } from '../../config/version';
 
 type Navigation = NativeStackNavigationProp<SettingsStackParamList, 'SettingsHome'>;
 
@@ -136,7 +135,7 @@ export const SettingsScreen: React.FC = () => {
             showChevron
           />
           <View style={styles.separator} />
-          <SettingsRow label={t('settings.items.appVersion')} value={pkg.version} />
+          <SettingsRow label={t('settings.items.appVersion')} value={APP_VERSION} />
         </View>
 
         <Text style={styles.sectionHeader}>{t('settings.sections.dangerZone').toUpperCase()}</Text>

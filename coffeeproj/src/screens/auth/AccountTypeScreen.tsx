@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-  StatusBar,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import type { AccountType } from '../../types';
@@ -34,9 +27,7 @@ export const AccountTypeScreen: React.FC<Props> = ({ navigation }) => {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Welcome to CoffeeProj</Text>
-          <Text style={styles.subtitle}>
-            Connect baristas with coffee shops across Russia
-          </Text>
+          <Text style={styles.subtitle}>Connect baristas with coffee shops across Russia</Text>
         </View>
 
         {/* Account Type Selection */}
@@ -47,9 +38,7 @@ export const AccountTypeScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.8}>
             <Text style={styles.buttonIcon}>☕</Text>
             <Text style={styles.buttonTitle}>I'm a Barista</Text>
-            <Text style={styles.buttonDescription}>
-              Find coffee shop jobs and opportunities
-            </Text>
+            <Text style={styles.buttonDescription}>Find coffee shop jobs and opportunities</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -58,9 +47,7 @@ export const AccountTypeScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.8}>
             <Text style={styles.buttonIcon}>🏪</Text>
             <Text style={styles.buttonTitle}>I'm a Business</Text>
-            <Text style={styles.buttonDescription}>
-              Post jobs and hire talented baristas
-            </Text>
+            <Text style={styles.buttonDescription}>Post jobs and hire talented baristas</Text>
           </TouchableOpacity>
         </View>
 

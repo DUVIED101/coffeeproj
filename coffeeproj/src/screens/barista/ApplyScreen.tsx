@@ -9,12 +9,15 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import { useAuthStore } from '../../stores/authStore';
+import { getErrorMessage } from '../../utils/getErrorMessage';
 import type { Job } from '../../types/job';
 
 type BaristaStackParamList = {
@@ -59,10 +62,10 @@ export const ApplyScreen: React.FC<Props> = ({ navigation, route }) => {
           },
         },
       ]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error submitting application:', error);
 
-      if (error.message === 'You have already applied to this job') {
+      if (getErrorMessage(error) === 'You have already applied to this job') {
         Alert.alert('Already Applied', 'You have already applied to this job');
       } else {
         Alert.alert('Error', 'Failed to submit application. Please try again.');
@@ -74,55 +77,63 @@ export const ApplyScreen: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.jobSummary}>
-          <Text style={styles.sectionTitle}>Job Summary</Text>
-          <Text style={styles.jobTitle}>{job.title}</Text>
-          <Text style={styles.businessName}>{job.businessName}</Text>
-          {job.branchName && <Text style={styles.branchName}>{job.branchName}</Text>}
-          <View style={styles.compensationContainer}>
-            <Text style={styles.compensationAmount}>
-              {job.compensation.amount.toLocaleString('ru-RU')} ₽
-            </Text>
-            <Text style={styles.compensationType}>
-              {job.compensation.type === 'hourly'
-                ? 'per hour'
-                : job.compensation.type === 'daily'
-                  ? 'per day'
-                  : 'fixed rate'}
-            </Text>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled">
+          <View style={styles.jobSummary}>
+            <Text style={styles.sectionTitle}>Job Summary</Text>
+            <Text style={styles.jobTitle}>{job.title}</Text>
+            <Text style={styles.businessName}>{job.businessName}</Text>
+            {job.branchName && <Text style={styles.branchName}>{job.branchName}</Text>}
+            <View style={styles.compensationContainer}>
+              <Text style={styles.compensationAmount}>
+                {job.compensation.amount.toLocaleString('ru-RU')} ₽
+              </Text>
+              <Text style={styles.compensationType}>
+                {job.compensation.type === 'hourly'
+                  ? 'per hour'
+                  : job.compensation.type === 'daily'
+                    ? 'per day'
+                    : 'fixed rate'}
+              </Text>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Cover Letter (optional)</Text>
-          <TextInput
-            style={styles.textInput}
-            placeholder="Tell the employer why you're a great fit for this job..."
-            placeholderTextColor={COLORS.textSecondary}
-            value={coverLetter}
-            onChangeText={setCoverLetter}
-            multiline
-            numberOfLines={6}
-            textAlignVertical="top"
-            maxLength={1000}
-          />
-          <Text style={styles.characterCount}>{coverLetter.length}/1000</Text>
-        </View>
-      </ScrollView>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Cover Letter (optional)</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Tell the employer why you're a great fit for this job..."
+              placeholderTextColor={COLORS.textSecondary}
+              value={coverLetter}
+              onChangeText={setCoverLetter}
+              multiline
+              numberOfLines={6}
+              textAlignVertical="top"
+              maxLength={1000}
+            />
+            <Text style={styles.characterCount}>{coverLetter.length}/1000</Text>
+          </View>
+        </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
-          onPress={handleSubmit}
-          disabled={isSubmitting}>
-          {isSubmitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.submitButtonText}>Submit Application</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+            onPress={handleSubmit}
+            disabled={isSubmitting}>
+            {isSubmitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.submitButtonText}>Submit Application</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -132,6 +143,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  flex: { flex: 1 },
   scrollView: {
     flex: 1,
   },

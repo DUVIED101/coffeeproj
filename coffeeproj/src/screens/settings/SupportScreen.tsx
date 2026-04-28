@@ -4,8 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../config/constants';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const pkg = require('../../../package.json') as { version: string };
+import { APP_VERSION } from '../../config/version';
 
 export const SupportScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -37,7 +36,7 @@ export const SupportScreen: React.FC = () => {
         </View>
         <View style={styles.versionRow}>
           <Text style={styles.versionLabel}>{t('settings.legal.appVersion')}</Text>
-          <Text style={styles.versionValue}>{pkg.version}</Text>
+          <Text style={styles.versionValue}>{APP_VERSION}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

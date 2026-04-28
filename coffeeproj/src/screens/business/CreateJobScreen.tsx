@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -21,12 +21,7 @@ import { BusinessService } from '../../services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
 import type { Branch, Equipment } from '../../types/business';
 import type { JobType, CompensationType } from '../../types/job';
-
-type BusinessStackParamList = {
-  CreateJob: undefined;
-  ManageJobs: undefined;
-  BranchManagement: { businessId: string };
-};
+import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'CreateJob'>;
@@ -89,7 +84,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
         setBusinessId(business.id);
         const branchesData = await BusinessService.getBranches(business.id);
         setBranches(branchesData);
-        if (branchesData.length > 0) {
+        if (branchesData.length === 1) {
           setSelectedBranchId(branchesData[0].id);
         }
       }
@@ -144,13 +139,17 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
     return `${day}.${month}.${year}`;
   };
 
+  // Supports night shifts: if end <= start, assume next-day end.
+  // Equal times are treated as invalid (caller should validate).
   const calculateTotalHours = (): number => {
     const startMinutes = startTime.getHours() * 60 + startTime.getMinutes();
     const endMinutes = endTime.getHours() * 60 + endTime.getMinutes();
-    return (endMinutes - startMinutes) / 60;
+    if (startMinutes === endMinutes) return 0;
+    const diff = endMinutes - startMinutes;
+    return (diff > 0 ? diff : diff + 1440) / 60;
   };
 
-  const calculatePayment = () => {
+  const payment = useMemo(() => {
     const amount = parseFloat(compensationAmount) || 0;
 
     if (compensationType === 'hourly') {
@@ -160,14 +159,14 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
       const totalWithFee = totalAmount + platformFee;
 
       return { totalHours, totalAmount, platformFee, totalWithFee };
-    } else {
-      const totalAmount = amount;
-      const platformFee = totalAmount * 0.15;
-      const totalWithFee = totalAmount + platformFee;
-
-      return { totalHours: 0, totalAmount, platformFee, totalWithFee };
     }
-  };
+    const totalAmount = amount;
+    const platformFee = totalAmount * 0.15;
+    const totalWithFee = totalAmount + platformFee;
+
+    return { totalHours: 0, totalAmount, platformFee, totalWithFee };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [compensationAmount, compensationType, startTime, endTime]);
 
   const validate = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -183,6 +182,11 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
     }
     if (isRecurring && selectedDays.length === 0) {
       newErrors.recurringDays = 'Select at least one day for recurring shifts';
+    }
+    const startMinutes = startTime.getHours() * 60 + startTime.getMinutes();
+    const endMinutes = endTime.getHours() * 60 + endTime.getMinutes();
+    if (startMinutes === endMinutes) {
+      newErrors.endTime = 'End time must differ from start time';
     }
 
     setErrors(newErrors);
@@ -212,8 +216,6 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
       if (!selectedBranch) {
         throw new Error('Branch not found');
       }
-
-      const payment = calculatePayment();
 
       const dayNames = [
         'monday',
@@ -311,8 +313,6 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
       </SafeAreaView>
     );
   }
-
-  const payment = calculatePayment();
 
   return (
     <SafeAreaView style={styles.container}>

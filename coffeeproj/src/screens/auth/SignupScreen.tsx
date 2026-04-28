@@ -19,6 +19,7 @@ import { COLORS } from '../../config/constants';
 import type { AccountType } from '../../types';
 import { AuthService } from '../../services/AuthService';
 import { useAuthStore } from '../../stores/authStore';
+import { getErrorMessage } from '../../utils/getErrorMessage';
 import {
   getEmailError,
   getPasswordError,
@@ -117,19 +118,18 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
           { text: 'OK' },
         ]);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Signup error:', error);
 
+      const message = getErrorMessage(error);
       let errorMessage = 'Failed to create account. Please try again.';
 
-      if (error.message) {
-        if (error.message.includes('already registered')) {
-          errorMessage = 'This email is already registered. Please login instead.';
-        } else if (error.message.includes('Invalid email')) {
-          errorMessage = 'Please enter a valid email address.';
-        } else if (error.message.includes('Password')) {
-          errorMessage = error.message;
-        }
+      if (message.includes('already registered')) {
+        errorMessage = 'This email is already registered. Please login instead.';
+      } else if (message.includes('Invalid email')) {
+        errorMessage = 'Please enter a valid email address.';
+      } else if (message.includes('Password')) {
+        errorMessage = message;
       }
 
       Alert.alert('Signup Failed', errorMessage, [{ text: 'OK' }]);

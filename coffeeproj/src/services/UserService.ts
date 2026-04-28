@@ -24,11 +24,7 @@ export class UserService {
    */
   static async getUserProfile(userId: string): Promise<User> {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
 
       if (error) throw error;
       if (!data) throw new Error('User not found');
@@ -45,11 +41,7 @@ export class UserService {
    */
   static async getUserByEmail(email: string): Promise<User | null> {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .single();
+      const { data, error } = await supabase.from('users').select('*').eq('email', email).single();
 
       if (error) {
         if (error.code === 'PGRST116') {
@@ -69,10 +61,7 @@ export class UserService {
   /**
    * Update user profile
    */
-  static async updateUserProfile(
-    userId: string,
-    updates: UpdateUserData
-  ): Promise<User> {
+  static async updateUserProfile(userId: string, updates: UpdateUserData): Promise<User> {
     try {
       const dbUpdates: any = {};
 
@@ -105,10 +94,7 @@ export class UserService {
    */
   static async deactivateAccount(userId: string): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ is_active: false })
-        .eq('id', userId);
+      const { error } = await supabase.from('users').update({ is_active: false }).eq('id', userId);
 
       if (error) throw error;
     } catch (error) {
@@ -122,10 +108,7 @@ export class UserService {
    */
   static async reactivateAccount(userId: string): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ is_active: true })
-        .eq('id', userId);
+      const { error } = await supabase.from('users').update({ is_active: true }).eq('id', userId);
 
       if (error) throw error;
     } catch (error) {
@@ -139,11 +122,7 @@ export class UserService {
    */
   static async emailExists(email: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('id')
-        .eq('email', email)
-        .single();
+      const { data, error } = await supabase.from('users').select('id').eq('email', email).single();
 
       if (error) {
         if (error.code === 'PGRST116') {

@@ -35,8 +35,7 @@ export class BaristaProfileService {
       if (error) throw error;
       if (!profile) throw new Error('Failed to create profile');
 
-      await this.updateProfileCompleteness(profile.id);
-
+      // profile_completeness is maintained by a DB trigger (migration 032).
       const updatedProfile = await this.getProfileByUserId(data.userId);
       if (!updatedProfile) throw new Error('Failed to retrieve profile');
 
@@ -144,8 +143,7 @@ export class BaristaProfileService {
       if (error) throw error;
       if (!profile) throw new Error('Failed to update profile');
 
-      await this.updateProfileCompleteness(profile.id);
-
+      // profile_completeness is maintained by a DB trigger (migration 032).
       const updatedProfile = await this.getProfileByUserId(userId);
       if (!updatedProfile) throw new Error('Failed to retrieve profile');
 
@@ -267,27 +265,6 @@ export class BaristaProfileService {
       return publicUrl;
     } catch (error) {
       console.error('Error in uploadPortfolioPhoto:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Update profile completeness using database function
-   */
-  private static async updateProfileCompleteness(profileId: string): Promise<void> {
-    try {
-      const { data, error } = await supabase.rpc('calculate_profile_completeness', {
-        profile_id: profileId,
-      });
-
-      if (error) throw error;
-
-      await supabase
-        .from('barista_profiles')
-        .update({ profile_completeness: data })
-        .eq('id', profileId);
-    } catch (error) {
-      console.error('Error in updateProfileCompleteness:', error);
       throw error;
     }
   }

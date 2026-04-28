@@ -22,6 +22,7 @@ import type { SettingsStackParamList } from '../../navigation/SettingsStack';
 type Navigation = NativeStackNavigationProp<SettingsStackParamList, 'ChangePassword'>;
 
 const MIN_PASSWORD_LENGTH = 8;
+const MAX_PASSWORD_LENGTH = 72;
 
 export const ChangePasswordScreen: React.FC = () => {
   const navigation = useNavigation<Navigation>();
@@ -41,8 +42,8 @@ export const ChangePasswordScreen: React.FC = () => {
   const newPasswordError = useMemo<string | null>(() => {
     if (!newPassword) return null;
     if (newPassword.length < MIN_PASSWORD_LENGTH) return t('settings.password.minLength');
-    if (currentPassword && newPassword === currentPassword)
-      return t('settings.password.sameAsCurrent');
+    if (newPassword.length > MAX_PASSWORD_LENGTH) return t('settings.password.minLength');
+    if (newPassword === currentPassword) return t('settings.password.sameAsCurrent');
     return null;
   }, [newPassword, currentPassword, t]);
 
@@ -55,6 +56,7 @@ export const ChangePasswordScreen: React.FC = () => {
   const canSubmit =
     currentPassword.length > 0 &&
     newPassword.length >= MIN_PASSWORD_LENGTH &&
+    newPassword.length <= MAX_PASSWORD_LENGTH &&
     newPassword !== currentPassword &&
     confirmPassword === newPassword &&
     !isSubmitting;
@@ -84,7 +86,7 @@ export const ChangePasswordScreen: React.FC = () => {
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled">

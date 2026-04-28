@@ -272,13 +272,26 @@ export class JobService {
   }
 
   /**
-   * Update job status
+   * Update job status. Requires ownerUserId as defence-in-depth:
+   * the update only matches rows owned by the caller.
    */
-  static async updateJobStatus(jobId: string, status: JobStatus): Promise<void> {
+  static async updateJobStatus(
+    jobId: string,
+    status: JobStatus,
+    ownerUserId: string
+  ): Promise<void> {
     try {
-      const { error } = await supabase.from('jobs').update({ status }).eq('id', jobId);
+      const { data, error } = await supabase
+        .from('jobs')
+        .update({ status })
+        .eq('id', jobId)
+        .eq('business_owner_id', ownerUserId)
+        .select('id');
 
       if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error('Not authorized to update this job');
+      }
     } catch (error) {
       console.error('Error in updateJobStatus:', error);
       throw error;

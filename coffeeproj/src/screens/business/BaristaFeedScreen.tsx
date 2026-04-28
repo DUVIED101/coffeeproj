@@ -26,12 +26,10 @@ type Props = {
 const BaristaCardItem = React.memo<{
   profile: BaristaProfile;
   onPressUserId: (userId: string) => void;
-}>(({ profile, onPressUserId }) => (
-  <BaristaCard profile={profile} onPress={() => onPressUserId(profile.userId)} />
-));
+}>(({ profile, onPressUserId }) => <BaristaCard profile={profile} onPress={onPressUserId} />);
 
 export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
-  const { user } = useAuthStore();
+  const userId = useAuthStore(s => s.user?.id);
   const [baristas, setBaristas] = useState<BaristaProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -40,17 +38,20 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
 
   useEffect(() => {
     loadBranchMetroStations();
-  }, [user?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   useEffect(() => {
     loadBaristas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const loadBranchMetroStations = async () => {
-    if (!user?.id) return;
+    const currentUserId = useAuthStore.getState().user?.id;
+    if (!currentUserId) return;
 
     try {
-      const business = await BusinessService.getBusinessByOwnerId(user.id);
+      const business = await BusinessService.getBusinessByOwnerId(currentUserId);
       if (!business) return;
 
       const branches = await BusinessService.getBranches(business.id);

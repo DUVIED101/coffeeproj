@@ -223,13 +223,38 @@ export class ApplicationService {
   }
 
   /**
-   * Update application status (business can accept/reject)
+   * Verify caller owns the job the application belongs to.
+   * Throws if not the owner — defence-in-depth on top of RLS.
+   */
+  private static async assertOwnsApplicationJob(
+    applicationId: string,
+    ownerUserId: string
+  ): Promise<void> {
+    const { data, error } = await supabase
+      .from('applications')
+      .select('id, jobs!inner(business_owner_id)')
+      .eq('id', applicationId)
+      .single();
+    if (error) throw error;
+    const jobs = (data as any)?.jobs;
+    const ownerId = Array.isArray(jobs) ? jobs[0]?.business_owner_id : jobs?.business_owner_id;
+    if (!ownerId || ownerId !== ownerUserId) {
+      throw new Error('Not authorized to update this application');
+    }
+  }
+
+  /**
+   * Update application status (business can accept/reject).
+   * Requires ownerUserId for defence-in-depth ownership check.
    */
   static async updateApplicationStatus(
     applicationId: string,
-    status: ApplicationStatus
+    status: ApplicationStatus,
+    ownerUserId: string
   ): Promise<void> {
     try {
+      await this.assertOwnsApplicationJob(applicationId, ownerUserId);
+
       const { error } = await supabase
         .from('applications')
         .update({ status })
@@ -309,11 +334,13 @@ export class ApplicationService {
   }
 
   /**
-   * Mark work as completed by business
-   * When both parties mark completed, status auto-updates to 'completed' via trigger
+   * Mark work as completed by business.
+   * Requires ownerUserId for defence-in-depth ownership check.
    */
-  static async markCompletedByBusiness(applicationId: string): Promise<void> {
+  static async markCompletedByBusiness(applicationId: string, ownerUserId: string): Promise<void> {
     try {
+      await this.assertOwnsApplicationJob(applicationId, ownerUserId);
+
       const { error } = await supabase
         .from('applications')
         .update({ completed_by_business: true })

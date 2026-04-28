@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/authStore';
 import { AuthStack } from './AuthStack';
 import { MainTabs } from './MainTabs';
 import { COLORS } from '../config/constants';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 export const AppNavigator: React.FC = () => {
   const { isAuthenticated, isLoading, initialize } = useAuthStore();
@@ -24,7 +25,9 @@ export const AppNavigator: React.FC = () => {
 
   return (
     <NavigationContainer>
-      {isAuthenticated ? <MainTabs key="authenticated" /> : <AuthStack key="unauthenticated" />}
+      <ErrorBoundary>
+        {isAuthenticated ? <MainTabs key="authenticated" /> : <AuthStack key="unauthenticated" />}
+      </ErrorBoundary>
     </NavigationContainer>
   );
 };
