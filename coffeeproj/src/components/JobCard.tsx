@@ -3,12 +3,15 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { Job } from '../types/job';
+import type { UserReviewAggregate } from '../types/review';
 import { COLORS } from '../config/constants';
+import { StarRow } from './StarRow';
 
 interface JobCardProps {
   job: Job;
   onPress?: (jobId: string) => void;
   onLongPress?: (job: Job) => void;
+  ownerAggregate?: UserReviewAggregate;
 }
 
 const formatCurrency = (amount: number, locale: string): string => {
@@ -74,7 +77,7 @@ const getCompensationText = (job: Job, t: TFunction, locale: string): string => 
   }
 };
 
-export const JobCard = React.memo<JobCardProps>(({ job, onPress, onLongPress }) => {
+export const JobCard = React.memo<JobCardProps>(({ job, onPress, onLongPress, ownerAggregate }) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
   const handlePress = useCallback(() => {
@@ -117,6 +120,14 @@ export const JobCard = React.memo<JobCardProps>(({ job, onPress, onLongPress }) 
           {job.businessName}
           {job.branchName && ` • ${job.branchName}`}
         </Text>
+        {ownerAggregate && ownerAggregate.reviewCount > 0 && (
+          <StarRow
+            rating={ownerAggregate.averageRating}
+            count={ownerAggregate.reviewCount}
+            showValue
+            size={12}
+          />
+        )}
       </View>
 
       <View style={styles.detailsRow}>

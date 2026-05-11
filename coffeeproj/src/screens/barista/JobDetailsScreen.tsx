@@ -14,9 +14,13 @@ import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
 import { ApplicationService } from '../../services/ApplicationService';
+import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
+import { StarRow } from '../../components/StarRow';
 import type { Job } from '../../types/job';
 import type { Application } from '../../types/application';
+import type { UserId } from '../../types/ids';
+import type { UserReviewAggregate } from '../../types/review';
 
 type BaristaStackParamList = {
   JobFeed: undefined;
@@ -39,6 +43,7 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ownerAggregate, setOwnerAggregate] = useState<UserReviewAggregate | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,6 +54,15 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         const jobData = await JobService.getJobById(jobId);
         if (cancelled) return;
         setJob(jobData);
+
+        if (jobData?.businessOwnerId) {
+          try {
+            const agg = await ReviewService.getAggregateForUser(jobData.businessOwnerId as UserId);
+            if (!cancelled) setOwnerAggregate(agg);
+          } catch (err) {
+            console.error('Error loading owner aggregate:', err);
+          }
+        }
 
         if (user?.id) {
           const application = await ApplicationService.checkApplicationExists(jobId, user.id);
@@ -188,6 +202,14 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           <View style={styles.businessInfo}>
             <Text style={styles.businessName}>{job.businessName}</Text>
             <Text style={styles.branchName}>{job.branchName}</Text>
+            {ownerAggregate && ownerAggregate.reviewCount > 0 && (
+              <StarRow
+                rating={ownerAggregate.averageRating}
+                count={ownerAggregate.reviewCount}
+                showValue
+                size={13}
+              />
+            )}
           </View>
         </View>
 

@@ -49,6 +49,34 @@
     "hourlyMax": "до {{max}}/час",
     "profileCompleteness": "Заполнено на {{percent}}%"
   },
+  "shiftHistory": {
+    "title": "История смен",
+    "empty": "Здесь появится история смен после первой завершённой работы",
+    "hours": "{{hours}}ч",
+    "noReviewLeft": "Оценка не оставлена"
+  },
+  "reviews": {
+    "title": "Отзывы",
+    "empty": "Пока нет отзывов",
+    "anonymous": "Анонимный отзыв",
+    "aggregate": "{{rating}} ★ · {{count}}",
+    "noRatingsShort": "Без оценок",
+    "modal": {
+      "title": "Оцените сотрудничество",
+      "subtitle": "Ваша оценка помогает другим выбирать партнёров",
+      "commentPlaceholder": "Поделитесь впечатлениями (необязательно)",
+      "submit": "Отправить",
+      "skip": "Пропустить",
+      "charCounter": "{{count}}/500",
+      "starLabel": "{{n}} из 5"
+    },
+    "banner": {
+      "prompt": "Оценить вторую сторону →"
+    },
+    "errors": {
+      "submitFailed": "Не удалось отправить отзыв. Попробуйте ещё раз."
+    }
+  },
   "applications": {
     "title": "Мои отклики",
     "empty": "Пока нет откликов",

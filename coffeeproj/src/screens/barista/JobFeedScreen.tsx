@@ -14,6 +14,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
+import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { FilterBar } from '../../components/FilterBar';
 import { JobCard } from '../../components/JobCard';
@@ -21,6 +22,8 @@ import { requestLocationPermission, getCurrentLocation } from '../../utils/geolo
 import type { Job, JobFilters } from '../../types/job';
 import type { GeoPoint } from '../../types/business';
 import type { BaristaProfile } from '../../types/baristaProfile';
+import type { UserId } from '../../types/ids';
+import type { UserReviewAggregate } from '../../types/review';
 
 type BaristaStackParamList = {
   JobFeed: undefined;
@@ -41,10 +44,11 @@ const formatDistance = (distanceMeters?: number): string => {
 const JobCardWithDistance = React.memo<{
   job: Job;
   onPressJobId: (jobId: string) => void;
-}>(({ job, onPressJobId }) => {
+  ownerAggregate?: UserReviewAggregate;
+}>(({ job, onPressJobId, ownerAggregate }) => {
   return (
     <View>
-      <JobCard job={job} onPress={onPressJobId} />
+      <JobCard job={job} onPress={onPressJobId} ownerAggregate={ownerAggregate} />
       {job.distance !== undefined && (
         <Text style={styles.distanceText}>{formatDistance(job.distance)}</Text>
       )}
@@ -62,6 +66,9 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
   const [filters, setFilters] = useState<JobFilters>({});
   const [baristaProfile, setBaristaProfile] = useState<BaristaProfile | null>(null);
   const [showProfileBanner, setShowProfileBanner] = useState(false);
+  const [ownerAggregates, setOwnerAggregates] = useState<Map<UserId, UserReviewAggregate>>(
+    new Map()
+  );
 
   useEffect(() => {
     initializeLocation();
@@ -121,6 +128,16 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
       console.log('✅ Jobs loaded:', jobsData.length);
       console.log('📋 Jobs data:', JSON.stringify(jobsData, null, 2));
       setJobs(jobsData);
+
+      const ownerIds = jobsData
+        .map(j => j.businessOwnerId as UserId | undefined)
+        .filter((id): id is UserId => Boolean(id));
+      if (ownerIds.length > 0) {
+        const aggMap = await ReviewService.getAggregatesForUsers(ownerIds);
+        setOwnerAggregates(aggMap);
+      } else {
+        setOwnerAggregates(new Map());
+      }
     } catch (error) {
       console.error('❌ Error loading jobs:', error);
       Alert.alert('Ошибка', 'Не удалось загрузить вакансии. Попробуйте еще раз.');
@@ -147,8 +164,14 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   const renderJob = useCallback(
-    ({ item }: { item: Job }) => <JobCardWithDistance job={item} onPressJobId={handleJobPress} />,
-    [handleJobPress]
+    ({ item }: { item: Job }) => (
+      <JobCardWithDistance
+        job={item}
+        onPressJobId={handleJobPress}
+        ownerAggregate={ownerAggregates.get(item.businessOwnerId as UserId)}
+      />
+    ),
+    [handleJobPress, ownerAggregates]
   );
 
   const renderEmpty = () => (

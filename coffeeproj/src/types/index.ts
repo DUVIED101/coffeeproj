@@ -8,3 +8,4 @@ export * from './chat';
 export * from './notification';
 export * from './notificationPreferences';
 export * from './baristaProfile';
+export * from './review';

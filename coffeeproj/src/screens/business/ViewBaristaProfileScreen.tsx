@@ -15,10 +15,14 @@ import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
 import { ChatService } from '../../services/ChatService';
+import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 import { getInitials } from '../../utils/getInitials';
+import { StarRow } from '../../components/StarRow';
 import type { BaristaProfile, ShiftTime } from '../../types/baristaProfile';
+import type { UserId } from '../../types/ids';
+import type { UserReviewAggregate } from '../../types/review';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 
 type Props = {
@@ -38,12 +42,16 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
   const currentUser = useAuthStore(state => state.user);
 
   const [profile, setProfile] = useState<BaristaProfile | null>(null);
+  const [aggregate, setAggregate] = useState<UserReviewAggregate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isStartingConversation, setIsStartingConversation] = useState(false);
 
   useEffect(() => {
     loadProfile();
-  }, []);
+    ReviewService.getAggregateForUser(baristaId as UserId)
+      .then(setAggregate)
+      .catch(err => console.error('Error loading review aggregate:', err));
+  }, [baristaId]);
 
   const handleStartConversation = useCallback(async () => {
     if (!currentUser?.id || !profile || isStartingConversation) return;
@@ -130,8 +138,25 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
             {profile.yearsOfExperience !== undefined && (
               <Text style={styles.experience}>{profile.yearsOfExperience} years of experience</Text>
             )}
+            {aggregate && aggregate.reviewCount > 0 && (
+              <View style={styles.aggregateRow}>
+                <StarRow
+                  rating={aggregate.averageRating}
+                  count={aggregate.reviewCount}
+                  showValue
+                  size={14}
+                />
+              </View>
+            )}
           </View>
         </View>
+
+        <TouchableOpacity
+          style={styles.reviewsLink}
+          onPress={() => navigation.navigate('UserReviews', { userId: baristaId })}>
+          <Text style={styles.reviewsLinkLabel}>Все отзывы</Text>
+          <Text style={styles.reviewsLinkChevron}>›</Text>
+        </TouchableOpacity>
 
         {profile.bio && (
           <View style={styles.section}>
@@ -290,6 +315,30 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     marginTop: 8,
     fontWeight: '600',
+  },
+  aggregateRow: {
+    marginTop: 8,
+  },
+  reviewsLink: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: COLORS.border,
+    marginTop: 12,
+  },
+  reviewsLinkLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  reviewsLinkChevron: {
+    fontSize: 22,
+    color: COLORS.textSecondary,
   },
   section: {
     backgroundColor: '#fff',

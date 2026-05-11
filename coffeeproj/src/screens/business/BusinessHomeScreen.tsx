@@ -20,9 +20,12 @@ import { JobCard } from '../../components/JobCard';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { JobService } from '../../services/JobService';
 import { BusinessService } from '../../services/BusinessService';
+import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { COLORS } from '../../config/constants';
 import type { Job, Branch, JobStatus } from '../../types';
+import type { UserId } from '../../types/ids';
+import type { UserReviewAggregate } from '../../types/review';
 
 const SHOW_ARCHIVED_KEY = 'business.showArchivedJobs';
 const ARCHIVED_STATUSES: JobStatus[] = ['filled', 'expired', 'cancelled'];
@@ -69,6 +72,15 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isLoadingBranches, setIsLoadingBranches] = useState(false);
   const [isRefreshingBranches, setIsRefreshingBranches] = useState(false);
+
+  const [reviewAggregate, setReviewAggregate] = useState<UserReviewAggregate | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    ReviewService.getAggregateForUser(user.id as UserId)
+      .then(setReviewAggregate)
+      .catch(err => console.error('Error loading review aggregate:', err));
+  }, [user?.id]);
 
   useEffect(() => {
     navigation.setOptions({
@@ -278,8 +290,23 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     </View>
   );
 
+  const reviewSummary =
+    reviewAggregate && reviewAggregate.reviewCount > 0
+      ? `${reviewAggregate.averageRating.toFixed(1)} ★ · ${reviewAggregate.reviewCount}`
+      : 'Без оценок';
+
   return (
     <SafeAreaView style={styles.container}>
+      <TouchableOpacity
+        style={styles.reviewsRow}
+        onPress={() => navigation.navigate('BusinessReviews')}>
+        <Text style={styles.reviewsRowLabel}>Отзывы</Text>
+        <View style={styles.reviewsRowRight}>
+          <Text style={styles.reviewsRowValue}>{reviewSummary}</Text>
+          <Text style={styles.reviewsRowChevron}>›</Text>
+        </View>
+      </TouchableOpacity>
+
       {/* Main Tab Bar */}
       <View style={styles.tabBar}>
         <TouchableOpacity
@@ -461,5 +488,33 @@ const styles = StyleSheet.create({
   branchMetro: {
     fontSize: 14,
     color: COLORS.primary,
+  },
+  reviewsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.background,
+  },
+  reviewsRowLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  reviewsRowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  reviewsRowValue: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+  },
+  reviewsRowChevron: {
+    fontSize: 22,
+    color: COLORS.textSecondary,
   },
 });

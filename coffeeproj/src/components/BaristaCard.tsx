@@ -3,12 +3,15 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { BaristaProfile } from '../types/baristaProfile';
+import type { UserReviewAggregate } from '../types/review';
 import { COLORS } from '../config/constants';
 import { getInitials } from '../utils/getInitials';
+import { StarRow } from './StarRow';
 
 type BaristaCardProps = {
   profile: BaristaProfile;
   onPress?: (userId: string) => void;
+  reviewAggregate?: UserReviewAggregate;
 };
 
 const formatRate = (amount: number, locale: string): string => `₽${amount.toLocaleString(locale)}`;
@@ -31,7 +34,7 @@ const getHourlyRateText = (
   return undefined;
 };
 
-export const BaristaCard = React.memo<BaristaCardProps>(({ profile, onPress }) => {
+export const BaristaCard = React.memo<BaristaCardProps>(({ profile, onPress, reviewAggregate }) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
   const {
@@ -75,6 +78,18 @@ export const BaristaCard = React.memo<BaristaCardProps>(({ profile, onPress }) =
             {firstName} {lastName}
           </Text>
           <Text style={styles.subtitle}>{city}</Text>
+          <View style={styles.ratingRow}>
+            {reviewAggregate && reviewAggregate.reviewCount > 0 ? (
+              <StarRow
+                rating={reviewAggregate.averageRating}
+                count={reviewAggregate.reviewCount}
+                showValue
+                size={13}
+              />
+            ) : (
+              <Text style={styles.noRating}>{t('reviews.noRatingsShort')}</Text>
+            )}
+          </View>
         </View>
       </View>
 
@@ -164,6 +179,14 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: COLORS.textSecondary,
+  },
+  ratingRow: {
+    marginTop: 6,
+  },
+  noRating: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontStyle: 'italic',
   },
   experienceRow: {
     marginBottom: 8,

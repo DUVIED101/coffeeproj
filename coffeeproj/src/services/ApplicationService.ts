@@ -1,5 +1,14 @@
 import { supabase } from '../config/supabase';
 import type { Application, ApplicationStatus, CreateApplicationData } from '../types/application';
+import type { ApplicationId, UserId } from '../types/ids';
+import type { ApplicationReview, RaterRole, StarRating } from '../types/review';
+import { computeShiftHours } from '../utils/shiftHours';
+
+export type CompletedShiftEntry = Application & {
+  hoursWorked: number;
+  businessReview?: ApplicationReview;
+  completedAt: string;
+};
 
 export class ApplicationService {
   /**
@@ -136,6 +145,77 @@ export class ApplicationService {
       return (data || []).map(app => this.mapApplicationWithJob(app));
     } catch (error) {
       console.error('Error in getApplicationsByBarista:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get every completed application for a barista, including hours worked
+   * and the review the business left (if any).
+   */
+  static async getCompletedApplicationsByBarista(
+    baristaId: UserId
+  ): Promise<CompletedShiftEntry[]> {
+    try {
+      const { data, error } = await supabase
+        .from('applications')
+        .select(
+          `
+          *,
+          jobs (
+            *,
+            businesses (name),
+            branches (name, metro_station)
+          ),
+          application_reviews!application_reviews_application_id_fkey (
+            id, application_id, rater_role, ratee_id, rating, comment, created_at
+          )
+        `
+        )
+        .eq('barista_id', baristaId)
+        .eq('status', 'completed')
+        .order('completed_at', { ascending: false });
+
+      if (error) throw error;
+
+      return (data || []).map(app => {
+        const mapped = this.mapApplicationWithJob(app);
+        const reviews: Array<{
+          id: string;
+          application_id: string;
+          rater_role: RaterRole;
+          ratee_id: string;
+          rating: number;
+          comment: string | null;
+          created_at: string;
+        }> = Array.isArray(app.application_reviews) ? app.application_reviews : [];
+        const businessReviewRow = reviews.find(r => r.rater_role === 'business');
+
+        const businessReview: ApplicationReview | undefined = businessReviewRow
+          ? {
+              id: businessReviewRow.id as ApplicationReview['id'],
+              applicationId: businessReviewRow.application_id as ApplicationId,
+              raterRole: businessReviewRow.rater_role,
+              rateeId: businessReviewRow.ratee_id as UserId,
+              rating: businessReviewRow.rating as StarRating,
+              comment: businessReviewRow.comment ?? undefined,
+              createdAt: businessReviewRow.created_at,
+            }
+          : undefined;
+
+        const hoursWorked = mapped.job?.shiftDetails
+          ? computeShiftHours(mapped.job.shiftDetails)
+          : 0;
+
+        return {
+          ...mapped,
+          hoursWorked,
+          businessReview,
+          completedAt: mapped.completedAt ?? mapped.updatedAt,
+        };
+      });
+    } catch (error) {
+      console.error('Error in getCompletedApplicationsByBarista:', error);
       throw error;
     }
   }

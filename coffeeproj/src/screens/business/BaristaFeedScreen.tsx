@@ -13,10 +13,13 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { BaristaSearchService } from '../../services/BaristaSearchService';
 import { BusinessService } from '../../services/BusinessService';
+import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { BaristaCard } from '../../components/BaristaCard';
 import { BaristaFilterBar } from '../../components/BaristaFilterBar';
 import type { BaristaProfile, BaristaFilters } from '../../types/baristaProfile';
+import type { UserId } from '../../types/ids';
+import type { UserReviewAggregate } from '../../types/review';
 import type { BusinessSearchStackParamList } from '../../navigation/BusinessSearchStack';
 
 type Props = {
@@ -26,11 +29,15 @@ type Props = {
 const BaristaCardItem = React.memo<{
   profile: BaristaProfile;
   onPressUserId: (userId: string) => void;
-}>(({ profile, onPressUserId }) => <BaristaCard profile={profile} onPress={onPressUserId} />);
+  reviewAggregate?: UserReviewAggregate;
+}>(({ profile, onPressUserId, reviewAggregate }) => (
+  <BaristaCard profile={profile} onPress={onPressUserId} reviewAggregate={reviewAggregate} />
+));
 
 export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
   const userId = useAuthStore(s => s.user?.id);
   const [baristas, setBaristas] = useState<BaristaProfile[]>([]);
+  const [aggregates, setAggregates] = useState<Map<UserId, UserReviewAggregate>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [filters, setFilters] = useState<BaristaFilters>({});
@@ -68,6 +75,13 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
     try {
       const results = await BaristaSearchService.searchBaristas(filters);
       setBaristas(results);
+      const userIds = results.map(p => p.userId as UserId);
+      if (userIds.length > 0) {
+        const aggMap = await ReviewService.getAggregatesForUsers(userIds);
+        setAggregates(aggMap);
+      } else {
+        setAggregates(new Map());
+      }
     } catch (error) {
       console.error('Error loading baristas:', error);
       Alert.alert('Ошибка', 'Не удалось загрузить баристов');
@@ -95,9 +109,13 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderBarista = useCallback(
     ({ item }: { item: BaristaProfile }) => (
-      <BaristaCardItem profile={item} onPressUserId={handleBaristaPress} />
+      <BaristaCardItem
+        profile={item}
+        onPressUserId={handleBaristaPress}
+        reviewAggregate={aggregates.get(item.userId as UserId)}
+      />
     ),
-    [handleBaristaPress]
+    [handleBaristaPress, aggregates]
   );
 
   const renderEmpty = () => (

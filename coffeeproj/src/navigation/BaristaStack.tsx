@@ -6,6 +6,7 @@ import { JobDetailsScreen } from '../screens/barista/JobDetailsScreen';
 import { ApplyScreen } from '../screens/barista/ApplyScreen';
 import { ApplicationsScreen } from '../screens/barista/ApplicationsScreen';
 import { ApplicationDetailsScreen } from '../screens/barista/ApplicationDetailsScreen';
+import { ShiftHistoryScreen } from '../screens/barista/ShiftHistoryScreen';
 import { BaristaProfileScreen } from '../screens/barista/BaristaProfileScreen';
 import { BaristaProfileSetupScreen } from '../screens/barista/BaristaProfileSetupScreen';
 import { ChatScreen } from '../screens/chat/ChatScreen';
@@ -20,6 +21,7 @@ export type BaristaStackParamList = {
   Apply: { job: Job };
   Applications: undefined;
   ApplicationDetails: { application: Application };
+  ShiftHistory: undefined;
   BaristaProfile: undefined;
   BaristaProfileSetup: undefined;
   Chat: { applicationId?: string; conversationId?: string };
@@ -70,6 +72,11 @@ export const BaristaStack: React.FC = () => {
         name="ApplicationDetails"
         component={ApplicationDetailsScreen}
         options={{ title: 'Application Details' }}
+      />
+      <Stack.Screen
+        name="ShiftHistory"
+        component={ShiftHistoryScreen}
+        options={{ title: 'История смен' }}
       />
       <Stack.Screen
         name="BaristaProfile"

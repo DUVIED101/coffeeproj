@@ -2,12 +2,14 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BaristaFeedScreen } from '../screens/business/BaristaFeedScreen';
 import { ViewBaristaProfileScreen } from '../screens/business/ViewBaristaProfileScreen';
+import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
 import { ChatScreen } from '../screens/chat/ChatScreen';
 import { COLORS } from '../config/constants';
 
 export type BusinessSearchStackParamList = {
   BaristaFeed: undefined;
   ViewBaristaProfile: { baristaId: string };
+  UserReviews: { userId: string };
   Chat: { applicationId?: string; conversationId?: string };
 };
 
@@ -34,6 +36,11 @@ export const BusinessSearchStack: React.FC = () => {
         name="ViewBaristaProfile"
         component={ViewBaristaProfileScreen}
         options={{ title: 'Профиль' }}
+      />
+      <Stack.Screen
+        name="UserReviews"
+        component={UserReviewsScreen}
+        options={{ title: 'Все отзывы' }}
       />
       <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
     </Stack.Navigator>

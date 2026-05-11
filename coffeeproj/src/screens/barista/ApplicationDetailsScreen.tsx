@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,11 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
+import { ReviewService } from '../../services/ReviewService';
+import { ReviewModal } from '../../components/ReviewModal';
 import type { Application } from '../../types/application';
+import type { ApplicationId, UserId } from '../../types/ids';
+import type { ApplicationReview } from '../../types/review';
 
 type BaristaStackParamList = {
   JobFeed: undefined;
@@ -37,8 +41,30 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
   const [currentStatus, setCurrentStatus] = useState(application.status);
   const [completedByBarista, setCompletedByBarista] = useState(application.completedByBarista);
   const [completedByBusiness, setCompletedByBusiness] = useState(application.completedByBusiness);
+  const [existingReview, setExistingReview] = useState<ApplicationReview | null>(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const hasPromptedThisSession = useRef(false);
 
   const job = application.job;
+  const businessOwnerId = job?.businessOwnerId as UserId | undefined;
+  const applicationId = application.id as ApplicationId;
+
+  useEffect(() => {
+    let cancelled = false;
+    const checkReview = async () => {
+      if (currentStatus !== 'completed') return;
+      try {
+        const review = await ReviewService.getReviewByApplication(applicationId, 'barista');
+        if (!cancelled) setExistingReview(review);
+      } catch (error) {
+        console.error('Error loading existing review:', error);
+      }
+    };
+    checkReview();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentStatus, applicationId]);
 
   const getStatusColor = (status: string): string => {
     switch (status) {
@@ -111,6 +137,23 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
       setIsMarkingComplete(true);
       await ApplicationService.markCompletedByBarista(application.id);
       setCompletedByBarista(true);
+
+      const refreshed = await ApplicationService.checkApplicationExists(
+        application.jobId,
+        application.baristaId
+      );
+      if (refreshed) {
+        setCurrentStatus(refreshed.status);
+        setCompletedByBusiness(refreshed.completedByBusiness);
+        if (
+          refreshed.status === 'completed' &&
+          !hasPromptedThisSession.current &&
+          !existingReview
+        ) {
+          hasPromptedThisSession.current = true;
+          setShowReviewModal(true);
+        }
+      }
       Alert.alert(t('common.success'), t('applications.details.markCompleteSuccess'));
     } catch (error) {
       console.error('Error marking work complete:', error);
@@ -119,6 +162,9 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
       setIsMarkingComplete(false);
     }
   };
+
+  const showReviewBanner =
+    currentStatus === 'completed' && !existingReview && !showReviewModal && !!businessOwnerId;
 
   const canWithdraw = currentStatus === 'pending' || currentStatus === 'under_review';
   const canMarkComplete = currentStatus === 'accepted' && !completedByBarista;
@@ -171,6 +217,15 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
           </View>
         )}
 
+        {showReviewBanner && (
+          <TouchableOpacity
+            style={styles.reviewBanner}
+            onPress={() => setShowReviewModal(true)}
+            accessibilityRole="button">
+            <Text style={styles.reviewBannerText}>{t('reviews.banner.prompt')}</Text>
+          </TouchableOpacity>
+        )}
+
         {/* Work Completion Status */}
         {showCompletionStatus && (
           <View style={styles.section}>
@@ -190,6 +245,20 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
           </View>
         )}
       </ScrollView>
+
+      {businessOwnerId && (
+        <ReviewModal
+          visible={showReviewModal}
+          applicationId={applicationId}
+          raterRole="barista"
+          rateeId={businessOwnerId}
+          onSubmitted={review => {
+            setExistingReview(review);
+            setShowReviewModal(false);
+          }}
+          onSkip={() => setShowReviewModal(false)}
+        />
+      )}
 
       {/* Action Buttons */}
       {(canWithdraw || canMarkComplete) && (
@@ -354,5 +423,19 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#065F46',
+  },
+  reviewBanner: {
+    backgroundColor: '#FEF3C7',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#FCD34D',
+  },
+  reviewBannerText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#92400E',
   },
 });

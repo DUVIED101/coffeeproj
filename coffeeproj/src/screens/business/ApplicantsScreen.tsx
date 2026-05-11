@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
@@ -11,13 +11,18 @@ import {
   Alert,
   Image,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ChatService } from '../../services/ChatService';
+import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
+import { ReviewModal } from '../../components/ReviewModal';
 import type { Application, ApplicationStatus } from '../../types/application';
+import type { ApplicationId, UserId } from '../../types/ids';
+import type { ApplicationReview } from '../../types/review';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 
 type Props = {
@@ -67,8 +72,11 @@ interface ApplicantItemProps {
   onViewProfile: (baristaId: string) => void;
   onChatPress: (applicationId: string) => void;
   onConfirmCompletion: (applicationId: string) => void;
+  onOpenReview: (application: Application) => void;
   isProcessing: boolean;
   unreadCount: number;
+  needsReview: boolean;
+  reviewBannerLabel: string;
 }
 
 const ApplicantItem = React.memo<ApplicantItemProps>(
@@ -81,8 +89,11 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     onViewProfile,
     onChatPress,
     onConfirmCompletion,
+    onOpenReview,
     isProcessing,
     unreadCount,
+    needsReview,
+    reviewBannerLabel,
   }) => {
     const handleAccept = useCallback(() => onAccept(applicationId), [onAccept, applicationId]);
     const handleReject = useCallback(() => onReject(applicationId), [onReject, applicationId]);
@@ -97,6 +108,10 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     const handleConfirmCompletion = useCallback(
       () => onConfirmCompletion(applicationId),
       [onConfirmCompletion, applicationId]
+    );
+    const handleOpenReview = useCallback(
+      () => onOpenReview(application),
+      [onOpenReview, application]
     );
     const baristaProfile = application.baristaProfile;
     const baristaEmail = application.baristaEmail || 'No email';
@@ -181,6 +196,15 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
           </TouchableOpacity>
         )}
 
+        {needsReview && (
+          <TouchableOpacity
+            style={styles.reviewBanner}
+            onPress={handleOpenReview}
+            accessibilityRole="button">
+            <Text style={styles.reviewBannerText}>{reviewBannerLabel}</Text>
+          </TouchableOpacity>
+        )}
+
         {isActionable && (
           <View style={styles.actionButtons}>
             <TouchableOpacity
@@ -214,10 +238,17 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { jobId } = route.params;
   const user = useAuthStore(s => s.user);
 
+  const { t } = useTranslation();
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
+  const [reviewTarget, setReviewTarget] = useState<{
+    applicationId: ApplicationId;
+    rateeId: UserId;
+  } | null>(null);
+  const promptedAppIds = useRef<Set<string>>(new Set());
 
   const markProcessing = useCallback((id: string, on: boolean) => {
     setProcessingIds(prev => {
@@ -241,6 +272,25 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
       } catch (err) {
         console.error('Error fetching unread counts:', err);
         setUnreadCounts({});
+      }
+
+      const completedIds = data.filter(a => a.status === 'completed').map(a => a.id);
+      if (completedIds.length > 0) {
+        try {
+          const reviewedSet = new Set<string>();
+          await Promise.all(
+            completedIds.map(async id => {
+              const review = await ReviewService.getReviewByApplication(
+                id as ApplicationId,
+                'business'
+              );
+              if (review) reviewedSet.add(id);
+            })
+          );
+          setReviewedIds(reviewedSet);
+        } catch (err) {
+          console.error('Error fetching review state:', err);
+        }
       }
     } catch (error) {
       console.error('Error loading applicants:', error);
@@ -313,6 +363,25 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         markProcessing(applicationId, true);
         await ApplicationService.markCompletedByBusiness(applicationId, user.id);
         await loadApplicants();
+        const refreshedList = await ApplicationService.getApplicationsByJob(jobId);
+        const refreshed = refreshedList.find(a => a.id === applicationId);
+        if (
+          refreshed &&
+          refreshed.status === 'completed' &&
+          !promptedAppIds.current.has(applicationId)
+        ) {
+          promptedAppIds.current.add(applicationId);
+          const existing = await ReviewService.getReviewByApplication(
+            applicationId as ApplicationId,
+            'business'
+          );
+          if (!existing) {
+            setReviewTarget({
+              applicationId: applicationId as ApplicationId,
+              rateeId: refreshed.baristaId as UserId,
+            });
+          }
+        }
         Alert.alert('Success', 'Work completion confirmed');
       } catch (error) {
         console.error('Error confirming completion:', error);
@@ -321,8 +390,22 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         markProcessing(applicationId, false);
       }
     },
-    [user, markProcessing, loadApplicants]
+    [user, markProcessing, loadApplicants, jobId]
   );
+
+  const handleOpenReview = useCallback((application: Application) => {
+    setReviewTarget({
+      applicationId: application.id as ApplicationId,
+      rateeId: application.baristaId as UserId,
+    });
+  }, []);
+
+  const handleReviewSubmitted = useCallback((review: ApplicationReview) => {
+    setReviewedIds(prev => new Set(prev).add(review.applicationId));
+    setReviewTarget(null);
+  }, []);
+
+  const reviewBannerLabel = t('reviews.banner.prompt');
 
   const renderApplicant = useCallback(
     ({ item }: { item: Application }) => (
@@ -335,8 +418,11 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         onViewProfile={handleViewProfile}
         onChatPress={handleChatPress}
         onConfirmCompletion={handleConfirmCompletion}
+        onOpenReview={handleOpenReview}
         isProcessing={processingIds.has(item.id)}
         unreadCount={unreadCounts[item.id] || 0}
+        needsReview={item.status === 'completed' && !reviewedIds.has(item.id)}
+        reviewBannerLabel={reviewBannerLabel}
       />
     ),
     [
@@ -345,8 +431,11 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
       handleViewProfile,
       handleChatPress,
       handleConfirmCompletion,
+      handleOpenReview,
       processingIds,
       unreadCounts,
+      reviewedIds,
+      reviewBannerLabel,
     ]
   );
 
@@ -383,6 +472,17 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={renderEmpty}
       />
+
+      {reviewTarget && (
+        <ReviewModal
+          visible
+          applicationId={reviewTarget.applicationId}
+          raterRole="business"
+          rateeId={reviewTarget.rateeId}
+          onSubmitted={handleReviewSubmitted}
+          onSkip={() => setReviewTarget(null)}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -596,5 +696,19 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  reviewBanner: {
+    marginTop: 8,
+    backgroundColor: '#FEF3C7',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+  },
+  reviewBannerText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#92400E',
   },
 });

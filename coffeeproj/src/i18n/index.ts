@@ -48,7 +48,6 @@ export async function initI18n(): Promise<void> {
   if (i18n.isInitialized) return;
   const lng = await resolveInitialLanguage();
   await i18n.use(initReactI18next).init({
-    compatibilityJSON: 'v3',
     resources: {
       ru: { translation: ru },
       en: { translation: en },

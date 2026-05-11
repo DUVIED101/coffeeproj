@@ -18,9 +18,13 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS, EQUIPMENT_TYPES } from '../../config/constants';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
+import { ReviewService } from '../../services/ReviewService';
 import { MetroSelector } from '../../components/MetroSelector';
+import { StarRow } from '../../components/StarRow';
 import { useAuthStore } from '../../stores/authStore';
 import type { BaristaProfile, ShiftTime } from '../../types/baristaProfile';
+import type { UserId } from '../../types/ids';
+import type { UserReviewAggregate } from '../../types/review';
 import type { ProfileStackParamList } from '../../navigation/ProfileStack';
 
 type Props = {
@@ -63,10 +67,22 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [isActivelyLooking, setIsActivelyLooking] = useState(true);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(2000, 0, 1));
+  const [aggregate, setAggregate] = useState<UserReviewAggregate | null>(null);
 
   useEffect(() => {
     loadProfile();
+    loadAggregate();
   }, []);
+
+  const loadAggregate = async () => {
+    if (!user?.id) return;
+    try {
+      const data = await ReviewService.getAggregateForUser(user.id as UserId);
+      setAggregate(data);
+    } catch (error) {
+      console.error('Error loading review aggregate:', error);
+    }
+  };
 
   const loadProfile = async () => {
     if (!user?.id) {
@@ -391,6 +407,38 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   <Text style={styles.infoText}>Born: {profile.dateOfBirth}</Text>
                 )}
               </>
+            )}
+          </View>
+
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.historyRow}
+              onPress={() => navigation.navigate('ShiftHistory')}>
+              <View style={styles.historyRowLeft}>
+                <Text style={styles.historyRowTitle}>История смен</Text>
+                {aggregate && aggregate.reviewCount > 0 ? (
+                  <StarRow
+                    rating={aggregate.averageRating}
+                    count={aggregate.reviewCount}
+                    showValue
+                    size={14}
+                  />
+                ) : (
+                  <Text style={styles.historyRowSubtitle}>Без оценок</Text>
+                )}
+              </View>
+              <Text style={styles.historyRowChevron}>›</Text>
+            </TouchableOpacity>
+
+            {user?.id && (
+              <TouchableOpacity
+                style={[styles.historyRow, styles.historyRowSecondary]}
+                onPress={() => navigation.navigate('UserReviews', { userId: user.id as string })}>
+                <View style={styles.historyRowLeft}>
+                  <Text style={styles.historyRowTitle}>Все отзывы</Text>
+                </View>
+                <Text style={styles.historyRowChevron}>›</Text>
+              </TouchableOpacity>
             )}
           </View>
 
@@ -881,5 +929,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: COLORS.primary,
+  },
+  historyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  historyRowSecondary: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  historyRowLeft: {
+    flex: 1,
+  },
+  historyRowTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 6,
+  },
+  historyRowSubtitle: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+  },
+  historyRowChevron: {
+    fontSize: 26,
+    color: COLORS.textSecondary,
+    marginLeft: 12,
   },
 });

@@ -8,6 +8,8 @@ import { JobDetailsScreen } from '../screens/business/JobDetailsScreen';
 import { ApplicantsScreen } from '../screens/business/ApplicantsScreen';
 import { ViewBaristaProfileScreen } from '../screens/business/ViewBaristaProfileScreen';
 import { BranchManagementScreen } from '../screens/business/BranchManagementScreen';
+import { BusinessReviewsScreen } from '../screens/business/BusinessReviewsScreen';
+import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
 import { ChatScreen } from '../screens/chat/ChatScreen';
 import { ConversationsListScreen } from '../screens/chat/ConversationsListScreen';
 import { BusinessService } from '../services/BusinessService';
@@ -23,6 +25,8 @@ export type BusinessStackParamList = {
   Applicants: { jobId: string };
   ViewBaristaProfile: { baristaId: string };
   BranchManagement: { businessId: string };
+  BusinessReviews: undefined;
+  UserReviews: { userId: string };
   Chat: { applicationId?: string; conversationId?: string };
   ConversationsList: undefined;
 };
@@ -105,6 +109,16 @@ export const BusinessStack: React.FC = () => {
         name="BranchManagement"
         component={BranchManagementScreen}
         options={{ title: 'Branches' }}
+      />
+      <Stack.Screen
+        name="BusinessReviews"
+        component={BusinessReviewsScreen}
+        options={{ title: 'Отзывы' }}
+      />
+      <Stack.Screen
+        name="UserReviews"
+        component={UserReviewsScreen}
+        options={{ title: 'Все отзывы' }}
       />
       <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
       <Stack.Screen

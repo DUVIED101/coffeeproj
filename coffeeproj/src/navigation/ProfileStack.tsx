@@ -2,11 +2,18 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BaristaProfileScreen } from '../screens/barista/BaristaProfileScreen';
 import { BaristaProfileSetupScreen } from '../screens/barista/BaristaProfileSetupScreen';
+import { ShiftHistoryScreen } from '../screens/barista/ShiftHistoryScreen';
+import { ApplicationDetailsScreen } from '../screens/barista/ApplicationDetailsScreen';
+import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
 import { COLORS } from '../config/constants';
+import type { Application } from '../types/application';
 
 export type ProfileStackParamList = {
   BaristaProfile: undefined;
   BaristaProfileSetup: undefined;
+  ShiftHistory: undefined;
+  ApplicationDetails: { application: Application };
+  UserReviews: { userId: string };
 };
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
@@ -30,6 +37,21 @@ export const ProfileStack: React.FC = () => {
         name="BaristaProfileSetup"
         component={BaristaProfileSetupScreen}
         options={{ title: 'Complete Your Profile' }}
+      />
+      <Stack.Screen
+        name="ShiftHistory"
+        component={ShiftHistoryScreen}
+        options={{ title: 'История смен' }}
+      />
+      <Stack.Screen
+        name="ApplicationDetails"
+        component={ApplicationDetailsScreen}
+        options={{ title: 'Application Details' }}
+      />
+      <Stack.Screen
+        name="UserReviews"
+        component={UserReviewsScreen}
+        options={{ title: 'Все отзывы' }}
       />
     </Stack.Navigator>
   );

@@ -45,6 +45,34 @@
     "hourlyMax": "up to {{max}}/hour",
     "profileCompleteness": "{{percent}}% complete"
   },
+  "shiftHistory": {
+    "title": "Shift history",
+    "empty": "Your shift history will appear here after your first completed shift",
+    "hours": "{{hours}}h",
+    "noReviewLeft": "No rating left"
+  },
+  "reviews": {
+    "title": "Reviews",
+    "empty": "No reviews yet",
+    "anonymous": "Anonymous review",
+    "aggregate": "{{rating}} ★ · {{count}}",
+    "noRatingsShort": "No ratings",
+    "modal": {
+      "title": "Rate this collaboration",
+      "subtitle": "Your rating helps others choose partners",
+      "commentPlaceholder": "Share your experience (optional)",
+      "submit": "Submit",
+      "skip": "Skip",
+      "charCounter": "{{count}}/500",
+      "starLabel": "{{n}} of 5"
+    },
+    "banner": {
+      "prompt": "Rate the other party →"
+    },
+    "errors": {
+      "submitFailed": "Failed to submit review. Please try again."
+    }
+  },
   "applications": {
     "title": "My Applications",
     "empty": "No applications yet",
