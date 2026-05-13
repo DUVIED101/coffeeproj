@@ -17,18 +17,18 @@ type BaristaCardProps = {
 const formatRate = (amount: number, locale: string): string => `₽${amount.toLocaleString(locale)}`;
 
 const getHourlyRateText = (
-  min: number | undefined,
-  max: number | undefined,
+  min: number | null | undefined,
+  max: number | null | undefined,
   t: TFunction,
   locale: string
 ): string | undefined => {
-  if (min !== undefined && max !== undefined) {
+  if (min != null && max != null) {
     return t('barista.hourlyRange', {
       min: formatRate(min, locale),
       max: formatRate(max, locale),
     });
   }
-  if (max !== undefined) {
+  if (max != null) {
     return t('barista.hourlyMax', { max: formatRate(max, locale) });
   }
   return undefined;
