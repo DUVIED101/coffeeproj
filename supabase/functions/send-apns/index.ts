@@ -64,6 +64,11 @@ const APNS_BUNDLE_ID = Deno.env.get("APNS_BUNDLE_ID") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY =
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+// Shared secret used by DB triggers to authenticate calls. Kept separate from the
+// auto-injected SUPABASE_SERVICE_ROLE_KEY because that env can be either the legacy
+// JWT or the new sb_secret_ format depending on project age — triggers need a value
+// the Supabase gateway also accepts as JWT.
+const INTERNAL_AUTH_TOKEN = Deno.env.get("INTERNAL_AUTH_TOKEN") ?? "";
 
 const CORS_HEADERS: Record<string, string> = {
   "access-control-allow-origin": "*",
@@ -299,8 +304,8 @@ async function handleRequest(req: Request): Promise<Response> {
   }
 
   const authHeader = req.headers.get("authorization") ?? "";
-  const expected = `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`;
-  if (!SUPABASE_SERVICE_ROLE_KEY || !timingSafeEqual(authHeader, expected)) {
+  const expected = `Bearer ${INTERNAL_AUTH_TOKEN}`;
+  if (!INTERNAL_AUTH_TOKEN || !timingSafeEqual(authHeader, expected)) {
     return jsonResponse(401, { error: "unauthorized" });
   }
 
