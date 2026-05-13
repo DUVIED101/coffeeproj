@@ -12,6 +12,8 @@
 		60C34F1339FE2FDF5992EBAC /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 3514D0DA3137423812647A8F /* PrivacyInfo.xcprivacy */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		8AA5568B2FB4AA9D009B9E96 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8AA556892FB4AA9D009B9E96 /* InfoPlist.strings */; };
+		8AA5568C2FB4AA9D009B9E96 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8AA556862FB4AA9D009B9E96 /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +28,8 @@
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = coffeeproj/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = coffeeproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		8A4EF5032FB24E77005C0E0D /* coffeeproj.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = coffeeproj.entitlements; path = coffeeproj/coffeeproj.entitlements; sourceTree = "<group>"; };
+		8AA556852FB4AA9D009B9E96 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = InfoPlist.strings; sourceTree = "<group>"; };
+		8AA556882FB4AA9D009B9E96 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = InfoPlist.strings; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -74,6 +78,8 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				8AA556872FB4AA9D009B9E96 /* en.lproj */,
+				8AA5568A2FB4AA9D009B9E96 /* ru.lproj */,
 				13B07FAE1A68108700A75B9A /* coffeeproj */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
@@ -91,6 +97,22 @@
 				13B07F961A680F5B00A75B9A /* coffeeproj.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		8AA556872FB4AA9D009B9E96 /* en.lproj */ = {
+			isa = PBXGroup;
+			children = (
+				8AA556862FB4AA9D009B9E96 /* InfoPlist.strings */,
+			);
+			path = en.lproj;
+			sourceTree = "<group>";
+		};
+		8AA5568A2FB4AA9D009B9E96 /* ru.lproj */ = {
+			isa = PBXGroup;
+			children = (
+				8AA556892FB4AA9D009B9E96 /* InfoPlist.strings */,
+			);
+			path = ru.lproj;
 			sourceTree = "<group>";
 		};
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
@@ -146,6 +168,7 @@
 			knownRegions = (
 				en,
 				Base,
+				ru,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
@@ -164,6 +187,8 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				8AA5568B2FB4AA9D009B9E96 /* InfoPlist.strings in Resources */,
+				8AA5568C2FB4AA9D009B9E96 /* InfoPlist.strings in Resources */,
 				60C34F1339FE2FDF5992EBAC /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -264,6 +289,25 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXVariantGroup section */
+		8AA556862FB4AA9D009B9E96 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				8AA556852FB4AA9D009B9E96 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		8AA556892FB4AA9D009B9E96 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				8AA556882FB4AA9D009B9E96 /* ru */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -272,7 +316,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = coffeeproj/coffeeproj.entitlements;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 973XF3CWAM;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = coffeeproj/Info.plist;
@@ -293,7 +337,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "coffeeproj/coffeeproj-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -305,7 +349,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = coffeeproj/coffeeproj.entitlements;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 973XF3CWAM;
 				INFOPLIST_FILE = coffeeproj/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -324,7 +368,7 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_OBJC_BRIDGING_HEADER = "coffeeproj/coffeeproj-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
