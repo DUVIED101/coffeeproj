@@ -4,11 +4,12 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAuthStore } from '../stores/authStore';
 import { AuthStack } from './AuthStack';
 import { MainTabs } from './MainTabs';
+import { ProfileBootstrapScreen } from '../screens/auth/ProfileBootstrapScreen';
 import { COLORS } from '../config/constants';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
 export const AppNavigator: React.FC = () => {
-  const { isAuthenticated, isLoading, initialize } = useAuthStore();
+  const { isAuthenticated, user, isLoading, initialize } = useAuthStore();
 
   useEffect(() => {
     // Initialize auth state on app mount
@@ -23,11 +24,19 @@ export const AppNavigator: React.FC = () => {
     );
   }
 
+  const renderRoot = () => {
+    if (!isAuthenticated) {
+      return <AuthStack key="unauthenticated" />;
+    }
+    if (!user) {
+      return <ProfileBootstrapScreen key="bootstrap" />;
+    }
+    return <MainTabs key="authenticated" />;
+  };
+
   return (
     <NavigationContainer>
-      <ErrorBoundary>
-        {isAuthenticated ? <MainTabs key="authenticated" /> : <AuthStack key="unauthenticated" />}
-      </ErrorBoundary>
+      <ErrorBoundary>{renderRoot()}</ErrorBoundary>
     </NavigationContainer>
   );
 };

@@ -18,7 +18,6 @@ import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import type { AccountType } from '../../types';
 import { AuthService } from '../../services/AuthService';
-import { useAuthStore } from '../../stores/authStore';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 import {
   getEmailError,
@@ -40,7 +39,6 @@ type Props = {
 
 export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
   const { accountType } = route.params;
-  const { setSession, setUser } = useAuthStore();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -94,7 +92,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
     try {
       const normalizedPhone = phoneNumber ? normalizePhone(phoneNumber) : undefined;
 
-      const { user, profile } = await AuthService.signUpWithEmail(
+      const { user } = await AuthService.signUpWithEmail(
         email.trim().toLowerCase(),
         password,
         accountType,
@@ -103,21 +101,9 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
 
       console.log('Signup successful:', user.id);
 
-      // Auth state will be updated automatically by authStore listener
-      setUser(profile);
-
-      // Show success message based on account type
-      if (accountType === 'barista') {
-        Alert.alert(
-          'Account Created',
-          'Your account has been created! Complete your profile to start applying for jobs.',
-          [{ text: 'OK' }]
-        );
-      } else {
-        Alert.alert('Account Created', 'Your account has been created successfully!', [
-          { text: 'OK' },
-        ]);
-      }
+      // No setUser / alert here. The auth listener flips isAuthenticated; the
+      // AppNavigator routes to ProfileBootstrapScreen which creates the
+      // public.users row and then to MainTabs.
     } catch (error: unknown) {
       console.error('Signup error:', error);
 
@@ -129,6 +115,8 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
       } else if (message.includes('Invalid email')) {
         errorMessage = 'Please enter a valid email address.';
       } else if (message.includes('Password')) {
+        errorMessage = message;
+      } else if (message.includes('Email confirmation is required')) {
         errorMessage = message;
       }
 

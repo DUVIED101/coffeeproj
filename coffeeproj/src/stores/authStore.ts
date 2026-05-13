@@ -156,7 +156,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 async function fetchUserProfile(userId: string): Promise<User | null> {
   const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
   if (error || !data) {
-    if (error) console.error('Error fetching user profile:', error);
+    // PGRST116 = "no rows returned" — expected during signup before the
+    // ProfileBootstrap screen has had a chance to create the row. Suppress.
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching user profile:', error);
+    }
     return null;
   }
   return {
@@ -179,13 +183,20 @@ supabase.auth.onAuthStateChange((event, session) => {
 
   const store = useAuthStore.getState();
 
-  if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+  if (event === 'SIGNED_IN' && session) {
+    // SIGNED_IN also fires right after supabase.auth.signUp(), before the
+    // client has had a chance to upsert the public.users row. We must NOT
+    // sign the user out here on a missing profile — that would race with
+    // AuthService.signUpWithEmail and invalidate the session it needs.
+    // The screens (SignupScreen, LoginScreen) own profile-load failures.
     store.setSession(session);
     setTimeout(() => {
       fetchUserProfile(session.user.id)
         .then(user => {
           if (!user) {
-            console.warn('User profile not found after auth event');
+            // Normal on signup — ProfileBootstrap will create the row and call
+            // setUser itself. console.log only so this doesn't surface in LogBox.
+            console.log('Profile not yet present after SIGNED_IN; waiting for bootstrap');
             return;
           }
           if (!user.isActive) {
@@ -200,9 +211,14 @@ supabase.auth.onAuthStateChange((event, session) => {
           useAuthStore.getState().setUser(user);
         })
         .catch(err => {
-          console.error('Error fetching user profile on auth event:', err);
+          console.error('Error fetching user profile on SIGNED_IN:', err);
         });
     }, 0);
+  } else if (event === 'TOKEN_REFRESHED' && session) {
+    // Periodic token refresh: just update the session. Do NOT refetch the
+    // profile — user data hasn't changed and a transient fetch failure must
+    // not log the user out mid-session.
+    store.setSession(session);
   } else if (event === 'SIGNED_OUT') {
     store.clearAuth();
   }

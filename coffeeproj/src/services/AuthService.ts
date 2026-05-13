@@ -1,22 +1,20 @@
 import { supabase } from '../config/supabase';
-import type { AccountType, User } from '../types';
+import type { AccountType } from '../types';
 
 export class AuthService {
   /**
-   * Sign up with email and password
-   * IMPORTANT: Requires email confirmation to be DISABLED in Supabase dashboard
+   * Sign up with email and password. Auth-only — the public.users row is
+   * created by ProfileBootstrapScreen after navigation routes there on the
+   * isAuthenticated && !user state.
+   * IMPORTANT: Requires email confirmation to be DISABLED in Supabase dashboard.
    */
   static async signUpWithEmail(
     email: string,
     password: string,
     accountType: AccountType,
     phoneNumber?: string
-  ): Promise<{ user: any; profile: User }> {
+  ): Promise<{ user: any }> {
     try {
-      // The `handle_new_user` trigger reads account_type/phone_number from
-      // auth.users.raw_user_meta_data and creates the public.users profile in
-      // the same transaction. If the profile INSERT fails, the auth.users
-      // INSERT is rolled back too — no orphan auth users (BUG-08).
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -48,34 +46,7 @@ export class AuthService {
         );
       }
 
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
-
-      if (userError || !userData) {
-        // Trigger ran but profile not found — sign back out so the user can
-        // retry instead of being stuck in a half-authenticated state.
-        await supabase.auth.signOut();
-        throw new Error(
-          `Failed to load user profile after signup: ${userError?.message ?? 'profile missing'}. Please try again.`
-        );
-      }
-
-      const profile: User = {
-        id: userData.id,
-        uid: userData.id,
-        email: userData.email,
-        phoneNumber: userData.phone_number,
-        accountType: userData.account_type,
-        isActive: userData.is_active,
-        isVerified: userData.is_verified,
-        createdAt: userData.created_at,
-        updatedAt: userData.updated_at,
-      };
-
-      return { user: authData.user, profile };
+      return { user: authData.user };
     } catch (error) {
       console.error('Signup error:', error);
       throw error;
