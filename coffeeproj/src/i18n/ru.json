@@ -208,6 +208,60 @@
   "business": {
     "jobs": {
       "showArchived": "Show archived"
+    },
+    "tabs": {
+      "jobs": "Вакансии",
+      "shifts": "Смены"
+    }
+  },
+  "businessProfile": {
+    "noBusinessTitle": "Бизнес не создан",
+    "noBusinessSubtitle": "Создайте бизнес во вкладке Business, чтобы продолжить.",
+    "verified": "Верифицирован",
+    "unverified": "Не верифицирован",
+    "organizationSection": "Организация",
+    "branches": "Мои точки",
+    "branchesCount_one": "{{count}} точка",
+    "branchesCount_few": "{{count}} точки",
+    "branchesCount_many": "{{count}} точек",
+    "branchesCount_other": "{{count}} точек",
+    "reviews": "Отзывы",
+    "noReviews": "Без оценок"
+  },
+  "shifts": {
+    "empty": "По выбранным фильтрам смен нет",
+    "noApplicantsYet": "Откликов пока нет",
+    "acceptedBarista": "Принятый бариста",
+    "unknownBarista": "Бариста",
+    "openChat": "Открыть чат",
+    "chat": "Чат",
+    "pendingCount_one": "{{count}} отклик",
+    "pendingCount_few": "{{count}} отклика",
+    "pendingCount_many": "{{count}} откликов",
+    "pendingCount_other": "{{count}} откликов",
+    "status": {
+      "open": "Открыта",
+      "under_review": "На рассмотрении",
+      "accepted": "Принят",
+      "in_progress": "В процессе",
+      "completed": "Завершена"
+    },
+    "lifecycle": {
+      "all": "Все"
+    },
+    "filter": {
+      "title": "Фильтры",
+      "reset": "Сбросить",
+      "apply": "Применить",
+      "jobType": "Тип смены",
+      "allTypes": "Все",
+      "temporary": "Временная",
+      "permanent": "Постоянная",
+      "metro": "Метро",
+      "metroPlaceholder": "Выберите станции метро",
+      "equipment": "Оборудование",
+      "includeArchive": "Включая завершённые",
+      "archiveSubLabel": "Показывать смены, которые уже завершились"
     }
   },
   "manageJobs": {

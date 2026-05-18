@@ -204,6 +204,56 @@
   "business": {
     "jobs": {
       "showArchived": "Show archived"
+    },
+    "tabs": {
+      "jobs": "Jobs",
+      "shifts": "Shifts"
+    }
+  },
+  "businessProfile": {
+    "noBusinessTitle": "No business yet",
+    "noBusinessSubtitle": "Create a business in the Business tab to continue.",
+    "verified": "Verified",
+    "unverified": "Unverified",
+    "organizationSection": "Organization",
+    "branches": "Branches",
+    "branchesCount_one": "{{count}} branch",
+    "branchesCount_other": "{{count}} branches",
+    "reviews": "Reviews",
+    "noReviews": "No ratings"
+  },
+  "shifts": {
+    "empty": "No shifts match the current filters",
+    "noApplicantsYet": "No applicants yet",
+    "acceptedBarista": "Accepted barista",
+    "unknownBarista": "Barista",
+    "openChat": "Open chat",
+    "chat": "Chat",
+    "pendingCount_one": "{{count}} applicant",
+    "pendingCount_other": "{{count}} applicants",
+    "status": {
+      "open": "Open",
+      "under_review": "Under review",
+      "accepted": "Accepted",
+      "in_progress": "In progress",
+      "completed": "Completed"
+    },
+    "lifecycle": {
+      "all": "All"
+    },
+    "filter": {
+      "title": "Filters",
+      "reset": "Reset",
+      "apply": "Apply",
+      "jobType": "Shift type",
+      "allTypes": "All",
+      "temporary": "Temporary",
+      "permanent": "Permanent",
+      "metro": "Metro",
+      "metroPlaceholder": "Select metro stations",
+      "equipment": "Equipment",
+      "includeArchive": "Include completed",
+      "archiveSubLabel": "Show shifts that have already finished"
     }
   },
   "manageJobs": {

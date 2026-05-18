@@ -225,6 +225,93 @@ export class ApplicationService {
   }
 
   /**
+   * Get all applications across every job of a business (business shifts dashboard).
+   * Joins job + branch info and hydrates each application with the barista's profile.
+   * Jobs with zero applications are NOT returned here — fetch them separately via
+   * JobService and merge client-side when surfacing "open" shifts.
+   */
+  static async getApplicationsByBusiness(businessId: string): Promise<Application[]> {
+    try {
+      const { data: applications, error } = await supabase
+        .from('applications')
+        .select(
+          `
+          *,
+          jobs!inner (
+            *,
+            businesses (name),
+            branches (name, metro_station)
+          )
+        `
+        )
+        .eq('jobs.business_id', businessId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      if (!applications || applications.length === 0) return [];
+
+      const baristaIds = [...new Set(applications.map(app => app.barista_id))];
+
+      const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select(
+          `
+          id,
+          email,
+          barista_profiles(
+            first_name,
+            last_name,
+            avatar_url,
+            bio,
+            equipment_experience,
+            years_of_experience
+          )
+        `
+        )
+        .in('id', baristaIds);
+
+      if (usersError) throw usersError;
+
+      const usersMap = new Map(
+        (users || []).map(user => {
+          const profileRow = Array.isArray(user.barista_profiles)
+            ? user.barista_profiles[0]
+            : user.barista_profiles;
+          return [
+            user.id,
+            {
+              email: user.email,
+              profile: profileRow,
+            },
+          ];
+        })
+      );
+
+      return applications.map(app => {
+        const userData = usersMap.get(app.barista_id);
+        const mapped = this.mapApplicationWithJob(app);
+        return {
+          ...mapped,
+          baristaEmail: userData?.email,
+          baristaProfile: userData?.profile
+            ? {
+                firstName: userData.profile.first_name,
+                lastName: userData.profile.last_name,
+                avatarUrl: userData.profile.avatar_url,
+                bio: userData.profile.bio,
+                equipmentExperience: userData.profile.equipment_experience || [],
+                yearsOfExperience: userData.profile.years_of_experience,
+              }
+            : undefined,
+        };
+      });
+    } catch (error) {
+      console.error('Error in getApplicationsByBusiness:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get all applications for a specific job (business view)
    * Includes barista email and profile information
    */

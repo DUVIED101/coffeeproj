@@ -18,10 +18,10 @@ import { StarRow } from '../../components/StarRow';
 import { ReviewListRow } from '../../components/ReviewListRow';
 import type { ApplicationReview, UserReviewAggregate } from '../../types/review';
 import type { UserId } from '../../types/ids';
-import type { BusinessStackParamList } from '../../navigation/BusinessStack';
+import type { BusinessProfileStackParamList } from '../../navigation/BusinessProfileStack';
 
 type Props = {
-  navigation: NativeStackNavigationProp<BusinessStackParamList, 'BusinessReviews'>;
+  navigation: NativeStackNavigationProp<BusinessProfileStackParamList, 'BusinessReviews'>;
 };
 
 export const BusinessReviewsScreen: React.FC<Props> = () => {

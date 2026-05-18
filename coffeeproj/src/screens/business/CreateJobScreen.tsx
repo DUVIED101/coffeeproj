@@ -15,6 +15,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { COLORS, EQUIPMENT_TYPES, RADII } from '../../config/constants';
 import { JobService } from '../../services/JobService';
 import { BusinessService } from '../../services/BusinessService';
@@ -22,6 +23,7 @@ import { useAuthStore } from '../../stores/authStore';
 import type { Branch, Equipment } from '../../types/business';
 import type { JobType, CompensationType } from '../../types/job';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
+import type { MainTabsParamList } from '../../navigation/MainTabs';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'CreateJob'>;
@@ -297,9 +299,13 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
           <TouchableOpacity
             style={[styles.emptyCta, !businessId && styles.saveButtonDisabled]}
             onPress={() => {
-              if (businessId) {
-                navigation.navigate('BranchManagement', { businessId });
-              }
+              if (!businessId) return;
+              const parent =
+                navigation.getParent<BottomTabNavigationProp<MainTabsParamList, 'Business'>>();
+              parent?.navigate('Profile', {
+                screen: 'BranchManagement',
+                params: { businessId },
+              });
             }}
             disabled={!businessId}>
             <Text style={styles.emptyCtaText}>{t('branches.add')}</Text>

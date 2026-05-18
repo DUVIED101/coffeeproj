@@ -1,35 +1,26 @@
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { createBottomTabNavigator, BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
 import { Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import type { NavigatorScreenParams } from '@react-navigation/native';
 import { useAuthStore } from '../stores/authStore';
 import { COLORS } from '../config/constants';
 import { BusinessStack } from './BusinessStack';
+import { BusinessProfileStack } from './BusinessProfileStack';
+import type { BusinessProfileStackParamList } from './BusinessProfileStack';
 import { BusinessSearchStack } from './BusinessSearchStack';
 import { BaristaStack } from './BaristaStack';
 import { ProfileStack } from './ProfileStack';
 import { SettingsStack } from './SettingsStack';
-
-const BusinessProfilePlaceholder = () => {
-  const { user } = useAuthStore();
-
-  return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>Business Profile</Text>
-      <Text style={styles.subtitle}>Account Type: {user?.accountType}</Text>
-      <Text style={styles.subtitle}>Status: {user?.isVerified ? 'Verified' : 'Not Verified'}</Text>
-    </View>
-  );
-};
 
 export type MainTabsParamList = {
   Settings: undefined;
   Jobs: undefined;
   Business: undefined;
   Baristas: undefined;
-  Profile: undefined;
+  Profile: NavigatorScreenParams<BusinessProfileStackParamList> | undefined;
 };
 
 const Tab = createBottomTabNavigator<MainTabsParamList>();
@@ -63,7 +54,7 @@ export const MainTabs: React.FC = () => {
       }}>
       <Tab.Screen
         name="Profile"
-        component={user.accountType === 'barista' ? ProfileStack : BusinessProfilePlaceholder}
+        component={user.accountType === 'barista' ? ProfileStack : BusinessProfileStack}
         options={{
           title: 'Profile',
           tabBarLabel: 'Profile',
@@ -170,16 +161,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
     backgroundColor: COLORS.background,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-    marginBottom: 24,
   },
 });

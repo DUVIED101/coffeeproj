@@ -9,6 +9,16 @@ export type ApplicationStatus =
   | 'withdrawn'
   | 'completed';
 
+// Lifecycle status used by the Business "Смены" dashboard.
+// Combines job + application + clock-time into a single state focused
+// on what the business needs to do next for the shift.
+export type ShiftLifecycleStatus =
+  | 'open'
+  | 'under_review'
+  | 'accepted'
+  | 'in_progress'
+  | 'completed';
+
 export interface Application {
   id: string;
   jobId: string;

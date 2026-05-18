@@ -14,15 +14,16 @@ import {
   Alert,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { COLORS } from '../../config/constants';
 import { BusinessService } from '../../services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
 import type { BusinessType } from '../../types';
+import type { MainTabsParamList } from '../../navigation/MainTabs';
 
 type BusinessStackParamList = {
   CreateBusiness: undefined;
   BusinessHome: { businessId: string };
-  BranchManagement: { businessId: string };
 };
 
 type Props = {
@@ -85,7 +86,12 @@ export const CreateBusinessScreen: React.FC<Props> = ({ navigation }) => {
         {
           text: 'OK',
           onPress: () => {
-            navigation.navigate('BranchManagement', { businessId: business.id });
+            const parent =
+              navigation.getParent<BottomTabNavigationProp<MainTabsParamList, 'Business'>>();
+            parent?.navigate('Profile', {
+              screen: 'BranchManagement',
+              params: { businessId: business.id },
+            });
           },
         },
       ]);

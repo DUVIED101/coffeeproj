@@ -13,26 +13,46 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import { JobCard } from '../../components/JobCard';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
+import { ShiftCard } from '../../components/ShiftCard';
+import { ShiftFilterSheet } from '../../components/ShiftFilterSheet';
+import type { ShiftFilters } from '../../components/ShiftFilterSheet';
 import { JobService } from '../../services/JobService';
-import { BusinessService } from '../../services/BusinessService';
-import { ReviewService } from '../../services/ReviewService';
+import { ApplicationService } from '../../services/ApplicationService';
 import { useAuthStore } from '../../stores/authStore';
 import { COLORS, RADII } from '../../config/constants';
-import type { Job, Branch, JobStatus } from '../../types';
-import type { UserId } from '../../types/ids';
-import type { UserReviewAggregate } from '../../types/review';
+import { classifyShiftLifecycle } from '../../utils/shiftLifecycle';
+import type { Job, JobStatus } from '../../types';
+import type { Application, ShiftLifecycleStatus } from '../../types/application';
 
 const SHOW_ARCHIVED_KEY = 'business.showArchivedJobs';
 const ARCHIVED_STATUSES: JobStatus[] = ['filled', 'expired', 'cancelled'];
 
 type BusinessHomeScreenProps = NativeStackScreenProps<BusinessStackParamList, 'BusinessHome'>;
 
-type TabType = 'jobs' | 'branches';
+type TabType = 'jobs' | 'shifts';
+
+type LifecycleTabValue = ShiftLifecycleStatus | 'all';
+
+type ShiftEntry = {
+  job: Job;
+  applications: Application[];
+  lifecycle: ShiftLifecycleStatus;
+};
+
+const LIFECYCLE_TAB_VALUES: LifecycleTabValue[] = [
+  'all',
+  'open',
+  'under_review',
+  'accepted',
+  'in_progress',
+  'completed',
+];
 
 export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigation, route }) => {
   const [activeTab, setActiveTab] = useState<TabType>('jobs');
@@ -40,7 +60,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
   const { user } = useAuthStore();
   const { t } = useTranslation();
 
-  // Jobs tab state
+  // Shared jobs state — used by both jobs tab and shifts tab
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
   const [isRefreshingJobs, setIsRefreshingJobs] = useState(false);
@@ -48,6 +68,14 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
   const [showArchived, setShowArchived] = useState(false);
   const pillOffsetsRef = useRef<Record<string, number>>({});
   const [snapOffsets, setSnapOffsets] = useState<number[]>([]);
+
+  // Shifts tab state
+  const [shiftApplications, setShiftApplications] = useState<Application[]>([]);
+  const [isLoadingShifts, setIsLoadingShifts] = useState(false);
+  const [isRefreshingShifts, setIsRefreshingShifts] = useState(false);
+  const [selectedLifecycle, setSelectedLifecycle] = useState<LifecycleTabValue>('all');
+  const [shiftFilters, setShiftFilters] = useState<ShiftFilters>({ includeArchive: false });
+  const [filterSheetVisible, setFilterSheetVisible] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(SHOW_ARCHIVED_KEY)
@@ -72,20 +100,6 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     }
   };
 
-  // Branches tab state
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [isLoadingBranches, setIsLoadingBranches] = useState(false);
-  const [isRefreshingBranches, setIsRefreshingBranches] = useState(false);
-
-  const [reviewAggregate, setReviewAggregate] = useState<UserReviewAggregate | null>(null);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    ReviewService.getAggregateForUser(user.id as UserId)
-      .then(setReviewAggregate)
-      .catch(err => console.error('Error loading review aggregate:', err));
-  }, [user?.id]);
-
   useEffect(() => {
     navigation.setOptions({
       header: () => (
@@ -97,28 +111,8 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     });
   }, [navigation]);
 
-  useEffect(() => {
-    if (activeTab === 'jobs') {
-      loadJobs();
-    } else {
-      loadBranches();
-    }
-  }, [activeTab]);
-
-  // Reload jobs when screen comes into focus (e.g., after creating a job)
-  useFocusEffect(
-    React.useCallback(() => {
-      if (activeTab === 'jobs') {
-        loadJobs();
-      } else {
-        loadBranches();
-      }
-    }, [activeTab])
-  );
-
-  const loadJobs = async () => {
+  const loadJobs = useCallback(async () => {
     if (!user?.id) return;
-
     setIsLoadingJobs(true);
     try {
       const fetchedJobs = await JobService.getJobsByBusinessId(businessId);
@@ -128,19 +122,41 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     } finally {
       setIsLoadingJobs(false);
     }
-  };
+  }, [businessId, user?.id]);
 
-  const loadBranches = async () => {
-    setIsLoadingBranches(true);
+  const loadShifts = useCallback(async () => {
+    setIsLoadingShifts(true);
     try {
-      const data = await BusinessService.getBranches(businessId);
-      setBranches(data);
+      const [fetchedApps, fetchedJobs] = await Promise.all([
+        ApplicationService.getApplicationsByBusiness(businessId),
+        JobService.getJobsByBusinessId(businessId),
+      ]);
+      setShiftApplications(fetchedApps);
+      setJobs(fetchedJobs);
     } catch (error) {
-      console.error('Error loading branches:', error);
+      console.error('Error loading shifts:', error);
     } finally {
-      setIsLoadingBranches(false);
+      setIsLoadingShifts(false);
     }
-  };
+  }, [businessId]);
+
+  useEffect(() => {
+    if (activeTab === 'jobs') {
+      loadJobs();
+    } else {
+      loadShifts();
+    }
+  }, [activeTab, loadJobs, loadShifts]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (activeTab === 'jobs') {
+        loadJobs();
+      } else {
+        loadShifts();
+      }
+    }, [activeTab, loadJobs, loadShifts])
+  );
 
   const handleRefreshJobs = async () => {
     setIsRefreshingJobs(true);
@@ -148,10 +164,10 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     setIsRefreshingJobs(false);
   };
 
-  const handleRefreshBranches = async () => {
-    setIsRefreshingBranches(true);
-    await loadBranches();
-    setIsRefreshingBranches(false);
+  const handleRefreshShifts = async () => {
+    setIsRefreshingShifts(true);
+    await loadShifts();
+    setIsRefreshingShifts(false);
   };
 
   const handleJobPress = useCallback(
@@ -165,9 +181,19 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     navigation.navigate('CreateJob');
   };
 
-  const handleManageBranches = () => {
-    navigation.navigate('BranchManagement', { businessId });
-  };
+  const handleShiftCardPressApplicants = useCallback(
+    (jobId: string) => {
+      navigation.navigate('Applicants', { jobId });
+    },
+    [navigation]
+  );
+
+  const handleShiftCardPressChat = useCallback(
+    (application: Application) => {
+      navigation.navigate('Chat', { applicationId: application.id });
+    },
+    [navigation]
+  );
 
   const filteredJobs = useMemo(
     () => jobs.filter(job => job.status === selectedStatus),
@@ -185,6 +211,62 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     for (const job of jobs) counts[job.status] = (counts[job.status] ?? 0) + 1;
     return counts;
   }, [jobs]);
+
+  const shiftEntries = useMemo<ShiftEntry[]>(() => {
+    const appsByJobId = new Map<string, Application[]>();
+    for (const app of shiftApplications) {
+      const list = appsByJobId.get(app.jobId) ?? [];
+      list.push(app);
+      appsByJobId.set(app.jobId, list);
+    }
+    return jobs.map(job => {
+      const apps = appsByJobId.get(job.id) ?? [];
+      return { job, applications: apps, lifecycle: classifyShiftLifecycle(job, apps) };
+    });
+  }, [jobs, shiftApplications]);
+
+  const lifecycleCounts = useMemo(() => {
+    const counts: Record<LifecycleTabValue, number> = {
+      all: 0,
+      open: 0,
+      under_review: 0,
+      accepted: 0,
+      in_progress: 0,
+      completed: 0,
+    };
+    for (const entry of shiftEntries) {
+      counts.all += 1;
+      counts[entry.lifecycle] += 1;
+    }
+    return counts;
+  }, [shiftEntries]);
+
+  const filteredShiftEntries = useMemo(() => {
+    return shiftEntries.filter(entry => {
+      if (selectedLifecycle !== 'all' && entry.lifecycle !== selectedLifecycle) return false;
+      // Archive toggle only hides completed when viewing "all" — picking the
+      // Completed pill explicitly should always show completed shifts.
+      if (
+        selectedLifecycle === 'all' &&
+        !shiftFilters.includeArchive &&
+        entry.lifecycle === 'completed'
+      ) {
+        return false;
+      }
+      if (shiftFilters.jobType && entry.job.jobType !== shiftFilters.jobType) return false;
+      if (shiftFilters.metroStations && shiftFilters.metroStations.length > 0) {
+        const station = entry.job.metroStation ?? entry.job.location.metroStation;
+        if (!station || !shiftFilters.metroStations.includes(station)) return false;
+      }
+      if (shiftFilters.equipment && shiftFilters.equipment.length > 0) {
+        const overlap = shiftFilters.equipment.some(eq =>
+          entry.job.requiredEquipmentExperience.includes(eq)
+        );
+        if (!overlap) return false;
+      }
+      return true;
+    });
+  }, [shiftEntries, selectedLifecycle, shiftFilters]);
 
   const ALL_STATUS_TABS: Array<{ label: string; value: JobStatus }> = [
     { label: 'Open', value: 'open' },
@@ -285,77 +367,121 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     </View>
   );
 
-  const renderBranchesTab = () => (
+  const activeFilterCount =
+    (shiftFilters.jobType ? 1 : 0) +
+    (shiftFilters.metroStations && shiftFilters.metroStations.length > 0 ? 1 : 0) +
+    (shiftFilters.equipment && shiftFilters.equipment.length > 0 ? 1 : 0) +
+    (shiftFilters.includeArchive ? 1 : 0);
+
+  const renderShiftsTab = () => (
     <View style={styles.tabContent}>
-      {isLoadingBranches ? (
+      <View style={styles.shiftToolbar}>
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={() => setFilterSheetVisible(true)}
+          accessibilityRole="button">
+          <MaterialCommunityIcons name="filter-variant" size={18} color={COLORS.text} />
+          <Text style={styles.filterButtonText}>{t('shifts.filter.title')}</Text>
+          {activeFilterCount > 0 ? (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+            </View>
+          ) : null}
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.statusTabsWrap}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.statusTabs}
+          contentContainerStyle={styles.statusTabsContent}>
+          {LIFECYCLE_TAB_VALUES.map(value => (
+            <TouchableOpacity
+              key={value}
+              style={[styles.statusTab, selectedLifecycle === value && styles.statusTabActive]}
+              onPress={() => setSelectedLifecycle(value)}>
+              <Text
+                style={[
+                  styles.statusTabText,
+                  selectedLifecycle === value && styles.statusTabTextActive,
+                ]}>
+                {value === 'all' ? t('shifts.lifecycle.all') : t(`shifts.status.${value}`)}
+              </Text>
+              <View style={styles.countBadge}>
+                <Text style={styles.countText}>{lifecycleCounts[value]}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+        <View style={styles.statusTabsFade} pointerEvents="none">
+          {[0, 0.15, 0.35, 0.6, 0.85, 1].map((opacity, i) => (
+            <View
+              key={i}
+              style={[styles.statusTabsFadeStrip, { backgroundColor: COLORS.background, opacity }]}
+            />
+          ))}
+        </View>
+      </View>
+
+      {isLoadingShifts ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
       ) : (
         <FlatList
-          data={branches}
-          keyExtractor={item => item.id}
+          data={filteredShiftEntries}
+          keyExtractor={item => item.job.id}
           renderItem={({ item }) => (
-            <View style={styles.branchCard}>
-              <Text style={styles.branchName}>{item.name}</Text>
-              <Text style={styles.branchAddress}>{item.address}</Text>
-              <Text style={styles.branchMetro}>{item.metroStation}</Text>
-            </View>
+            <ShiftCard
+              job={item.job}
+              applications={item.applications}
+              lifecycle={item.lifecycle}
+              onPressApplicants={handleShiftCardPressApplicants}
+              onPressAcceptedChat={handleShiftCardPressChat}
+            />
           )}
           contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl refreshing={isRefreshingBranches} onRefresh={handleRefreshBranches} />
+            <RefreshControl refreshing={isRefreshingShifts} onRefresh={handleRefreshShifts} />
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>No branches yet</Text>
-              <TouchableOpacity style={styles.emptyStateButton} onPress={handleManageBranches}>
-                <Text style={styles.emptyStateButtonText}>Add Branch</Text>
-              </TouchableOpacity>
+              <Text style={styles.emptyStateText}>{t('shifts.empty')}</Text>
             </View>
           }
         />
       )}
 
-      <TouchableOpacity style={styles.fab} onPress={handleManageBranches}>
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      <ShiftFilterSheet
+        visible={filterSheetVisible}
+        initialFilters={shiftFilters}
+        onApply={setShiftFilters}
+        onClose={() => setFilterSheetVisible(false)}
+      />
     </View>
   );
 
-  const reviewSummary =
-    reviewAggregate && reviewAggregate.reviewCount > 0
-      ? `${reviewAggregate.averageRating.toFixed(1)} ★ · ${reviewAggregate.reviewCount}`
-      : 'Без оценок';
-
   return (
     <SafeAreaView style={styles.container}>
-      <TouchableOpacity
-        style={styles.reviewsRow}
-        onPress={() => navigation.navigate('BusinessReviews')}>
-        <Text style={styles.reviewsRowLabel}>Отзывы</Text>
-        <View style={styles.reviewsRowRight}>
-          <Text style={styles.reviewsRowValue}>{reviewSummary}</Text>
-          <Text style={styles.reviewsRowChevron}>›</Text>
-        </View>
-      </TouchableOpacity>
-
       {/* Main Tab Bar */}
       <View style={styles.tabBar}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'jobs' && styles.tabActive]}
           onPress={() => setActiveTab('jobs')}>
-          <Text style={[styles.tabText, activeTab === 'jobs' && styles.tabTextActive]}>Jobs</Text>
+          <Text style={[styles.tabText, activeTab === 'jobs' && styles.tabTextActive]}>
+            {t('business.tabs.jobs')}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'branches' && styles.tabActive]}
-          onPress={() => setActiveTab('branches')}>
-          <Text style={[styles.tabText, activeTab === 'branches' && styles.tabTextActive]}>
-            Branches
+          style={[styles.tab, activeTab === 'shifts' && styles.tabActive]}
+          onPress={() => setActiveTab('shifts')}>
+          <Text style={[styles.tabText, activeTab === 'shifts' && styles.tabTextActive]}>
+            {t('business.tabs.shifts')}
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Tab Content */}
-      {activeTab === 'jobs' ? renderJobsTab() : renderBranchesTab()}
+      {activeTab === 'jobs' ? renderJobsTab() : renderShiftsTab()}
     </SafeAreaView>
   );
 };
@@ -482,17 +608,6 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     marginBottom: 16,
   },
-  emptyStateButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: RADII.pill,
-    backgroundColor: COLORS.primary,
-  },
-  emptyStateButtonText: {
-    fontSize: 14,
-    color: COLORS.background,
-    fontWeight: '600',
-  },
   fab: {
     position: 'absolute',
     right: 16,
@@ -514,55 +629,42 @@ const styles = StyleSheet.create({
     color: COLORS.background,
     fontWeight: '300',
   },
-  branchCard: {
-    backgroundColor: COLORS.background,
-    borderRadius: RADII.card,
-    padding: 16,
-    marginBottom: 12,
+  shiftToolbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: RADII.pill,
     borderWidth: 1,
     borderColor: COLORS.border,
-  },
-  branchName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginBottom: 8,
-  },
-  branchAddress: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginBottom: 4,
-  },
-  branchMetro: {
-    fontSize: 14,
-    color: COLORS.primary,
-  },
-  reviewsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
     backgroundColor: COLORS.background,
   },
-  reviewsRowLabel: {
-    fontSize: 16,
+  filterButtonText: {
+    fontSize: 13,
     fontWeight: '600',
     color: COLORS.text,
   },
-  reviewsRowRight: {
-    flexDirection: 'row',
+  filterBadge: {
+    backgroundColor: COLORS.primary,
+    borderRadius: RADII.pill,
+    paddingHorizontal: 6,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
+    marginLeft: 4,
   },
-  reviewsRowValue: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-  },
-  reviewsRowChevron: {
-    fontSize: 22,
-    color: COLORS.textSecondary,
+  filterBadgeText: {
+    color: COLORS.background,
+    fontSize: 11,
+    fontWeight: '700',
   },
 });
