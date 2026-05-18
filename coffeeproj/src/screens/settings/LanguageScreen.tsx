@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.background,
     marginHorizontal: 16,
-    borderRadius: 10,
+    borderRadius: 12,
     overflow: 'hidden',
   },
   row: {

@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   retryButtonText: {
     color: '#fff',
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
   applyButton: {
     backgroundColor: COLORS.primary,
     paddingVertical: 16,
-    borderRadius: 8,
+    borderRadius: 999,
     alignItems: 'center',
   },
   applyButtonDisabled: {

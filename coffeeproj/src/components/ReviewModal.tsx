@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 12,
     fontSize: 14,
     color: COLORS.text,
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   submitButton: {
     backgroundColor: COLORS.primary,
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: 999,
     alignItems: 'center',
   },
   submitButtonDisabled: {

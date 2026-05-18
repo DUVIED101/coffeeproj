@@ -35,12 +35,14 @@
   },
   "jobs": {
     "urgent": "Срочно",
+    "applicationsCount": "{{count}} заявок",
     "applicationsCount_one": "{{count}} заявка",
     "applicationsCount_few": "{{count}} заявки",
     "applicationsCount_many": "{{count}} заявок",
     "applicationsCount_other": "{{count}} заявок"
   },
   "barista": {
+    "experienceYears": "{{count}} лет опыта",
     "experienceYears_one": "{{count}} год опыта",
     "experienceYears_few": "{{count}} года опыта",
     "experienceYears_many": "{{count}} лет опыта",

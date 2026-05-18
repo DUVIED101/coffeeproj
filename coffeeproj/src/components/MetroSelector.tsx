@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   selector: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 20,
+    borderRadius: 999,
     paddingVertical: 8,
     paddingHorizontal: 16,
     backgroundColor: COLORS.backgroundSecondary,
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 8,
+    borderRadius: 12,
     fontSize: 16,
   },
   stationList: {
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   doneButton: {
     backgroundColor: COLORS.primary,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 999,
     alignItems: 'center',
   },
   doneButtonText: {

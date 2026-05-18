@@ -62,14 +62,18 @@ export const MainTabs: React.FC = () => {
         headerTintColor: COLORS.text,
       }}>
       <Tab.Screen
-        name="Settings"
-        component={SettingsStack}
+        name="Profile"
+        component={user.accountType === 'barista' ? ProfileStack : BusinessProfilePlaceholder}
         options={{
-          title: t('settings.title'),
-          tabBarLabel: t('settings.title'),
+          title: 'Profile',
+          tabBarLabel: 'Profile',
           headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="cog" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <MaterialCommunityIcons
+              name={focused ? 'account-circle' : 'account-circle-outline'}
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -80,17 +84,17 @@ export const MainTabs: React.FC = () => {
           title: 'Jobs',
           tabBarLabel: 'Jobs',
           headerShown: false,
-          // Hide this tab for non-barista users by rendering nothing
+          tabBarIcon: ({ color, size, focused }) => (
+            <MaterialCommunityIcons
+              name={focused ? 'briefcase-search' : 'briefcase-search-outline'}
+              color={color}
+              size={size}
+            />
+          ),
           tabBarButton: (props: BottomTabBarButtonProps) => {
             const { user } = useAuthStore.getState();
             const isBaristaUser = user?.accountType === 'barista';
-
-            // If not barista user, don't render the tab button
-            if (!isBaristaUser) {
-              return null;
-            }
-
-            // Otherwise, render default Pressable button
+            if (!isBaristaUser) return null;
             return <Pressable {...props} />;
           },
         }}
@@ -102,17 +106,17 @@ export const MainTabs: React.FC = () => {
           title: 'Business',
           tabBarLabel: 'Business',
           headerShown: false,
-          // Hide this tab for non-business users by rendering nothing
+          tabBarIcon: ({ color, size, focused }) => (
+            <MaterialCommunityIcons
+              name={focused ? 'storefront' : 'storefront-outline'}
+              color={color}
+              size={size}
+            />
+          ),
           tabBarButton: (props: BottomTabBarButtonProps) => {
             const { user } = useAuthStore.getState();
             const isBusinessUser = user?.accountType === 'business';
-
-            // If not business user, don't render the tab button
-            if (!isBusinessUser) {
-              return null;
-            }
-
-            // Otherwise, render default Pressable button
+            if (!isBusinessUser) return null;
             return <Pressable {...props} />;
           },
         }}
@@ -124,28 +128,35 @@ export const MainTabs: React.FC = () => {
           title: 'Baristas',
           tabBarLabel: 'Baristas',
           headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="coffee" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <MaterialCommunityIcons
+              name={focused ? 'coffee' : 'coffee-outline'}
+              color={color}
+              size={size}
+            />
           ),
           tabBarButton: (props: BottomTabBarButtonProps) => {
             const { user } = useAuthStore.getState();
             const isBusinessUser = user?.accountType === 'business';
-
-            if (!isBusinessUser) {
-              return null;
-            }
-
+            if (!isBusinessUser) return null;
             return <Pressable {...props} />;
           },
         }}
       />
       <Tab.Screen
-        name="Profile"
-        component={user.accountType === 'barista' ? ProfileStack : BusinessProfilePlaceholder}
+        name="Settings"
+        component={SettingsStack}
         options={{
-          title: 'Profile',
-          tabBarLabel: 'Profile',
+          title: t('settings.title'),
+          tabBarLabel: t('settings.title'),
           headerShown: false,
+          tabBarIcon: ({ color, size, focused }) => (
+            <MaterialCommunityIcons
+              name={focused ? 'cog' : 'cog-outline'}
+              color={color}
+              size={size}
+            />
+          ),
         }}
       />
     </Tab.Navigator>

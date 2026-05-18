@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
   filterChip: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 999,
     backgroundColor: COLORS.backgroundSecondary,
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     backgroundColor: COLORS.backgroundSecondary,
     marginBottom: 8,
   },
@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
   doneButton: {
     margin: 16,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 999,
     backgroundColor: COLORS.primary,
     alignItems: 'center',
   },
@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
   resetButton: {
     margin: 16,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 999,
     backgroundColor: COLORS.backgroundSecondary,
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
   cityInput: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 12,
     fontSize: 16,
     color: COLORS.text,

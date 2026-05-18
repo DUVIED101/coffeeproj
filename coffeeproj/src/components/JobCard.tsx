@@ -181,7 +181,7 @@ export const JobCard = React.memo<JobCardProps>(({ job, onPress, onLongPress, ow
 
       <View style={styles.footer}>
         <Text style={styles.applicationCount}>
-          {t('jobs.applicationsCount', { count: job.applicationCount })}
+          {t('jobs.applicationsCount', { count: job.applicationCount ?? 0 })}
         </Text>
       </View>
     </TouchableOpacity>
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   statusText: {
     fontSize: 12,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.backgroundSecondary,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 8,
     marginRight: 8,
     marginBottom: 4,
   },
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.backgroundSecondary,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 8,
     marginRight: 6,
     marginBottom: 4,
   },

@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   retryButtonText: {
     color: '#fff',
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
   viewApplicantsButton: {
     backgroundColor: COLORS.primary,
     paddingVertical: 16,
-    borderRadius: 8,
+    borderRadius: 999,
     alignItems: 'center',
   },
   viewApplicantsButtonText: {
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: 999,
     alignItems: 'center',
     marginTop: 8,
   },

@@ -35,10 +35,12 @@
   },
   "jobs": {
     "urgent": "Urgent",
+    "applicationsCount": "{{count}} applications",
     "applicationsCount_one": "{{count}} application",
     "applicationsCount_other": "{{count}} applications"
   },
   "barista": {
+    "experienceYears": "{{count}} years of experience",
     "experienceYears_one": "{{count}} year of experience",
     "experienceYears_other": "{{count}} years of experience",
     "hourlyRange": "{{min}}–{{max}}/hour",

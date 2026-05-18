@@ -598,7 +598,7 @@ const styles = StyleSheet.create({
   progressDot: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: 999,
     backgroundColor: COLORS.backgroundSecondary,
     borderWidth: 2,
     borderColor: COLORS.border,
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 12,
     fontSize: 16,
     color: COLORS.text,
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
   datePickerButton: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 12,
     backgroundColor: '#fff',
   },
@@ -688,7 +688,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
     marginTop: 12,
   },
@@ -715,7 +715,7 @@ const styles = StyleSheet.create({
   chip: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 20,
+    borderRadius: 999,
     backgroundColor: COLORS.backgroundSecondary,
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -767,7 +767,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.primary,
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: 999,
     alignItems: 'center',
   },
   primaryButtonDisabled: {
@@ -781,7 +781,7 @@ const styles = StyleSheet.create({
   secondaryButton: {
     paddingVertical: 14,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: COLORS.primary,
     alignItems: 'center',

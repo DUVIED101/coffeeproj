@@ -915,7 +915,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 12,
     fontSize: 16,
     color: COLORS.text,
@@ -948,7 +948,7 @@ const styles = StyleSheet.create({
   chip: {
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 16,
+    borderRadius: 999,
     backgroundColor: COLORS.backgroundSecondary,
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -985,7 +985,7 @@ const styles = StyleSheet.create({
   portfolioPhoto: {
     width: 100,
     height: 100,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   emptyText: {
     fontSize: 14,
@@ -1027,7 +1027,7 @@ const styles = StyleSheet.create({
   datePickerButton: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 12,
     backgroundColor: '#fff',
   },
@@ -1042,7 +1042,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
     marginTop: 12,
   },
@@ -1055,7 +1055,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.backgroundSecondary,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: COLORS.border,
     alignItems: 'center',

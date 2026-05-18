@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS } from '../config/constants';
+import { COLORS, RADII } from '../config/constants';
 
 export type HeaderAction = {
   label: string;
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   pillButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: RADII.pill,
     backgroundColor: COLORS.backgroundSecondary,
     borderWidth: 1,
     borderColor: COLORS.border,

@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
   },
   applicantCard: {
     backgroundColor: '#fff',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -622,7 +622,7 @@ const styles = StyleSheet.create({
   viewProfileButton: {
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: COLORS.primary,
     alignItems: 'center',
@@ -641,7 +641,7 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 999,
     alignItems: 'center',
   },
   acceptButton: {
@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.primary,
     marginBottom: 12,
@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 12,
     backgroundColor: '#EF4444',
-    borderRadius: 10,
+    borderRadius: 12,
     minWidth: 20,
     height: 20,
     justifyContent: 'center',
@@ -706,7 +706,7 @@ const styles = StyleSheet.create({
   confirmCompletionButton: {
     backgroundColor: '#10B981',
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 999,
     alignItems: 'center',
     marginBottom: 12,
   },
@@ -720,7 +720,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF3C7',
     paddingVertical: 12,
     paddingHorizontal: 14,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#FCD34D',
   },

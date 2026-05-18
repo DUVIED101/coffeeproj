@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 8,
     fontSize: 15,
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   saveButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 8,
+    borderRadius: 999,
     backgroundColor: COLORS.primary,
   },
   saveButtonDisabled: {

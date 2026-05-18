@@ -15,7 +15,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS, EQUIPMENT_TYPES } from '../../config/constants';
+import { COLORS, EQUIPMENT_TYPES, RADII } from '../../config/constants';
 import { JobService } from '../../services/JobService';
 import { BusinessService } from '../../services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
@@ -740,7 +740,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: RADII.card,
     alignItems: 'center',
   },
   emptyCtaText: {
@@ -774,7 +774,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: RADII.input,
     padding: 12,
     fontSize: 16,
     backgroundColor: '#fff',
@@ -794,10 +794,11 @@ const styles = StyleSheet.create({
   },
   segmentedControl: {
     flexDirection: 'row',
-    borderRadius: 8,
+    borderRadius: RADII.pill,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: COLORS.border,
+    backgroundColor: COLORS.backgroundSecondary,
   },
   segmentButton: {
     flex: 1,
@@ -821,7 +822,7 @@ const styles = StyleSheet.create({
   },
   branchOption: {
     padding: 12,
-    borderRadius: 8,
+    borderRadius: RADII.input,
     borderWidth: 1,
     borderColor: COLORS.border,
     backgroundColor: '#fff',
@@ -852,7 +853,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     backgroundColor: COLORS.error,
-    borderRadius: 6,
+    borderRadius: RADII.input,
   },
   removeButtonText: {
     color: '#fff',
@@ -875,7 +876,7 @@ const styles = StyleSheet.create({
   equipmentChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 16,
+    borderRadius: RADII.pill,
     borderWidth: 1,
     borderColor: COLORS.border,
     backgroundColor: '#fff',
@@ -901,7 +902,7 @@ const styles = StyleSheet.create({
   dateButton: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: RADII.input,
     padding: 12,
     backgroundColor: '#fff',
     marginBottom: 8,
@@ -935,7 +936,7 @@ const styles = StyleSheet.create({
   dayChip: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 16,
+    borderRadius: RADII.pill,
     borderWidth: 1,
     borderColor: COLORS.border,
     backgroundColor: '#fff',
@@ -960,7 +961,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: RADII.pill,
     borderWidth: 1,
     borderColor: COLORS.border,
     backgroundColor: '#fff',
@@ -981,7 +982,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     padding: 16,
     backgroundColor: COLORS.backgroundSecondary,
-    borderRadius: 8,
+    borderRadius: RADII.card,
   },
   paymentLine: {
     fontSize: 14,
@@ -1005,7 +1006,7 @@ const styles = StyleSheet.create({
   tagChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 16,
+    borderRadius: RADII.pill,
     borderWidth: 1,
     borderColor: COLORS.border,
     backgroundColor: '#fff',
@@ -1024,8 +1025,9 @@ const styles = StyleSheet.create({
   saveButton: {
     margin: 16,
     backgroundColor: COLORS.primary,
-    padding: 16,
-    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: RADII.pill,
     alignItems: 'center',
   },
   saveButtonDisabled: {

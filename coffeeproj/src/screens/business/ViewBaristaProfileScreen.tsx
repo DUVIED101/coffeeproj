@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
   chip: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 20,
+    borderRadius: 999,
     backgroundColor: COLORS.primary,
   },
   chipText: {
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
   portfolioPhoto: {
     width: 100,
     height: 100,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   messageButtonContainer: {
     paddingHorizontal: 20,
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   },
   messageButton: {
     backgroundColor: COLORS.primary,
-    borderRadius: 12,
+    borderRadius: 999,
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',

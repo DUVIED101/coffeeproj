@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 999,
   },
   createButtonText: {
     color: '#fff',
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.backgroundSecondary,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: 12,
     minWidth: 24,
     alignItems: 'center',
   },

@@ -134,7 +134,7 @@ export function ChatScreen({ navigation, route }: any) {
         : undefined;
     const otherPartyName =
       user?.accountType === 'barista' ? businessName : conversation?.baristaName;
-    const title = conversation?.jobTitle || otherPartyName || 'Chat';
+    const title = otherPartyName || conversation?.jobTitle || 'Chat';
     navigation.setOptions({
       header: () => (
         <ScreenHeaderWithActions
@@ -272,7 +272,7 @@ export function ChatScreen({ navigation, route }: any) {
           <Text style={styles.title} numberOfLines={1}>
             {conversation.jobTitle || 'Chat'}
           </Text>
-          {conversation.businessName && (
+          {user?.accountType === 'barista' && conversation.businessName && (
             <Text style={styles.subtitle} numberOfLines={1}>
               {conversation.businessName}
             </Text>
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     maxWidth: '75%',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 16,
+    borderRadius: 18,
     marginBottom: 8,
   },
   ownMessageBubble: {
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     backgroundColor: COLORS.background,
-    borderRadius: 20,
+    borderRadius: 999,
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginRight: 8,
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     backgroundColor: COLORS.primary,
-    borderRadius: 20,
+    borderRadius: 999,
     paddingHorizontal: 20,
     paddingVertical: 10,
     justifyContent: 'center',

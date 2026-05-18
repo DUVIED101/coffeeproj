@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -22,7 +22,7 @@ import { JobService } from '../../services/JobService';
 import { BusinessService } from '../../services/BusinessService';
 import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
-import { COLORS } from '../../config/constants';
+import { COLORS, RADII } from '../../config/constants';
 import type { Job, Branch, JobStatus } from '../../types';
 import type { UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
@@ -46,6 +46,8 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
   const [isRefreshingJobs, setIsRefreshingJobs] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<JobStatus>('open');
   const [showArchived, setShowArchived] = useState(false);
+  const pillOffsetsRef = useRef<Record<string, number>>({});
+  const [snapOffsets, setSnapOffsets] = useState<number[]>([]);
 
   useEffect(() => {
     AsyncStorage.getItem(SHOW_ARCHIVED_KEY)
@@ -58,6 +60,8 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
   const toggleShowArchived = async () => {
     const next = !showArchived;
     setShowArchived(next);
+    pillOffsetsRef.current = {};
+    setSnapOffsets([]);
     if (next === false && ARCHIVED_STATUSES.includes(selectedStatus)) {
       setSelectedStatus('open');
     }
@@ -195,38 +199,65 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
 
   const renderJobsTab = () => (
     <View style={styles.tabContent}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.statusTabs}
-        contentContainerStyle={styles.statusTabsContent}>
-        {visibleStatusTabs.map(item => (
-          <TouchableOpacity
-            key={item.value}
-            style={[styles.statusTab, selectedStatus === item.value && styles.statusTabActive]}
-            onPress={() => setSelectedStatus(item.value)}>
-            <Text
-              style={[
-                styles.statusTabText,
-                selectedStatus === item.value && styles.statusTabTextActive,
-              ]}>
-              {item.label}
-            </Text>
-            <View style={styles.countBadge}>
-              <Text style={styles.countText}>{statusCounts[item.value]}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-        <View style={styles.archiveToggle}>
-          <Text style={styles.archiveToggleText}>{t('business.jobs.showArchived')}</Text>
-          <Switch
-            value={showArchived}
-            onValueChange={toggleShowArchived}
-            trackColor={{ false: COLORS.border, true: COLORS.primary }}
-            thumbColor="#fff"
-          />
+      <View style={styles.archiveToggleRow}>
+        <Text style={styles.archiveToggleText}>{t('business.jobs.showArchived')}</Text>
+        <Switch
+          value={showArchived}
+          onValueChange={toggleShowArchived}
+          trackColor={{ false: COLORS.border, true: COLORS.primary }}
+          thumbColor="#fff"
+        />
+      </View>
+      <View style={styles.statusTabsWrap}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          decelerationRate="fast"
+          snapToOffsets={snapOffsets}
+          snapToAlignment="start"
+          style={styles.statusTabs}
+          contentContainerStyle={styles.statusTabsContent}>
+          {visibleStatusTabs.map(item => (
+            <TouchableOpacity
+              key={item.value}
+              style={[styles.statusTab, selectedStatus === item.value && styles.statusTabActive]}
+              onPress={() => setSelectedStatus(item.value)}
+              onLayout={e => {
+                pillOffsetsRef.current[item.value] = e.nativeEvent.layout.x;
+                const ordered = visibleStatusTabs
+                  .map(s => pillOffsetsRef.current[s.value])
+                  .filter((x): x is number => typeof x === 'number');
+                if (ordered.length === visibleStatusTabs.length) {
+                  setSnapOffsets(prev => {
+                    if (prev.length === ordered.length && prev.every((v, i) => v === ordered[i])) {
+                      return prev;
+                    }
+                    return ordered;
+                  });
+                }
+              }}>
+              <Text
+                style={[
+                  styles.statusTabText,
+                  selectedStatus === item.value && styles.statusTabTextActive,
+                ]}>
+                {item.label}
+              </Text>
+              <View style={styles.countBadge}>
+                <Text style={styles.countText}>{statusCounts[item.value]}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+        <View style={styles.statusTabsFade} pointerEvents="none">
+          {[0, 0.15, 0.35, 0.6, 0.85, 1].map((opacity, i) => (
+            <View
+              key={i}
+              style={[styles.statusTabsFadeStrip, { backgroundColor: COLORS.background, opacity }]}
+            />
+          ))}
         </View>
-      </ScrollView>
+      </View>
 
       {isLoadingJobs ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
@@ -362,33 +393,50 @@ const styles = StyleSheet.create({
   tabContent: {
     flex: 1,
   },
-  archiveToggle: {
+  archiveToggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingLeft: 12,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    backgroundColor: COLORS.background,
   },
   archiveToggleText: {
     fontSize: 13,
     color: COLORS.textSecondary,
   },
-  statusTabs: {
+  statusTabsWrap: {
+    position: 'relative',
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+  },
+  statusTabs: {
     flexGrow: 0,
+  },
+  statusTabsFade: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 40,
+    flexDirection: 'row',
+  },
+  statusTabsFadeStrip: {
+    flex: 1,
   },
   statusTabsContent: {
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 10,
+    paddingLeft: 12,
+    paddingRight: 48,
+    gap: 8,
   },
   statusTab: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    marginRight: 8,
-    borderRadius: 20,
+    borderRadius: RADII.pill,
     backgroundColor: COLORS.background,
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -408,7 +456,7 @@ const styles = StyleSheet.create({
   },
   countBadge: {
     backgroundColor: COLORS.border,
-    borderRadius: 10,
+    borderRadius: RADII.pill,
     paddingHorizontal: 6,
     paddingVertical: 2,
     minWidth: 20,
@@ -437,7 +485,7 @@ const styles = StyleSheet.create({
   emptyStateButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 20,
+    borderRadius: RADII.pill,
     backgroundColor: COLORS.primary,
   },
   emptyStateButtonText: {
@@ -468,7 +516,7 @@ const styles = StyleSheet.create({
   },
   branchCard: {
     backgroundColor: COLORS.background,
-    borderRadius: 8,
+    borderRadius: RADII.card,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,

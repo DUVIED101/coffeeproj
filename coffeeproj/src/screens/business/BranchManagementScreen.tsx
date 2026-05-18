@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 999,
   },
   addButtonText: {
     color: '#fff',
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 12,
     fontSize: 16,
     backgroundColor: '#fff',
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
   equipmentChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 16,
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: COLORS.border,
     backgroundColor: '#fff',
@@ -635,7 +635,7 @@ const styles = StyleSheet.create({
   saveButton: {
     backgroundColor: COLORS.primary,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 999,
     alignItems: 'center',
     marginTop: 8,
   },
@@ -674,7 +674,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: 999,
     alignItems: 'center',
   },
   emptyCtaText: {
@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
   branchCard: {
     backgroundColor: '#fff',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: COLORS.border,

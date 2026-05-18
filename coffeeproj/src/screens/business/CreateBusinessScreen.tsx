@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 12,
     fontSize: 16,
     backgroundColor: '#fff',
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: 12,
     backgroundColor: '#fff',
   },
   radioButton: {
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   radioButtonInner: {
     width: 12,
     height: 12,
-    borderRadius: 6,
+    borderRadius: 8,
     backgroundColor: COLORS.primary,
   },
   radioTextContainer: {
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: COLORS.primary,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 999,
     alignItems: 'center',
     marginTop: 12,
   },

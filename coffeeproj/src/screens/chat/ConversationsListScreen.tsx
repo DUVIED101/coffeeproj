@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   },
   conversationCard: {
     backgroundColor: '#fff',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,

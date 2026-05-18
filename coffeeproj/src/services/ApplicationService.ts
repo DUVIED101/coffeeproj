@@ -63,7 +63,7 @@ export class ApplicationService {
             paymentStatus: db.jobs.payment_status,
             status: db.jobs.status,
             tags: db.jobs.tags || [],
-            applicationCount: db.jobs.application_count,
+            applicationCount: db.jobs.application_count ?? 0,
             views: db.jobs.views,
             postedAt: db.jobs.posted_at,
             expiresAt: db.jobs.expires_at,

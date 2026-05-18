@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../config/constants';
 import type { AccountType } from '../../types';
 
@@ -36,7 +37,7 @@ export const AccountTypeScreen: React.FC<Props> = ({ navigation }) => {
             style={[styles.button, styles.baristaButton]}
             onPress={() => handleSelectType('barista')}
             activeOpacity={0.8}>
-            <Text style={styles.buttonIcon}>☕</Text>
+            <MaterialCommunityIcons name="coffee" size={48} color={COLORS.primary} />
             <Text style={styles.buttonTitle}>I'm a Barista</Text>
             <Text style={styles.buttonDescription}>Find coffee shop jobs and opportunities</Text>
           </TouchableOpacity>
@@ -45,7 +46,7 @@ export const AccountTypeScreen: React.FC<Props> = ({ navigation }) => {
             style={[styles.button, styles.businessButton]}
             onPress={() => handleSelectType('business')}
             activeOpacity={0.8}>
-            <Text style={styles.buttonIcon}>🏪</Text>
+            <MaterialCommunityIcons name="storefront" size={48} color={COLORS.secondary} />
             <Text style={styles.buttonTitle}>I'm a Business</Text>
             <Text style={styles.buttonDescription}>Post jobs and hire talented baristas</Text>
           </TouchableOpacity>
@@ -114,14 +115,11 @@ const styles = StyleSheet.create({
   businessButton: {
     borderColor: COLORS.secondary,
   },
-  buttonIcon: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
   buttonTitle: {
     fontSize: 20,
     fontWeight: '600',
     color: COLORS.text,
+    marginTop: 12,
     marginBottom: 8,
   },
   buttonDescription: {

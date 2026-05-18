@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 8,
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: COLORS.primary,
     alignItems: 'center',

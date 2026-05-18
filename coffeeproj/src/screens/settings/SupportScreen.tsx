@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: COLORS.background,
-    borderRadius: 10,
+    borderRadius: 12,
     overflow: 'hidden',
   },
   row: {

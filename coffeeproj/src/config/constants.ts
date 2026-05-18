@@ -44,3 +44,11 @@ export const FONTS = {
   bold: 'System',
   semiBold: 'System',
 };
+
+// Corner radii (iOS HIG aligned)
+export const RADII = {
+  pill: 999, // capsule chips, filter pills, header action buttons
+  card: 12, // cards, primary buttons, list rows, sections
+  input: 10, // text inputs, date buttons, segmented controls
+  chipSmall: 8, // tiny status badges inside cards
+};

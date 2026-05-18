@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
   statusBadge: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 16,
+    borderRadius: 999,
     marginBottom: 8,
   },
   statusText: {
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
   withdrawButton: {
     backgroundColor: '#EF4444',
     paddingVertical: 16,
-    borderRadius: 8,
+    borderRadius: 999,
     alignItems: 'center',
   },
   withdrawButtonText: {
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
   completeButton: {
     backgroundColor: '#10B981',
     paddingVertical: 16,
-    borderRadius: 8,
+    borderRadius: 999,
     alignItems: 'center',
   },
   completeButtonText: {
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
   completionBanner: {
     backgroundColor: '#D1FAE5',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
   },
   completionText: {

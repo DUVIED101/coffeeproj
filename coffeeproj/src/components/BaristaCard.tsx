@@ -93,7 +93,7 @@ export const BaristaCard = React.memo<BaristaCardProps>(({ profile, onPress, rev
         </View>
       </View>
 
-      {yearsOfExperience !== undefined && (
+      {typeof yearsOfExperience === 'number' && (
         <View style={styles.experienceRow}>
           <Text style={styles.experienceText}>
             {t('barista.experienceYears', { count: yearsOfExperience })}
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.backgroundSecondary,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 8,
     marginRight: 6,
     marginBottom: 4,
   },

@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: COLORS.primary,
-    borderRadius: 8,
+    borderRadius: 999,
     paddingVertical: 12,
     paddingHorizontal: 24,
     minWidth: 160,
