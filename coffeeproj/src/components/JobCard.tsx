@@ -158,6 +158,12 @@ export const JobCard = React.memo<JobCardProps>(({ job, onPress, onLongPress, ow
         </View>
       )}
 
+      {job.location?.address && (
+        <Text style={styles.addressText} numberOfLines={2}>
+          {job.location.address}
+        </Text>
+      )}
+
       {job.requiredEquipmentExperience.length > 0 && (
         <View style={styles.equipmentRow}>
           {visibleEquipment.map((equipment, index) => (
@@ -276,6 +282,11 @@ const styles = StyleSheet.create({
   metroText: {
     fontSize: 14,
     color: COLORS.text,
+  },
+  addressText: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginBottom: 8,
   },
   equipmentRow: {
     flexDirection: 'row',

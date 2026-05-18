@@ -16,7 +16,8 @@ import { COLORS } from '../../config/constants';
 import { ApplicationService, type CompletedShiftEntry } from '../../services/ApplicationService';
 import { useAuthStore } from '../../stores/authStore';
 import { StarRow } from '../../components/StarRow';
-import type { UserId } from '../../types/ids';
+import { ReviewModal } from '../../components/ReviewModal';
+import type { ApplicationId, UserId } from '../../types/ids';
 
 type ShiftHistoryStackParamList = {
   ShiftHistory: undefined;
@@ -39,10 +40,12 @@ const formatRange = (startIso: string, endIso: string | undefined, locale: strin
 const ShiftHistoryCard = React.memo<{
   entry: CompletedShiftEntry;
   onPress: (entry: CompletedShiftEntry) => void;
-}>(({ entry, onPress }) => {
+  onRateBusiness: (entry: CompletedShiftEntry) => void;
+}>(({ entry, onPress, onRateBusiness }) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
   const handlePress = useCallback(() => onPress(entry), [onPress, entry]);
+  const handleRate = useCallback(() => onRateBusiness(entry), [onRateBusiness, entry]);
 
   const businessName = entry.job?.businessName ?? '';
   const branchName = entry.job?.branchName;
@@ -50,6 +53,8 @@ const ShiftHistoryCard = React.memo<{
   const range = entry.job?.shiftDetails
     ? formatRange(entry.job.shiftDetails.startDate, entry.job.shiftDetails.endDate, locale)
     : '';
+
+  const canRate = !entry.baristaReview && Boolean(entry.job?.businessOwnerId);
 
   return (
     <TouchableOpacity style={styles.card} onPress={handlePress} activeOpacity={0.7}>
@@ -77,6 +82,17 @@ const ShiftHistoryCard = React.memo<{
           <Text style={styles.noReview}>{t('shiftHistory.noReviewLeft')}</Text>
         )}
       </View>
+
+      {entry.baristaReview ? (
+        <View style={styles.ownReviewRow}>
+          <Text style={styles.ownReviewLabel}>Your review:</Text>
+          <StarRow rating={entry.baristaReview.rating} size={14} />
+        </View>
+      ) : canRate ? (
+        <TouchableOpacity style={styles.rateButton} onPress={handleRate} activeOpacity={0.7}>
+          <Text style={styles.rateButtonText}>Rate business</Text>
+        </TouchableOpacity>
+      ) : null}
     </TouchableOpacity>
   );
 });
@@ -87,6 +103,10 @@ export const ShiftHistoryScreen: React.FC<Props> = ({ navigation }) => {
   const [entries, setEntries] = useState<CompletedShiftEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [reviewTarget, setReviewTarget] = useState<{
+    applicationId: ApplicationId;
+    rateeId: UserId;
+  } | null>(null);
 
   const loadEntries = useCallback(async () => {
     if (!userId) {
@@ -122,11 +142,24 @@ export const ShiftHistoryScreen: React.FC<Props> = ({ navigation }) => {
     [navigation]
   );
 
+  const handleRateBusiness = useCallback((entry: CompletedShiftEntry) => {
+    const ownerId = entry.job?.businessOwnerId;
+    if (!ownerId) return;
+    setReviewTarget({
+      applicationId: entry.id as ApplicationId,
+      rateeId: ownerId as UserId,
+    });
+  }, []);
+
   const renderEntry = useCallback(
     ({ item }: { item: CompletedShiftEntry }) => (
-      <ShiftHistoryCard entry={item} onPress={handleEntryPress} />
+      <ShiftHistoryCard
+        entry={item}
+        onPress={handleEntryPress}
+        onRateBusiness={handleRateBusiness}
+      />
     ),
-    [handleEntryPress]
+    [handleEntryPress, handleRateBusiness]
   );
 
   const renderEmpty = () => (
@@ -161,6 +194,20 @@ export const ShiftHistoryScreen: React.FC<Props> = ({ navigation }) => {
           />
         }
       />
+
+      {reviewTarget && (
+        <ReviewModal
+          visible
+          applicationId={reviewTarget.applicationId}
+          raterRole="barista"
+          rateeId={reviewTarget.rateeId}
+          onSubmitted={() => {
+            setReviewTarget(null);
+            loadEntries();
+          }}
+          onSkip={() => setReviewTarget(null)}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -222,6 +269,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
     fontStyle: 'italic',
+  },
+  ownReviewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+  },
+  ownReviewLabel: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+  },
+  rateButton: {
+    marginTop: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    alignItems: 'center',
+  },
+  rateButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary,
   },
   emptyContainer: {
     alignItems: 'center',

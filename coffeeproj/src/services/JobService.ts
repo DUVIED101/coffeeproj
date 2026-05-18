@@ -234,6 +234,16 @@ export class JobService {
 
       console.log('📡 RPC error:', error);
       console.log('📡 RPC data count:', data?.length);
+      if (data && Array.isArray(data)) {
+        console.log(
+          '📡 RPC distance_meters per job:',
+          data.map((j: any) => ({
+            id: j.id,
+            metro: j.metro_station,
+            distance_meters: j.distance_meters,
+          }))
+        );
+      }
 
       if (error) throw error;
 

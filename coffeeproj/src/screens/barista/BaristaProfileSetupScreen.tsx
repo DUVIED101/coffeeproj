@@ -17,7 +17,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS, EQUIPMENT_TYPES } from '../../config/constants';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
 import { MetroSelector } from '../../components/MetroSelector';
+import { CertificatesEditor } from '../../components/CertificatesEditor';
 import { useAuthStore } from '../../stores/authStore';
+import { formatLocalDate } from '../../utils/dateUtils';
 import type { ShiftTime, BaristaProfile } from '../../types/baristaProfile';
 
 type BaristaStackParamList = {
@@ -117,8 +119,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const handleDateChange = useCallback((event: any, date?: Date) => {
     if (date) {
       setSelectedDate(date);
-      const formattedDate = date.toISOString().split('T')[0];
-      setDateOfBirth(formattedDate);
+      setDateOfBirth(formatLocalDate(date));
     }
   }, []);
 
@@ -310,8 +311,10 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 <DateTimePicker
                   value={selectedDate}
                   mode="date"
-                  display="spinner"
-                  onValueChange={handleDateChange}
+                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                  themeVariant="light"
+                  textColor="#000000"
+                  onChange={handleDateChange}
                   maximumDate={new Date()}
                   minimumDate={new Date(1940, 0, 1)}
                 />
@@ -353,6 +356,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               value={yearsOfExperience}
               onChangeText={setYearsOfExperience}
               keyboardType="numeric"
+              returnKeyType="done"
             />
 
             <Text style={styles.label}>Equipment Experience (optional)</Text>
@@ -418,6 +422,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 value={hourlyRateMin}
                 onChangeText={setHourlyRateMin}
                 keyboardType="numeric"
+                returnKeyType="done"
               />
               <Text style={styles.separator}>-</Text>
               <TextInput
@@ -427,6 +432,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 value={hourlyRateMax}
                 onChangeText={setHourlyRateMax}
                 keyboardType="numeric"
+                returnKeyType="done"
               />
             </View>
           </View>
@@ -436,11 +442,38 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         return (
           <View>
             <Text style={styles.stepTitle}>Portfolio</Text>
-            <Text style={styles.stepSubtitle}>Add photos and avatar (optional)</Text>
+            <Text style={styles.stepSubtitle}>Add certifications (optional)</Text>
 
-            <Text style={styles.infoText}>
-              You can upload photos and avatar after creating your profile.
-            </Text>
+            <CertificatesEditor
+              certificates={certifications}
+              isBusy={isSubmitting}
+              onAdd={async name => {
+                const next = [...certifications, name];
+                setCertifications(next);
+                if (existingProfile && user?.id) {
+                  try {
+                    await BaristaProfileService.setCertifications(user.id, next);
+                  } catch (error: unknown) {
+                    console.error('Error saving certificate:', error);
+                    setCertifications(certifications);
+                    Alert.alert('Error', 'Failed to save certificate.');
+                  }
+                }
+              }}
+              onRemove={async cert => {
+                const next = certifications.filter(c => c !== cert);
+                setCertifications(next);
+                if (existingProfile && user?.id) {
+                  try {
+                    await BaristaProfileService.setCertifications(user.id, next);
+                  } catch (error: unknown) {
+                    console.error('Error removing certificate:', error);
+                    setCertifications(certifications);
+                    Alert.alert('Error', 'Failed to remove certificate.');
+                  }
+                }
+              }}
+            />
           </View>
         );
 

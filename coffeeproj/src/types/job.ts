@@ -41,6 +41,7 @@ export interface JobLocation {
   address: string;
   city: string;
   coordinates: GeoPoint;
+  metroStation?: string;
 }
 
 export interface ShiftDetails {

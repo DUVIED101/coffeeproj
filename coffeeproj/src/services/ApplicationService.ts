@@ -7,6 +7,7 @@ import { computeShiftHours } from '../utils/shiftHours';
 export type CompletedShiftEntry = Application & {
   hoursWorked: number;
   businessReview?: ApplicationReview;
+  baristaReview?: ApplicationReview;
   completedAt: string;
 };
 
@@ -190,18 +191,20 @@ export class ApplicationService {
           created_at: string;
         }> = Array.isArray(app.application_reviews) ? app.application_reviews : [];
         const businessReviewRow = reviews.find(r => r.rater_role === 'business');
+        const baristaReviewRow = reviews.find(r => r.rater_role === 'barista');
 
-        const businessReview: ApplicationReview | undefined = businessReviewRow
-          ? {
-              id: businessReviewRow.id as ApplicationReview['id'],
-              applicationId: businessReviewRow.application_id as ApplicationId,
-              raterRole: businessReviewRow.rater_role,
-              rateeId: businessReviewRow.ratee_id as UserId,
-              rating: businessReviewRow.rating as StarRating,
-              comment: businessReviewRow.comment ?? undefined,
-              createdAt: businessReviewRow.created_at,
-            }
-          : undefined;
+        const toReview = (row: (typeof reviews)[number]): ApplicationReview => ({
+          id: row.id as ApplicationReview['id'],
+          applicationId: row.application_id as ApplicationId,
+          raterRole: row.rater_role,
+          rateeId: row.ratee_id as UserId,
+          rating: row.rating as StarRating,
+          comment: row.comment ?? undefined,
+          createdAt: row.created_at,
+        });
+
+        const businessReview = businessReviewRow ? toReview(businessReviewRow) : undefined;
+        const baristaReview = baristaReviewRow ? toReview(baristaReviewRow) : undefined;
 
         const hoursWorked = mapped.job?.shiftDetails
           ? computeShiftHours(mapped.job.shiftDetails)
@@ -211,6 +214,7 @@ export class ApplicationService {
           ...mapped,
           hoursWorked,
           businessReview,
+          baristaReview,
           completedAt: mapped.completedAt ?? mapped.updatedAt,
         };
       });

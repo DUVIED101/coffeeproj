@@ -4,6 +4,7 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAuthStore } from '../stores/authStore';
 import { AuthStack } from './AuthStack';
 import { MainTabs } from './MainTabs';
+import { flushPendingPushPayload, navigationRef } from './navigationRef';
 import { ProfileBootstrapScreen } from '../screens/auth/ProfileBootstrapScreen';
 import { COLORS } from '../config/constants';
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -35,7 +36,7 @@ export const AppNavigator: React.FC = () => {
   };
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef} onReady={flushPendingPushPayload}>
       <ErrorBoundary>{renderRoot()}</ErrorBoundary>
     </NavigationContainer>
   );

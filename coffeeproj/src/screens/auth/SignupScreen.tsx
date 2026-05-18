@@ -179,6 +179,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
                 placeholder="+7 (XXX) XXX-XX-XX"
                 placeholderTextColor={COLORS.textSecondary}
                 keyboardType="phone-pad"
+                returnKeyType="done"
               />
               {phoneError && <Text style={styles.errorText}>{phoneError}</Text>}
             </View>

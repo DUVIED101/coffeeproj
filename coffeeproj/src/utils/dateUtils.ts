@@ -32,3 +32,14 @@ export function formatDateHeader(date: Date): string {
 export function isSameDay(date1: Date, date2: Date): boolean {
   return date1.toDateString() === date2.toDateString();
 }
+
+// Format a Date as a calendar-local YYYY-MM-DD string. Avoids the off-by-one
+// bug from Date.toISOString(), which shifts to UTC and rolls the day back for
+// any timezone east of UTC (e.g. Moscow's local midnight becomes 21:00 UTC the
+// day before).
+export function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}

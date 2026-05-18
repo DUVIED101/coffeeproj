@@ -9,6 +9,7 @@ import {
   Alert,
   Image,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -20,6 +21,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 import { getInitials } from '../../utils/getInitials';
 import { StarRow } from '../../components/StarRow';
+import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import type { BaristaProfile, ShiftTime } from '../../types/baristaProfile';
 import type { UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
@@ -45,6 +47,30 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
   const [aggregate, setAggregate] = useState<UserReviewAggregate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isStartingConversation, setIsStartingConversation] = useState(false);
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [viewerPhotos, setViewerPhotos] = useState<string[]>([]);
+  const [viewerIndex, setViewerIndex] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        loadProfile(),
+        ReviewService.getAggregateForUser(baristaId as UserId).then(setAggregate),
+      ]);
+    } catch (error) {
+      console.error('Error refreshing barista profile:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [baristaId]);
+
+  const openViewer = useCallback((photos: string[], startIndex: number) => {
+    setViewerPhotos(photos);
+    setViewerIndex(startIndex);
+    setViewerVisible(true);
+  }, []);
 
   useEffect(() => {
     loadProfile();
@@ -116,11 +142,24 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={COLORS.primary}
+          />
+        }>
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
             {profile.avatarUrl ? (
-              <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
+              <TouchableOpacity
+                onPress={() => openViewer([profile.avatarUrl as string], 0)}
+                accessibilityLabel="View avatar fullscreen">
+                <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
+              </TouchableOpacity>
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarInitials}>
@@ -181,13 +220,11 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
         {profile.certifications.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Certifications</Text>
-            <View style={styles.chipsContainer}>
-              {profile.certifications.map((cert, index) => (
-                <View key={index} style={styles.chip}>
-                  <Text style={styles.chipText}>{cert}</Text>
-                </View>
-              ))}
-            </View>
+            {profile.certifications.map((cert, index) => (
+              <Text key={`${index}-${cert}`} style={styles.certificationItem}>
+                {index + 1}. {cert}
+              </Text>
+            ))}
           </View>
         )}
 
@@ -218,7 +255,12 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
             <Text style={styles.sectionTitle}>Portfolio</Text>
             <View style={styles.portfolioGrid}>
               {profile.portfolioPhotos.map((photo, index) => (
-                <Image key={index} source={{ uri: photo }} style={styles.portfolioPhoto} />
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => openViewer(profile.portfolioPhotos, index)}
+                  accessibilityLabel={`View portfolio photo ${index + 1}`}>
+                  <Image source={{ uri: photo }} style={styles.portfolioPhoto} />
+                </TouchableOpacity>
               ))}
             </View>
           </View>
@@ -248,6 +290,13 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
           </Text>
         </View>
       </ScrollView>
+
+      <FullscreenImageViewer
+        visible={viewerVisible}
+        photos={viewerPhotos}
+        initialIndex={viewerIndex}
+        onClose={() => setViewerVisible(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -378,6 +427,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#fff',
     fontWeight: '500',
+  },
+  certificationItem: {
+    fontSize: 15,
+    color: COLORS.text,
+    paddingVertical: 4,
   },
   portfolioGrid: {
     flexDirection: 'row',

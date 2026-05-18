@@ -17,6 +17,8 @@ export type PushNotificationPayload = {
   kind: NotificationKind;
   title?: string;
   body?: string;
+  /** True when the user tapped the notification; false for foreground arrivals. */
+  userInteraction?: boolean;
   data?: {
     kind: NotificationKind;
     applicationId?: ApplicationId;

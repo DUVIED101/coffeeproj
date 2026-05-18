@@ -14,6 +14,7 @@ import {
 import { FlatList as FlatListComponent } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
+import { useHeaderHeight } from '@react-navigation/elements';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { COLORS } from '../../config/constants';
 import { ChatService } from '../../services/ChatService';
@@ -67,6 +68,7 @@ const MessageBubble = React.memo<{
 export function ChatScreen({ navigation, route }: any) {
   const { applicationId, conversationId: initialConversationId } = route.params;
   const user = useAuthStore(state => state.user);
+  const headerHeight = useHeaderHeight();
 
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -265,7 +267,7 @@ export function ChatScreen({ navigation, route }: any) {
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
+        keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
         <View style={styles.header}>
           <Text style={styles.title} numberOfLines={1}>
             {conversation.jobTitle || 'Chat'}
@@ -301,6 +303,10 @@ export function ChatScreen({ navigation, route }: any) {
             multiline
             maxLength={2000}
             editable={!isSending}
+            autoCorrect={false}
+            spellCheck={false}
+            autoComplete="off"
+            keyboardType="default"
           />
           <TouchableOpacity
             style={[

@@ -47,7 +47,18 @@
     "experienceYears_other": "{{count}} лет опыта",
     "hourlyRange": "{{min}}–{{max}}/час",
     "hourlyMax": "до {{max}}/час",
-    "profileCompleteness": "Заполнено на {{percent}}%"
+    "profileCompleteness": "Заполнено на {{percent}}%",
+    "completeness": {
+      "missingTitle": "Осталось заполнить",
+      "items": {
+        "basicInfo": "Имя, фамилию, город и дату рождения",
+        "bio": "О себе (не менее 50 символов)",
+        "experience": "Опыт работы и оборудование",
+        "preferences": "Предпочитаемые станции метро и смены",
+        "hourlyRate": "Желаемую почасовую ставку",
+        "portfolio": "Хотя бы одно фото портфолио"
+      }
+    }
   },
   "shiftHistory": {
     "title": "История смен",
@@ -92,6 +103,8 @@
       "applicationStatus": "Статус отклика",
       "appliedOn": "Откликнулись: {{date}}",
       "jobDetails": "О вакансии",
+      "description": "Описание",
+      "requirements": "Требования",
       "metroPrefix": "Метро: {{station}}",
       "perHour": "за час",
       "perDay": "за день",
@@ -143,7 +156,8 @@
       "addressRequired": "Address is required",
       "addressPlaceholder": "e.g. Arbat St, 10",
       "city": "City",
-      "metro": "Metro Station (Optional)",
+      "metro": "Metro Station",
+      "metroRequired": "Metro station is required",
       "equipment": "Equipment (Optional)"
     },
     "errors": {

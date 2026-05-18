@@ -128,6 +128,7 @@ export const CreateBusinessScreen: React.FC<Props> = ({ navigation }) => {
                 }}
                 editable={!isLoading}
                 autoCapitalize="words"
+                returnKeyType="done"
               />
               {nameError && <Text style={styles.errorText}>{nameError}</Text>}
             </View>

@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { AppNavigator } from './navigation/AppNavigator';
 import { useNotificationSetup } from './hooks/useNotificationSetup';
+import { routePushPayload } from './navigation/navigationRef';
 import { initI18n } from './i18n';
 import type { PushNotificationPayload } from './types/notification';
 import 'react-native-gesture-handler';
 
 const handlePushNotification = (payload: PushNotificationPayload): void => {
-  // TODO: wire navigation ref for deep-linking from push taps (Phase 6+)
-  console.log('Push received:', payload.data?.kind, payload.data);
+  routePushPayload(payload);
 };
 
 function AppContent(): React.JSX.Element {

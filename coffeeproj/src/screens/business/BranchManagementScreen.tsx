@@ -13,6 +13,7 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -85,6 +86,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
 
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isAddingBranch, setIsAddingBranch] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
@@ -97,6 +99,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
 
   const [nameError, setNameError] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
+  const [metroError, setMetroError] = useState<string | null>(null);
 
   const loadBranches = useCallback(async () => {
     try {
@@ -114,6 +117,15 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
     loadBranches();
   }, [loadBranches]);
 
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await loadBranches();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [loadBranches]);
+
   const resetForm = useCallback(() => {
     setName('');
     setAddress('');
@@ -122,6 +134,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
     setSelectedEquipment([]);
     setNameError(null);
     setAddressError(null);
+    setMetroError(null);
   }, []);
 
   const closeForm = useCallback(() => {
@@ -145,6 +158,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
     setSelectedEquipment(branch.equipment);
     setNameError(null);
     setAddressError(null);
+    setMetroError(null);
     setIsAddingBranch(true);
   }, []);
 
@@ -171,6 +185,13 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
       isValid = false;
     } else {
       setAddressError(null);
+    }
+
+    if (!metroStation.trim()) {
+      setMetroError(t('branches.form.metroRequired'));
+      isValid = false;
+    } else {
+      setMetroError(null);
     }
 
     return isValid;
@@ -252,7 +273,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
           address: trimmedAddress,
           city: trimmedCity,
           coordinates,
-          metroStation: metroStation || undefined,
+          metroStation: metroStation.trim(),
           equipment: selectedEquipment,
         });
 
@@ -264,7 +285,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
           address: trimmedAddress,
           city: trimmedCity,
           coordinates,
-          metroStation: metroStation || undefined,
+          metroStation: metroStation.trim(),
           equipment: selectedEquipment,
         });
 
@@ -353,7 +374,16 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          style={styles.content}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor={COLORS.primary}
+            />
+          }>
           {isAddingBranch && (
             <View style={styles.formContainer}>
               <Text style={styles.formTitle}>{formTitle}</Text>
@@ -371,6 +401,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
                     setNameError(null);
                   }}
                   editable={!isSaving}
+                  returnKeyType="done"
                 />
                 {nameError && <Text style={styles.errorText}>{nameError}</Text>}
               </View>
@@ -388,6 +419,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
                     setAddressError(null);
                   }}
                   editable={!isSaving}
+                  returnKeyType="done"
                 />
                 {addressError && <Text style={styles.errorText}>{addressError}</Text>}
               </View>
@@ -401,15 +433,22 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
                   value={city}
                   onChangeText={setCity}
                   editable={!isSaving}
+                  returnKeyType="done"
                 />
               </View>
 
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>{t('branches.form.metro')}</Text>
+                <Text style={styles.label}>
+                  {t('branches.form.metro')} <Text style={styles.required}>*</Text>
+                </Text>
                 <MetroSelector
                   value={metroStation || null}
-                  onChange={value => setMetroStation(value ?? '')}
+                  onChange={value => {
+                    setMetroStation(value ?? '');
+                    if (value) setMetroError(null);
+                  }}
                 />
+                {metroError && <Text style={styles.errorText}>{metroError}</Text>}
               </View>
 
               <View style={styles.inputContainer}>

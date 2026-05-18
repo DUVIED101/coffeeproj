@@ -15,7 +15,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '../../config/constants';
+import { COLORS, EQUIPMENT_TYPES } from '../../config/constants';
 import { JobService } from '../../services/JobService';
 import { BusinessService } from '../../services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
@@ -27,13 +27,7 @@ type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'CreateJob'>;
 };
 
-const EQUIPMENT_OPTIONS: Equipment[] = [
-  'La Marzocco',
-  'Victoria Arduino',
-  'Nuova Simonelli',
-  'Synesso',
-  'Slayer',
-];
+const EQUIPMENT_OPTIONS: readonly Equipment[] = EQUIPMENT_TYPES;
 
 const TAG_OPTIONS = ['urgent', 'flexible', 'training-provided'];
 
@@ -243,6 +237,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
           address: selectedBranch.address,
           city: selectedBranch.city,
           coordinates: selectedBranch.coordinates,
+          metroStation: selectedBranch.metroStation,
         },
         shiftDetails: {
           startDate: startDate.toISOString(),
@@ -384,6 +379,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
               const { title: _, ...rest } = errors;
               setErrors(rest);
             }}
+            returnKeyType="done"
           />
           {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
         </View>
@@ -409,6 +405,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
                 placeholder={`Requirement ${index + 1}`}
                 value={requirement}
                 onChangeText={text => updateRequirement(index, text)}
+                returnKeyType="done"
               />
               {requirements.length > 1 && (
                 <TouchableOpacity
@@ -457,19 +454,27 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.dateButtonText}>{formatDate(startDate)}</Text>
           </TouchableOpacity>
           {showStartDatePicker && (
-            <DateTimePicker
-              value={startDate}
-              mode="date"
-              display="spinner"
-              onChange={(event, selectedDate) => {
-                setShowStartDatePicker(false);
-                if (selectedDate) {
-                  setStartDate(selectedDate);
-                  const { startDate: _, ...rest } = errors;
-                  setErrors(rest);
-                }
-              }}
-            />
+            <>
+              <DateTimePicker
+                value={startDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                themeVariant="light"
+                textColor="#000000"
+                onChange={(_event, selectedDate) => {
+                  if (selectedDate) {
+                    setStartDate(selectedDate);
+                    const { startDate: _, ...rest } = errors;
+                    setErrors(rest);
+                  }
+                }}
+              />
+              <TouchableOpacity
+                style={styles.pickerDoneButton}
+                onPress={() => setShowStartDatePicker(false)}>
+                <Text style={styles.pickerDoneText}>Done</Text>
+              </TouchableOpacity>
+            </>
           )}
           {errors.startDate && <Text style={styles.errorText}>{errors.startDate}</Text>}
 
@@ -480,17 +485,25 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
           {showEndDatePicker && (
-            <DateTimePicker
-              value={endDate || new Date()}
-              mode="date"
-              display="spinner"
-              onChange={(event, selectedDate) => {
-                setShowEndDatePicker(false);
-                if (selectedDate) {
-                  setEndDate(selectedDate);
-                }
-              }}
-            />
+            <>
+              <DateTimePicker
+                value={endDate || new Date()}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                themeVariant="light"
+                textColor="#000000"
+                onChange={(_event, selectedDate) => {
+                  if (selectedDate) {
+                    setEndDate(selectedDate);
+                  }
+                }}
+              />
+              <TouchableOpacity
+                style={styles.pickerDoneButton}
+                onPress={() => setShowEndDatePicker(false)}>
+                <Text style={styles.pickerDoneText}>Done</Text>
+              </TouchableOpacity>
+            </>
           )}
 
           <View style={styles.timeRow}>
@@ -504,20 +517,28 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.dateButtonText}>{formatTime(startTime)}</Text>
               </TouchableOpacity>
               {showStartTimePicker && (
-                <DateTimePicker
-                  value={startTime}
-                  mode="time"
-                  is24Hour={true}
-                  display="spinner"
-                  onChange={(event, selectedTime) => {
-                    setShowStartTimePicker(false);
-                    if (selectedTime) {
-                      setStartTime(selectedTime);
-                      const { startTime: _, ...rest } = errors;
-                      setErrors(rest);
-                    }
-                  }}
-                />
+                <>
+                  <DateTimePicker
+                    value={startTime}
+                    mode="time"
+                    is24Hour={true}
+                    display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                    themeVariant="light"
+                    textColor="#000000"
+                    onChange={(_event, selectedTime) => {
+                      if (selectedTime) {
+                        setStartTime(selectedTime);
+                        const { startTime: _, ...rest } = errors;
+                        setErrors(rest);
+                      }
+                    }}
+                  />
+                  <TouchableOpacity
+                    style={styles.pickerDoneButton}
+                    onPress={() => setShowStartTimePicker(false)}>
+                    <Text style={styles.pickerDoneText}>Done</Text>
+                  </TouchableOpacity>
+                </>
               )}
               {errors.startTime && <Text style={styles.errorText}>{errors.startTime}</Text>}
             </View>
@@ -532,20 +553,28 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.dateButtonText}>{formatTime(endTime)}</Text>
               </TouchableOpacity>
               {showEndTimePicker && (
-                <DateTimePicker
-                  value={endTime}
-                  mode="time"
-                  is24Hour={true}
-                  display="spinner"
-                  onChange={(event, selectedTime) => {
-                    setShowEndTimePicker(false);
-                    if (selectedTime) {
-                      setEndTime(selectedTime);
-                      const { endTime: _, ...rest } = errors;
-                      setErrors(rest);
-                    }
-                  }}
-                />
+                <>
+                  <DateTimePicker
+                    value={endTime}
+                    mode="time"
+                    is24Hour={true}
+                    display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                    themeVariant="light"
+                    textColor="#000000"
+                    onChange={(_event, selectedTime) => {
+                      if (selectedTime) {
+                        setEndTime(selectedTime);
+                        const { endTime: _, ...rest } = errors;
+                        setErrors(rest);
+                      }
+                    }}
+                  />
+                  <TouchableOpacity
+                    style={styles.pickerDoneButton}
+                    onPress={() => setShowEndTimePicker(false)}>
+                    <Text style={styles.pickerDoneText}>Done</Text>
+                  </TouchableOpacity>
+                </>
               )}
               {errors.endTime && <Text style={styles.errorText}>{errors.endTime}</Text>}
             </View>
@@ -625,6 +654,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
               const { compensation: _, ...rest } = errors;
               setErrors(rest);
             }}
+            returnKeyType="done"
           />
           {errors.compensation && <Text style={styles.errorText}>{errors.compensation}</Text>}
 
@@ -879,6 +909,17 @@ const styles = StyleSheet.create({
   dateButtonText: {
     fontSize: 16,
     color: COLORS.text,
+  },
+  pickerDoneButton: {
+    alignSelf: 'flex-end',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  pickerDoneText: {
+    color: COLORS.primary,
+    fontSize: 16,
+    fontWeight: '600',
   },
   switchRow: {
     flexDirection: 'row',

@@ -11,7 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { JobFilters, JobType } from '../types/job';
 import type { Equipment, GeoPoint } from '../types/business';
-import { COLORS } from '../config/constants';
+import { COLORS, EQUIPMENT_TYPES } from '../config/constants';
 import { MetroSelector } from './MetroSelector';
 
 interface FilterBarProps {
@@ -20,13 +20,7 @@ interface FilterBarProps {
   userLocation?: GeoPoint;
 }
 
-const EQUIPMENT_OPTIONS: Equipment[] = [
-  'La Marzocco',
-  'Victoria Arduino',
-  'Nuova Simonelli',
-  'Synesso',
-  'Slayer',
-];
+const EQUIPMENT_OPTIONS: readonly Equipment[] = EQUIPMENT_TYPES;
 
 const DISTANCE_OPTIONS_KM = [5, 10, 25, 50] as const;
 
@@ -200,7 +194,10 @@ export const FilterBar = React.memo<FilterBarProps>(
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.equipmentList}>
+              <ScrollView
+                style={styles.equipmentScroll}
+                contentContainerStyle={styles.equipmentList}
+                showsVerticalScrollIndicator={false}>
                 {EQUIPMENT_OPTIONS.map(equipment => {
                   const isSelected = currentFilters.equipment?.includes(equipment) || false;
                   return (
@@ -219,7 +216,7 @@ export const FilterBar = React.memo<FilterBarProps>(
                     </TouchableOpacity>
                   );
                 })}
-              </View>
+              </ScrollView>
 
               <View style={styles.modalButtonsRow}>
                 {selectedEquipmentCount > 0 && (
@@ -351,6 +348,9 @@ const styles = StyleSheet.create({
   closeButton: {
     fontSize: 24,
     color: COLORS.textSecondary,
+  },
+  equipmentScroll: {
+    flexGrow: 0,
   },
   equipmentList: {
     padding: 16,

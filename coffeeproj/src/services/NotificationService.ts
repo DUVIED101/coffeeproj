@@ -26,6 +26,7 @@ export class NotificationService {
       kind?: NotificationKind;
       applicationId?: string;
       conversationId?: string;
+      userInteraction?: number | boolean;
     };
     const kind: NotificationKind = rawData.kind ?? 'new_message';
     const alert = notification.getAlert();
@@ -35,11 +36,13 @@ export class NotificationService {
       typeof alert === 'string'
         ? alert
         : (alert?.body ?? (message != null ? String(message) : undefined));
+    const userInteraction = Boolean(rawData.userInteraction);
 
     return {
       kind,
       title: title ?? undefined,
       body: body ?? undefined,
+      userInteraction,
       data: {
         kind,
         applicationId: rawData.applicationId as ApplicationId | undefined,
@@ -150,5 +153,20 @@ export class NotificationService {
       PushNotificationIOS.removeEventListener('notification');
       PushNotificationIOS.removeEventListener('localNotification');
     };
+  }
+
+  /**
+   * Cold-start tap: returns the notification that launched the app from a
+   * terminated state, or null. Safe to call repeatedly — only the first call
+   * returns a payload.
+   */
+  static async getInitialNotification(): Promise<PushNotificationPayload | null> {
+    try {
+      const initial = await PushNotificationIOS.getInitialNotification();
+      return initial ? this.mapNotification(initial) : null;
+    } catch (error) {
+      console.error('NotificationService.getInitialNotification:', error);
+      return null;
+    }
   }
 }

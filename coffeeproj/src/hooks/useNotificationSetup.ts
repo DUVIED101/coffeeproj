@@ -31,6 +31,13 @@ export const useNotificationSetup = (opts?: Options): void => {
       }
       if (onNotification && !controller.signal.aborted) {
         cleanupHandler = NotificationService.onNotification(onNotification);
+
+        // Cold-start: if the app was launched by tapping a notification,
+        // route it now (queued in navigationRef until NavigationContainer is ready).
+        const initial = await NotificationService.getInitialNotification();
+        if (initial && !controller.signal.aborted) {
+          onNotification(initial);
+        }
       }
     })();
 

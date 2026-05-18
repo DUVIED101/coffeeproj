@@ -67,7 +67,9 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
       onSubmitted(review);
     } catch (error) {
       console.error('Error submitting review:', error);
-      Alert.alert(t('common.error'), t('reviews.errors.submitFailed'));
+      const detail =
+        error instanceof Error && error.message ? error.message : String(error ?? 'Unknown error');
+      Alert.alert(t('common.error'), `${t('reviews.errors.submitFailed')}\n\n${detail}`);
       setIsSubmitting(false);
     }
   }, [rating, comment, applicationId, raterRole, rateeId, t, onSubmitted, reset]);

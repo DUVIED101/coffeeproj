@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -12,6 +13,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -21,7 +23,11 @@ import { BaristaProfileService } from '../../services/BaristaProfileService';
 import { ReviewService } from '../../services/ReviewService';
 import { MetroSelector } from '../../components/MetroSelector';
 import { StarRow } from '../../components/StarRow';
+import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
+import { CertificatesEditor } from '../../components/CertificatesEditor';
 import { useAuthStore } from '../../stores/authStore';
+import { formatLocalDate } from '../../utils/dateUtils';
+import { computeProfileCompleteness } from '../../utils/profileCompleteness';
 import type { BaristaProfile, ShiftTime } from '../../types/baristaProfile';
 import type { UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
@@ -46,6 +52,7 @@ const getCompletenessColor = (completeness: number): string => {
 
 export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const user = useAuthStore(state => state.user);
+  const { t } = useTranslation();
 
   const [profile, setProfile] = useState<BaristaProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,6 +75,25 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(2000, 0, 1));
   const [aggregate, setAggregate] = useState<UserReviewAggregate | null>(null);
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [viewerPhotos, setViewerPhotos] = useState<string[]>([]);
+  const [viewerIndex, setViewerIndex] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([loadProfile(), loadAggregate()]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  const openViewer = useCallback((photos: string[], startIndex: number) => {
+    setViewerPhotos(photos);
+    setViewerIndex(startIndex);
+    setViewerVisible(true);
+  }, []);
 
   useEffect(() => {
     loadProfile();
@@ -149,8 +175,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const handleDateChange = useCallback((event: any, date?: Date) => {
     if (date) {
       setSelectedDate(date);
-      const formattedDate = date.toISOString().split('T')[0];
-      setDateOfBirth(formattedDate);
+      setDateOfBirth(formatLocalDate(date));
     }
   }, []);
 
@@ -182,6 +207,38 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     } catch (error: unknown) {
       console.error('Error uploading avatar:', error);
       Alert.alert('Error', 'Failed to upload avatar. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleAddCertificate = async (name: string): Promise<void> => {
+    if (!user?.id || !profile) return;
+    try {
+      setIsSaving(true);
+      const next = [...profile.certifications, name];
+      setCertifications(next);
+      await BaristaProfileService.setCertifications(user.id, next);
+      await loadProfile();
+    } catch (error: unknown) {
+      console.error('Error saving certificate:', error);
+      Alert.alert('Error', 'Failed to save certificate. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRemoveCertificate = async (cert: string): Promise<void> => {
+    if (!user?.id || !profile) return;
+    try {
+      setIsSaving(true);
+      const next = profile.certifications.filter(c => c !== cert);
+      setCertifications(next);
+      await BaristaProfileService.setCertifications(user.id, next);
+      await loadProfile();
+    } catch (error: unknown) {
+      console.error('Error removing certificate:', error);
+      Alert.alert('Error', 'Failed to remove certificate.');
     } finally {
       setIsSaving(false);
     }
@@ -271,7 +328,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     return null;
   }
 
-  const completenessColor = getCompletenessColor(profile.profileCompleteness);
+  const completeness = computeProfileCompleteness(profile);
+  const completenessColor = getCompletenessColor(completeness.percent);
+  const missingItems = completeness.items.filter(item => !item.satisfied);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -281,11 +340,22 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled">
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor={COLORS.primary}
+            />
+          }>
           <View style={styles.header}>
             <View style={styles.avatarContainer}>
               {profile.avatarUrl ? (
-                <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
+                <TouchableOpacity
+                  onPress={() => openViewer([profile.avatarUrl as string], 0)}
+                  accessibilityLabel="View avatar fullscreen">
+                  <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
+                </TouchableOpacity>
               ) : (
                 <View style={styles.avatarPlaceholder}>
                   <Text style={styles.avatarInitials}>
@@ -316,15 +386,27 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                     style={[
                       styles.completenessBarFill,
                       {
-                        width: `${profile.profileCompleteness}%`,
+                        width: `${completeness.percent}%`,
                         backgroundColor: completenessColor,
                       },
                     ]}
                   />
                 </View>
                 <Text style={[styles.completenessText, { color: completenessColor }]}>
-                  {profile.profileCompleteness}% complete
+                  {t('barista.profileCompleteness', { percent: completeness.percent })}
                 </Text>
+                {missingItems.length > 0 && (
+                  <View style={styles.missingContainer}>
+                    <Text style={styles.missingTitle}>
+                      {t('barista.completeness.missingTitle')}:
+                    </Text>
+                    {missingItems.map(item => (
+                      <Text key={item.key} style={styles.missingItem}>
+                        • {t(`barista.completeness.items.${item.key}`)}
+                      </Text>
+                    ))}
+                  </View>
+                )}
               </View>
             </View>
           </View>
@@ -388,8 +470,10 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                     <DateTimePicker
                       value={selectedDate}
                       mode="date"
-                      display="spinner"
-                      onValueChange={handleDateChange}
+                      display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                      themeVariant="light"
+                      textColor="#000000"
+                      onChange={handleDateChange}
                       maximumDate={new Date()}
                       minimumDate={new Date(1940, 0, 1)}
                     />
@@ -416,16 +500,6 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
               onPress={() => navigation.navigate('ShiftHistory')}>
               <View style={styles.historyRowLeft}>
                 <Text style={styles.historyRowTitle}>История смен</Text>
-                {aggregate && aggregate.reviewCount > 0 ? (
-                  <StarRow
-                    rating={aggregate.averageRating}
-                    count={aggregate.reviewCount}
-                    showValue
-                    size={14}
-                  />
-                ) : (
-                  <Text style={styles.historyRowSubtitle}>Без оценок</Text>
-                )}
               </View>
               <Text style={styles.historyRowChevron}>›</Text>
             </TouchableOpacity>
@@ -436,6 +510,16 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 onPress={() => navigation.navigate('UserReviews', { userId: user.id as string })}>
                 <View style={styles.historyRowLeft}>
                   <Text style={styles.historyRowTitle}>Все отзывы</Text>
+                  {aggregate && aggregate.reviewCount > 0 ? (
+                    <StarRow
+                      rating={aggregate.averageRating}
+                      count={aggregate.reviewCount}
+                      showValue
+                      size={14}
+                    />
+                  ) : (
+                    <Text style={styles.historyRowSubtitle}>Без оценок</Text>
+                  )}
                 </View>
                 <Text style={styles.historyRowChevron}>›</Text>
               </TouchableOpacity>
@@ -466,6 +550,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   onChangeText={setYearsOfExperience}
                   keyboardType="numeric"
                   editable={isEditing}
+                  returnKeyType="done"
                 />
 
                 <Text style={styles.label}>Equipment Experience</Text>
@@ -488,6 +573,14 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                     </TouchableOpacity>
                   ))}
                 </View>
+
+                <Text style={styles.label}>Certifications</Text>
+                <CertificatesEditor
+                  certificates={profile?.certifications ?? certifications}
+                  isBusy={isSaving}
+                  onAdd={handleAddCertificate}
+                  onRemove={handleRemoveCertificate}
+                />
               </>
             ) : (
               <>
@@ -507,6 +600,16 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                         </View>
                       ))}
                     </View>
+                  </>
+                )}
+                {profile.certifications.length > 0 && (
+                  <>
+                    <Text style={styles.label}>Certifications</Text>
+                    {profile.certifications.map((cert, index) => (
+                      <Text key={`${index}-${cert}`} style={styles.certificationItem}>
+                        {index + 1}. {cert}
+                      </Text>
+                    ))}
                   </>
                 )}
               </>
@@ -555,6 +658,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                     keyboardType="numeric"
                     placeholder="Min"
                     editable={isEditing}
+                    returnKeyType="done"
                   />
                   <Text style={styles.separator}>-</Text>
                   <TextInput
@@ -564,6 +668,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                     keyboardType="numeric"
                     placeholder="Max"
                     editable={isEditing}
+                    returnKeyType="done"
                   />
                 </View>
               </>
@@ -609,7 +714,12 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
             {profile.portfolioPhotos.length > 0 ? (
               <View style={styles.portfolioGrid}>
                 {profile.portfolioPhotos.map((photo, index) => (
-                  <Image key={index} source={{ uri: photo }} style={styles.portfolioPhoto} />
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => openViewer(profile.portfolioPhotos, index)}
+                    accessibilityLabel={`View portfolio photo ${index + 1}`}>
+                    <Image source={{ uri: photo }} style={styles.portfolioPhoto} />
+                  </TouchableOpacity>
                 ))}
               </View>
             ) : (
@@ -642,6 +752,13 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <FullscreenImageViewer
+        visible={viewerVisible}
+        photos={viewerPhotos}
+        initialIndex={viewerIndex}
+        onClose={() => setViewerVisible(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -737,6 +854,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 4,
   },
+  missingContainer: {
+    marginTop: 8,
+  },
+  missingTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  missingItem: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    lineHeight: 18,
+  },
   section: {
     backgroundColor: '#fff',
     padding: 20,
@@ -802,6 +933,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.textSecondary,
     marginTop: 8,
+  },
+  certificationItem: {
+    fontSize: 15,
+    color: COLORS.text,
+    paddingVertical: 4,
   },
   chipsContainer: {
     flexDirection: 'row',

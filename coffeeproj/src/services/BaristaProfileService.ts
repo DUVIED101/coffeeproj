@@ -270,6 +270,82 @@ export class BaristaProfileService {
   }
 
   /**
+   * Upload a certificate image to storage and return the public URL.
+   * Does NOT touch barista_profiles — caller decides when to persist the list
+   * (during initial signup the profile row may not exist yet).
+   */
+  static async uploadCertificateFile(userId: string, photoUri: string): Promise<string> {
+    const fileName = `${userId}/certificates/cert_${Date.now()}.jpg`;
+
+    const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function () {
+        resolve(xhr.response);
+      };
+      xhr.onerror = function () {
+        reject(new Error('Failed to read file'));
+      };
+      xhr.responseType = 'arraybuffer';
+      xhr.open('GET', photoUri, true);
+      xhr.send(null);
+    });
+
+    const { error } = await supabase.storage
+      .from('barista-portfolios')
+      .upload(fileName, arrayBuffer, {
+        contentType: 'image/jpeg',
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) throw error;
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('barista-portfolios').getPublicUrl(fileName);
+
+    return publicUrl;
+  }
+
+  /**
+   * Upload a certificate AND persist it on an existing barista_profiles row.
+   * Used by the profile-edit flow where the row already exists.
+   */
+  static async uploadCertificate(userId: string, photoUri: string): Promise<string> {
+    try {
+      const publicUrl = await this.uploadCertificateFile(userId, photoUri);
+
+      const profile = await this.getProfileByUserId(userId);
+      if (!profile) throw new Error('Profile not found');
+
+      const updated = [...profile.certifications, publicUrl];
+      const { error: updateError } = await supabase
+        .from('barista_profiles')
+        .update({ certifications: updated })
+        .eq('user_id', userId);
+
+      if (updateError) throw updateError;
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error in uploadCertificate:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Replace the certifications array (used to remove an entry).
+   */
+  static async setCertifications(userId: string, certifications: string[]): Promise<void> {
+    const { error } = await supabase
+      .from('barista_profiles')
+      .update({ certifications })
+      .eq('user_id', userId);
+
+    if (error) throw error;
+  }
+
+  /**
    * Map database profile object to BaristaProfile type
    */
   private static mapProfile(db: any): BaristaProfile {

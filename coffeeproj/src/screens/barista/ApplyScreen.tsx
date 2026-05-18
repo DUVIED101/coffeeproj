@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import { useAuthStore } from '../../stores/authStore';
@@ -35,6 +36,7 @@ type Props = {
 export const ApplyScreen: React.FC<Props> = ({ navigation, route }) => {
   const { job } = route.params;
   const user = useAuthStore(state => state.user);
+  const headerHeight = useHeaderHeight();
 
   const [coverLetter, setCoverLetter] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,7 +82,7 @@ export const ApplyScreen: React.FC<Props> = ({ navigation, route }) => {
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
+        keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -148,7 +150,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100,
+    paddingBottom: 24,
   },
   jobSummary: {
     backgroundColor: '#fff',
@@ -217,10 +219,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: '#fff',
     padding: 20,
     borderTopWidth: 1,

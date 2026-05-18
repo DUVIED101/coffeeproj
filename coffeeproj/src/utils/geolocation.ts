@@ -15,25 +15,46 @@ export async function requestLocationPermission(): Promise<boolean> {
   }
 }
 
-export async function getCurrentLocation(): Promise<GeoPoint | null> {
-  return new Promise(resolve => {
+type FixAttemptOptions = {
+  enableHighAccuracy: boolean;
+  timeout: number;
+};
+
+const fetchPosition = (opts: FixAttemptOptions): Promise<GeoPoint | null> =>
+  new Promise(resolve => {
     Geolocation.getCurrentPosition(
       position => {
+        console.log('📍 getCurrentLocation: fix acquired', {
+          accuracy: position.coords.accuracy,
+          highAccuracy: opts.enableHighAccuracy,
+        });
         resolve({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         });
       },
-      () => {
+      error => {
+        // Log the iOS error code/message so we can see WHY a fix failed —
+        // timeout, permission denied, position unavailable, etc.
+        console.warn('📍 getCurrentLocation: error', {
+          highAccuracy: opts.enableHighAccuracy,
+          code: (error as { code?: number }).code,
+          message: (error as { message?: string }).message,
+        });
         resolve(null);
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      }
+      { ...opts, maximumAge: 60_000 }
     );
   });
+
+// Try a high-accuracy fix first; if it times out (common on cold-start indoors)
+// fall back to a coarse fix which usually returns instantly from cached cell /
+// wifi data. Total worst-case wait ~25s, vs. the previous hard 10s timeout
+// that left userLocation undefined and removed the distance from the feed.
+export async function getCurrentLocation(): Promise<GeoPoint | null> {
+  const highAccuracy = await fetchPosition({ enableHighAccuracy: true, timeout: 15_000 });
+  if (highAccuracy) return highAccuracy;
+  return fetchPosition({ enableHighAccuracy: false, timeout: 10_000 });
 }
 
 export function calculateDistance(point1: GeoPoint, point2: GeoPoint): number {

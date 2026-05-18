@@ -145,19 +145,22 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
       if (refreshed) {
         setCurrentStatus(refreshed.status);
         setCompletedByBusiness(refreshed.completedByBusiness);
-        if (
-          refreshed.status === 'completed' &&
-          !hasPromptedThisSession.current &&
-          !existingReview
-        ) {
-          hasPromptedThisSession.current = true;
-          setShowReviewModal(true);
-        }
       }
-      Alert.alert(t('common.success'), t('applications.details.markCompleteSuccess'));
+      const bothCompleted = refreshed?.status === 'completed';
+      if (bothCompleted && !hasPromptedThisSession.current && !existingReview && businessOwnerId) {
+        hasPromptedThisSession.current = true;
+        setShowReviewModal(true);
+      } else {
+        Alert.alert(t('common.success'), t('applications.details.markCompleteSuccess'));
+      }
     } catch (error) {
       console.error('Error marking work complete:', error);
-      Alert.alert(t('common.error'), t('applications.details.markCompleteFailure'));
+      const detail =
+        error instanceof Error && error.message ? error.message : String(error ?? 'Unknown error');
+      Alert.alert(
+        t('common.error'),
+        `${t('applications.details.markCompleteFailure')}\n\n${detail}`
+      );
     } finally {
       setIsMarkingComplete(false);
     }
@@ -208,6 +211,26 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
             </Text>
           )}
         </View>
+
+        {/* Description */}
+        {job?.description && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('applications.details.description')}</Text>
+            <Text style={styles.coverLetter}>{job.description}</Text>
+          </View>
+        )}
+
+        {/* Requirements */}
+        {job?.requirements && job.requirements.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('applications.details.requirements')}</Text>
+            {job.requirements.map((req, idx) => (
+              <Text key={idx} style={styles.requirementItem}>
+                • {req}
+              </Text>
+            ))}
+          </View>
+        )}
 
         {/* Cover Letter */}
         {application.coverLetter && (
@@ -384,6 +407,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: COLORS.text,
     lineHeight: 22,
+  },
+  requirementItem: {
+    fontSize: 15,
+    color: COLORS.text,
+    lineHeight: 22,
+    marginBottom: 4,
   },
   footer: {
     backgroundColor: '#fff',

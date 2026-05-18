@@ -43,7 +43,18 @@
     "experienceYears_other": "{{count}} years of experience",
     "hourlyRange": "{{min}}–{{max}}/hour",
     "hourlyMax": "up to {{max}}/hour",
-    "profileCompleteness": "{{percent}}% complete"
+    "profileCompleteness": "{{percent}}% complete",
+    "completeness": {
+      "missingTitle": "Still to add",
+      "items": {
+        "basicInfo": "First name, last name, city and date of birth",
+        "bio": "About you (at least 50 characters)",
+        "experience": "Work experience and equipment",
+        "preferences": "Preferred metro stations and shifts",
+        "hourlyRate": "Desired hourly rate",
+        "portfolio": "At least one portfolio photo"
+      }
+    }
   },
   "shiftHistory": {
     "title": "Shift history",
@@ -88,6 +99,8 @@
       "applicationStatus": "Application Status",
       "appliedOn": "Applied: {{date}}",
       "jobDetails": "Job Details",
+      "description": "Description",
+      "requirements": "Requirements",
       "metroPrefix": "Metro: {{station}}",
       "perHour": "per hour",
       "perDay": "per day",
@@ -139,7 +152,8 @@
       "addressRequired": "Address is required",
       "addressPlaceholder": "e.g. Arbat St, 10",
       "city": "City",
-      "metro": "Metro Station (Optional)",
+      "metro": "Metro Station",
+      "metroRequired": "Metro station is required",
       "equipment": "Equipment (Optional)"
     },
     "errors": {

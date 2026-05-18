@@ -1,15 +1,20 @@
 import UIKit
 import React
 import React_RCTAppDelegate
+import UserNotifications
 
 @main
-class AppDelegate: RCTAppDelegate {
+class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate {
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     self.moduleName = "coffeeproj"
     self.initialProps = [:]
+
+    // Required for @react-native-community/push-notification-ios to forward
+    // foreground presentation and tap events to JS via the 'notification' event.
+    UNUserNotificationCenter.current().delegate = self
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
@@ -34,6 +39,25 @@ class AppDelegate: RCTAppDelegate {
     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
   ) {
     RNCPushNotificationIOS.didReceiveRemoteNotification(userInfo, fetchCompletionHandler: completionHandler)
+  }
+
+  // Foreground presentation: show banner + sound while app is open.
+  func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    completionHandler([.banner, .sound, .badge, .list])
+  }
+
+  // Notification tap: forwards the payload to JS so navigationRef can route.
+  func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+    RNCPushNotificationIOS.didReceive(response)
+    completionHandler()
   }
 
   override func sourceURL(for bridge: RCTBridge) -> URL? {

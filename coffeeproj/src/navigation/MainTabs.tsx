@@ -48,6 +48,7 @@ export const MainTabs: React.FC = () => {
 
   return (
     <Tab.Navigator
+      initialRouteName="Profile"
       screenOptions={{
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.textSecondary,

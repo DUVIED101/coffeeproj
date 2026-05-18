@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  RefreshControl,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -241,6 +242,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { t } = useTranslation();
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
@@ -305,6 +307,15 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
       loadApplicants();
     }, [loadApplicants])
   );
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await loadApplicants();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [loadApplicants]);
 
   const handleAccept = useCallback(
     async (applicationId: string) => {
@@ -471,6 +482,13 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={renderEmpty}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={COLORS.primary}
+          />
+        }
       />
 
       {reviewTarget && (
