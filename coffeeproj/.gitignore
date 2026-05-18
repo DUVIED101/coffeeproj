@@ -51,3 +51,6 @@ fastlane/test_output
 
 # testing
 /coverage
+
+# Supabase CLI cache
+supabase/.temp/
