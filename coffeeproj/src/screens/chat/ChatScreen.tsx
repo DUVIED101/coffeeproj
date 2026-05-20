@@ -16,6 +16,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../config/constants';
 import { ChatService } from '../../services/ChatService';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
@@ -69,6 +70,7 @@ export function ChatScreen({ navigation, route }: any) {
   const { applicationId, conversationId: initialConversationId } = route.params;
   const user = useAuthStore(state => state.user);
   const headerHeight = useHeaderHeight();
+  const { t } = useTranslation();
 
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -262,6 +264,9 @@ export function ChatScreen({ navigation, route }: any) {
     );
   }
 
+  const isChatClosed =
+    conversation.applicationStatus === 'rejected' || conversation.applicationStatus === 'withdrawn';
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -293,35 +298,46 @@ export function ChatScreen({ navigation, route }: any) {
           }}
         />
 
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.textInput}
-            value={messageText}
-            onChangeText={setMessageText}
-            placeholder="Type a message..."
-            placeholderTextColor={COLORS.textSecondary}
-            multiline
-            maxLength={2000}
-            editable={!isSending}
-            autoCorrect={false}
-            spellCheck={false}
-            autoComplete="off"
-            keyboardType="default"
-          />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              (!messageText.trim() || isSending) && styles.sendButtonDisabled,
-            ]}
-            onPress={handleSendMessage}
-            disabled={!messageText.trim() || isSending}>
-            {isSending ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.sendButtonText}>Send</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+        {isChatClosed ? (
+          <View style={styles.closedBanner}>
+            <Text style={styles.closedBannerTitle}>{t('chat.closed.title')}</Text>
+            <Text style={styles.closedBannerSubtitle}>
+              {conversation.applicationStatus === 'withdrawn'
+                ? t('chat.closed.cancelled')
+                : t('chat.closed.rejected')}
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.textInput}
+              value={messageText}
+              onChangeText={setMessageText}
+              placeholder="Type a message..."
+              placeholderTextColor={COLORS.textSecondary}
+              multiline
+              maxLength={2000}
+              editable={!isSending}
+              autoCorrect={false}
+              spellCheck={false}
+              autoComplete="off"
+              keyboardType="default"
+            />
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                (!messageText.trim() || isSending) && styles.sendButtonDisabled,
+              ]}
+              onPress={handleSendMessage}
+              disabled={!messageText.trim() || isSending}>
+              {isSending ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.sendButtonText}>Send</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -521,5 +537,24 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  closedBanner: {
+    backgroundColor: '#FEF2F2',
+    borderTopWidth: 1,
+    borderTopColor: '#FECACA',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  closedBannerTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#991B1B',
+    marginBottom: 4,
+  },
+  closedBannerSubtitle: {
+    fontSize: 13,
+    color: '#7F1D1D',
+    textAlign: 'center',
   },
 });

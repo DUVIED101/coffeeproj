@@ -4,6 +4,7 @@ import type {
   CreateBaristaProfileData,
   UpdateBaristaProfileData,
 } from '../types/baristaProfile';
+import { canAddPhoto, PHOTO_LIMIT } from '../utils/storage';
 
 export class BaristaProfileService {
   /**
@@ -219,10 +220,17 @@ export class BaristaProfileService {
   }
 
   /**
-   * Upload portfolio photo
+   * Upload portfolio photo. Enforces the 5-photo limit on the client;
+   * a DB CHECK is the backstop (migration 045).
    */
   static async uploadPortfolioPhoto(userId: string, photoUri: string): Promise<string> {
     try {
+      const profile = await this.getProfileByUserId(userId);
+      if (!profile) throw new Error('Profile not found');
+      if (!canAddPhoto(profile.portfolioPhotos)) {
+        throw new PortfolioPhotoLimitError();
+      }
+
       const fileName = `${userId}/portfolio_${Date.now()}.jpg`;
 
       // Read file as ArrayBuffer using XMLHttpRequest for React Native
@@ -252,9 +260,6 @@ export class BaristaProfileService {
       const {
         data: { publicUrl },
       } = supabase.storage.from('barista-portfolios').getPublicUrl(fileName);
-
-      const profile = await this.getProfileByUserId(userId);
-      if (!profile) throw new Error('Profile not found');
 
       const updatedPhotos = [...profile.portfolioPhotos, publicUrl];
       await supabase
@@ -373,5 +378,12 @@ export class BaristaProfileService {
       createdAt: db.created_at,
       updatedAt: db.updated_at,
     };
+  }
+}
+
+export class PortfolioPhotoLimitError extends Error {
+  constructor() {
+    super(`Portfolio photo limit (${PHOTO_LIMIT}) reached`);
+    this.name = 'PortfolioPhotoLimitError';
   }
 }

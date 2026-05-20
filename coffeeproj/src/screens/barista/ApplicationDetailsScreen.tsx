@@ -37,6 +37,7 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
   const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
   const { application } = route.params;
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [isCancellingShift, setIsCancellingShift] = useState(false);
   const [isMarkingComplete, setIsMarkingComplete] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(application.status);
   const [completedByBarista, setCompletedByBarista] = useState(application.completedByBarista);
@@ -132,6 +133,34 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
     );
   };
 
+  const handleCancelShift = () => {
+    Alert.alert(
+      t('applications.cancelShift.confirmTitle'),
+      t('applications.cancelShift.confirmBody'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('applications.cancelShift.action'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsCancellingShift(true);
+              await ApplicationService.withdrawApplication(application.id);
+              setCurrentStatus('withdrawn');
+              Alert.alert(t('common.success'), t('applications.cancelShift.success'));
+              navigation.goBack();
+            } catch (error) {
+              console.error('Error cancelling shift:', error);
+              Alert.alert(t('common.error'), t('applications.cancelShift.failure'));
+            } finally {
+              setIsCancellingShift(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleMarkComplete = async () => {
     try {
       setIsMarkingComplete(true);
@@ -171,6 +200,7 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
 
   const canWithdraw = currentStatus === 'pending' || currentStatus === 'under_review';
   const canMarkComplete = currentStatus === 'accepted' && !completedByBarista;
+  const canCancelShift = currentStatus === 'accepted';
   const showCompletionStatus = currentStatus === 'accepted' || currentStatus === 'completed';
 
   return (
@@ -284,7 +314,7 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
       )}
 
       {/* Action Buttons */}
-      {(canWithdraw || canMarkComplete) && (
+      {(canWithdraw || canMarkComplete || canCancelShift) && (
         <View style={styles.footer}>
           {canMarkComplete && (
             <TouchableOpacity
@@ -296,6 +326,20 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
               ) : (
                 <Text style={styles.completeButtonText}>
                   {t('applications.details.markCompleteAction')}
+                </Text>
+              )}
+            </TouchableOpacity>
+          )}
+          {canCancelShift && (
+            <TouchableOpacity
+              style={[styles.cancelShiftButton, canMarkComplete && { marginTop: 12 }]}
+              onPress={handleCancelShift}
+              disabled={isCancellingShift}>
+              {isCancellingShift ? (
+                <ActivityIndicator size="small" color="#EF4444" />
+              ) : (
+                <Text style={styles.cancelShiftButtonText}>
+                  {t('applications.cancelShift.action')}
                 </Text>
               )}
             </TouchableOpacity>
@@ -439,6 +483,18 @@ const styles = StyleSheet.create({
   },
   completeButtonText: {
     color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  cancelShiftButton: {
+    paddingVertical: 16,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#EF4444',
+    alignItems: 'center',
+  },
+  cancelShiftButtonText: {
+    color: '#EF4444',
     fontSize: 16,
     fontWeight: '600',
   },

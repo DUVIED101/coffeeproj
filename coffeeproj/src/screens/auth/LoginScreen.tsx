@@ -16,6 +16,7 @@ import {
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { AuthService } from '../../services/AuthService';
+import { PasswordInput } from '../../components/PasswordInput';
 import { getEmailError } from '../../utils/validation';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 
@@ -159,17 +160,14 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             {/* Password Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={[styles.input, passwordError ? styles.inputError : null]}
+              <PasswordInput
                 value={password}
                 onChangeText={text => {
                   setPassword(text);
                   setPasswordError(null);
                 }}
                 placeholder="••••••••"
-                placeholderTextColor={COLORS.textSecondary}
-                secureTextEntry
-                autoCapitalize="none"
+                hasError={!!passwordError}
               />
               {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
             </View>

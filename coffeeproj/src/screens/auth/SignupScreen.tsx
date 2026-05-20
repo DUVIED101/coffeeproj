@@ -18,6 +18,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import type { AccountType } from '../../types';
 import { AuthService } from '../../services/AuthService';
+import { PasswordInput } from '../../components/PasswordInput';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 import {
   getEmailError,
@@ -135,6 +136,15 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            style={styles.backButton}>
+            <Text style={styles.backArrow}>‹</Text>
+          </TouchableOpacity>
+
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>Create Account</Text>
@@ -187,17 +197,14 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
             {/* Password Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={[styles.input, passwordError ? styles.inputError : null]}
+              <PasswordInput
                 value={password}
                 onChangeText={text => {
                   setPassword(text);
                   setPasswordError(null);
                 }}
                 placeholder="••••••••"
-                placeholderTextColor={COLORS.textSecondary}
-                secureTextEntry
-                autoCapitalize="none"
+                hasError={!!passwordError}
               />
               {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
               <Text style={styles.hint}>
@@ -208,17 +215,14 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
             {/* Confirm Password Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Confirm Password</Text>
-              <TextInput
-                style={[styles.input, confirmPasswordError ? styles.inputError : null]}
+              <PasswordInput
                 value={confirmPassword}
                 onChangeText={text => {
                   setConfirmPassword(text);
                   setConfirmPasswordError(null);
                 }}
                 placeholder="••••••••"
-                placeholderTextColor={COLORS.textSecondary}
-                secureTextEntry
-                autoCapitalize="none"
+                hasError={!!confirmPasswordError}
               />
               {confirmPasswordError && <Text style={styles.errorText}>{confirmPasswordError}</Text>}
             </View>
@@ -261,8 +265,19 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 40,
+    paddingTop: 16,
     paddingBottom: 32,
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+    paddingHorizontal: 4,
+    marginBottom: 8,
+  },
+  backArrow: {
+    fontSize: 36,
+    lineHeight: 36,
+    color: COLORS.text,
   },
   header: {
     marginBottom: 32,

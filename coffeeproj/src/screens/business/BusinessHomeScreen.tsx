@@ -94,35 +94,6 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     }, [user?.id])
   );
 
-  if (isResolvingBusiness) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.gateContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (!businessId) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.gateContainer}>
-          <MaterialCommunityIcons
-            name="storefront-outline"
-            size={56}
-            color={COLORS.textSecondary}
-          />
-          <Text style={styles.gateTitle}>{t('businessGate.title')}</Text>
-          <Text style={styles.gateSubtitle}>{t('businessGate.subtitle')}</Text>
-          <TouchableOpacity style={styles.gateCta} onPress={handleGoToProfile}>
-            <Text style={styles.gateCtaText}>{t('businessGate.cta')}</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   // Shared jobs state — used by both jobs tab and shifts tab
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
@@ -175,7 +146,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
   }, [navigation]);
 
   const loadJobs = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id || !businessId) return;
     setIsLoadingJobs(true);
     try {
       const fetchedJobs = await JobService.getJobsByBusinessId(businessId);
@@ -188,6 +159,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
   }, [businessId, user?.id]);
 
   const loadShifts = useCallback(async () => {
+    if (!businessId) return;
     setIsLoadingShifts(true);
     try {
       const [fetchedApps, fetchedJobs] = await Promise.all([
@@ -522,6 +494,35 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
       />
     </View>
   );
+
+  if (isResolvingBusiness) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.gateContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!businessId) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.gateContainer}>
+          <MaterialCommunityIcons
+            name="storefront-outline"
+            size={56}
+            color={COLORS.textSecondary}
+          />
+          <Text style={styles.gateTitle}>{t('businessGate.title')}</Text>
+          <Text style={styles.gateSubtitle}>{t('businessGate.subtitle')}</Text>
+          <TouchableOpacity style={styles.gateCta} onPress={handleGoToProfile}>
+            <Text style={styles.gateCtaText}>{t('businessGate.cta')}</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>

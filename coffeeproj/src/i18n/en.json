@@ -131,6 +131,13 @@
       "markCompleteFailure": "Failed to mark work as completed. Please try again.",
       "markCompleteAction": "Mark Work as Completed",
       "withdrawAction": "Withdraw Application"
+    },
+    "cancelShift": {
+      "confirmTitle": "Cancel shift?",
+      "confirmBody": "The job will return to active and reappear in the candidate feed.",
+      "action": "Cancel shift",
+      "success": "Shift cancelled",
+      "failure": "Failed to cancel shift. Please try again."
     }
   },
   "apply": {
@@ -146,6 +153,23 @@
     "accept": "Accept",
     "reject": "Reject",
     "coverLetter": "Cover Letter"
+  },
+  "auth": {
+    "password": {
+      "show": "Show password",
+      "hide": "Hide password"
+    }
+  },
+  "chat": {
+    "closed": {
+      "title": "Chat closed",
+      "rejected": "The business selected another candidate.",
+      "cancelled": "The shift was cancelled."
+    }
+  },
+  "portfolioPhotos": {
+    "counter": "{{count}}/{{max}} photos",
+    "limitReached": "You can upload up to {{max}} portfolio photos"
   },
   "branches": {
     "title": "Branch Management",

@@ -2,7 +2,6 @@ import React, { useLayoutEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -17,6 +16,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../config/constants';
 import { AuthService } from '../../services/AuthService';
+import { PasswordInput } from '../../components/PasswordInput';
 import type { SettingsStackParamList } from '../../navigation/SettingsStack';
 
 type Navigation = NativeStackNavigationProp<SettingsStackParamList, 'ChangePassword'>;
@@ -92,16 +92,13 @@ export const ChangePasswordScreen: React.FC = () => {
           keyboardShouldPersistTaps="handled">
           <View style={styles.field}>
             <Text style={styles.label}>{t('settings.password.current')}</Text>
-            <TextInput
-              style={[styles.input, currentError ? styles.inputError : null]}
+            <PasswordInput
               value={currentPassword}
               onChangeText={text => {
                 setCurrentPassword(text);
                 if (currentError) setCurrentError(null);
               }}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
+              hasError={!!currentError}
               textContentType="password"
             />
             {currentError ? <Text style={styles.errorText}>{currentError}</Text> : null}
@@ -109,13 +106,10 @@ export const ChangePasswordScreen: React.FC = () => {
 
           <View style={styles.field}>
             <Text style={styles.label}>{t('settings.password.new')}</Text>
-            <TextInput
-              style={[styles.input, newPasswordError ? styles.inputError : null]}
+            <PasswordInput
               value={newPassword}
               onChangeText={setNewPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
+              hasError={!!newPasswordError}
               textContentType="newPassword"
             />
             {newPasswordError ? <Text style={styles.errorText}>{newPasswordError}</Text> : null}
@@ -123,13 +117,10 @@ export const ChangePasswordScreen: React.FC = () => {
 
           <View style={styles.field}>
             <Text style={styles.label}>{t('settings.password.confirm')}</Text>
-            <TextInput
-              style={[styles.input, confirmError ? styles.inputError : null]}
+            <PasswordInput
               value={confirmPassword}
               onChangeText={setConfirmPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
+              hasError={!!confirmError}
               textContentType="newPassword"
             />
             {confirmError ? <Text style={styles.errorText}>{confirmError}</Text> : null}
@@ -168,19 +159,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
     marginBottom: 6,
-  },
-  input: {
-    backgroundColor: COLORS.background,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: COLORS.text,
-  },
-  inputError: {
-    borderColor: COLORS.error,
   },
   errorText: {
     fontSize: 13,

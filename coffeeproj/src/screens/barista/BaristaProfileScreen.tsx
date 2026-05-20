@@ -19,7 +19,11 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { launchImageLibrary } from 'react-native-image-picker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS, EQUIPMENT_TYPES } from '../../config/constants';
-import { BaristaProfileService } from '../../services/BaristaProfileService';
+import {
+  BaristaProfileService,
+  PortfolioPhotoLimitError,
+} from '../../services/BaristaProfileService';
+import { PHOTO_LIMIT } from '../../utils/storage';
 import { ReviewService } from '../../services/ReviewService';
 import { MetroSelector } from '../../components/MetroSelector';
 import { CityToggle } from '../../components/CityToggle';
@@ -250,6 +254,11 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const handlePortfolioPhotoUpload = async () => {
     if (!user?.id) return;
 
+    if (profile && profile.portfolioPhotos.length >= PHOTO_LIMIT) {
+      Alert.alert(t('common.warning'), t('portfolioPhotos.limitReached', { max: PHOTO_LIMIT }));
+      return;
+    }
+
     try {
       const result = await launchImageLibrary({
         mediaType: 'photo',
@@ -264,7 +273,11 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
       Alert.alert('Success', 'Portfolio photo uploaded successfully!');
     } catch (error: unknown) {
       console.error('Error uploading portfolio photo:', error);
-      Alert.alert('Error', 'Failed to upload photo. Please try again.');
+      if (error instanceof PortfolioPhotoLimitError) {
+        Alert.alert(t('common.warning'), t('portfolioPhotos.limitReached', { max: PHOTO_LIMIT }));
+      } else {
+        Alert.alert('Error', 'Failed to upload photo. Please try again.');
+      }
     } finally {
       setIsSaving(false);
     }
@@ -718,7 +731,15 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Portfolio</Text>
+            <View style={styles.portfolioHeader}>
+              <Text style={styles.sectionTitle}>Portfolio</Text>
+              <Text style={styles.portfolioCounter}>
+                {t('portfolioPhotos.counter', {
+                  count: profile.portfolioPhotos.length,
+                  max: PHOTO_LIMIT,
+                })}
+              </Text>
+            </View>
 
             {profile.portfolioPhotos.length > 0 ? (
               <View style={styles.portfolioGrid}>
@@ -736,9 +757,12 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
             )}
 
             <TouchableOpacity
-              style={styles.uploadButton}
+              style={[
+                styles.uploadButton,
+                profile.portfolioPhotos.length >= PHOTO_LIMIT && styles.uploadButtonDisabled,
+              ]}
               onPress={handlePortfolioPhotoUpload}
-              disabled={isSaving}>
+              disabled={isSaving || profile.portfolioPhotos.length >= PHOTO_LIMIT}>
               <Text style={styles.uploadButtonText}>
                 {isSaving ? 'Uploading...' : '+ Add Portfolio Photo'}
               </Text>
@@ -1070,10 +1094,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 12,
   },
+  uploadButtonDisabled: {
+    opacity: 0.5,
+  },
   uploadButtonText: {
     fontSize: 14,
     fontWeight: '600',
     color: COLORS.primary,
+  },
+  portfolioHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  portfolioCounter: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
   },
   historyRow: {
     flexDirection: 'row',

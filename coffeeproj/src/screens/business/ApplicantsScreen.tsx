@@ -70,6 +70,7 @@ interface ApplicantItemProps {
   baristaId: string;
   onAccept: (applicationId: string) => void;
   onReject: (applicationId: string) => void;
+  onCancelShift: (applicationId: string) => void;
   onViewProfile: (baristaId: string) => void;
   onChatPress: (applicationId: string) => void;
   onConfirmCompletion: (applicationId: string) => void;
@@ -78,6 +79,7 @@ interface ApplicantItemProps {
   unreadCount: number;
   needsReview: boolean;
   reviewBannerLabel: string;
+  cancelLabel: string;
 }
 
 const ApplicantItem = React.memo<ApplicantItemProps>(
@@ -87,6 +89,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     baristaId,
     onAccept,
     onReject,
+    onCancelShift,
     onViewProfile,
     onChatPress,
     onConfirmCompletion,
@@ -95,9 +98,14 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     unreadCount,
     needsReview,
     reviewBannerLabel,
+    cancelLabel,
   }) => {
     const handleAccept = useCallback(() => onAccept(applicationId), [onAccept, applicationId]);
     const handleReject = useCallback(() => onReject(applicationId), [onReject, applicationId]);
+    const handleCancelShift = useCallback(
+      () => onCancelShift(applicationId),
+      [onCancelShift, applicationId]
+    );
     const handleViewProfile = useCallback(
       () => onViewProfile(baristaId),
       [onViewProfile, baristaId]
@@ -132,6 +140,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     const isActionable = application.status === 'pending' || application.status === 'under_review';
     const canConfirmCompletion =
       application.status === 'accepted' && !application.completedByBusiness;
+    const canCancelShift = application.status === 'accepted';
 
     return (
       <View style={styles.applicantCard}>
@@ -193,6 +202,19 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <Text style={styles.confirmCompletionButtonText}>Confirm Completion</Text>
+            )}
+          </TouchableOpacity>
+        )}
+
+        {canCancelShift && (
+          <TouchableOpacity
+            style={styles.cancelShiftButton}
+            onPress={handleCancelShift}
+            disabled={isProcessing}>
+            {isProcessing ? (
+              <ActivityIndicator size="small" color="#EF4444" />
+            ) : (
+              <Text style={styles.cancelShiftButtonText}>{cancelLabel}</Text>
             )}
           </TouchableOpacity>
         )}
@@ -353,6 +375,41 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
     [user, markProcessing, loadApplicants]
   );
 
+  const handleCancelShift = useCallback(
+    (applicationId: string) => {
+      if (!user) return;
+      Alert.alert(
+        t('applications.cancelShift.confirmTitle'),
+        t('applications.cancelShift.confirmBody'),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('applications.cancelShift.action'),
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                markProcessing(applicationId, true);
+                await ApplicationService.updateApplicationStatus(
+                  applicationId,
+                  'rejected',
+                  user.id
+                );
+                await loadApplicants();
+                Alert.alert(t('common.success'), t('applications.cancelShift.success'));
+              } catch (error) {
+                console.error('Error cancelling shift:', error);
+                Alert.alert(t('common.error'), t('applications.cancelShift.failure'));
+              } finally {
+                markProcessing(applicationId, false);
+              }
+            },
+          },
+        ]
+      );
+    },
+    [user, markProcessing, loadApplicants, t]
+  );
+
   const handleViewProfile = useCallback(
     (baristaId: string) => {
       navigation.navigate('ViewBaristaProfile', { baristaId });
@@ -417,6 +474,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
   }, []);
 
   const reviewBannerLabel = t('reviews.banner.prompt');
+  const cancelLabel = t('applications.cancelShift.action');
 
   const renderApplicant = useCallback(
     ({ item }: { item: Application }) => (
@@ -426,6 +484,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         baristaId={item.baristaId}
         onAccept={handleAccept}
         onReject={handleReject}
+        onCancelShift={handleCancelShift}
         onViewProfile={handleViewProfile}
         onChatPress={handleChatPress}
         onConfirmCompletion={handleConfirmCompletion}
@@ -434,11 +493,13 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         unreadCount={unreadCounts[item.id] || 0}
         needsReview={item.status === 'completed' && !reviewedIds.has(item.id)}
         reviewBannerLabel={reviewBannerLabel}
+        cancelLabel={cancelLabel}
       />
     ),
     [
       handleAccept,
       handleReject,
+      handleCancelShift,
       handleViewProfile,
       handleChatPress,
       handleConfirmCompletion,
@@ -447,6 +508,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
       unreadCounts,
       reviewedIds,
       reviewBannerLabel,
+      cancelLabel,
     ]
   );
 
@@ -712,6 +774,19 @@ const styles = StyleSheet.create({
   },
   confirmCompletionButtonText: {
     color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  cancelShiftButton: {
+    paddingVertical: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#EF4444',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  cancelShiftButtonText: {
+    color: '#EF4444',
     fontSize: 14,
     fontWeight: '600',
   },
