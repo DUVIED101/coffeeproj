@@ -20,7 +20,19 @@
     "titleMulti": "Выберите станции метро",
     "searchPlaceholder": "Поиск станции...",
     "noResults": "Станции не найдены",
-    "selectedCount": "{{count}} станций"
+    "selectedCount": "{{count}} станций",
+    "cityTab": {
+      "spb": "СПб",
+      "moscow": "Москва"
+    }
+  },
+  "city": {
+    "title": "Город",
+    "placeholder": "Выберите город",
+    "codes": {
+      "spb": "Санкт-Петербург",
+      "moscow": "Москва"
+    }
   },
   "jobStatus": {
     "open": "Открыто",

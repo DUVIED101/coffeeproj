@@ -1,5 +1,6 @@
 // Export all types from a single entry point
 export * from './ids';
+export * from './city';
 export * from './user';
 export * from './business';
 export * from './job';

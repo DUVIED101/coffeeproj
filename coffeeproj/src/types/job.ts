@@ -1,4 +1,5 @@
 import type { GeoPoint, Equipment } from './business';
+import type { CityCode } from './city';
 
 // Job Types
 export type JobType = 'temporary' | 'permanent';
@@ -39,7 +40,7 @@ export interface Job {
 
 export interface JobLocation {
   address: string;
-  city: string;
+  city: CityCode;
   coordinates: GeoPoint;
   metroStation?: string;
 }
@@ -101,7 +102,7 @@ export interface JobFilters {
   equipment?: string[];
   metroStations?: string[]; // Changed from metroStation (singular) to metroStations (plural array)
   maxDistance?: number; // meters, default 50000
-  city?: string;
+  city?: CityCode;
 }
 
 export interface JobSearchParams extends JobFilters {

@@ -12,11 +12,15 @@ import {
 import { useTranslation } from 'react-i18next';
 import { COLORS, RADII, EQUIPMENT_TYPES } from '../config/constants';
 import { MetroSelector } from './MetroSelector';
+import { CityToggle } from './CityToggle';
 import type { JobType } from '../types/job';
 import type { Equipment } from '../types/business';
+import type { CityCode } from '../types/city';
+import { DEFAULT_CITY } from '../types/city';
 
 export type ShiftFilters = {
   jobType?: JobType;
+  city?: CityCode;
   metroStations?: string[];
   equipment?: Equipment[];
   includeArchive: boolean;
@@ -61,6 +65,10 @@ export const ShiftFilterSheet: React.FC<ShiftFilterSheetProps> = ({
       ...prev,
       metroStations: stations.length > 0 ? stations : undefined,
     }));
+  }, []);
+
+  const handleCityChange = useCallback((nextCity: CityCode) => {
+    setDraft(prev => ({ ...prev, city: nextCity, metroStations: undefined }));
   }, []);
 
   const handleArchiveToggle = useCallback((value: boolean) => {
@@ -116,9 +124,14 @@ export const ShiftFilterSheet: React.FC<ShiftFilterSheetProps> = ({
               </TouchableOpacity>
             </View>
 
+            <Text style={styles.sectionTitle}>{t('city.title')}</Text>
+            <CityToggle value={draft.city ?? DEFAULT_CITY} onChange={handleCityChange} />
+
             <Text style={styles.sectionTitle}>{t('shifts.filter.metro')}</Text>
             <MetroSelector
               multiSelect
+              city={draft.city ?? DEFAULT_CITY}
+              onCityChange={handleCityChange}
               value={draft.metroStations ?? []}
               onChange={handleMetroChange}
               placeholder={t('shifts.filter.metroPlaceholder')}

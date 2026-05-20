@@ -20,7 +20,19 @@
     "titleMulti": "Select metro stations",
     "searchPlaceholder": "Search station...",
     "noResults": "No stations found",
-    "selectedCount": "{{count}} stations"
+    "selectedCount": "{{count}} stations",
+    "cityTab": {
+      "spb": "SPB",
+      "moscow": "Moscow"
+    }
+  },
+  "city": {
+    "title": "City",
+    "placeholder": "Select city",
+    "codes": {
+      "spb": "Saint Petersburg",
+      "moscow": "Moscow"
+    }
   },
   "jobStatus": {
     "open": "Open",

@@ -22,6 +22,7 @@ import { COLORS, EQUIPMENT_TYPES } from '../../config/constants';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
 import { ReviewService } from '../../services/ReviewService';
 import { MetroSelector } from '../../components/MetroSelector';
+import { CityToggle } from '../../components/CityToggle';
 import { StarRow } from '../../components/StarRow';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import { CertificatesEditor } from '../../components/CertificatesEditor';
@@ -29,6 +30,8 @@ import { useAuthStore } from '../../stores/authStore';
 import { formatLocalDate } from '../../utils/dateUtils';
 import { computeProfileCompleteness } from '../../utils/profileCompleteness';
 import type { BaristaProfile, ShiftTime } from '../../types/baristaProfile';
+import type { CityCode } from '../../types/city';
+import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU } from '../../types/city';
 import type { UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
 import type { ProfileStackParamList } from '../../navigation/ProfileStack';
@@ -61,7 +64,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [city, setCity] = useState('');
+  const [city, setCity] = useState<CityCode>(DEFAULT_CITY);
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [bio, setBio] = useState('');
   const [yearsOfExperience, setYearsOfExperience] = useState('');
@@ -138,7 +141,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const populateFields = (profileData: BaristaProfile) => {
     setFirstName(profileData.firstName);
     setLastName(profileData.lastName);
-    setCity(profileData.city);
+    setCity(toCityCode(profileData.city));
     setDateOfBirth(profileData.dateOfBirth || '');
     if (profileData.dateOfBirth) {
       setSelectedDate(new Date(profileData.dateOfBirth));
@@ -290,7 +293,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
       const updatedProfile = await BaristaProfileService.updateProfile(user.id, {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        city: city.trim(),
+        city,
         dateOfBirth: dateOfBirth.trim() || undefined,
         bio: bio.trim() || undefined,
         yearsOfExperience: yearsOfExperience ? parseInt(yearsOfExperience, 10) : undefined,
@@ -378,7 +381,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.name}>
                 {profile.firstName} {profile.lastName}
               </Text>
-              <Text style={styles.city}>{profile.city}</Text>
+              <Text style={styles.city}>{CITY_LABELS_RU[toCityCode(profile.city)]}</Text>
 
               <View style={styles.completenessContainer}>
                 <View style={styles.completenessBar}>
@@ -449,11 +452,12 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 />
 
                 <Text style={styles.label}>City</Text>
-                <TextInput
-                  style={styles.input}
+                <CityToggle
                   value={city}
-                  onChangeText={setCity}
-                  editable={isEditing}
+                  onChange={nextCity => {
+                    setCity(nextCity);
+                    setPreferredMetroStations([]);
+                  }}
                 />
 
                 <Text style={styles.label}>Date of Birth</Text>
@@ -624,6 +628,11 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.label}>Preferred Metro Stations</Text>
                 <MetroSelector
                   multiSelect
+                  city={city}
+                  onCityChange={nextCity => {
+                    setCity(nextCity);
+                    setPreferredMetroStations([]);
+                  }}
                   value={preferredMetroStations}
                   onChange={setPreferredMetroStations}
                 />

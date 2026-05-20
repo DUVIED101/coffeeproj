@@ -1,6 +1,7 @@
 // Barista Profile Types
 
 import type { Equipment } from './business';
+import type { CityCode } from './city';
 
 export type ShiftTime = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -12,7 +13,7 @@ export interface BaristaProfile {
   firstName: string;
   lastName: string;
   dateOfBirth?: string;
-  city: string;
+  city: CityCode;
   avatarUrl?: string;
 
   // Professional Info
@@ -44,7 +45,7 @@ export interface CreateBaristaProfileData {
   userId: string;
   firstName: string;
   lastName: string;
-  city: string;
+  city: CityCode;
   dateOfBirth?: string;
   bio?: string;
   yearsOfExperience?: number;
@@ -62,7 +63,7 @@ export interface UpdateBaristaProfileData extends Partial<
 > {}
 
 export type BaristaFilters = {
-  city?: string;
+  city?: CityCode;
   equipment?: Equipment[];
   metroStations?: string[];
   minYearsExperience?: number;

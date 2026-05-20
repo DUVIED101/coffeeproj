@@ -1,4 +1,5 @@
 import metroData from '../data/metro-stations.json';
+import type { CityCode } from '../types/city';
 
 export interface MetroStation {
   id: string;
@@ -7,67 +8,61 @@ export interface MetroStation {
   line: string;
   lineEn: string;
   lineColor: string;
-  coordinates: {
+  coordinates?: {
     latitude: number;
     longitude: number;
   };
 }
 
+export interface MetroLine {
+  name: string;
+  nameEn: string;
+  color: string;
+}
+
 export interface MetroStationsData {
-  stpetersburg: MetroStation[];
+  spb: MetroStation[];
+  moscow: MetroStation[];
 }
 
 const typedMetroData = metroData as MetroStationsData;
 
+const stationsByCity: Record<CityCode, MetroStation[]> = {
+  spb: typedMetroData.spb,
+  moscow: typedMetroData.moscow,
+};
+
 export class MetroService {
-  private static stations: MetroStation[] = typedMetroData.stpetersburg;
-
-  /**
-   * Get all metro stations
-   */
-  static getAllStations(): MetroStation[] {
-    return this.stations;
+  static getAllStations(city: CityCode): MetroStation[] {
+    return stationsByCity[city];
   }
 
-  /**
-   * Get station by name
-   */
-  static getStationByName(name: string): MetroStation | undefined {
-    return this.stations.find(
-      station =>
-        station.name.toLowerCase() === name.toLowerCase() ||
-        station.nameEn.toLowerCase() === name.toLowerCase()
+  static getStationByName(name: string, city: CityCode): MetroStation | undefined {
+    const lower = name.toLowerCase();
+    return stationsByCity[city].find(
+      station => station.name.toLowerCase() === lower || station.nameEn.toLowerCase() === lower
     );
   }
 
-  /**
-   * Search stations by partial name
-   */
-  static searchStations(query: string): MetroStation[] {
-    const lowerQuery = query.toLowerCase();
-    return this.stations.filter(
+  static searchStations(query: string, city: CityCode): MetroStation[] {
+    const trimmed = query.trim();
+    if (!trimmed) return stationsByCity[city];
+    const lower = trimmed.toLowerCase();
+    return stationsByCity[city].filter(
       station =>
-        station.name.toLowerCase().includes(lowerQuery) ||
-        station.nameEn.toLowerCase().includes(lowerQuery)
+        station.name.toLowerCase().includes(lower) || station.nameEn.toLowerCase().includes(lower)
     );
   }
 
-  /**
-   * Get stations by line
-   */
-  static getStationsByLine(lineName: string): MetroStation[] {
-    return this.stations.filter(
+  static getStationsByLine(lineName: string, city: CityCode): MetroStation[] {
+    return stationsByCity[city].filter(
       station => station.line === lineName || station.lineEn === lineName
     );
   }
 
-  /**
-   * Get unique lines
-   */
-  static getUniqueLines(): Array<{ name: string; nameEn: string; color: string }> {
-    const linesMap = new Map<string, { name: string; nameEn: string; color: string }>();
-
-    this.stations.forEach(station => {
+  static getUniqueLines(city: CityCode): MetroLine[] {
+    const linesMap = new Map<string, MetroLine>();
+    for (const station of stationsByCity[city]) {
       if (!linesMap.has(station.line)) {
         linesMap.set(station.line, {
           name: station.line,
@@ -75,38 +70,38 @@ export class MetroService {
           color: station.lineColor,
         });
       }
-    });
-
+    }
     return Array.from(linesMap.values());
   }
 
-  /**
-   * Get stations sorted by distance from user location
-   */
   static getStationsByDistance(
     userLat: number,
     userLon: number,
+    city: CityCode,
     maxResults: number = 10
   ): Array<MetroStation & { distance: number }> {
-    const stationsWithDistance = this.stations.map(station => ({
-      ...station,
-      distance: this.calculateDistance(
-        userLat,
-        userLon,
-        station.coordinates.latitude,
-        station.coordinates.longitude
-      ),
-    }));
-
-    return stationsWithDistance.sort((a, b) => a.distance - b.distance).slice(0, maxResults);
+    return stationsByCity[city]
+      .filter(
+        (
+          station
+        ): station is MetroStation & { coordinates: NonNullable<MetroStation['coordinates']> } =>
+          station.coordinates !== undefined
+      )
+      .map(station => ({
+        ...station,
+        distance: this.calculateDistance(
+          userLat,
+          userLon,
+          station.coordinates.latitude,
+          station.coordinates.longitude
+        ),
+      }))
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, maxResults);
   }
 
-  /**
-   * Calculate distance between two coordinates (Haversine formula)
-   * Returns distance in meters
-   */
   private static calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371e3; // Earth's radius in meters
+    const R = 6371e3;
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
     const Δφ = ((lat2 - lat1) * Math.PI) / 180;
@@ -120,9 +115,6 @@ export class MetroService {
     return R * c;
   }
 
-  /**
-   * Format distance for display
-   */
   static formatDistance(meters: number): string {
     if (meters < 1000) {
       return `${Math.round(meters)} м`;

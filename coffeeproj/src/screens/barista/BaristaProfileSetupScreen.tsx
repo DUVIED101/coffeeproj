@@ -17,10 +17,13 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS, EQUIPMENT_TYPES } from '../../config/constants';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
 import { MetroSelector } from '../../components/MetroSelector';
+import { CityToggle } from '../../components/CityToggle';
 import { CertificatesEditor } from '../../components/CertificatesEditor';
 import { useAuthStore } from '../../stores/authStore';
 import { formatLocalDate } from '../../utils/dateUtils';
 import type { ShiftTime, BaristaProfile } from '../../types/baristaProfile';
+import type { CityCode } from '../../types/city';
+import { DEFAULT_CITY, toCityCode } from '../../types/city';
 
 type BaristaStackParamList = {
   JobFeed: undefined;
@@ -50,7 +53,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [city, setCity] = useState('');
+  const [city, setCity] = useState<CityCode>(DEFAULT_CITY);
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(2000, 0, 1));
@@ -83,7 +86,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         // Pre-fill all fields
         setFirstName(profile.firstName);
         setLastName(profile.lastName);
-        setCity(profile.city);
+        setCity(toCityCode(profile.city));
         setDateOfBirth(profile.dateOfBirth || '');
         if (profile.dateOfBirth) {
           setSelectedDate(new Date(profile.dateOfBirth));
@@ -135,13 +138,18 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
   const validateStep = (): boolean => {
     if (currentStep === 0) {
-      if (!firstName.trim() || !lastName.trim() || !city.trim()) {
+      if (!firstName.trim() || !lastName.trim()) {
         Alert.alert('Validation Error', 'Please fill in all required fields');
         return false;
       }
     }
     return true;
   };
+
+  const handleCityChange = useCallback((nextCity: CityCode) => {
+    setCity(nextCity);
+    setPreferredMetroStations([]);
+  }, []);
 
   const handleNext = () => {
     if (!validateStep()) {
@@ -188,7 +196,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       const profileData = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        city: city.trim(),
+        city,
         dateOfBirth: dateOfBirth.trim() || undefined,
         bio: bio.trim() || undefined,
         yearsOfExperience: yearsOfExperience ? parseInt(yearsOfExperience, 10) : undefined,
@@ -290,13 +298,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.label}>
               City <Text style={styles.required}>*</Text>
             </Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Moscow, St. Petersburg, etc."
-              placeholderTextColor={COLORS.textSecondary}
-              value={city}
-              onChangeText={setCity}
-            />
+            <CityToggle value={city} onChange={handleCityChange} />
 
             <Text style={styles.label}>Date of Birth (optional)</Text>
             <TouchableOpacity
@@ -391,6 +393,8 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.label}>Preferred Metro Stations (optional)</Text>
             <MetroSelector
               multiSelect
+              city={city}
+              onCityChange={handleCityChange}
               value={preferredMetroStations}
               onChange={setPreferredMetroStations}
             />

@@ -1,5 +1,7 @@
 // Business and Branch Types
 
+import type { CityCode } from './city';
+
 export type BusinessType = 'singleLocation' | 'multiLocation';
 
 export type Equipment =
@@ -34,7 +36,7 @@ export interface Branch {
   businessId: string;
   name: string;
   address: string;
-  city: string;
+  city: CityCode;
   coordinates: GeoPoint;
   metroStation?: string;
   equipment: Equipment[];
@@ -70,7 +72,7 @@ export interface CreateBranchData {
   businessId: string;
   name: string;
   address: string;
-  city: string;
+  city: CityCode;
   coordinates: GeoPoint;
   metroStation?: string;
   equipment?: Equipment[];
@@ -80,7 +82,7 @@ export interface CreateBranchData {
 export interface UpdateBranchData {
   name?: string;
   address?: string;
-  city?: string;
+  city?: CityCode;
   coordinates?: GeoPoint;
   metroStation?: string;
   equipment?: Equipment[];

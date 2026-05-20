@@ -11,6 +11,8 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { JobFilters, JobType } from '../types/job';
 import type { Equipment, GeoPoint } from '../types/business';
+import type { CityCode } from '../types/city';
+import { DEFAULT_CITY } from '../types/city';
 import { COLORS, EQUIPMENT_TYPES } from '../config/constants';
 import { MetroSelector } from './MetroSelector';
 
@@ -60,6 +62,17 @@ export const FilterBar = React.memo<FilterBarProps>(
         onFilterChange({
           ...currentFilters,
           metroStations: stationNames.length > 0 ? stationNames : undefined,
+        });
+      },
+      [currentFilters, onFilterChange]
+    );
+
+    const handleCityChange = useCallback(
+      (nextCity: CityCode) => {
+        onFilterChange({
+          ...currentFilters,
+          city: nextCity,
+          metroStations: undefined,
         });
       },
       [currentFilters, onFilterChange]
@@ -156,6 +169,8 @@ export const FilterBar = React.memo<FilterBarProps>(
           <View style={styles.metroSelectorContainer}>
             <MetroSelector
               multiSelect
+              city={currentFilters.city ?? DEFAULT_CITY}
+              onCityChange={handleCityChange}
               value={currentFilters.metroStations ?? []}
               onChange={handleMetroChange}
               placeholder={t('filters.metroStation')}

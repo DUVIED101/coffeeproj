@@ -12,11 +12,15 @@ import {
 import { useTranslation } from 'react-i18next';
 import { MetroService } from '../utils/metro';
 import type { MetroStation } from '../utils/metro';
+import type { CityCode } from '../types/city';
+import { CITY_CODES } from '../types/city';
 import { COLORS } from '../config/constants';
 
 type CommonProps = {
   placeholder?: string;
   error?: string;
+  city: CityCode;
+  onCityChange: (city: CityCode) => void;
 };
 
 type SingleMetroSelectorProps = CommonProps & {
@@ -35,7 +39,13 @@ type MetroSelectorProps = SingleMetroSelectorProps | MultiMetroSelectorProps;
 
 export const MetroSelector: React.FC<MetroSelectorProps> = props => {
   const { t } = useTranslation();
-  const { placeholder = t('metro.placeholderSingle'), error, multiSelect } = props;
+  const {
+    placeholder = t('metro.placeholderSingle'),
+    error,
+    multiSelect,
+    city,
+    onCityChange,
+  } = props;
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -48,16 +58,11 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
   }, [props.value, props.multiSelect]);
 
   const filteredStations = useMemo(() => {
-    const allStations = MetroService.getAllStations();
-    console.log('[MetroSelector] Total stations available:', allStations.length);
-
     if (!searchQuery.trim()) {
-      return allStations;
+      return MetroService.getAllStations(city);
     }
-    const results = MetroService.searchStations(searchQuery);
-    console.log('[MetroSelector] Search results for', searchQuery, ':', results.length);
-    return results;
-  }, [searchQuery]);
+    return MetroService.searchStations(searchQuery, city);
+  }, [searchQuery, city]);
 
   const handleSelectStation = (station: MetroStation) => {
     if (props.multiSelect) {
@@ -71,6 +76,12 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
       setIsOpen(false);
       setSearchQuery('');
     }
+  };
+
+  const handleCityTab = (nextCity: CityCode) => {
+    if (nextCity === city) return;
+    onCityChange(nextCity);
+    setSearchQuery('');
   };
 
   const handleClear = () => {
@@ -140,6 +151,22 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
               <TouchableOpacity onPress={handleDone}>
                 <Text style={styles.closeButton}>✕</Text>
               </TouchableOpacity>
+            </View>
+
+            <View style={styles.cityTabs}>
+              {CITY_CODES.map(code => {
+                const active = code === city;
+                return (
+                  <TouchableOpacity
+                    key={code}
+                    style={[styles.cityTab, active && styles.cityTabActive]}
+                    onPress={() => handleCityTab(code)}>
+                    <Text style={[styles.cityTabText, active && styles.cityTabTextActive]}>
+                      {t(`metro.cityTab.${code}`)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
             <TextInput
@@ -247,6 +274,37 @@ const styles = StyleSheet.create({
   closeButton: {
     fontSize: 24,
     color: '#999',
+  },
+  cityTabs: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginTop: 12,
+    backgroundColor: COLORS.backgroundSecondary,
+    borderRadius: 999,
+    padding: 4,
+  },
+  cityTab: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 999,
+    alignItems: 'center',
+  },
+  cityTabActive: {
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  cityTabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.textSecondary,
+  },
+  cityTabTextActive: {
+    color: COLORS.text,
+    fontWeight: '600',
   },
   searchInput: {
     margin: 16,

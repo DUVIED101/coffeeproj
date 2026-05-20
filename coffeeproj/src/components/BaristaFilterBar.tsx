@@ -7,10 +7,11 @@ import {
   StyleSheet,
   Modal,
   Pressable,
-  TextInput,
 } from 'react-native';
 import type { BaristaFilters, ShiftTime } from '../types/baristaProfile';
 import type { Equipment } from '../types/business';
+import type { CityCode } from '../types/city';
+import { DEFAULT_CITY, CITY_CODES, CITY_LABELS_RU } from '../types/city';
 import { COLORS } from '../config/constants';
 import { MetroSelector } from './MetroSelector';
 
@@ -66,8 +67,6 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
     const [showShiftModal, setShowShiftModal] = useState(false);
     const [showExperienceModal, setShowExperienceModal] = useState(false);
     const [showHourlyCapModal, setShowHourlyCapModal] = useState(false);
-    const [showCityModal, setShowCityModal] = useState(false);
-    const [cityDraft, setCityDraft] = useState(currentFilters.city ?? '');
 
     const branchPresetActive = useMemo(
       () =>
@@ -153,28 +152,26 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
       [currentFilters, onFilterChange]
     );
 
-    const handleOpenCityModal = useCallback(() => {
-      setCityDraft(currentFilters.city ?? '');
-      setShowCityModal(true);
-    }, [currentFilters.city]);
-
-    const handleConfirmCity = useCallback(() => {
-      const trimmed = cityDraft.trim();
-      onFilterChange({ ...currentFilters, city: trimmed.length > 0 ? trimmed : undefined });
-      setShowCityModal(false);
-    }, [cityDraft, currentFilters, onFilterChange]);
-
-    const handleClearCity = useCallback(() => {
-      setCityDraft('');
-      onFilterChange({ ...currentFilters, city: undefined });
-      setShowCityModal(false);
+    const handleCityCycle = useCallback(() => {
+      const current = currentFilters.city ?? DEFAULT_CITY;
+      const currentIdx = CITY_CODES.indexOf(current);
+      const next = CITY_CODES[(currentIdx + 1) % CITY_CODES.length];
+      onFilterChange({ ...currentFilters, city: next, metroStations: undefined });
     }, [currentFilters, onFilterChange]);
+
+    const handleCityChange = useCallback(
+      (nextCity: CityCode) => {
+        onFilterChange({ ...currentFilters, city: nextCity, metroStations: undefined });
+      },
+      [currentFilters, onFilterChange]
+    );
 
     const selectedEquipmentCount = currentFilters.equipment?.length || 0;
     const selectedShiftCount = currentFilters.shiftTimes?.length || 0;
     const hasMinExperience = currentFilters.minYearsExperience !== undefined;
     const hasHourlyCap = currentFilters.hourlyRateMax !== undefined;
-    const hasCity = !!currentFilters.city && currentFilters.city.length > 0;
+    const activeCity: CityCode = currentFilters.city ?? DEFAULT_CITY;
+    const hasCity = currentFilters.city !== undefined;
 
     const experienceLabel = hasMinExperience
       ? `Опыт ${currentFilters.minYearsExperience}+`
@@ -182,7 +179,7 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
     const hourlyCapLabel = hasHourlyCap
       ? `до ₽${currentFilters.hourlyRateMax?.toLocaleString('ru-RU')}/час`
       : 'До ₽/час';
-    const cityLabel = hasCity ? `Город: ${currentFilters.city}` : 'Город';
+    const cityLabel = `Город: ${CITY_LABELS_RU[activeCity]}`;
 
     const showBranchPreset = !!branchMetroStations && branchMetroStations.length > 0;
 
@@ -219,6 +216,8 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
           <View style={styles.metroSelectorContainer}>
             <MetroSelector
               multiSelect
+              city={activeCity}
+              onCityChange={handleCityChange}
               value={currentFilters.metroStations ?? []}
               onChange={handleMetroChange}
               placeholder="Метро"
@@ -256,7 +255,7 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
 
           <TouchableOpacity
             style={[styles.filterChip, hasCity && styles.filterChipActive]}
-            onPress={handleOpenCityModal}>
+            onPress={handleCityCycle}>
             <Text style={[styles.filterChipText, hasCity && styles.filterChipTextActive]}>
               {cityLabel}
             </Text>
@@ -455,51 +454,6 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
             </View>
           </Pressable>
         </Modal>
-
-        <Modal
-          visible={showCityModal}
-          animationType="slide"
-          transparent
-          onRequestClose={() => setShowCityModal(false)}>
-          <Pressable style={styles.modalOverlay} onPress={() => setShowCityModal(false)}>
-            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Город</Text>
-                <TouchableOpacity onPress={() => setShowCityModal(false)}>
-                  <Text style={styles.closeButton}>✕</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.cityInputContainer}>
-                <TextInput
-                  style={styles.cityInput}
-                  value={cityDraft}
-                  onChangeText={setCityDraft}
-                  placeholder="Введите город"
-                  placeholderTextColor={COLORS.textSecondary}
-                  autoFocus
-                  returnKeyType="done"
-                  onSubmitEditing={handleConfirmCity}
-                />
-              </View>
-
-              <View style={styles.modalButtonsRow}>
-                {hasCity && (
-                  <TouchableOpacity
-                    style={[styles.doneButton, styles.clearButton]}
-                    onPress={handleClearCity}>
-                    <Text style={[styles.doneButtonText, styles.clearButtonText]}>Очистить</Text>
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity
-                  style={[styles.doneButton, hasCity && styles.doneButtonHalf]}
-                  onPress={handleConfirmCity}>
-                  <Text style={styles.doneButtonText}>Готово</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Pressable>
-        </Modal>
       </View>
     );
   }
@@ -640,17 +594,5 @@ const styles = StyleSheet.create({
   },
   metroSelectorContainer: {
     minWidth: 120,
-  },
-  cityInputContainer: {
-    padding: 16,
-  },
-  cityInput: {
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 12,
-    padding: 12,
-    fontSize: 16,
-    color: COLORS.text,
-    backgroundColor: COLORS.backgroundSecondary,
   },
 });

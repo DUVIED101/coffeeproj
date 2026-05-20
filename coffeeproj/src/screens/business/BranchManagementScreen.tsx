@@ -21,7 +21,9 @@ import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { BusinessService, BranchHasActiveJobsError } from '../../services/BusinessService';
 import { MetroSelector } from '../../components/MetroSelector';
-import type { Branch, Equipment, GeoPoint } from '../../types';
+import { CityToggle } from '../../components/CityToggle';
+import type { Branch, Equipment, GeoPoint, CityCode } from '../../types';
+import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU } from '../../types/city';
 
 type BusinessStackParamList = {
   CreateBusiness: undefined;
@@ -93,7 +95,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
 
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
-  const [city, setCity] = useState('Санкт-Петербург');
+  const [city, setCity] = useState<CityCode>(DEFAULT_CITY);
   const [metroStation, setMetroStation] = useState('');
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment[]>([]);
 
@@ -129,7 +131,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
   const resetForm = useCallback(() => {
     setName('');
     setAddress('');
-    setCity('Санкт-Петербург');
+    setCity(DEFAULT_CITY);
     setMetroStation('');
     setSelectedEquipment([]);
     setNameError(null);
@@ -153,7 +155,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
     setEditingBranch(branch);
     setName(branch.name);
     setAddress(branch.address);
-    setCity(branch.city);
+    setCity(toCityCode(branch.city));
     setMetroStation(branch.metroStation ?? '');
     setSelectedEquipment(branch.equipment);
     setNameError(null);
@@ -244,18 +246,18 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
 
     try {
       const trimmedAddress = address.trim();
-      const trimmedCity = city.trim();
+      const cityLabel = CITY_LABELS_RU[city];
 
       let coordinates: GeoPoint | null;
 
       if (
         editingBranch &&
         trimmedAddress === editingBranch.address &&
-        trimmedCity === editingBranch.city
+        city === editingBranch.city
       ) {
         coordinates = editingBranch.coordinates;
       } else {
-        coordinates = await geocodeAddress(trimmedAddress, trimmedCity);
+        coordinates = await geocodeAddress(trimmedAddress, cityLabel);
       }
 
       if (!coordinates) {
@@ -271,7 +273,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
         await BusinessService.updateBranch(editingBranch.id, {
           name: name.trim(),
           address: trimmedAddress,
-          city: trimmedCity,
+          city,
           coordinates,
           metroStation: metroStation.trim(),
           equipment: selectedEquipment,
@@ -283,7 +285,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
           businessId,
           name: name.trim(),
           address: trimmedAddress,
-          city: trimmedCity,
+          city,
           coordinates,
           metroStation: metroStation.trim(),
           equipment: selectedEquipment,
@@ -428,12 +430,12 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
                 <Text style={styles.label}>
                   {t('branches.form.city')} <Text style={styles.required}>*</Text>
                 </Text>
-                <TextInput
-                  style={styles.input}
+                <CityToggle
                   value={city}
-                  onChangeText={setCity}
-                  editable={!isSaving}
-                  returnKeyType="done"
+                  onChange={nextCity => {
+                    setCity(nextCity);
+                    setMetroStation('');
+                  }}
                 />
               </View>
 
@@ -442,6 +444,11 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
                   {t('branches.form.metro')} <Text style={styles.required}>*</Text>
                 </Text>
                 <MetroSelector
+                  city={city}
+                  onCityChange={nextCity => {
+                    setCity(nextCity);
+                    setMetroStation('');
+                  }}
                   value={metroStation || null}
                   onChange={value => {
                     setMetroStation(value ?? '');
