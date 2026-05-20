@@ -24,6 +24,7 @@ import { ShiftFilterSheet } from '../../components/ShiftFilterSheet';
 import type { ShiftFilters } from '../../components/ShiftFilterSheet';
 import { JobService } from '../../services/JobService';
 import { ApplicationService } from '../../services/ApplicationService';
+import { BusinessService } from '../../services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
 import { COLORS, RADII } from '../../config/constants';
 import { classifyShiftLifecycle } from '../../utils/shiftLifecycle';
@@ -56,9 +57,71 @@ const LIFECYCLE_TAB_VALUES: LifecycleTabValue[] = [
 
 export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigation, route }) => {
   const [activeTab, setActiveTab] = useState<TabType>('jobs');
-  const { businessId } = route.params;
   const { user } = useAuthStore();
   const { t } = useTranslation();
+
+  // Resolve the businessId on every focus so the screen reflects newly created
+  // profiles without an app restart. Param value (if any) seeds the initial render.
+  const [businessId, setBusinessId] = useState<string | undefined>(route.params?.businessId);
+  const [isResolvingBusiness, setIsResolvingBusiness] = useState(!route.params?.businessId);
+
+  const handleGoToProfile = useCallback(() => {
+    const parent = navigation.getParent();
+    parent?.navigate('Profile' as never);
+  }, [navigation]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      const resolve = async () => {
+        if (!user?.id) {
+          setIsResolvingBusiness(false);
+          return;
+        }
+        try {
+          const business = await BusinessService.getBusinessByOwnerId(user.id);
+          if (!cancelled) setBusinessId(business?.id);
+        } catch (error) {
+          console.error('Error resolving business in home screen:', error);
+        } finally {
+          if (!cancelled) setIsResolvingBusiness(false);
+        }
+      };
+      resolve();
+      return () => {
+        cancelled = true;
+      };
+    }, [user?.id])
+  );
+
+  if (isResolvingBusiness) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.gateContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!businessId) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.gateContainer}>
+          <MaterialCommunityIcons
+            name="storefront-outline"
+            size={56}
+            color={COLORS.textSecondary}
+          />
+          <Text style={styles.gateTitle}>{t('businessGate.title')}</Text>
+          <Text style={styles.gateSubtitle}>{t('businessGate.subtitle')}</Text>
+          <TouchableOpacity style={styles.gateCta} onPress={handleGoToProfile}>
+            <Text style={styles.gateCtaText}>{t('businessGate.cta')}</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   // Shared jobs state — used by both jobs tab and shifts tab
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -628,6 +691,37 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: COLORS.background,
     fontWeight: '300',
+  },
+  gateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    gap: 12,
+  },
+  gateTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.text,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  gateSubtitle: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  gateCta: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: RADII.pill,
+  },
+  gateCtaText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
   },
   shiftToolbar: {
     flexDirection: 'row',

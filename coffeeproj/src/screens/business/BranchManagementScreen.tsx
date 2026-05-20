@@ -18,15 +18,23 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
+import { launchImageLibrary } from 'react-native-image-picker';
 import { COLORS } from '../../config/constants';
-import { BusinessService, BranchHasActiveJobsError } from '../../services/BusinessService';
+import {
+  BusinessService,
+  BranchHasActiveJobsError,
+  BranchPhotoLimitError,
+} from '../../services/BusinessService';
 import { MetroSelector } from '../../components/MetroSelector';
 import { CityToggle } from '../../components/CityToggle';
+import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
+import { useAuthStore } from '../../stores/authStore';
 import type { Branch, Equipment, GeoPoint, CityCode } from '../../types';
 import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU } from '../../types/city';
+import { PHOTO_LIMIT, MAX_PHOTO_BYTES, isFileTooLarge } from '../../utils/storage';
 
 type BusinessStackParamList = {
-  CreateBusiness: undefined;
+  BusinessProfileSetup: undefined;
   BranchManagement: { businessId: string };
 };
 
@@ -50,41 +58,63 @@ type BranchRowProps = {
   branch: Branch;
   onEdit: (branch: Branch) => void;
   onDelete: (branchId: string, branchName: string) => void;
+  onAddPhoto: (branchId: string) => void;
+  onRemovePhoto: (branchId: string, photoUrl: string) => void;
 };
 
-const BranchRow = React.memo<BranchRowProps>(({ branch, onEdit, onDelete }) => {
-  const { t } = useTranslation();
-  return (
-    <View style={styles.branchCard}>
-      <View style={styles.branchHeader}>
-        <Text style={styles.branchName}>{branch.name}</Text>
-        <View style={styles.branchActions}>
-          <TouchableOpacity onPress={() => onEdit(branch)}>
-            <Text style={styles.editButton}>{t('common.edit')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => onDelete(branch.id, branch.name)}>
-            <Text style={styles.deleteButton}>{t('common.delete')}</Text>
-          </TouchableOpacity>
+const BranchRow = React.memo<BranchRowProps>(
+  ({ branch, onEdit, onDelete, onAddPhoto, onRemovePhoto }) => {
+    const { t } = useTranslation();
+    const handleAdd = useCallback(() => onAddPhoto(branch.id), [branch.id, onAddPhoto]);
+    const handleRemove = useCallback(
+      (photoUrl: string) => onRemovePhoto(branch.id, photoUrl),
+      [branch.id, onRemovePhoto]
+    );
+
+    return (
+      <View style={styles.branchCard}>
+        <View style={styles.branchHeader}>
+          <Text style={styles.branchName}>{branch.name}</Text>
+          <View style={styles.branchActions}>
+            <TouchableOpacity onPress={() => onEdit(branch)}>
+              <Text style={styles.editButton}>{t('common.edit')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => onDelete(branch.id, branch.name)}>
+              <Text style={styles.deleteButton}>{t('common.delete')}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
+        <Text style={styles.branchAddress}>{branch.address}</Text>
+        {branch.metroStation && (
+          <View style={styles.metroRow}>
+            <Text style={styles.metroIcon}>Ⓜ</Text>
+            <Text style={styles.branchMetro}>{branch.metroStation}</Text>
+          </View>
+        )}
+        {branch.equipment.length > 0 && (
+          <View style={styles.equipmentContainer}>
+            {branch.equipment.map(eq => (
+              <View key={eq} style={styles.equipmentBadge}>
+                <Text style={styles.equipmentText}>{eq}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+        <BranchPhotoGallery
+          photos={branch.photos}
+          editable
+          onAdd={handleAdd}
+          onRemove={handleRemove}
+        />
       </View>
-      <Text style={styles.branchAddress}>{branch.address}</Text>
-      {branch.metroStation && <Text style={styles.branchMetro}>🚇 {branch.metroStation}</Text>}
-      {branch.equipment.length > 0 && (
-        <View style={styles.equipmentContainer}>
-          {branch.equipment.map(eq => (
-            <View key={eq} style={styles.equipmentBadge}>
-              <Text style={styles.equipmentText}>{eq}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-    </View>
-  );
-});
+    );
+  }
+);
 
 export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
   const { businessId } = route.params;
   const { t } = useTranslation();
+  const ownerId = useAuthStore(s => s.user?.id);
 
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -340,11 +370,92 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
     );
   };
 
+  const handleAddPhoto = useCallback(
+    async (branchId: string) => {
+      if (!ownerId) {
+        Alert.alert(t('common.error'), t('businessSetup.errors.notAuthenticated'));
+        return;
+      }
+      const branch = branches.find(b => b.id === branchId);
+      const remaining = PHOTO_LIMIT - (branch?.photos.length ?? 0);
+      if (remaining <= 0) {
+        Alert.alert(t('common.error'), t('branchPhotos.limitReached', { max: PHOTO_LIMIT }));
+        return;
+      }
+
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        quality: 0.8,
+        selectionLimit: remaining,
+      });
+      if (result.didCancel || !result.assets?.length) return;
+
+      const accepted: string[] = [];
+      let oversizedCount = 0;
+      for (const asset of result.assets) {
+        if (!asset.uri) continue;
+        if (isFileTooLarge(asset.fileSize)) {
+          oversizedCount += 1;
+          continue;
+        }
+        accepted.push(asset.uri);
+      }
+
+      let uploadedCount = 0;
+      for (const uri of accepted) {
+        try {
+          await BusinessService.addBranchPhoto(branchId, ownerId, uri);
+          uploadedCount += 1;
+        } catch (error) {
+          if (error instanceof BranchPhotoLimitError) {
+            Alert.alert(t('common.error'), t('branchPhotos.limitReached', { max: PHOTO_LIMIT }));
+            break;
+          }
+          console.error('Error adding branch photo:', error);
+        }
+      }
+
+      if (uploadedCount > 0) await loadBranches();
+
+      if (oversizedCount > 0) {
+        Alert.alert(
+          t('common.warning'),
+          t('branchPhotos.someTooLarge', {
+            count: oversizedCount,
+            maxMb: MAX_PHOTO_BYTES / (1024 * 1024),
+          })
+        );
+      } else if (uploadedCount < accepted.length) {
+        Alert.alert(t('common.error'), t('branchPhotos.uploadFailed'));
+      }
+    },
+    [ownerId, branches, loadBranches, t]
+  );
+
+  const handleRemovePhoto = useCallback(
+    async (branchId: string, photoUrl: string) => {
+      try {
+        await BusinessService.removeBranchPhoto(branchId, photoUrl);
+        await loadBranches();
+      } catch (error) {
+        console.error('Error removing branch photo:', error);
+        Alert.alert(t('common.error'), t('branchPhotos.removeFailed'));
+      }
+    },
+    [loadBranches, t]
+  );
+
   const renderBranch = useCallback(
     ({ item }: { item: Branch }) => (
-      <BranchRow branch={item} onEdit={openEditForm} onDelete={handleDeleteBranch} />
+      <BranchRow
+        branch={item}
+        onEdit={openEditForm}
+        onDelete={handleDeleteBranch}
+        onAddPhoto={handleAddPhoto}
+        onRemovePhoto={handleRemovePhoto}
+      />
     ),
-    [openEditForm, handleDeleteBranch]
+    [openEditForm, handleDeleteBranch, handleAddPhoto, handleRemovePhoto]
   );
 
   if (isLoading) {
@@ -728,10 +839,19 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     marginBottom: 4,
   },
+  metroRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  metroIcon: {
+    fontSize: 16,
+    marginRight: 4,
+    color: COLORS.primary,
+  },
   branchMetro: {
     fontSize: 14,
     color: COLORS.textSecondary,
-    marginBottom: 8,
   },
   equipmentContainer: {
     flexDirection: 'row',

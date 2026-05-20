@@ -226,12 +226,23 @@
       "shifts": "Смены"
     }
   },
+  "businessGate": {
+    "title": "Сначала создайте профиль бизнеса",
+    "subtitle": "Откройте вкладку Профиль и заполните данные — после этого станут доступны разделы вакансий и смен.",
+    "cta": "Перейти в Профиль"
+  },
   "businessProfile": {
-    "noBusinessTitle": "Бизнес не создан",
-    "noBusinessSubtitle": "Создайте бизнес во вкладке Business, чтобы продолжить.",
+    "noBusinessTitle": "Профиль бизнеса ещё не создан",
+    "noBusinessSubtitle": "Создайте профиль бизнеса, чтобы публиковать вакансии и управлять точками.",
+    "createCta": "Создать профиль",
     "verified": "Верифицирован",
     "unverified": "Не верифицирован",
+    "editProfile": "Редактировать профиль",
     "organizationSection": "Организация",
+    "brandSection": "Бренд",
+    "website": "Сайт",
+    "instagram": "Instagram",
+    "foundedYear": "Год основания",
     "branches": "Мои точки",
     "branchesCount_one": "{{count}} точка",
     "branchesCount_few": "{{count}} точки",
@@ -239,6 +250,65 @@
     "branchesCount_other": "{{count}} точек",
     "reviews": "Отзывы",
     "noReviews": "Без оценок"
+  },
+  "businessSetup": {
+    "title": "Профиль бизнеса",
+    "subtitle": "Заполните профиль, чтобы публиковать вакансии",
+    "finish": "Готово",
+    "steps": {
+      "basics": "Основное",
+      "brand": "Бренд",
+      "branch": "Точка",
+      "photos": "Фото"
+    },
+    "basics": {
+      "title": "Основная информация",
+      "subtitle": "Расскажите о вашем бизнесе",
+      "name": "Название",
+      "namePlaceholder": "Напр., Surf Coffee Moscow",
+      "nameRequired": "Укажите название бизнеса",
+      "description": "Описание (опционально)",
+      "descriptionPlaceholder": "Краткое описание вашего бизнеса...",
+      "type": "Тип бизнеса",
+      "typeSingle": "Одна точка",
+      "typeSingleDesc": "Одно кафе или одна локация",
+      "typeMulti": "Несколько точек",
+      "typeMultiDesc": "Сеть или несколько филиалов"
+    },
+    "brand": {
+      "title": "Бренд",
+      "subtitle": "Опционально — улучшит вид ваших вакансий",
+      "logo": "Логотип",
+      "noLogo": "Нет логотипа",
+      "pickLogo": "Выбрать фото",
+      "changeLogo": "Изменить",
+      "website": "Сайт",
+      "instagram": "Instagram",
+      "foundedYear": "Год основания"
+    },
+    "branch": {
+      "title": "Первая точка",
+      "subtitle": "Чтобы публиковать вакансии, нужна хотя бы одна точка"
+    },
+    "photos": {
+      "title": "Фото точки",
+      "subtitle": "До {{max}} фото — они будут отображаться в вакансиях"
+    },
+    "errors": {
+      "notAuthenticated": "Вы не авторизованы",
+      "saveFailed": "Не удалось сохранить профиль бизнеса",
+      "partialSuccess": "Профиль сохранён, но не удалось загрузить: {{items}}. Попробуйте ещё раз из профиля."
+    }
+  },
+  "branchPhotos": {
+    "add": "Добавить фото",
+    "empty": "Фото пока нет",
+    "counter": "{{count}}/{{max}} фото",
+    "limitReached": "Можно загрузить максимум {{max}} фото на точку",
+    "uploadFailed": "Не удалось загрузить фото",
+    "removeFailed": "Не удалось удалить фото",
+    "fileTooLarge": "Файл слишком большой. Максимум {{maxMb}} МБ.",
+    "someTooLarge": "Пропущено файлов: {{count}} — больше {{maxMb}} МБ."
   },
   "shifts": {
     "empty": "По выбранным фильтрам смен нет",
@@ -289,6 +359,7 @@
     "edit": "Изменить",
     "confirm": "Подтвердить",
     "back": "Назад",
+    "continue": "Продолжить",
     "loading": "Загрузка...",
     "error": "Ошибка",
     "success": "Готово",
@@ -297,7 +368,8 @@
     "done": "Готово",
     "ok": "ОК",
     "yes": "Да",
-    "no": "Нет"
+    "no": "Нет",
+    "warning": "Внимание"
   },
   "settings": {
     "title": "Настройки",

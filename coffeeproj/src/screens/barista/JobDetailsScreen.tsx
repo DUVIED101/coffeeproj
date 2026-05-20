@@ -17,6 +17,7 @@ import { ApplicationService } from '../../services/ApplicationService';
 import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { StarRow } from '../../components/StarRow';
+import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
 import type { Job } from '../../types/job';
 import type { Application } from '../../types/application';
 import type { UserId } from '../../types/ids';
@@ -212,6 +213,12 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             )}
           </View>
         </View>
+
+        {job.branchPhotos && job.branchPhotos.length > 0 && (
+          <View style={styles.section}>
+            <BranchPhotoGallery photos={job.branchPhotos} />
+          </View>
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Location</Text>

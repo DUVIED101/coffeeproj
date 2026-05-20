@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { CreateBusinessScreen } from '../screens/business/CreateBusinessScreen';
 import { BusinessHomeScreen } from '../screens/business/BusinessHomeScreen';
 import { CreateJobScreen } from '../screens/business/CreateJobScreen';
 import { JobDetailsScreen } from '../screens/business/JobDetailsScreen';
@@ -10,14 +8,9 @@ import { ViewBaristaProfileScreen } from '../screens/business/ViewBaristaProfile
 import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
 import { ChatScreen } from '../screens/chat/ChatScreen';
 import { ConversationsListScreen } from '../screens/chat/ConversationsListScreen';
-import { BusinessService } from '../services/BusinessService';
-import { useAuthStore } from '../stores/authStore';
-import { COLORS } from '../config/constants';
-import type { Business } from '../types';
 
 export type BusinessStackParamList = {
-  CreateBusiness: undefined;
-  BusinessHome: { businessId: string };
+  BusinessHome: { businessId?: string };
   CreateJob: undefined;
   JobDetails: { jobId: string };
   Applicants: { jobId: string };
@@ -30,56 +23,17 @@ export type BusinessStackParamList = {
 const Stack = createNativeStackNavigator<BusinessStackParamList>();
 
 export const BusinessStack: React.FC = () => {
-  const { user } = useAuthStore();
-  const [business, setBusiness] = useState<Business | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    checkExistingBusiness();
-  }, [user?.id]);
-
-  const checkExistingBusiness = async () => {
-    if (!user?.id) {
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const existingBusiness = await BusinessService.getBusinessByOwnerId(user.id);
-      setBusiness(existingBusiness);
-    } catch (error) {
-      console.error('Error checking existing business:', error);
-      setBusiness(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
-    );
-  }
-
   return (
     <Stack.Navigator
-      initialRouteName={business ? 'BusinessHome' : 'CreateBusiness'}
+      initialRouteName="BusinessHome"
       screenOptions={{
         headerShown: true,
         headerBackTitleVisible: false,
       }}>
       <Stack.Screen
-        name="CreateBusiness"
-        component={CreateBusinessScreen}
-        options={{ title: 'Create Business' }}
-      />
-      <Stack.Screen
         name="BusinessHome"
         component={BusinessHomeScreen}
         options={{ title: 'My Business' }}
-        initialParams={business ? { businessId: business.id } : undefined}
       />
       <Stack.Screen
         name="CreateJob"
@@ -115,12 +69,3 @@ export const BusinessStack: React.FC = () => {
     </Stack.Navigator>
   );
 };
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.background,
-  },
-});

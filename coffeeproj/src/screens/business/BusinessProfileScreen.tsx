@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   ScrollView,
   RefreshControl,
+  Image,
+  Linking,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -83,6 +85,15 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
     navigation.navigate('BusinessReviews');
   }, [navigation]);
 
+  const handleEditProfile = useCallback(() => {
+    navigation.navigate('BusinessProfileSetup');
+  }, [navigation]);
+
+  const handleOpenLink = useCallback(async (url: string) => {
+    const canOpen = await Linking.canOpenURL(url);
+    if (canOpen) await Linking.openURL(url);
+  }, []);
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -97,8 +108,16 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyContainer}>
+          <MaterialCommunityIcons
+            name="storefront-outline"
+            size={56}
+            color={COLORS.textSecondary}
+          />
           <Text style={styles.emptyTitle}>{t('businessProfile.noBusinessTitle')}</Text>
           <Text style={styles.emptySubtitle}>{t('businessProfile.noBusinessSubtitle')}</Text>
+          <TouchableOpacity style={styles.emptyCta} onPress={handleEditProfile}>
+            <Text style={styles.emptyCtaText}>{t('businessProfile.createCta')}</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -121,10 +140,19 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
           />
         }>
         <View style={styles.header}>
-          <View style={styles.avatarPlaceholder}>
-            <MaterialCommunityIcons name="storefront" size={36} color={COLORS.primary} />
-          </View>
+          {business.logoUrl ? (
+            <Image source={{ uri: business.logoUrl }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <MaterialCommunityIcons name="storefront" size={36} color={COLORS.primary} />
+            </View>
+          )}
           <Text style={styles.businessName}>{business.name}</Text>
+          {!!business.description && (
+            <Text style={styles.businessDescription} numberOfLines={4}>
+              {business.description}
+            </Text>
+          )}
           {business.isVerified ? (
             <View style={styles.verifiedBadge}>
               <MaterialCommunityIcons name="check-decagram" size={16} color={COLORS.success} />
@@ -140,7 +168,57 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.unverifiedText}>{t('businessProfile.unverified')}</Text>
             </View>
           )}
+          <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
+            <MaterialCommunityIcons name="pencil-outline" size={16} color={COLORS.primary} />
+            <Text style={styles.editButtonText}>{t('businessProfile.editProfile')}</Text>
+          </TouchableOpacity>
         </View>
+
+        {(business.website || business.instagramHandle || business.foundedYear) && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('businessProfile.brandSection')}</Text>
+            {business.website && (
+              <TouchableOpacity
+                style={styles.row}
+                onPress={() => handleOpenLink(business.website!)}>
+                <View style={styles.rowIcon}>
+                  <MaterialCommunityIcons name="web" size={22} color={COLORS.text} />
+                </View>
+                <View style={styles.rowLabelWrap}>
+                  <Text style={styles.rowLabel}>{t('businessProfile.website')}</Text>
+                  <Text style={styles.rowSubLabel} numberOfLines={1}>
+                    {business.website}
+                  </Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </TouchableOpacity>
+            )}
+            {business.instagramHandle && (
+              <View style={styles.row}>
+                <View style={styles.rowIcon}>
+                  <MaterialCommunityIcons name="instagram" size={22} color={COLORS.text} />
+                </View>
+                <View style={styles.rowLabelWrap}>
+                  <Text style={styles.rowLabel}>{t('businessProfile.instagram')}</Text>
+                  <Text style={styles.rowSubLabel} numberOfLines={1}>
+                    {business.instagramHandle}
+                  </Text>
+                </View>
+              </View>
+            )}
+            {business.foundedYear && (
+              <View style={styles.row}>
+                <View style={styles.rowIcon}>
+                  <MaterialCommunityIcons name="calendar" size={22} color={COLORS.text} />
+                </View>
+                <View style={styles.rowLabelWrap}>
+                  <Text style={styles.rowLabel}>{t('businessProfile.foundedYear')}</Text>
+                  <Text style={styles.rowSubLabel}>{business.foundedYear}</Text>
+                </View>
+              </View>
+            )}
+          </View>
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('businessProfile.organizationSection')}</Text>
@@ -151,9 +229,7 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
             </View>
             <View style={styles.rowLabelWrap}>
               <Text style={styles.rowLabel}>{t('businessProfile.branches')}</Text>
-              <Text style={styles.rowSubLabel}>
-                {t('businessProfile.branchesCount', { count: branchCount })}
-              </Text>
+              <Text style={styles.rowSubLabel}>{branchCount}</Text>
             </View>
             <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
@@ -189,18 +265,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
+    gap: 12,
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
     color: COLORS.text,
-    marginBottom: 8,
     textAlign: 'center',
+    marginTop: 8,
   },
   emptySubtitle: {
     fontSize: 14,
     color: COLORS.textSecondary,
     textAlign: 'center',
+    marginBottom: 12,
+  },
+  emptyCta: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: RADII.pill,
+  },
+  emptyCtaText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
   },
   scrollContent: {
     paddingBottom: 32,
@@ -221,6 +310,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  avatarImage: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    marginBottom: 12,
+  },
+  businessDescription: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: 24,
+    marginBottom: 8,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: RADII.pill,
+    backgroundColor: COLORS.backgroundSecondary,
+    marginTop: 12,
+  },
+  editButtonText: {
+    fontSize: 13,
+    color: COLORS.primary,
+    fontWeight: '600',
   },
   businessName: {
     fontSize: 20,

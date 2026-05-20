@@ -27,6 +27,10 @@ export interface Business {
   businessType: BusinessType;
   isVerified: boolean;
   isAcceptingApplications?: boolean;
+  logoUrl?: string;
+  website?: string;
+  instagramHandle?: string;
+  foundedYear?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,6 +45,7 @@ export interface Branch {
   metroStation?: string;
   equipment: Equipment[];
   operatingHours?: OperatingHours;
+  photos: string[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -59,6 +64,10 @@ export interface CreateBusinessData {
   name: string;
   description?: string;
   businessType: BusinessType;
+  logoUrl?: string;
+  website?: string;
+  instagramHandle?: string;
+  foundedYear?: number;
 }
 
 export interface UpdateBusinessData {
@@ -66,6 +75,10 @@ export interface UpdateBusinessData {
   description?: string;
   businessType?: BusinessType;
   isAcceptingApplications?: boolean;
+  logoUrl?: string;
+  website?: string;
+  instagramHandle?: string;
+  foundedYear?: number;
 }
 
 export interface CreateBranchData {
@@ -87,5 +100,6 @@ export interface UpdateBranchData {
   metroStation?: string;
   equipment?: Equipment[];
   operatingHours?: OperatingHours;
+  photos?: string[];
   isActive?: boolean;
 }

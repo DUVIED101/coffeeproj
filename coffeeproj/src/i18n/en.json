@@ -222,17 +222,87 @@
       "shifts": "Shifts"
     }
   },
+  "businessGate": {
+    "title": "Create your business profile first",
+    "subtitle": "Open the Profile tab and complete the setup to start using the Business section.",
+    "cta": "Go to Profile"
+  },
   "businessProfile": {
-    "noBusinessTitle": "No business yet",
-    "noBusinessSubtitle": "Create a business in the Business tab to continue.",
+    "noBusinessTitle": "No business profile yet",
+    "noBusinessSubtitle": "Create your business profile to start posting jobs and managing branches.",
+    "createCta": "Create business profile",
     "verified": "Verified",
     "unverified": "Unverified",
+    "editProfile": "Edit profile",
     "organizationSection": "Organization",
+    "brandSection": "Brand",
+    "website": "Website",
+    "instagram": "Instagram",
+    "foundedYear": "Founded",
     "branches": "Branches",
     "branchesCount_one": "{{count}} branch",
     "branchesCount_other": "{{count}} branches",
     "reviews": "Reviews",
     "noReviews": "No ratings"
+  },
+  "businessSetup": {
+    "title": "Business profile",
+    "subtitle": "Set up your business to start posting jobs",
+    "finish": "Finish",
+    "steps": {
+      "basics": "Basics",
+      "brand": "Brand",
+      "branch": "Branch",
+      "photos": "Photos"
+    },
+    "basics": {
+      "title": "Basic information",
+      "subtitle": "Tell baristas who you are",
+      "name": "Business name",
+      "namePlaceholder": "e.g. Surf Coffee Moscow",
+      "nameRequired": "Business name is required",
+      "description": "Description (optional)",
+      "descriptionPlaceholder": "Brief description of your business...",
+      "type": "Business type",
+      "typeSingle": "Single location",
+      "typeSingleDesc": "One coffee shop or location",
+      "typeMulti": "Multiple locations",
+      "typeMultiDesc": "Chain or multiple branches"
+    },
+    "brand": {
+      "title": "Brand",
+      "subtitle": "Optional — improves how baristas see your listings",
+      "logo": "Logo",
+      "noLogo": "No logo",
+      "pickLogo": "Choose photo",
+      "changeLogo": "Change",
+      "website": "Website",
+      "instagram": "Instagram handle",
+      "foundedYear": "Founded year"
+    },
+    "branch": {
+      "title": "First branch",
+      "subtitle": "You need at least one branch to post jobs"
+    },
+    "photos": {
+      "title": "Branch photos",
+      "subtitle": "Up to {{max}} photos — they appear in job listings"
+    },
+    "errors": {
+      "notAuthenticated": "You are not authenticated",
+      "saveFailed": "Failed to save business profile",
+      "partialSuccess": "Profile saved but some items failed: {{items}}. Try again from your profile."
+    }
+  },
+  "branchPhotos": {
+    "add": "Add photo",
+    "empty": "No photos yet",
+    "counter": "{{count}}/{{max}} photos",
+    "limitReached": "You can upload up to {{max}} photos per branch",
+    "uploadFailed": "Failed to upload photo",
+    "removeFailed": "Failed to remove photo",
+    "fileTooLarge": "File is too large. Max {{maxMb}} MB.",
+    "someTooLarge": "{{count}} file(s) skipped: over {{maxMb}} MB."
   },
   "shifts": {
     "empty": "No shifts match the current filters",
@@ -281,6 +351,7 @@
     "edit": "Edit",
     "confirm": "Confirm",
     "back": "Back",
+    "continue": "Continue",
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
@@ -289,7 +360,8 @@
     "done": "Done",
     "ok": "OK",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "warning": "Warning"
   },
   "settings": {
     "title": "Settings",

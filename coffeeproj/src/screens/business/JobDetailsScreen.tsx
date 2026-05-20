@@ -15,6 +15,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
 import { useAuthStore } from '../../stores/authStore';
+import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
 import type { Job, JobStatus } from '../../types/job';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 
@@ -172,6 +173,12 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
               : `${job.applicationCount} applicant${job.applicationCount !== 1 ? 's' : ''}`}
           </Text>
         </View>
+
+        {job.branchPhotos && job.branchPhotos.length > 0 && (
+          <View style={styles.section}>
+            <BranchPhotoGallery photos={job.branchPhotos} />
+          </View>
+        )}
 
         {/* Location */}
         <View style={styles.section}>

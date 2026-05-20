@@ -61,7 +61,9 @@ export class JobService {
       createdAt: db.created_at,
       updatedAt: db.updated_at,
       businessName: db.businesses?.name,
+      businessLogoUrl: db.businesses?.logo_url ?? undefined,
       branchName: db.branches?.name,
+      branchPhotos: db.branches?.photos ?? [],
       metroStation: db.branches?.metro_station,
     };
   }
@@ -130,8 +132,8 @@ export class JobService {
         .select(
           `
           *,
-          businesses (name),
-          branches (name, metro_station)
+          businesses (name, logo_url),
+          branches (name, metro_station, photos)
         `
         )
         .eq('id', jobId)
@@ -157,8 +159,8 @@ export class JobService {
         .select(
           `
           *,
-          businesses (name),
-          branches (name, metro_station)
+          businesses (name, logo_url),
+          branches (name, metro_station, photos)
         `
         )
         .eq('business_id', businessId)
@@ -184,8 +186,8 @@ export class JobService {
         .select(
           `
           *,
-          businesses (name),
-          branches (name, metro_station)
+          businesses (name, logo_url),
+          branches (name, metro_station, photos)
         `
         )
         .eq('business_owner_id', ownerUserId)

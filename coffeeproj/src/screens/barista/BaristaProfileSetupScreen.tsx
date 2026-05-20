@@ -19,6 +19,7 @@ import { BaristaProfileService } from '../../services/BaristaProfileService';
 import { MetroSelector } from '../../components/MetroSelector';
 import { CityToggle } from '../../components/CityToggle';
 import { CertificatesEditor } from '../../components/CertificatesEditor';
+import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { useAuthStore } from '../../stores/authStore';
 import { formatLocalDate } from '../../utils/dateUtils';
 import type { ShiftTime, BaristaProfile } from '../../types/baristaProfile';
@@ -240,29 +241,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const renderProgressIndicator = () => (
-    <View style={styles.progressContainer}>
-      {STEPS.map((step, index) => (
-        <View key={step} style={styles.progressStep}>
-          <View
-            style={[
-              styles.progressDot,
-              index <= currentStep && styles.progressDotActive,
-              index < currentStep && styles.progressDotCompleted,
-            ]}>
-            <Text
-              style={[
-                styles.progressDotText,
-                index <= currentStep && styles.progressDotTextActive,
-              ]}>
-              {index + 1}
-            </Text>
-          </View>
-          {index < STEPS.length - 1 && (
-            <View style={[styles.progressLine, index < currentStep && styles.progressLineActive]} />
-          )}
-        </View>
-      ))}
-    </View>
+    <ProgressIndicator steps={STEPS} currentStep={currentStep} />
   );
 
   const renderStepContent = () => {
@@ -584,55 +563,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
     marginTop: 4,
-  },
-  progressContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  progressStep: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  progressDot: {
-    width: 32,
-    height: 32,
-    borderRadius: 999,
-    backgroundColor: COLORS.backgroundSecondary,
-    borderWidth: 2,
-    borderColor: COLORS.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  progressDotActive: {
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.primary,
-  },
-  progressDotCompleted: {
-    backgroundColor: COLORS.success,
-    borderColor: COLORS.success,
-  },
-  progressDotText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-  },
-  progressDotTextActive: {
-    color: '#fff',
-  },
-  progressLine: {
-    width: 40,
-    height: 2,
-    backgroundColor: COLORS.border,
-    marginHorizontal: 4,
-  },
-  progressLineActive: {
-    backgroundColor: COLORS.success,
   },
   flex: {
     flex: 1,

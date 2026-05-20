@@ -33,7 +33,9 @@ export interface Job {
 
   // Joined fields (from database queries)
   businessName?: string;
+  businessLogoUrl?: string;
   branchName?: string;
+  branchPhotos?: string[];
   metroStation?: string;
   distance?: number; // in meters
 }

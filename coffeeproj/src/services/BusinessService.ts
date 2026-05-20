@@ -7,6 +7,13 @@ import type {
   CreateBranchData,
   UpdateBranchData,
 } from '../types';
+import {
+  uploadImageToBucket,
+  PHOTO_LIMIT,
+  buildBusinessLogoPath,
+  buildBranchPhotoPath,
+  canAddPhoto,
+} from '../utils/storage';
 
 export class BranchHasActiveJobsError extends Error {
   public readonly count: number;
@@ -31,6 +38,10 @@ export class BusinessService {
       businessType: db.business_type,
       isVerified: db.is_verified,
       isAcceptingApplications: db.is_accepting_applications ?? true,
+      logoUrl: db.logo_url ?? undefined,
+      website: db.website ?? undefined,
+      instagramHandle: db.instagram_handle ?? undefined,
+      foundedYear: db.founded_year ?? undefined,
       createdAt: db.created_at,
       updatedAt: db.updated_at,
     };
@@ -50,6 +61,7 @@ export class BusinessService {
       metroStation: db.metro_station,
       equipment: db.equipment || [],
       operatingHours: db.operating_hours,
+      photos: db.photos || [],
       isActive: db.is_active,
       createdAt: db.created_at,
       updatedAt: db.updated_at,
@@ -68,11 +80,33 @@ export class BusinessService {
           name: data.name,
           description: data.description,
           business_type: data.businessType,
+          logo_url: data.logoUrl,
+          website: data.website,
+          instagram_handle: data.instagramHandle,
+          founded_year: data.foundedYear,
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // A row for this owner already exists (unique_owner). Fall back to update
+        // so the wizard works as an upsert even if a previous attempt half-succeeded.
+        if ((error as { code?: string }).code === '23505') {
+          const existing = await this.getBusinessByOwnerId(data.ownerId);
+          if (existing) {
+            return this.updateBusiness(existing.id, {
+              name: data.name,
+              description: data.description,
+              businessType: data.businessType,
+              logoUrl: data.logoUrl,
+              website: data.website,
+              instagramHandle: data.instagramHandle,
+              foundedYear: data.foundedYear,
+            });
+          }
+        }
+        throw error;
+      }
       if (!business) throw new Error('Failed to create business');
 
       return this.mapBusiness(business);
@@ -148,6 +182,18 @@ export class BusinessService {
       if (updates.isAcceptingApplications !== undefined) {
         dbUpdates.is_accepting_applications = updates.isAcceptingApplications;
       }
+      if (updates.logoUrl !== undefined) {
+        dbUpdates.logo_url = updates.logoUrl;
+      }
+      if (updates.website !== undefined) {
+        dbUpdates.website = updates.website;
+      }
+      if (updates.instagramHandle !== undefined) {
+        dbUpdates.instagram_handle = updates.instagramHandle;
+      }
+      if (updates.foundedYear !== undefined) {
+        dbUpdates.founded_year = updates.foundedYear;
+      }
 
       const { data, error } = await supabase
         .from('businesses')
@@ -182,6 +228,7 @@ export class BusinessService {
           metro_station: data.metroStation,
           equipment: data.equipment || [],
           operating_hours: data.operatingHours,
+          photos: [],
         })
         .select()
         .single();
@@ -266,6 +313,9 @@ export class BusinessService {
       if (updates.operatingHours !== undefined) {
         dbUpdates.operating_hours = updates.operatingHours;
       }
+      if (updates.photos !== undefined) {
+        dbUpdates.photos = updates.photos;
+      }
       if (updates.isActive !== undefined) {
         dbUpdates.is_active = updates.isActive;
       }
@@ -312,5 +362,72 @@ export class BusinessService {
       console.error('Error in deleteBranch:', error);
       throw error;
     }
+  }
+
+  /**
+   * Upload a business logo and persist the public URL on the business row.
+   */
+  static async uploadBusinessLogo(
+    businessId: string,
+    ownerId: string,
+    photoUri: string
+  ): Promise<string> {
+    const path = buildBusinessLogoPath(ownerId, Date.now());
+    const publicUrl = await uploadImageToBucket({
+      bucket: 'business-logos',
+      path,
+      uri: photoUri,
+    });
+
+    const { error } = await supabase
+      .from('businesses')
+      .update({ logo_url: publicUrl })
+      .eq('id', businessId);
+
+    if (error) throw error;
+    return publicUrl;
+  }
+
+  /**
+   * Upload a branch photo and append it to the branch photos array.
+   * Enforces the 5-photo limit on the client; a DB CHECK is the backstop.
+   */
+  static async addBranchPhoto(
+    branchId: string,
+    ownerId: string,
+    photoUri: string
+  ): Promise<Branch> {
+    const branch = await this.getBranch(branchId);
+    if (!canAddPhoto(branch.photos)) {
+      throw new BranchPhotoLimitError();
+    }
+
+    const path = buildBranchPhotoPath(ownerId, branchId, Date.now());
+    const publicUrl = await uploadImageToBucket({
+      bucket: 'branch-photos',
+      path,
+      uri: photoUri,
+    });
+
+    const nextPhotos = [...branch.photos, publicUrl];
+    return this.updateBranch(branchId, { photos: nextPhotos });
+  }
+
+  /**
+   * Remove a photo URL from a branch's photo array.
+   * Storage object is not deleted — leaves a soft-tombstone so other readers
+   * with stale joined data don't 404.
+   */
+  static async removeBranchPhoto(branchId: string, photoUrl: string): Promise<Branch> {
+    const branch = await this.getBranch(branchId);
+    const nextPhotos = branch.photos.filter(url => url !== photoUrl);
+    return this.updateBranch(branchId, { photos: nextPhotos });
+  }
+}
+
+export class BranchPhotoLimitError extends Error {
+  constructor() {
+    super(`Branch photo limit (${PHOTO_LIMIT}) reached`);
+    this.name = 'BranchPhotoLimitError';
   }
 }
