@@ -23,7 +23,7 @@ import {
   BaristaProfileService,
   PortfolioPhotoLimitError,
 } from '../../services/BaristaProfileService';
-import { PHOTO_LIMIT } from '../../utils/storage';
+import { PHOTO_LIMIT, MAX_PHOTO_BYTES, isFileTooLarge } from '../../utils/storage';
 import { ReviewService } from '../../services/ReviewService';
 import { MetroSelector } from '../../components/MetroSelector';
 import { CityToggle } from '../../components/CityToggle';
@@ -252,35 +252,91 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handlePortfolioPhotoUpload = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !profile) return;
 
-    if (profile && profile.portfolioPhotos.length >= PHOTO_LIMIT) {
+    const remaining = PHOTO_LIMIT - profile.portfolioPhotos.length;
+    if (remaining <= 0) {
       Alert.alert(t('common.warning'), t('portfolioPhotos.limitReached', { max: PHOTO_LIMIT }));
       return;
     }
 
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      quality: 0.8,
+      selectionLimit: remaining,
+    });
+    if (result.didCancel || !result.assets?.length) return;
+
+    const accepted: string[] = [];
+    let oversizedCount = 0;
+    for (const asset of result.assets) {
+      if (!asset.uri) continue;
+      if (isFileTooLarge(asset.fileSize)) {
+        oversizedCount += 1;
+        continue;
+      }
+      accepted.push(asset.uri);
+    }
+
+    if (accepted.length === 0 && oversizedCount === 0) return;
+
+    setIsSaving(true);
+    let uploadedCount = 0;
+    let hitLimit = false;
     try {
-      const result = await launchImageLibrary({
-        mediaType: 'photo',
-        quality: 0.8,
-      });
-
-      if (result.didCancel || !result.assets?.[0]?.uri) return;
-
-      setIsSaving(true);
-      await BaristaProfileService.uploadPortfolioPhoto(user.id, result.assets[0].uri);
-      await loadProfile();
-      Alert.alert('Success', 'Portfolio photo uploaded successfully!');
-    } catch (error: unknown) {
-      console.error('Error uploading portfolio photo:', error);
-      if (error instanceof PortfolioPhotoLimitError) {
-        Alert.alert(t('common.warning'), t('portfolioPhotos.limitReached', { max: PHOTO_LIMIT }));
-      } else {
-        Alert.alert('Error', 'Failed to upload photo. Please try again.');
+      for (const uri of accepted) {
+        try {
+          await BaristaProfileService.uploadPortfolioPhoto(user.id, uri);
+          uploadedCount += 1;
+        } catch (error: unknown) {
+          if (error instanceof PortfolioPhotoLimitError) {
+            hitLimit = true;
+            break;
+          }
+          console.error('Error uploading portfolio photo:', error);
+        }
       }
     } finally {
+      if (uploadedCount > 0) await loadProfile();
       setIsSaving(false);
     }
+
+    if (hitLimit) {
+      Alert.alert(t('common.warning'), t('portfolioPhotos.limitReached', { max: PHOTO_LIMIT }));
+    } else if (oversizedCount > 0) {
+      Alert.alert(
+        t('common.warning'),
+        t('branchPhotos.someTooLarge', {
+          count: oversizedCount,
+          maxMb: MAX_PHOTO_BYTES / (1024 * 1024),
+        })
+      );
+    } else if (uploadedCount < accepted.length) {
+      Alert.alert('Error', 'Some photos failed to upload. Please try again.');
+    }
+  };
+
+  const handleRemovePortfolioPhoto = (photoUrl: string): void => {
+    if (!user?.id) return;
+    Alert.alert('Удалить фото', 'Удалить это фото из портфолио?', [
+      { text: 'Отмена', style: 'cancel' },
+      {
+        text: 'Удалить',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            setIsSaving(true);
+            await BaristaProfileService.removePortfolioPhoto(user.id, photoUrl);
+            await loadProfile();
+          } catch (error: unknown) {
+            console.error('Error removing portfolio photo:', error);
+            Alert.alert('Error', 'Failed to remove photo. Please try again.');
+          } finally {
+            setIsSaving(false);
+          }
+        },
+      },
+    ]);
   };
 
   const handleEdit = () => {
@@ -744,12 +800,22 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
             {profile.portfolioPhotos.length > 0 ? (
               <View style={styles.portfolioGrid}>
                 {profile.portfolioPhotos.map((photo, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    onPress={() => openViewer(profile.portfolioPhotos, index)}
-                    accessibilityLabel={`View portfolio photo ${index + 1}`}>
-                    <Image source={{ uri: photo }} style={styles.portfolioPhoto} />
-                  </TouchableOpacity>
+                  <View key={index} style={styles.portfolioItem}>
+                    <TouchableOpacity
+                      onPress={() => openViewer(profile.portfolioPhotos, index)}
+                      accessibilityLabel={`View portfolio photo ${index + 1}`}>
+                      <Image source={{ uri: photo }} style={styles.portfolioPhoto} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.portfolioRemoveButton}
+                      onPress={() => handleRemovePortfolioPhoto(photo)}
+                      disabled={isSaving}
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel="Remove photo">
+                      <Text style={styles.portfolioRemoveButtonText}>×</Text>
+                    </TouchableOpacity>
+                  </View>
                 ))}
               </View>
             ) : (
@@ -1015,10 +1081,30 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 12,
   },
+  portfolioItem: {
+    position: 'relative',
+  },
   portfolioPhoto: {
     width: 100,
     height: 100,
     borderRadius: 12,
+  },
+  portfolioRemoveButton: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  portfolioRemoveButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    lineHeight: 20,
+    fontWeight: '700',
   },
   emptyText: {
     fontSize: 14,

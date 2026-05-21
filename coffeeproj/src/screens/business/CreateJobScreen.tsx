@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -66,6 +66,8 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
     loadBranches();
@@ -190,6 +192,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleSave = async () => {
+    if (isSubmittingRef.current) return;
     if (!validate()) {
       Alert.alert('Validation Error', 'Please fill in all required fields');
       return;
@@ -200,6 +203,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
+    isSubmittingRef.current = true;
     setIsSaving(true);
 
     try {
@@ -277,6 +281,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
       Alert.alert('Error', 'Failed to create job');
     } finally {
       setIsSaving(false);
+      isSubmittingRef.current = false;
     }
   };
 

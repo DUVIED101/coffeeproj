@@ -24,6 +24,7 @@ type AuthStackParamList = {
   AccountType: undefined;
   Signup: { accountType: any };
   Login: undefined;
+  PasswordReset: { email: string };
 };
 
 type Props = {
@@ -107,17 +108,31 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
     try {
-      await AuthService.resetPassword(email.trim().toLowerCase());
+      await AuthService.resetPassword(normalizedEmail);
 
-      Alert.alert('Password Reset', 'A password reset link has been sent to your email address.', [
-        { text: 'OK' },
-      ]);
+      Alert.alert(
+        'Код отправлен',
+        'Мы выслали 6-значный код на вашу почту. Введите его на следующем экране.',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('PasswordReset', { email: normalizedEmail }),
+          },
+        ]
+      );
     } catch (error: unknown) {
       console.error('Password reset error:', error);
-      Alert.alert('Error', 'Failed to send password reset email. Please try again.', [
-        { text: 'OK' },
-      ]);
+      const message = getErrorMessage(error);
+      const isRateLimit = /rate|limit|too many/i.test(message);
+      Alert.alert(
+        isRateLimit ? 'Слишком часто' : 'Ошибка',
+        isRateLimit
+          ? 'Превышен лимит запросов. Подождите несколько минут и попробуйте снова.'
+          : message,
+        [{ text: 'OK' }]
+      );
     }
   };
 

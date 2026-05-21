@@ -275,6 +275,21 @@ export class BaristaProfileService {
   }
 
   /**
+   * Remove a portfolio photo URL from the barista profile. Storage object is
+   * left in place (soft-tombstone) so stale joined readers don't 404.
+   */
+  static async removePortfolioPhoto(userId: string, photoUrl: string): Promise<void> {
+    const profile = await this.getProfileByUserId(userId);
+    if (!profile) throw new Error('Profile not found');
+    const nextPhotos = profile.portfolioPhotos.filter(url => url !== photoUrl);
+    const { error } = await supabase
+      .from('barista_profiles')
+      .update({ portfolio_photos: nextPhotos })
+      .eq('user_id', userId);
+    if (error) throw error;
+  }
+
+  /**
    * Upload a certificate image to storage and return the public URL.
    * Does NOT touch barista_profiles — caller decides when to persist the list
    * (during initial signup the profile row may not exist yet).

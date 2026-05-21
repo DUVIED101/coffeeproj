@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { Job } from '../types/job';
@@ -99,6 +99,7 @@ export const JobCard = React.memo<JobCardProps>(({ job, onPress, onLongPress, ow
   const remainingEquipmentCount = job.requiredEquipmentExperience.length - 3;
 
   const hasUrgentTag = job.tags.includes('urgent');
+  const branchThumbUri = job.branchPhotos?.[0];
 
   return (
     <TouchableOpacity
@@ -115,69 +116,77 @@ export const JobCard = React.memo<JobCardProps>(({ job, onPress, onLongPress, ow
         </View>
       </View>
 
-      <View style={styles.businessInfo}>
-        <Text style={styles.businessText}>
-          {job.businessName}
-          {job.branchName && ` • ${job.branchName}`}
-        </Text>
-        {ownerAggregate && ownerAggregate.reviewCount > 0 && (
-          <StarRow
-            rating={ownerAggregate.averageRating}
-            count={ownerAggregate.reviewCount}
-            showValue
-            size={12}
-          />
-        )}
-      </View>
-
-      <View style={styles.detailsRow}>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{jobTypeText}</Text>
-        </View>
-        {hasUrgentTag && (
-          <View style={[styles.badge, styles.urgentBadge]}>
-            <Text style={[styles.badgeText, styles.urgentText]}>{t('jobs.urgent')}</Text>
+      <View style={styles.bodyRow}>
+        <View style={styles.bodyLeft}>
+          <View style={styles.businessInfo}>
+            <Text style={styles.businessText}>
+              {job.businessName}
+              {job.branchName && ` • ${job.branchName}`}
+            </Text>
+            {ownerAggregate && ownerAggregate.reviewCount > 0 && (
+              <StarRow
+                rating={ownerAggregate.averageRating}
+                count={ownerAggregate.reviewCount}
+                showValue
+                size={12}
+              />
+            )}
           </View>
-        )}
-      </View>
 
-      <View style={styles.shiftInfo}>
-        <Text style={styles.shiftText}>
-          {shiftDate} • {shiftTime}
-        </Text>
-      </View>
-
-      <View style={styles.compensationRow}>
-        <Text style={styles.compensationText}>{compensationText}</Text>
-      </View>
-
-      {job.metroStation && (
-        <View style={styles.metroRow}>
-          <Text style={styles.metroIcon}>Ⓜ</Text>
-          <Text style={styles.metroText}>{job.metroStation}</Text>
-        </View>
-      )}
-
-      {job.location?.address && (
-        <Text style={styles.addressText} numberOfLines={2}>
-          {job.location.address}
-        </Text>
-      )}
-
-      {job.requiredEquipmentExperience.length > 0 && (
-        <View style={styles.equipmentRow}>
-          {visibleEquipment.map((equipment, index) => (
-            <View key={index} style={styles.equipmentChip}>
-              <Text style={styles.equipmentText}>{equipment}</Text>
+          <View style={styles.detailsRow}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{jobTypeText}</Text>
             </View>
-          ))}
-          {remainingEquipmentCount > 0 && (
-            <View style={styles.equipmentChip}>
-              <Text style={styles.equipmentText}>+{remainingEquipmentCount}</Text>
+            {hasUrgentTag && (
+              <View style={[styles.badge, styles.urgentBadge]}>
+                <Text style={[styles.badgeText, styles.urgentText]}>{t('jobs.urgent')}</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.shiftInfo}>
+            <Text style={styles.shiftText}>
+              {shiftDate} • {shiftTime}
+            </Text>
+          </View>
+
+          <View style={styles.compensationRow}>
+            <Text style={styles.compensationText}>{compensationText}</Text>
+          </View>
+
+          {job.metroStation && (
+            <View style={styles.metroRow}>
+              <Text style={styles.metroIcon}>Ⓜ</Text>
+              <Text style={styles.metroText}>{job.metroStation}</Text>
+            </View>
+          )}
+
+          {job.location?.address && (
+            <Text style={styles.addressText} numberOfLines={2}>
+              {job.location.address}
+            </Text>
+          )}
+
+          {job.requiredEquipmentExperience.length > 0 && (
+            <View style={styles.equipmentRow}>
+              {visibleEquipment.map((equipment, index) => (
+                <View key={index} style={styles.equipmentChip}>
+                  <Text style={styles.equipmentText}>{equipment}</Text>
+                </View>
+              ))}
+              {remainingEquipmentCount > 0 && (
+                <View style={styles.equipmentChip}>
+                  <Text style={styles.equipmentText}>+{remainingEquipmentCount}</Text>
+                </View>
+              )}
             </View>
           )}
         </View>
-      )}
+
+        {branchThumbUri && (
+          <Image source={{ uri: branchThumbUri }} style={styles.branchThumb} resizeMode="cover" />
+        )}
+      </View>
 
       <View style={styles.footer}>
         <Text style={styles.applicationCount}>
@@ -217,6 +226,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
+  },
+  bodyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  bodyLeft: {
+    flex: 1,
+  },
+  branchThumb: {
+    width: 96,
+    height: 96,
+    borderRadius: 12,
+    backgroundColor: COLORS.backgroundSecondary,
   },
   statusText: {
     fontSize: 12,

@@ -265,7 +265,7 @@
     "organizationSection": "Организация",
     "brandSection": "Бренд",
     "website": "Сайт",
-    "instagram": "Instagram",
+    "socialLinks": "Социальные сети",
     "foundedYear": "Год основания",
     "branches": "Мои точки",
     "branchesCount_one": "{{count}} точка",
@@ -307,7 +307,7 @@
       "pickLogo": "Выбрать фото",
       "changeLogo": "Изменить",
       "website": "Сайт",
-      "instagram": "Instagram",
+      "socialLinks": "Социальные сети",
       "foundedYear": "Год основания"
     },
     "branch": {
@@ -375,6 +375,13 @@
     "create": "+ Создать",
     "empty": "Нет {{status}} вакансий",
     "emptyHint": "Здесь появятся вакансии с этим статусом.\nДолгое нажатие на карточку — действия со статусом."
+  },
+  "socialLinks": {
+    "instagram": "Instagram",
+    "telegram": "Telegram",
+    "vk": "ВКонтакте",
+    "website": "Сайт",
+    "other": "Другое"
   },
   "common": {
     "save": "Сохранить",

@@ -18,6 +18,7 @@ type BranchPhotoGalleryProps = {
   busyIndex?: number;
   onAdd?: () => void;
   onRemove?: (photoUrl: string, index: number) => void;
+  onPhotoPress?: (index: number) => void;
 };
 
 const Thumbnail = memo(function Thumbnail({
@@ -26,17 +27,20 @@ const Thumbnail = memo(function Thumbnail({
   editable,
   busy,
   onRemove,
+  onPress,
 }: {
   uri: string;
   index: number;
   editable: boolean;
   busy: boolean;
   onRemove?: (uri: string, index: number) => void;
+  onPress?: (index: number) => void;
 }) {
   const handleRemove = useCallback(() => onRemove?.(uri, index), [onRemove, uri, index]);
+  const handlePress = useCallback(() => onPress?.(index), [onPress, index]);
 
-  return (
-    <View style={styles.thumbnailWrap}>
+  const content = (
+    <>
       <Image source={{ uri }} style={styles.thumbnail} resizeMode="cover" />
       {index === 0 && (
         <View style={styles.coverBadge}>
@@ -57,8 +61,23 @@ const Thumbnail = memo(function Thumbnail({
           )}
         </TouchableOpacity>
       )}
-    </View>
+    </>
   );
+
+  if (onPress && !editable) {
+    return (
+      <TouchableOpacity
+        style={styles.thumbnailWrap}
+        onPress={handlePress}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel={`View photo ${index + 1}`}>
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return <View style={styles.thumbnailWrap}>{content}</View>;
 });
 
 export const BranchPhotoGallery: React.FC<BranchPhotoGalleryProps> = ({
@@ -67,6 +86,7 @@ export const BranchPhotoGallery: React.FC<BranchPhotoGalleryProps> = ({
   busyIndex,
   onAdd,
   onRemove,
+  onPhotoPress,
 }) => {
   const { t } = useTranslation();
   const canAdd = editable && photos.length < PHOTO_LIMIT;
@@ -79,9 +99,10 @@ export const BranchPhotoGallery: React.FC<BranchPhotoGalleryProps> = ({
         editable={editable}
         busy={busyIndex === index}
         onRemove={onRemove}
+        onPress={onPhotoPress}
       />
     ),
-    [editable, busyIndex, onRemove]
+    [editable, busyIndex, onRemove, onPhotoPress]
   );
 
   const keyExtractor = useCallback((url: string, idx: number) => `${idx}-${url}`, []);

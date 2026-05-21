@@ -105,17 +105,34 @@ export class AuthService {
   }
 
   /**
-   * Reset password for email
+   * Send a password-reset email. With OTP flow the email contains a 6-digit
+   * code that the user enters in PasswordResetScreen — no deep link required.
    */
   static async resetPassword(email: string): Promise<void> {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'coffeeproj://reset-password', // Deep link for mobile
-      });
-
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
       if (error) throw error;
     } catch (error) {
       console.error('Error in resetPassword:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Exchange the 6-digit code from the recovery email for an authenticated
+   * session. After this returns, the caller can immediately call
+   * `updatePassword` because the user is signed in.
+   */
+  static async verifyPasswordResetOtp(email: string, token: string): Promise<void> {
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: 'recovery',
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error in verifyPasswordResetOtp:', error);
       throw error;
     }
   }

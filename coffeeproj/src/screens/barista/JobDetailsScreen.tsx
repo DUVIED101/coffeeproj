@@ -18,6 +18,7 @@ import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { StarRow } from '../../components/StarRow';
 import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
+import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import type { Job } from '../../types/job';
 import type { Application } from '../../types/application';
 import type { UserId } from '../../types/ids';
@@ -45,6 +46,8 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [isNavigating, setIsNavigating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ownerAggregate, setOwnerAggregate] = useState<UserReviewAggregate | null>(null);
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -216,7 +219,13 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {job.branchPhotos && job.branchPhotos.length > 0 && (
           <View style={styles.section}>
-            <BranchPhotoGallery photos={job.branchPhotos} />
+            <BranchPhotoGallery
+              photos={job.branchPhotos}
+              onPhotoPress={index => {
+                setViewerIndex(index);
+                setViewerVisible(true);
+              }}
+            />
           </View>
         )}
 
@@ -352,6 +361,13 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
       )}
+
+      <FullscreenImageViewer
+        visible={viewerVisible}
+        photos={job.branchPhotos ?? []}
+        initialIndex={viewerIndex}
+        onClose={() => setViewerVisible(false)}
+      />
     </SafeAreaView>
   );
 };

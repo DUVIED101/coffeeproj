@@ -22,8 +22,10 @@ import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { CityToggle } from '../../components/CityToggle';
 import { MetroSelector } from '../../components/MetroSelector';
 import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
+import { SocialLinksEditor } from '../../components/SocialLinksEditor';
 import { useAuthStore } from '../../stores/authStore';
 import type { Business, Branch, BusinessType, Equipment, GeoPoint } from '../../types';
+import type { SocialLink } from '../../types/business';
 import type { CityCode } from '../../types/city';
 import { DEFAULT_CITY, CITY_LABELS_RU, toCityCode } from '../../types/city';
 import { PHOTO_LIMIT, MAX_PHOTO_BYTES, isFileTooLarge } from '../../utils/storage';
@@ -97,7 +99,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
   const [pendingLogoUri, setPendingLogoUri] = useState<string | null>(null);
   const [website, setWebsite] = useState('');
-  const [instagramHandle, setInstagramHandle] = useState('');
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [foundedYear, setFoundedYear] = useState('');
 
   // Step 3 — First branch
@@ -127,7 +129,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
           setBusinessType(business.businessType);
           setLogoUrl(business.logoUrl);
           setWebsite(business.website ?? '');
-          setInstagramHandle(business.instagramHandle ?? '');
+          setSocialLinks(business.socialLinks ?? []);
           setFoundedYear(business.foundedYear?.toString() ?? '');
 
           const branches = await BusinessService.getBranches(business.id);
@@ -266,13 +268,17 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         existingBusiness ?? (await BusinessService.getBusinessByOwnerId(user.id));
 
       // 1) Upsert business
+      const sanitizedSocialLinks = socialLinks
+        .map(link => ({ ...link, value: link.value.trim() }))
+        .filter(link => link.value.length > 0);
+
       const business = currentBusiness
         ? await BusinessService.updateBusiness(currentBusiness.id, {
             name: name.trim(),
             description: description.trim() || undefined,
             businessType,
             website: website.trim() || undefined,
-            instagramHandle: instagramHandle.trim() || undefined,
+            socialLinks: sanitizedSocialLinks,
             foundedYear: foundedYear ? parseInt(foundedYear, 10) : undefined,
           })
         : await BusinessService.createBusiness({
@@ -281,7 +287,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
             description: description.trim() || undefined,
             businessType,
             website: website.trim() || undefined,
-            instagramHandle: instagramHandle.trim() || undefined,
+            socialLinks: sanitizedSocialLinks,
             foundedYear: foundedYear ? parseInt(foundedYear, 10) : undefined,
           });
 
@@ -375,7 +381,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
     businessType,
     pendingLogoUri,
     website,
-    instagramHandle,
+    socialLinks,
     foundedYear,
     branchName,
     branchAddress,
@@ -520,15 +526,8 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 keyboardType="url"
               />
 
-              <Text style={styles.label}>{t('businessSetup.brand.instagram')}</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="@coffeeshop"
-                placeholderTextColor={COLORS.textSecondary}
-                value={instagramHandle}
-                onChangeText={setInstagramHandle}
-                autoCapitalize="none"
-              />
+              <Text style={styles.label}>{t('businessSetup.brand.socialLinks')}</Text>
+              <SocialLinksEditor links={socialLinks} onChange={setSocialLinks} />
 
               <Text style={styles.label}>{t('businessSetup.brand.foundedYear')}</Text>
               <TextInput

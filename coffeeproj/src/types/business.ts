@@ -19,6 +19,13 @@ export interface GeoPoint {
   longitude: number;
 }
 
+export type SocialPlatform = 'instagram' | 'telegram' | 'vk' | 'website' | 'other';
+
+export interface SocialLink {
+  platform: SocialPlatform;
+  value: string;
+}
+
 export interface Business {
   id: string;
   ownerId: string;
@@ -29,7 +36,7 @@ export interface Business {
   isAcceptingApplications?: boolean;
   logoUrl?: string;
   website?: string;
-  instagramHandle?: string;
+  socialLinks: SocialLink[];
   foundedYear?: number;
   createdAt: string;
   updatedAt: string;
@@ -66,7 +73,7 @@ export interface CreateBusinessData {
   businessType: BusinessType;
   logoUrl?: string;
   website?: string;
-  instagramHandle?: string;
+  socialLinks?: SocialLink[];
   foundedYear?: number;
 }
 
@@ -77,7 +84,7 @@ export interface UpdateBusinessData {
   isAcceptingApplications?: boolean;
   logoUrl?: string;
   website?: string;
-  instagramHandle?: string;
+  socialLinks?: SocialLink[];
   foundedYear?: number;
 }
 

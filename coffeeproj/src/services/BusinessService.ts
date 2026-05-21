@@ -40,7 +40,7 @@ export class BusinessService {
       isAcceptingApplications: db.is_accepting_applications ?? true,
       logoUrl: db.logo_url ?? undefined,
       website: db.website ?? undefined,
-      instagramHandle: db.instagram_handle ?? undefined,
+      socialLinks: Array.isArray(db.social_links) ? db.social_links : [],
       foundedYear: db.founded_year ?? undefined,
       createdAt: db.created_at,
       updatedAt: db.updated_at,
@@ -82,7 +82,7 @@ export class BusinessService {
           business_type: data.businessType,
           logo_url: data.logoUrl,
           website: data.website,
-          instagram_handle: data.instagramHandle,
+          social_links: data.socialLinks ?? [],
           founded_year: data.foundedYear,
         })
         .select()
@@ -100,7 +100,7 @@ export class BusinessService {
               businessType: data.businessType,
               logoUrl: data.logoUrl,
               website: data.website,
-              instagramHandle: data.instagramHandle,
+              socialLinks: data.socialLinks,
               foundedYear: data.foundedYear,
             });
           }
@@ -188,8 +188,8 @@ export class BusinessService {
       if (updates.website !== undefined) {
         dbUpdates.website = updates.website;
       }
-      if (updates.instagramHandle !== undefined) {
-        dbUpdates.instagram_handle = updates.instagramHandle;
+      if (updates.socialLinks !== undefined) {
+        dbUpdates.social_links = updates.socialLinks;
       }
       if (updates.foundedYear !== undefined) {
         dbUpdates.founded_year = updates.foundedYear;

@@ -261,7 +261,7 @@
     "organizationSection": "Organization",
     "brandSection": "Brand",
     "website": "Website",
-    "instagram": "Instagram",
+    "socialLinks": "Social networks",
     "foundedYear": "Founded",
     "branches": "Branches",
     "branchesCount_one": "{{count}} branch",
@@ -301,7 +301,7 @@
       "pickLogo": "Choose photo",
       "changeLogo": "Change",
       "website": "Website",
-      "instagram": "Instagram handle",
+      "socialLinks": "Social networks",
       "foundedYear": "Founded year"
     },
     "branch": {
@@ -367,6 +367,13 @@
     "create": "+ Create",
     "empty": "No {{status}} jobs",
     "emptyHint": "Jobs with this status will appear here.\nLong-press a card for status actions."
+  },
+  "socialLinks": {
+    "instagram": "Instagram",
+    "telegram": "Telegram",
+    "vk": "VK",
+    "website": "Website",
+    "other": "Other"
   },
   "common": {
     "save": "Save",

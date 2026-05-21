@@ -20,11 +20,51 @@ import { BusinessService } from '../../services/BusinessService';
 import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import type { Business } from '../../types';
+import type { SocialLink, SocialPlatform } from '../../types/business';
 import type { UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
 import type { BusinessProfileStackParamList } from '../../navigation/BusinessProfileStack';
+import type { TFunction } from 'i18next';
 
 type Props = NativeStackScreenProps<BusinessProfileStackParamList, 'BusinessProfileHome'>;
+
+const stripAt = (handle: string): string => handle.replace(/^@+/, '').trim();
+
+const buildSocialLinkUrl = (link: SocialLink): string | null => {
+  const value = link.value.trim();
+  if (!value) return null;
+  if (/^https?:\/\//i.test(value)) return value;
+  switch (link.platform) {
+    case 'instagram':
+      return `https://instagram.com/${stripAt(value)}`;
+    case 'telegram':
+      return `https://t.me/${stripAt(value)}`;
+    case 'vk':
+      return value.startsWith('vk.com') ? `https://${value}` : `https://vk.com/${stripAt(value)}`;
+    case 'website':
+      return `https://${value}`;
+    case 'other':
+      return null;
+  }
+};
+
+const socialIconName = (platform: SocialPlatform): string => {
+  switch (platform) {
+    case 'instagram':
+      return 'instagram';
+    case 'telegram':
+      return 'send';
+    case 'vk':
+      return 'alpha-v-circle';
+    case 'website':
+      return 'web';
+    case 'other':
+      return 'link-variant';
+  }
+};
+
+const socialLabel = (platform: SocialPlatform, t: TFunction): string =>
+  t(`socialLinks.${platform}`, { defaultValue: platform });
 
 export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { t } = useTranslation();
@@ -174,7 +214,7 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {(business.website || business.instagramHandle || business.foundedYear) && (
+        {(business.website || business.socialLinks.length > 0 || business.foundedYear) && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('businessProfile.brandSection')}</Text>
             {business.website && (
@@ -193,19 +233,39 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.chevron}>›</Text>
               </TouchableOpacity>
             )}
-            {business.instagramHandle && (
-              <View style={styles.row}>
-                <View style={styles.rowIcon}>
-                  <MaterialCommunityIcons name="instagram" size={22} color={COLORS.text} />
+            {business.socialLinks.map((link, index) => {
+              const url = buildSocialLinkUrl(link);
+              const inner = (
+                <>
+                  <View style={styles.rowIcon}>
+                    <MaterialCommunityIcons
+                      name={socialIconName(link.platform)}
+                      size={22}
+                      color={COLORS.text}
+                    />
+                  </View>
+                  <View style={styles.rowLabelWrap}>
+                    <Text style={styles.rowLabel}>{socialLabel(link.platform, t)}</Text>
+                    <Text style={styles.rowSubLabel} numberOfLines={1}>
+                      {link.value}
+                    </Text>
+                  </View>
+                  {url && <Text style={styles.chevron}>›</Text>}
+                </>
+              );
+              return url ? (
+                <TouchableOpacity
+                  key={`${link.platform}-${index}`}
+                  style={styles.row}
+                  onPress={() => handleOpenLink(url)}>
+                  {inner}
+                </TouchableOpacity>
+              ) : (
+                <View key={`${link.platform}-${index}`} style={styles.row}>
+                  {inner}
                 </View>
-                <View style={styles.rowLabelWrap}>
-                  <Text style={styles.rowLabel}>{t('businessProfile.instagram')}</Text>
-                  <Text style={styles.rowSubLabel} numberOfLines={1}>
-                    {business.instagramHandle}
-                  </Text>
-                </View>
-              </View>
-            )}
+              );
+            })}
             {business.foundedYear && (
               <View style={styles.row}>
                 <View style={styles.rowIcon}>

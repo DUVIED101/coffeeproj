@@ -16,6 +16,7 @@ import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
 import { useAuthStore } from '../../stores/authStore';
 import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
+import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import type { Job, JobStatus } from '../../types/job';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 
@@ -33,6 +34,8 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [viewerVisible, setViewerVisible] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState(0);
 
   useEffect(() => {
     loadJob();
@@ -176,7 +179,13 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {job.branchPhotos && job.branchPhotos.length > 0 && (
           <View style={styles.section}>
-            <BranchPhotoGallery photos={job.branchPhotos} />
+            <BranchPhotoGallery
+              photos={job.branchPhotos}
+              onPhotoPress={index => {
+                setViewerIndex(index);
+                setViewerVisible(true);
+              }}
+            />
           </View>
         )}
 
@@ -335,6 +344,13 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           )}
         </View>
       )}
+
+      <FullscreenImageViewer
+        visible={viewerVisible}
+        photos={job.branchPhotos ?? []}
+        initialIndex={viewerIndex}
+        onClose={() => setViewerVisible(false)}
+      />
     </SafeAreaView>
   );
 };
