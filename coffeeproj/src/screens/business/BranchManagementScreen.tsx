@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -32,6 +32,7 @@ import { useAuthStore } from '../../stores/authStore';
 import type { Branch, Equipment, GeoPoint, CityCode } from '../../types';
 import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU } from '../../types/city';
 import { PHOTO_LIMIT, MAX_PHOTO_BYTES, isFileTooLarge } from '../../utils/storage';
+import { geocodeAddress } from '../../utils/geocode';
 
 type BusinessStackParamList = {
   BusinessProfileSetup: undefined;
@@ -133,6 +134,12 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
   const [addressError, setAddressError] = useState<string | null>(null);
   const [metroError, setMetroError] = useState<string | null>(null);
 
+  const [addressCoords, setAddressCoords] = useState<GeoPoint | null>(null);
+  const [addressLookupStatus, setAddressLookupStatus] = useState<
+    'idle' | 'searching' | 'found' | 'notFound'
+  >('idle');
+  const geocodedKeyRef = useRef<string | null>(null);
+
   const loadBranches = useCallback(async () => {
     try {
       const data = await BusinessService.getBranches(businessId);
@@ -167,6 +174,9 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
     setNameError(null);
     setAddressError(null);
     setMetroError(null);
+    setAddressCoords(null);
+    setAddressLookupStatus('idle');
+    geocodedKeyRef.current = null;
   }, []);
 
   const closeForm = useCallback(() => {
@@ -185,12 +195,16 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
     setEditingBranch(branch);
     setName(branch.name);
     setAddress(branch.address);
-    setCity(toCityCode(branch.city));
+    const editCity = toCityCode(branch.city);
+    setCity(editCity);
     setMetroStation(branch.metroStation ?? '');
     setSelectedEquipment(branch.equipment);
     setNameError(null);
     setAddressError(null);
     setMetroError(null);
+    setAddressCoords(branch.coordinates);
+    setAddressLookupStatus('found');
+    geocodedKeyRef.current = `${branch.address.trim()}|${editCity}`;
     setIsAddingBranch(true);
   }, []);
 
@@ -229,43 +243,33 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
     return isValid;
   };
 
-  const geocodeAddress = async (
-    addressLine: string,
-    cityLine: string
-  ): Promise<GeoPoint | null> => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10_000);
-    try {
-      const fullAddress = `${addressLine}, ${cityLine}, Russia`;
-      const encodedAddress = encodeURIComponent(fullAddress);
-
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=1`,
-        {
-          headers: {
-            'User-Agent': 'CoffeeProj/1.0',
-          },
-          signal: controller.signal,
-        }
-      );
-
-      const data = await response.json();
-
-      if (data && data.length > 0) {
-        return {
-          latitude: parseFloat(data[0].lat),
-          longitude: parseFloat(data[0].lon),
-        };
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Geocoding error:', error);
-      return null;
-    } finally {
-      clearTimeout(timeoutId);
+  useEffect(() => {
+    if (!isAddingBranch) return;
+    const trimmedAddress = address.trim();
+    if (!trimmedAddress) {
+      setAddressCoords(null);
+      setAddressLookupStatus('idle');
+      geocodedKeyRef.current = null;
+      return;
     }
-  };
+    const key = `${trimmedAddress}|${city}`;
+    if (geocodedKeyRef.current === key) return;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(async () => {
+      setAddressLookupStatus('searching');
+      const coords = await geocodeAddress(trimmedAddress, CITY_LABELS_RU[city], controller.signal);
+      if (controller.signal.aborted) return;
+      geocodedKeyRef.current = key;
+      setAddressCoords(coords);
+      setAddressLookupStatus(coords ? 'found' : 'notFound');
+    }, 500);
+
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [address, city, isAddingBranch]);
 
   const handleSaveBranch = async () => {
     if (!validateForm()) {
@@ -277,10 +281,12 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
     try {
       const trimmedAddress = address.trim();
       const cityLabel = CITY_LABELS_RU[city];
+      const key = `${trimmedAddress}|${city}`;
 
       let coordinates: GeoPoint | null;
-
-      if (
+      if (addressCoords && geocodedKeyRef.current === key) {
+        coordinates = addressCoords;
+      } else if (
         editingBranch &&
         trimmedAddress === editingBranch.address &&
         city === editingBranch.city
@@ -535,6 +541,25 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
                   returnKeyType="done"
                 />
                 {addressError && <Text style={styles.errorText}>{addressError}</Text>}
+                {addressLookupStatus === 'searching' && (
+                  <Text style={styles.addressHintMuted}>
+                    {t('branches.form.addressLookup.searching', { defaultValue: 'Ищем адрес…' })}
+                  </Text>
+                )}
+                {addressLookupStatus === 'found' && (
+                  <Text style={styles.addressHintFound}>
+                    {t('branches.form.addressLookup.found', {
+                      defaultValue: 'Адрес найден — внизу подсказки по метро',
+                    })}
+                  </Text>
+                )}
+                {addressLookupStatus === 'notFound' && (
+                  <Text style={styles.addressHintNotFound}>
+                    {t('branches.form.addressLookup.notFound', {
+                      defaultValue: 'Адрес не найден — уточните формулировку',
+                    })}
+                  </Text>
+                )}
               </View>
 
               <View style={styles.inputContainer}>
@@ -565,6 +590,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
                     setMetroStation(value ?? '');
                     if (value) setMetroError(null);
                   }}
+                  userLocation={addressCoords ?? undefined}
                 />
                 {metroError && <Text style={styles.errorText}>{metroError}</Text>}
               </View>
@@ -711,6 +737,21 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: COLORS.error,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  addressHintMuted: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  addressHintFound: {
+    color: COLORS.success,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  addressHintNotFound: {
+    color: COLORS.warning,
     fontSize: 12,
     marginTop: 4,
   },

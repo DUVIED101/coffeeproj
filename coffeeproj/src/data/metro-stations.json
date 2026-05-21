@@ -592,8 +592,8 @@
       "id": "50",
       "name": "Спасская",
       "nameEn": "Spasskaya",
-      "line": "Правобережная",
-      "lineEn": "Pravoberezhnaya",
+      "line": "Лахтинско-Правобережная",
+      "lineEn": "Lakhtinsko-Pravoberezhnaya",
       "lineColor": "#F98B3A",
       "coordinates": {
         "latitude": 59.926994,
@@ -604,8 +604,8 @@
       "id": "51",
       "name": "Достоевская",
       "nameEn": "Dostoevskaya",
-      "line": "Правобережная",
-      "lineEn": "Pravoberezhnaya",
+      "line": "Лахтинско-Правобережная",
+      "lineEn": "Lakhtinsko-Pravoberezhnaya",
       "lineColor": "#F98B3A",
       "coordinates": {
         "latitude": 59.928232,
@@ -616,8 +616,8 @@
       "id": "52",
       "name": "Лиговский проспект",
       "nameEn": "Ligovsky Prospekt",
-      "line": "Правобережная",
-      "lineEn": "Pravoberezhnaya",
+      "line": "Лахтинско-Правобережная",
+      "lineEn": "Lakhtinsko-Pravoberezhnaya",
       "lineColor": "#F98B3A",
       "coordinates": {
         "latitude": 59.930166,
@@ -628,8 +628,8 @@
       "id": "53",
       "name": "Площадь Александра Невского-2",
       "nameEn": "Ploshchad Aleksandra Nevskogo-2",
-      "line": "Правобережная",
-      "lineEn": "Pravoberezhnaya",
+      "line": "Лахтинско-Правобережная",
+      "lineEn": "Lakhtinsko-Pravoberezhnaya",
       "lineColor": "#F98B3A",
       "coordinates": {
         "latitude": 59.924139,
@@ -640,8 +640,8 @@
       "id": "54",
       "name": "Новочеркасская",
       "nameEn": "Novocherkasskaya",
-      "line": "Правобережная",
-      "lineEn": "Pravoberezhnaya",
+      "line": "Лахтинско-Правобережная",
+      "lineEn": "Lakhtinsko-Pravoberezhnaya",
       "lineColor": "#F98B3A",
       "coordinates": {
         "latitude": 59.929321,
@@ -652,8 +652,8 @@
       "id": "55",
       "name": "Ладожская",
       "nameEn": "Ladozhskaya",
-      "line": "Правобережная",
-      "lineEn": "Pravoberezhnaya",
+      "line": "Лахтинско-Правобережная",
+      "lineEn": "Lakhtinsko-Pravoberezhnaya",
       "lineColor": "#F98B3A",
       "coordinates": {
         "latitude": 59.950348,
@@ -664,8 +664,8 @@
       "id": "56",
       "name": "Проспект Большевиков",
       "nameEn": "Prospekt Bolshevikov",
-      "line": "Правобережная",
-      "lineEn": "Pravoberezhnaya",
+      "line": "Лахтинско-Правобережная",
+      "lineEn": "Lakhtinsko-Pravoberezhnaya",
       "lineColor": "#F98B3A",
       "coordinates": {
         "latitude": 59.960821,
@@ -676,8 +676,8 @@
       "id": "57",
       "name": "Улица Дыбенко",
       "nameEn": "Ulitsa Dybenko",
-      "line": "Правобережная",
-      "lineEn": "Pravoberezhnaya",
+      "line": "Лахтинско-Правобережная",
+      "lineEn": "Lakhtinsko-Pravoberezhnaya",
       "lineColor": "#F98B3A",
       "coordinates": {
         "latitude": 59.971237,
@@ -868,21 +868,21 @@
       "id": "73",
       "name": "Путиловская",
       "nameEn": "Putilovskaya",
-      "line": "Кольцевая",
-      "lineEn": "Koltsevaya",
-      "lineColor": "#8B4789",
+      "line": "Красносельско-Калининская",
+      "lineEn": "Krasnoselsko-Kalininskaya",
+      "lineColor": "#A0522D",
       "coordinates": {
-        "latitude": 59.884342,
-        "longitude": 30.257113
+        "latitude": 59.879167,
+        "longitude": 30.265278
       }
     },
     {
       "id": "74",
       "name": "Горный институт",
       "nameEn": "Gorny Institut",
-      "line": "Кольцевая",
-      "lineEn": "Koltsevaya",
-      "lineColor": "#8B4789",
+      "line": "Лахтинско-Правобережная",
+      "lineEn": "Lakhtinsko-Pravoberezhnaya",
+      "lineColor": "#F98B3A",
       "coordinates": {
         "latitude": 59.918234,
         "longitude": 30.286521
@@ -890,14 +890,14 @@
     },
     {
       "id": "75",
-      "name": "Театральная",
-      "nameEn": "Teatralnaya",
-      "line": "Кольцевая",
-      "lineEn": "Koltsevaya",
-      "lineColor": "#8B4789",
+      "name": "Юго-Западная",
+      "nameEn": "Yugo-Zapadnaya",
+      "line": "Красносельско-Калининская",
+      "lineEn": "Krasnoselsko-Kalininskaya",
+      "lineColor": "#A0522D",
       "coordinates": {
-        "latitude": 59.932123,
-        "longitude": 30.327654
+        "latitude": 59.859167,
+        "longitude": 30.230278
       }
     }
   ],

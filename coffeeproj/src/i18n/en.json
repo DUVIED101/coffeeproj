@@ -21,6 +21,7 @@
     "searchPlaceholder": "Search station...",
     "noResults": "No stations found",
     "selectedCount": "{{count}} stations",
+    "nearbySection": "Near you",
     "cityTab": {
       "spb": "SPB",
       "moscow": "Moscow"
@@ -207,6 +208,11 @@
       "address": "Address",
       "addressRequired": "Address is required",
       "addressPlaceholder": "e.g. Arbat St, 10",
+      "addressLookup": {
+        "searching": "Looking up address…",
+        "found": "Address found — see nearby metro below",
+        "notFound": "Address not found — please refine"
+      },
       "city": "City",
       "metro": "Metro Station",
       "metroRequired": "Metro station is required",

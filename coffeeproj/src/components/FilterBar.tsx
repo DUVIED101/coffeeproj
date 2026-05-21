@@ -174,6 +174,7 @@ export const FilterBar = React.memo<FilterBarProps>(
               value={currentFilters.metroStations ?? []}
               onChange={handleMetroChange}
               placeholder={t('filters.metroStation')}
+              userLocation={userLocation}
             />
           </View>
 

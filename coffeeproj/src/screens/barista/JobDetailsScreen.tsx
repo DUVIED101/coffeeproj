@@ -239,7 +239,7 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
           )}
           {displayDistance !== undefined && (
-            <Text style={styles.distance}>{formatDistance(displayDistance)} from you</Text>
+            <Text style={styles.distance}>{formatDistance(displayDistance)} от вас</Text>
           )}
         </View>
 

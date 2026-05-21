@@ -3,7 +3,7 @@ import {
   View,
   Text,
   TextInput,
-  FlatList,
+  SectionList,
   TouchableOpacity,
   StyleSheet,
   Modal,
@@ -14,13 +14,19 @@ import { MetroService } from '../utils/metro';
 import type { MetroStation } from '../utils/metro';
 import type { CityCode } from '../types/city';
 import { CITY_CODES } from '../types/city';
+import type { GeoPoint } from '../types/business';
 import { COLORS } from '../config/constants';
+
+const NEARBY_LIMIT = 5;
+
+type StationRow = MetroStation & { distance?: number };
 
 type CommonProps = {
   placeholder?: string;
   error?: string;
   city: CityCode;
   onCityChange: (city: CityCode) => void;
+  userLocation?: GeoPoint;
 };
 
 type SingleMetroSelectorProps = CommonProps & {
@@ -45,6 +51,7 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
     multiSelect,
     city,
     onCityChange,
+    userLocation,
   } = props;
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,12 +64,30 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.value, props.multiSelect]);
 
-  const filteredStations = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return MetroService.getAllStations(city);
+  const nearbyStations = useMemo<StationRow[]>(() => {
+    if (!userLocation || searchQuery.trim()) return [];
+    return MetroService.getStationsByDistance(
+      userLocation.latitude,
+      userLocation.longitude,
+      city,
+      NEARBY_LIMIT
+    );
+  }, [userLocation, searchQuery, city]);
+
+  const sections = useMemo<Array<{ key: 'nearby' | 'all'; data: StationRow[] }>>(() => {
+    const trimmed = searchQuery.trim();
+    if (trimmed) {
+      return [{ key: 'all', data: MetroService.searchStations(trimmed, city) as StationRow[] }];
     }
-    return MetroService.searchStations(searchQuery, city);
-  }, [searchQuery, city]);
+    const nearbyIds = new Set(nearbyStations.map(s => s.id));
+    const rest: StationRow[] = MetroService.getAllStations(city).filter(s => !nearbyIds.has(s.id));
+    const result: Array<{ key: 'nearby' | 'all'; data: StationRow[] }> = [];
+    if (nearbyStations.length > 0) {
+      result.push({ key: 'nearby', data: nearbyStations });
+    }
+    result.push({ key: 'all', data: rest });
+    return result;
+  }, [searchQuery, city, nearbyStations]);
 
   const handleSelectStation = (station: MetroStation) => {
     if (props.multiSelect) {
@@ -107,17 +132,39 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
     return t('metro.selectedCount', { count: selectedStations.length });
   };
 
-  const renderStation = ({ item }: { item: MetroStation }) => {
+  const renderStation = ({ item }: { item: StationRow }) => {
     const isSelected = isStationSelected(item.name);
     return (
       <TouchableOpacity style={styles.stationItem} onPress={() => handleSelectStation(item)}>
         <View style={[styles.lineIndicator, { backgroundColor: item.lineColor }]} />
         <View style={styles.stationInfo}>
           <Text style={styles.stationName}>{item.name}</Text>
-          <Text style={styles.stationLine}>{item.line}</Text>
+          <View style={styles.stationMetaRow}>
+            <Text style={styles.stationLine}>{item.line}</Text>
+            {typeof item.distance === 'number' && (
+              <Text style={styles.stationDistance}>
+                {MetroService.formatDistance(item.distance)}
+              </Text>
+            )}
+          </View>
         </View>
         {multiSelect && isSelected && <Text style={styles.checkmark}>✓</Text>}
       </TouchableOpacity>
+    );
+  };
+
+  const renderSectionHeader = ({
+    section,
+  }: {
+    section: { key: 'nearby' | 'all'; data: StationRow[] };
+  }) => {
+    if (section.key !== 'nearby') return null;
+    return (
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionHeaderText}>
+          {t('metro.nearbySection', { defaultValue: 'Рядом с вами' })}
+        </Text>
+      </View>
     );
   };
 
@@ -177,12 +224,14 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
               autoFocus
             />
 
-            <FlatList
-              data={filteredStations}
+            <SectionList
+              sections={sections}
               renderItem={renderStation}
+              renderSectionHeader={renderSectionHeader}
               keyExtractor={item => item.id}
               style={styles.stationList}
               keyboardShouldPersistTaps="handled"
+              stickySectionHeadersEnabled={false}
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
                   <Text style={styles.emptyText}>{t('metro.noResults')}</Text>
@@ -341,6 +390,27 @@ const styles = StyleSheet.create({
   stationLine: {
     fontSize: 14,
     color: '#666',
+  },
+  stationMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  stationDistance: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginLeft: 8,
+  },
+  sectionHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+    backgroundColor: '#fff',
+  },
+  sectionHeaderText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
   },
   emptyContainer: {
     padding: 40,

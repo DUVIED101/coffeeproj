@@ -57,8 +57,17 @@ describe('MetroService', () => {
       ]);
     });
 
-    it('preserves the existing 6 Saint Petersburg lines', () => {
-      expect(MetroService.getUniqueLines('spb')).toHaveLength(6);
+    it('lists the 6 real Saint Petersburg lines (no ring line — that is Moscow only)', () => {
+      const lines = MetroService.getUniqueLines('spb').map(line => line.name);
+
+      expect(lines).toEqual([
+        'Кировско-Выборгская',
+        'Московско-Петроградская',
+        'Невско-Василеостровская',
+        'Лахтинско-Правобережная',
+        'Фрунзенско-Приморская',
+        'Красносельско-Калининская',
+      ]);
     });
   });
 
