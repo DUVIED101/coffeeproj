@@ -118,29 +118,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   // Delete the current user's account and clear local session state.
+  // Intentionally does NOT touch the global `isLoading` flag — AppNavigator
+  // unmounts the whole tree while isLoading is true, which would tear down
+  // the DeleteAccountScreen and swallow validation errors (e.g. wrong
+  // password). The screen owns its own submit-loading state.
   deleteAccount: async (params: { password: string; force?: boolean }) => {
-    try {
-      set({ isLoading: true });
-
-      const currentUserId = get().user?.id;
-      if (currentUserId) {
-        try {
-          await NotificationService.unregisterDevice(currentUserId as UserId);
-        } catch (err) {
-          console.warn('Error unregistering device on delete:', err);
-        }
+    const currentUserId = get().user?.id;
+    if (currentUserId) {
+      try {
+        await NotificationService.unregisterDevice(currentUserId as UserId);
+      } catch (err) {
+        console.warn('Error unregistering device on delete:', err);
       }
-
-      await AuthService.deleteAccount(params);
-
-      get().clearAuth();
-      await AsyncStorage.removeItem('supabase.auth.token');
-    } catch (error) {
-      console.error('Error during deleteAccount:', error);
-      throw error;
-    } finally {
-      set({ isLoading: false });
     }
+
+    await AuthService.deleteAccount(params);
+
+    get().clearAuth();
+    await AsyncStorage.removeItem('supabase.auth.token');
   },
 
   // Clear auth state

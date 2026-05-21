@@ -1,6 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
 import { computeProfileCompleteness } from './profileCompleteness';
 import type { BaristaProfile } from '../types/baristaProfile';
+import type { BaristaProfileId, WorkExperienceId } from '../types/ids';
 
 const baseProfile: BaristaProfile = {
   id: 'p1',
@@ -19,6 +20,23 @@ const baseProfile: BaristaProfile = {
   hourlyRateMin: 500,
   hourlyRateMax: 800,
   portfolioPhotos: ['https://example.com/p1.jpg'],
+  workExperiences: [
+    {
+      id: 'we1' as WorkExperienceId,
+      baristaProfileId: 'p1' as BaristaProfileId,
+      employer: 'Surf Coffee',
+      position: 'Бариста',
+      startYear: 2022,
+      startMonth: 3,
+      endYear: 2023,
+      endMonth: 11,
+      isCurrent: false,
+      description: null,
+      sortOrder: 1,
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z',
+    },
+  ],
   isActivelyLooking: true,
   profileCompleteness: 0,
   createdAt: '2024-01-01T00:00:00Z',
@@ -45,6 +63,7 @@ describe('computeProfileCompleteness', () => {
       hourlyRateMin: undefined,
       hourlyRateMax: undefined,
       portfolioPhotos: [],
+      workExperiences: [],
     };
     expect(computeProfileCompleteness(empty).percent).toEqual(0);
   });
@@ -69,6 +88,16 @@ describe('computeProfileCompleteness', () => {
     expect(
       computeProfileCompleteness({ ...baseProfile, hourlyRateMax: undefined }).percent
     ).toEqual(90);
+  });
+
+  it('drops 15% when work history is empty', () => {
+    expect(computeProfileCompleteness({ ...baseProfile, workExperiences: [] }).percent).toEqual(85);
+  });
+
+  it('drops 15% when work history is undefined', () => {
+    expect(
+      computeProfileCompleteness({ ...baseProfile, workExperiences: undefined }).percent
+    ).toEqual(85);
   });
 
   it('exposes per-item weights and satisfaction for UI checklist', () => {

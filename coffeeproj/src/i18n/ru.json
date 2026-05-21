@@ -67,11 +67,29 @@
       "items": {
         "basicInfo": "Имя, фамилию, город и дату рождения",
         "bio": "О себе (не менее 50 символов)",
-        "experience": "Опыт работы и оборудование",
+        "experience": "Стаж и оборудование",
+        "workHistory": "Хотя бы одно место работы",
         "preferences": "Предпочитаемые станции метро и смены",
         "hourlyRate": "Желаемую почасовую ставку",
         "portfolio": "Хотя бы одно фото портфолио"
       }
+    },
+    "workExperience": {
+      "title": "Опыт работы",
+      "empty": "Опыт работы не указан",
+      "addButton": "+ Добавить место работы",
+      "employer": "Место работы",
+      "position": "Должность",
+      "startDate": "Начало",
+      "endDate": "Окончание",
+      "currentlyWorking": "Работаю сейчас",
+      "duration": "Срок: {{years}} г. {{months}} мес.",
+      "currentRange": "{{start}} — наст. время",
+      "rangeWithEnd": "{{start}} — {{end}}",
+      "description": "Описание (опционально)",
+      "removeConfirm": "Удалить запись об опыте?",
+      "limitReached": "Максимум {{max}} записей",
+      "totalShort": "Всего: {{years}} г. {{months}} мес."
     }
   },
   "shiftHistory": {
@@ -400,7 +418,8 @@
     "ok": "ОК",
     "yes": "Да",
     "no": "Нет",
-    "warning": "Внимание"
+    "warning": "Внимание",
+    "notSpecified": "Не указано"
   },
   "settings": {
     "title": "Настройки",

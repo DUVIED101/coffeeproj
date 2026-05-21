@@ -23,6 +23,7 @@ import {
   BaristaProfileService,
   PortfolioPhotoLimitError,
 } from '../../services/BaristaProfileService';
+import { WorkExperienceService } from '../../services/WorkExperienceService';
 import { PHOTO_LIMIT, MAX_PHOTO_BYTES, isFileTooLarge } from '../../utils/storage';
 import { ReviewService } from '../../services/ReviewService';
 import { MetroSelector } from '../../components/MetroSelector';
@@ -30,15 +31,18 @@ import { CityToggle } from '../../components/CityToggle';
 import { StarRow } from '../../components/StarRow';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import { CertificatesEditor } from '../../components/CertificatesEditor';
+import { WorkExperienceEditor } from '../../components/WorkExperienceEditor';
 import { useAuthStore } from '../../stores/authStore';
 import { formatLocalDate } from '../../utils/dateUtils';
 import { computeProfileCompleteness } from '../../utils/profileCompleteness';
 import type { BaristaProfile, ShiftTime } from '../../types/baristaProfile';
 import type { CityCode } from '../../types/city';
 import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU } from '../../types/city';
-import type { UserId } from '../../types/ids';
+import type { BaristaProfileId, UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
 import type { ProfileStackParamList } from '../../navigation/ProfileStack';
+import type { WorkExperience, WorkExperienceDraft } from '../../types/workExperience';
+import { computeDuration, computeTotalDuration } from '../../types/workExperience';
 
 type Props = {
   navigation: NativeStackNavigationProp<ProfileStackParamList, 'BaristaProfile'>;
@@ -56,6 +60,61 @@ const getCompletenessColor = (completeness: number): string => {
   if (completeness < 80) return COLORS.warning;
   return COLORS.success;
 };
+
+const formatMonthYear = (year: number, month: number): string => {
+  const d = new Date(year, month - 1, 1);
+  const formatted = d.toLocaleDateString('ru-RU', { month: 'short', year: 'numeric' });
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+};
+
+const WorkExperienceList: React.FC<{ experiences: WorkExperience[] }> = React.memo(
+  ({ experiences }) => {
+    const { t } = useTranslation();
+
+    if (experiences.length === 0) {
+      return <Text style={styles.emptyText}>{t('barista.workExperience.empty')}</Text>;
+    }
+
+    return (
+      <>
+        {experiences.map(exp => {
+          const start = formatMonthYear(exp.startYear, exp.startMonth);
+          const rangeLabel =
+            exp.isCurrent || exp.endYear === null || exp.endMonth === null
+              ? t('barista.workExperience.currentRange', { start })
+              : t('barista.workExperience.rangeWithEnd', {
+                  start,
+                  end: formatMonthYear(exp.endYear, exp.endMonth),
+                });
+          const duration = computeDuration({
+            startYear: exp.startYear,
+            startMonth: exp.startMonth,
+            endYear: exp.endYear,
+            endMonth: exp.endMonth,
+            isCurrent: exp.isCurrent,
+          });
+
+          return (
+            <View key={exp.id} style={styles.workExpRow}>
+              <Text style={styles.workExpTitle}>
+                {exp.position} · {exp.employer}
+              </Text>
+              <Text style={styles.workExpRange}>
+                {rangeLabel} ·{' '}
+                {t('barista.workExperience.duration', {
+                  years: duration.years,
+                  months: duration.months,
+                })}
+              </Text>
+              {exp.description && <Text style={styles.workExpDescription}>{exp.description}</Text>}
+            </View>
+          );
+        })}
+      </>
+    );
+  }
+);
+WorkExperienceList.displayName = 'WorkExperienceList';
 
 export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const user = useAuthStore(state => state.user);
@@ -79,6 +138,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [hourlyRateMin, setHourlyRateMin] = useState('');
   const [hourlyRateMax, setHourlyRateMax] = useState('');
   const [isActivelyLooking, setIsActivelyLooking] = useState(true);
+  const [workExperienceDrafts, setWorkExperienceDrafts] = useState<WorkExperienceDraft[]>([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(2000, 0, 1));
   const [aggregate, setAggregate] = useState<UserReviewAggregate | null>(null);
@@ -132,8 +192,13 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
         return;
       }
 
-      setProfile(profileData);
-      populateFields(profileData);
+      const workExperiences = await WorkExperienceService.listForProfile(
+        profileData.id as BaristaProfileId
+      );
+      const enriched: BaristaProfile = { ...profileData, workExperiences };
+
+      setProfile(enriched);
+      populateFields(enriched);
     } catch (error: unknown) {
       console.error('Error loading profile:', error);
       Alert.alert('Error', 'Failed to load profile');
@@ -165,6 +230,19 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
       profileData.hourlyRateMax !== undefined ? String(profileData.hourlyRateMax) : ''
     );
     setIsActivelyLooking(profileData.isActivelyLooking);
+    setWorkExperienceDrafts(
+      (profileData.workExperiences ?? []).map(e => ({
+        id: e.id,
+        employer: e.employer,
+        position: e.position,
+        startYear: e.startYear,
+        startMonth: e.startMonth,
+        endYear: e.endYear,
+        endMonth: e.endMonth,
+        isCurrent: e.isCurrent,
+        description: e.description,
+      }))
+    );
   };
 
   const toggleEquipment = useCallback((equipment: string) => {
@@ -375,7 +453,12 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
         isActivelyLooking,
       });
 
-      setProfile(updatedProfile);
+      const savedExperiences = await WorkExperienceService.replaceAll(
+        updatedProfile.id as BaristaProfileId,
+        workExperienceDrafts
+      );
+
+      setProfile({ ...updatedProfile, workExperiences: savedExperiences });
       setIsEditing(false);
       Alert.alert('Success', 'Profile updated successfully!');
     } catch (error: unknown) {
@@ -686,6 +769,34 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   </>
                 )}
               </>
+            )}
+          </View>
+
+          <View style={styles.section}>
+            <View style={styles.workExpHeader}>
+              <Text style={styles.sectionTitle}>{t('barista.workExperience.title')}</Text>
+              {(profile.workExperiences ?? []).length > 0 &&
+                (() => {
+                  const total = computeTotalDuration(profile.workExperiences ?? []);
+                  return (
+                    <Text style={styles.workExpTotal}>
+                      {t('barista.workExperience.totalShort', {
+                        years: total.years,
+                        months: total.months,
+                      })}
+                    </Text>
+                  );
+                })()}
+            </View>
+
+            {isEditing ? (
+              <WorkExperienceEditor
+                experiences={workExperienceDrafts}
+                onChange={setWorkExperienceDrafts}
+                disabled={isSaving}
+              />
+            ) : (
+              <WorkExperienceList experiences={profile.workExperiences ?? []} />
             )}
           </View>
 
@@ -1111,6 +1222,39 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontStyle: 'italic',
     marginTop: 8,
+  },
+  workExpHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  workExpTotal: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+  workExpRow: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  workExpTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  workExpRange: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  workExpDescription: {
+    fontSize: 14,
+    color: COLORS.text,
+    marginTop: 4,
   },
   toggleButton: {
     flexDirection: 'row',

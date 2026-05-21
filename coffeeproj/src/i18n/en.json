@@ -63,11 +63,29 @@
       "items": {
         "basicInfo": "First name, last name, city and date of birth",
         "bio": "About you (at least 50 characters)",
-        "experience": "Work experience and equipment",
+        "experience": "Years of experience and equipment",
+        "workHistory": "At least one place of work",
         "preferences": "Preferred metro stations and shifts",
         "hourlyRate": "Desired hourly rate",
         "portfolio": "At least one portfolio photo"
       }
+    },
+    "workExperience": {
+      "title": "Work Experience",
+      "empty": "No work history added",
+      "addButton": "+ Add a place of work",
+      "employer": "Place of work",
+      "position": "Position",
+      "startDate": "Start",
+      "endDate": "End",
+      "currentlyWorking": "Currently working here",
+      "duration": "Duration: {{years}} yr {{months}} mo",
+      "currentRange": "{{start}} — present",
+      "rangeWithEnd": "{{start}} — {{end}}",
+      "description": "Description (optional)",
+      "removeConfirm": "Remove this work experience?",
+      "limitReached": "Maximum {{max}} entries",
+      "totalShort": "Total: {{years}}y {{months}}m"
     }
   },
   "shiftHistory": {
@@ -392,7 +410,8 @@
     "ok": "OK",
     "yes": "Yes",
     "no": "No",
-    "warning": "Warning"
+    "warning": "Warning",
+    "notSpecified": "Not specified"
   },
   "settings": {
     "title": "Settings",

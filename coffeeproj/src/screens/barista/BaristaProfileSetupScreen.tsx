@@ -16,15 +16,19 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS, EQUIPMENT_TYPES } from '../../config/constants';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
+import { WorkExperienceService } from '../../services/WorkExperienceService';
 import { MetroSelector } from '../../components/MetroSelector';
 import { CityToggle } from '../../components/CityToggle';
 import { CertificatesEditor } from '../../components/CertificatesEditor';
 import { ProgressIndicator } from '../../components/ProgressIndicator';
+import { WorkExperienceEditor } from '../../components/WorkExperienceEditor';
 import { useAuthStore } from '../../stores/authStore';
 import { formatLocalDate } from '../../utils/dateUtils';
 import type { ShiftTime, BaristaProfile } from '../../types/baristaProfile';
 import type { CityCode } from '../../types/city';
 import { DEFAULT_CITY, toCityCode } from '../../types/city';
+import type { BaristaProfileId } from '../../types/ids';
+import type { WorkExperienceDraft } from '../../types/workExperience';
 
 type BaristaStackParamList = {
   JobFeed: undefined;
@@ -36,7 +40,7 @@ type Props = {
   navigation: NativeStackNavigationProp<BaristaStackParamList, 'BaristaProfileSetup'>;
 };
 
-const STEPS = ['Basic Info', 'Professional', 'Preferences', 'Portfolio'];
+const STEPS = ['Basic Info', 'Professional', 'Preferences', 'Portfolio', 'Work Experience'];
 const SHIFT_TIMES: { value: ShiftTime; label: string }[] = [
   { value: 'morning', label: 'Morning (6AM-12PM)' },
   { value: 'afternoon', label: 'Afternoon (12PM-6PM)' },
@@ -69,6 +73,8 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const [hourlyRateMin, setHourlyRateMin] = useState('');
   const [hourlyRateMax, setHourlyRateMax] = useState('');
 
+  const [workExperiences, setWorkExperiences] = useState<WorkExperienceDraft[]>([]);
+
   useEffect(() => {
     loadExistingProfile();
   }, []);
@@ -100,6 +106,23 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         setSelectedShiftTimes(profile.preferredShiftTimes);
         setHourlyRateMin(profile.hourlyRateMin?.toString() || '');
         setHourlyRateMax(profile.hourlyRateMax?.toString() || '');
+
+        const existingExperiences = await WorkExperienceService.listForProfile(
+          profile.id as BaristaProfileId
+        );
+        setWorkExperiences(
+          existingExperiences.map(e => ({
+            id: e.id,
+            employer: e.employer,
+            position: e.position,
+            startYear: e.startYear,
+            startMonth: e.startMonth,
+            endYear: e.endYear,
+            endMonth: e.endMonth,
+            isCurrent: e.isCurrent,
+            description: e.description,
+          }))
+        );
       }
     } catch (error) {
       console.error('Error loading existing profile:', error);
@@ -170,21 +193,6 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const handleSkip = () => {
-    Alert.alert(
-      'Skip Profile Setup',
-      'Your profile will be incomplete and employers may not consider your applications. Are you sure?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Skip',
-          style: 'destructive',
-          onPress: () => navigation.replace('JobFeed'),
-        },
-      ]
-    );
-  };
-
   const handleSubmit = async () => {
     if (!user?.id) {
       Alert.alert('Error', 'User not authenticated');
@@ -210,28 +218,30 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         hourlyRateMax: hourlyRateMax ? parseInt(hourlyRateMax, 10) : undefined,
       };
 
+      let profileId: BaristaProfileId;
       if (existingProfile) {
-        // Update existing profile
-        await BaristaProfileService.updateProfile(user.id, profileData);
-        Alert.alert('Success', 'Profile updated successfully!', [
-          {
-            text: 'OK',
-            onPress: () => navigation.replace('BaristaProfile'),
-          },
-        ]);
+        const updated = await BaristaProfileService.updateProfile(user.id, profileData);
+        profileId = updated.id as BaristaProfileId;
       } else {
-        // Create new profile
-        await BaristaProfileService.createProfile({
+        const created = await BaristaProfileService.createProfile({
           userId: user.id,
           ...profileData,
         });
-        Alert.alert('Success', 'Profile created successfully!', [
+        profileId = created.id as BaristaProfileId;
+      }
+
+      await WorkExperienceService.replaceAll(profileId, workExperiences);
+
+      Alert.alert(
+        'Success',
+        existingProfile ? 'Profile updated successfully!' : 'Profile created successfully!',
+        [
           {
             text: 'OK',
             onPress: () => navigation.replace('BaristaProfile'),
           },
-        ]);
-      }
+        ]
+      );
     } catch (error: unknown) {
       console.error('Error creating profile:', error);
       Alert.alert('Error', 'Failed to create profile. Please try again.');
@@ -460,6 +470,20 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         );
 
+      case 4:
+        return (
+          <View>
+            <Text style={styles.stepTitle}>Work Experience</Text>
+            <Text style={styles.stepSubtitle}>List places where you have worked (optional)</Text>
+
+            <WorkExperienceEditor
+              experiences={workExperiences}
+              onChange={setWorkExperiences}
+              disabled={isSubmitting}
+            />
+          </View>
+        );
+
       default:
         return null;
     }
@@ -509,10 +533,6 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.secondaryButtonText}>Back</Text>
             </TouchableOpacity>
           )}
-
-          <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-            <Text style={styles.skipButtonText}>Skip</Text>
-          </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.primaryButton, isSubmitting && styles.primaryButtonDisabled]}
@@ -724,14 +744,5 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontSize: 16,
     fontWeight: '600',
-  },
-  skipButton: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  skipButtonText: {
-    color: COLORS.textSecondary,
-    fontSize: 14,
   },
 });

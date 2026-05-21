@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -15,6 +16,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
+import { WorkExperienceService } from '../../services/WorkExperienceService';
 import { ChatService } from '../../services/ChatService';
 import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
@@ -23,9 +25,11 @@ import { getInitials } from '../../utils/getInitials';
 import { StarRow } from '../../components/StarRow';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import type { BaristaProfile, ShiftTime } from '../../types/baristaProfile';
-import type { UserId } from '../../types/ids';
+import type { BaristaProfileId, UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
+import type { WorkExperience } from '../../types/workExperience';
+import { computeDuration, computeTotalDuration } from '../../types/workExperience';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'ViewBaristaProfile'>;
@@ -39,9 +43,16 @@ const SHIFT_TIMES: { value: ShiftTime; label: string }[] = [
   { value: 'night', label: 'Night' },
 ];
 
+const formatMonthYearShort = (year: number, month: number): string => {
+  const d = new Date(year, month - 1, 1);
+  const formatted = d.toLocaleDateString('ru-RU', { month: 'short', year: 'numeric' });
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+};
+
 export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route }) => {
   const { baristaId } = route.params;
   const currentUser = useAuthStore(state => state.user);
+  const { t } = useTranslation();
 
   const [profile, setProfile] = useState<BaristaProfile | null>(null);
   const [aggregate, setAggregate] = useState<UserReviewAggregate | null>(null);
@@ -115,7 +126,10 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
         return;
       }
 
-      setProfile(profileData);
+      const workExperiences = await WorkExperienceService.listForProfile(
+        profileData.id as BaristaProfileId
+      );
+      setProfile({ ...profileData, workExperiences });
     } catch (error: unknown) {
       console.error('Error loading profile:', error);
       Alert.alert('Error', 'Failed to load barista profile', [
@@ -204,6 +218,59 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
           </View>
         )}
 
+        {(profile.workExperiences ?? []).length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.workExpHeader}>
+              <Text style={styles.sectionTitle}>{t('barista.workExperience.title')}</Text>
+              {(() => {
+                const total = computeTotalDuration(profile.workExperiences ?? []);
+                return (
+                  <Text style={styles.workExpTotal}>
+                    {t('barista.workExperience.totalShort', {
+                      years: total.years,
+                      months: total.months,
+                    })}
+                  </Text>
+                );
+              })()}
+            </View>
+            {(profile.workExperiences ?? []).map((exp: WorkExperience) => {
+              const start = formatMonthYearShort(exp.startYear, exp.startMonth);
+              const rangeLabel =
+                exp.isCurrent || exp.endYear === null || exp.endMonth === null
+                  ? t('barista.workExperience.currentRange', { start })
+                  : t('barista.workExperience.rangeWithEnd', {
+                      start,
+                      end: formatMonthYearShort(exp.endYear, exp.endMonth),
+                    });
+              const duration = computeDuration({
+                startYear: exp.startYear,
+                startMonth: exp.startMonth,
+                endYear: exp.endYear,
+                endMonth: exp.endMonth,
+                isCurrent: exp.isCurrent,
+              });
+              return (
+                <View key={exp.id} style={styles.workExpRow}>
+                  <Text style={styles.workExpTitle}>
+                    {exp.position} · {exp.employer}
+                  </Text>
+                  <Text style={styles.workExpRange}>
+                    {rangeLabel} ·{' '}
+                    {t('barista.workExperience.duration', {
+                      years: duration.years,
+                      months: duration.months,
+                    })}
+                  </Text>
+                  {exp.description && (
+                    <Text style={styles.workExpDescription}>{exp.description}</Text>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        )}
+
         {profile.equipmentExperience.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Equipment Experience</Text>
@@ -235,6 +302,19 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
           </View>
         )}
 
+        {profile.preferredMetroStations.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Preferred Metro Stations</Text>
+            <View style={styles.chipsContainer}>
+              {profile.preferredMetroStations.map(station => (
+                <View key={station} style={styles.chip}>
+                  <Text style={styles.chipText}>{station}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
         {profile.preferredShiftTimes.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Preferred Shift Times</Text>
@@ -249,6 +329,22 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
             </View>
           </View>
         )}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Hourly Rate</Text>
+          <Text style={styles.infoText}>
+            {(() => {
+              const min =
+                typeof profile.hourlyRateMin === 'number' ? `${profile.hourlyRateMin} RUB` : null;
+              const max =
+                typeof profile.hourlyRateMax === 'number' ? `${profile.hourlyRateMax} RUB` : null;
+              if (min && max) return `${min} – ${max}`;
+              if (min) return min;
+              if (max) return max;
+              return t('common.notSpecified');
+            })()}
+          </Text>
+        </View>
 
         {profile.portfolioPhotos.length > 0 && (
           <View style={styles.section}>
@@ -281,14 +377,6 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
             </TouchableOpacity>
           </View>
         )}
-
-        <View style={styles.section}>
-          <Text style={styles.noteTitle}>Note</Text>
-          <Text style={styles.noteText}>
-            Contact information and rate expectations are only visible after accepting the
-            application.
-          </Text>
-        </View>
       </ScrollView>
 
       <FullscreenImageViewer
@@ -433,6 +521,39 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     paddingVertical: 4,
   },
+  workExpHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  workExpTotal: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+  workExpRow: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  workExpTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  workExpRange: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  workExpDescription: {
+    fontSize: 14,
+    color: COLORS.text,
+    marginTop: 4,
+  },
   portfolioGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -461,17 +582,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
-  },
-  noteTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-    marginBottom: 8,
-  },
-  noteText: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    lineHeight: 20,
-    fontStyle: 'italic',
   },
 });

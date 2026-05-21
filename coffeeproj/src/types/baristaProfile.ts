@@ -2,6 +2,7 @@
 
 import type { Equipment } from './business';
 import type { CityCode } from './city';
+import type { WorkExperience } from './workExperience';
 
 export type ShiftTime = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -32,6 +33,9 @@ export interface BaristaProfile {
 
   // Portfolio
   portfolioPhotos: string[];
+
+  // Work history (loaded separately from work_experiences table)
+  workExperiences?: WorkExperience[];
 
   // Status
   isActivelyLooking: boolean;
