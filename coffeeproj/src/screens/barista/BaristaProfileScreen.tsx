@@ -35,6 +35,8 @@ import { WorkExperienceEditor } from '../../components/WorkExperienceEditor';
 import { useAuthStore } from '../../stores/authStore';
 import { formatLocalDate } from '../../utils/dateUtils';
 import { computeProfileCompleteness } from '../../utils/profileCompleteness';
+import { requestLocationPermission, getCurrentLocation } from '../../utils/geolocation';
+import type { GeoPoint } from '../../types/business';
 import type { BaristaProfile, ShiftTime } from '../../types/baristaProfile';
 import type { CityCode } from '../../types/city';
 import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU } from '../../types/city';
@@ -146,6 +148,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [viewerPhotos, setViewerPhotos] = useState<string[]>([]);
   const [viewerIndex, setViewerIndex] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [userLocation, setUserLocation] = useState<GeoPoint | undefined>(undefined);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -165,7 +168,19 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   useEffect(() => {
     loadProfile();
     loadAggregate();
+    initializeLocation();
   }, []);
+
+  const initializeLocation = async () => {
+    try {
+      const hasPermission = await requestLocationPermission();
+      if (!hasPermission) return;
+      const location = await getCurrentLocation();
+      if (location) setUserLocation(location);
+    } catch (error) {
+      console.warn('Error initializing location for metro picker:', error);
+    }
+  };
 
   const loadAggregate = async () => {
     if (!user?.id) return;
@@ -217,18 +232,14 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     }
     setBio(profileData.bio || '');
     setYearsOfExperience(
-      profileData.yearsOfExperience !== undefined ? String(profileData.yearsOfExperience) : ''
+      profileData.yearsOfExperience != null ? String(profileData.yearsOfExperience) : ''
     );
     setSelectedEquipment(profileData.equipmentExperience);
     setCertifications(profileData.certifications);
     setPreferredMetroStations(profileData.preferredMetroStations);
     setSelectedShiftTimes(profileData.preferredShiftTimes);
-    setHourlyRateMin(
-      profileData.hourlyRateMin !== undefined ? String(profileData.hourlyRateMin) : ''
-    );
-    setHourlyRateMax(
-      profileData.hourlyRateMax !== undefined ? String(profileData.hourlyRateMax) : ''
-    );
+    setHourlyRateMin(profileData.hourlyRateMin != null ? String(profileData.hourlyRateMin) : '');
+    setHourlyRateMax(profileData.hourlyRateMax != null ? String(profileData.hourlyRateMax) : '');
     setIsActivelyLooking(profileData.isActivelyLooking);
     setWorkExperienceDrafts(
       (profileData.workExperiences ?? []).map(e => ({
@@ -815,6 +826,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   }}
                   value={preferredMetroStations}
                   onChange={setPreferredMetroStations}
+                  userLocation={userLocation}
                 />
 
                 <Text style={styles.label}>Preferred Shift Times</Text>

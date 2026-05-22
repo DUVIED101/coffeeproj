@@ -11,6 +11,8 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -24,6 +26,8 @@ import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { WorkExperienceEditor } from '../../components/WorkExperienceEditor';
 import { useAuthStore } from '../../stores/authStore';
 import { formatLocalDate } from '../../utils/dateUtils';
+import { requestLocationPermission, getCurrentLocation } from '../../utils/geolocation';
+import type { GeoPoint } from '../../types/business';
 import type { ShiftTime, BaristaProfile } from '../../types/baristaProfile';
 import type { CityCode } from '../../types/city';
 import { DEFAULT_CITY, toCityCode } from '../../types/city';
@@ -75,9 +79,23 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
   const [workExperiences, setWorkExperiences] = useState<WorkExperienceDraft[]>([]);
 
+  const [userLocation, setUserLocation] = useState<GeoPoint | undefined>(undefined);
+
   useEffect(() => {
     loadExistingProfile();
+    initializeLocation();
   }, []);
+
+  const initializeLocation = async () => {
+    try {
+      const hasPermission = await requestLocationPermission();
+      if (!hasPermission) return;
+      const location = await getCurrentLocation();
+      if (location) setUserLocation(location);
+    } catch (error) {
+      console.warn('Error initializing location for metro picker:', error);
+    }
+  };
 
   const loadExistingProfile = async () => {
     if (!user?.id) {
@@ -386,6 +404,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               onCityChange={handleCityChange}
               value={preferredMetroStations}
               onChange={setPreferredMetroStations}
+              userLocation={userLocation}
             />
 
             <Text style={styles.label}>Preferred Shift Times (optional)</Text>
@@ -521,8 +540,11 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled">
-          {renderStepContent()}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag">
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+            <View>{renderStepContent()}</View>
+          </TouchableWithoutFeedback>
         </ScrollView>
       </KeyboardAvoidingView>
 
