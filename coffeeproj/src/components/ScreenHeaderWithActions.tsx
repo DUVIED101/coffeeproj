@@ -1,11 +1,19 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS, RADII } from '../config/constants';
 
 export type HeaderAction = {
-  label: string;
+  /** Text label — renders a pill button. Required when `icon` is not set. */
+  label?: string;
+  /** MaterialCommunityIcons name — renders an icon button instead of a pill. */
+  icon?: string;
+  /** Number badge (e.g. unread count). Only rendered in icon mode. */
+  badgeCount?: number;
   onPress: () => void;
+  /** Stable key — required when an action has no label. */
+  testID?: string;
 };
 
 type ScreenHeaderWithActionsProps = {
@@ -13,6 +21,8 @@ type ScreenHeaderWithActionsProps = {
   actions?: HeaderAction[];
   onBack?: () => void;
 };
+
+const formatBadge = (count: number): string => (count > 99 ? '99+' : String(count));
 
 export const ScreenHeaderWithActions = React.memo<ScreenHeaderWithActionsProps>(
   ({ title, actions, onBack }) => {
@@ -35,15 +45,35 @@ export const ScreenHeaderWithActions = React.memo<ScreenHeaderWithActionsProps>(
           </Text>
           {actions && actions.length > 0 && (
             <View style={styles.actions}>
-              {actions.map(action => (
-                <TouchableOpacity
-                  key={action.label}
-                  style={styles.pillButton}
-                  onPress={action.onPress}
-                  activeOpacity={0.7}>
-                  <Text style={styles.pillButtonText}>{action.label}</Text>
-                </TouchableOpacity>
-              ))}
+              {actions.map((action, index) => {
+                const key = action.testID ?? action.label ?? action.icon ?? `action-${index}`;
+                if (action.icon) {
+                  return (
+                    <TouchableOpacity
+                      key={key}
+                      style={styles.iconButton}
+                      onPress={action.onPress}
+                      activeOpacity={0.7}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <MaterialCommunityIcons name={action.icon} size={24} color={COLORS.primary} />
+                      {action.badgeCount !== undefined && action.badgeCount > 0 && (
+                        <View style={styles.badge}>
+                          <Text style={styles.badgeText}>{formatBadge(action.badgeCount)}</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                }
+                return (
+                  <TouchableOpacity
+                    key={key}
+                    style={styles.pillButton}
+                    onPress={action.onPress}
+                    activeOpacity={0.7}>
+                    <Text style={styles.pillButtonText}>{action.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           )}
         </View>
@@ -100,5 +130,27 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontSize: 14,
     fontWeight: '600',
+  },
+  iconButton: {
+    padding: 6,
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: 9,
+    backgroundColor: '#E53935',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+    lineHeight: 14,
   },
 });

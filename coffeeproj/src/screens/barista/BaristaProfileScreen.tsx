@@ -4,7 +4,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TextInput,
   TouchableOpacity,
@@ -15,6 +14,7 @@ import {
   Platform,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { launchImageLibrary } from 'react-native-image-picker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -32,7 +32,9 @@ import { StarRow } from '../../components/StarRow';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import { CertificatesEditor } from '../../components/CertificatesEditor';
 import { WorkExperienceEditor } from '../../components/WorkExperienceEditor';
+import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { useAuthStore } from '../../stores/authStore';
+import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { formatLocalDate } from '../../utils/dateUtils';
 import { computeProfileCompleteness } from '../../utils/profileCompleteness';
 import { requestLocationPermission, getCurrentLocation } from '../../utils/geolocation';
@@ -120,6 +122,7 @@ WorkExperienceList.displayName = 'WorkExperienceList';
 
 export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const user = useAuthStore(state => state.user);
+  const unreadCount = useNotificationFeedStore(state => state.unreadCount);
   const { t } = useTranslation();
 
   const [profile, setProfile] = useState<BaristaProfile | null>(null);
@@ -482,7 +485,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
@@ -499,7 +502,23 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const missingItems = completeness.items.filter(item => !item.satisfied);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+      <ScreenHeaderWithActions
+        title={t('barista.profile.title', { defaultValue: 'Профиль' })}
+        actions={[
+          {
+            icon: 'bell-outline',
+            badgeCount: unreadCount,
+            onPress: () => navigation.navigate('NotificationFeed'),
+            testID: 'bell',
+          },
+          {
+            icon: 'cog-outline',
+            onPress: () => navigation.navigate('Settings'),
+            testID: 'settings',
+          },
+        ]}
+      />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>

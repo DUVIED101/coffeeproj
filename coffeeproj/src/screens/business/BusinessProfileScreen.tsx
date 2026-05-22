@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
@@ -11,6 +10,7 @@ import {
   Image,
   Linking,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +19,8 @@ import { COLORS, RADII } from '../../config/constants';
 import { BusinessService } from '../../services/BusinessService';
 import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
+import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
+import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import type { Business } from '../../types';
 import type { SocialLink, SocialPlatform } from '../../types/business';
 import type { UserId } from '../../types/ids';
@@ -69,6 +71,7 @@ const socialLabel = (platform: SocialPlatform, t: TFunction): string =>
 export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { t } = useTranslation();
   const userId = useAuthStore(s => s.user?.id) as UserId | undefined;
+  const unreadCount = useNotificationFeedStore(s => s.unreadCount);
 
   const [business, setBusiness] = useState<Business | null>(null);
   const [branchCount, setBranchCount] = useState<number>(0);
@@ -136,7 +139,7 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
@@ -146,7 +149,7 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   if (!business) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
         <View style={styles.emptyContainer}>
           <MaterialCommunityIcons
             name="storefront-outline"
@@ -169,7 +172,23 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
       : t('businessProfile.noReviews');
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+      <ScreenHeaderWithActions
+        title={t('businessProfile.title', { defaultValue: 'Профиль бизнеса' })}
+        actions={[
+          {
+            icon: 'bell-outline',
+            badgeCount: unreadCount,
+            onPress: () => navigation.navigate('NotificationFeed'),
+            testID: 'bell',
+          },
+          {
+            icon: 'cog-outline',
+            onPress: () => navigation.navigate('Settings'),
+            testID: 'settings',
+          },
+        ]}
+      />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={

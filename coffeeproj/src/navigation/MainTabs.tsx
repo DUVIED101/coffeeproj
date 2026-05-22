@@ -13,14 +13,15 @@ import type { BusinessProfileStackParamList } from './BusinessProfileStack';
 import { BusinessSearchStack } from './BusinessSearchStack';
 import { BaristaStack } from './BaristaStack';
 import { ProfileStack } from './ProfileStack';
-import { SettingsStack } from './SettingsStack';
+import { ChatsStack } from './ChatsStack';
+import type { ChatsStackParamList } from './ChatsStack';
 
 export type MainTabsParamList = {
-  Settings: undefined;
+  Profile: NavigatorScreenParams<BusinessProfileStackParamList> | undefined;
   Jobs: undefined;
   Business: undefined;
   Baristas: undefined;
-  Profile: NavigatorScreenParams<BusinessProfileStackParamList> | undefined;
+  Chats: NavigatorScreenParams<ChatsStackParamList> | undefined;
 };
 
 const Tab = createBottomTabNavigator<MainTabsParamList>();
@@ -135,15 +136,15 @@ export const MainTabs: React.FC = () => {
         }}
       />
       <Tab.Screen
-        name="Settings"
-        component={SettingsStack}
+        name="Chats"
+        component={ChatsStack}
         options={{
-          title: t('settings.title'),
-          tabBarLabel: t('settings.title'),
+          title: t('chats.title'),
+          tabBarLabel: t('chats.title'),
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
             <MaterialCommunityIcons
-              name={focused ? 'cog' : 'cog-outline'}
+              name={focused ? 'chat' : 'chat-outline'}
               color={color}
               size={size}
             />

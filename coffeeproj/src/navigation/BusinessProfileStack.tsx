@@ -5,7 +5,11 @@ import { BusinessProfileSetupScreen } from '../screens/business/BusinessProfileS
 import { BranchManagementScreen } from '../screens/business/BranchManagementScreen';
 import { BusinessReviewsScreen } from '../screens/business/BusinessReviewsScreen';
 import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
+import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
+import { SettingsStack } from './SettingsStack';
+import type { SettingsStackParamList } from './SettingsStack';
 import { COLORS } from '../config/constants';
+import type { NavigatorScreenParams } from '@react-navigation/native';
 
 export type BusinessProfileStackParamList = {
   BusinessProfileHome: undefined;
@@ -13,6 +17,8 @@ export type BusinessProfileStackParamList = {
   BranchManagement: { businessId: string };
   BusinessReviews: undefined;
   UserReviews: { userId: string };
+  NotificationFeed: undefined;
+  Settings: NavigatorScreenParams<SettingsStackParamList> | undefined;
 };
 
 const Stack = createNativeStackNavigator<BusinessProfileStackParamList>();
@@ -51,6 +57,12 @@ export const BusinessProfileStack: React.FC = () => {
         component={UserReviewsScreen}
         options={{ title: 'Все отзывы' }}
       />
+      <Stack.Screen
+        name="NotificationFeed"
+        component={NotificationFeedScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen name="Settings" component={SettingsStack} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 };

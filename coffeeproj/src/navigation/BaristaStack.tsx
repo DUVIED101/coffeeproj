@@ -1,5 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { JobFeedScreen } from '../screens/barista/JobFeedScreen';
 import { ScreenHeaderWithActions } from '../components/ScreenHeaderWithActions';
 import { JobDetailsScreen } from '../screens/barista/JobDetailsScreen';
@@ -9,9 +10,9 @@ import { ApplicationDetailsScreen } from '../screens/barista/ApplicationDetailsS
 import { ShiftHistoryScreen } from '../screens/barista/ShiftHistoryScreen';
 import { BaristaProfileScreen } from '../screens/barista/BaristaProfileScreen';
 import { BaristaProfileSetupScreen } from '../screens/barista/BaristaProfileSetupScreen';
-import { ChatScreen } from '../screens/chat/ChatScreen';
-import { ConversationsListScreen } from '../screens/chat/ConversationsListScreen';
+import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
 import { BusinessJobsScreen } from '../screens/barista/BusinessJobsScreen';
+import { useNotificationFeedStore } from '../stores/notificationFeedStore';
 import type { Job } from '../types';
 import type { Application } from '../types/application';
 
@@ -24,14 +25,15 @@ export type BaristaStackParamList = {
   ShiftHistory: undefined;
   BaristaProfile: undefined;
   BaristaProfileSetup: undefined;
-  Chat: { applicationId?: string; conversationId?: string };
-  ConversationsList: undefined;
+  NotificationFeed: undefined;
   BusinessJobs: { businessOwnerId: string; businessName?: string };
 };
 
 const Stack = createNativeStackNavigator<BaristaStackParamList>();
 
 export const BaristaStack: React.FC = () => {
+  const { t } = useTranslation();
+
   return (
     <Stack.Navigator
       initialRouteName="JobFeed"
@@ -43,18 +45,7 @@ export const BaristaStack: React.FC = () => {
         name="JobFeed"
         component={JobFeedScreen}
         options={({ navigation }) => ({
-          header: () => (
-            <ScreenHeaderWithActions
-              title="Find Jobs"
-              actions={[
-                { label: 'Chats', onPress: () => navigation.navigate('ConversationsList') },
-                {
-                  label: 'My Applications',
-                  onPress: () => navigation.navigate('Applications'),
-                },
-              ]}
-            />
-          ),
+          header: () => <JobFeedHeader navigation={navigation} t={t} />,
         })}
       />
       <Stack.Screen
@@ -88,11 +79,10 @@ export const BaristaStack: React.FC = () => {
         component={BaristaProfileSetupScreen}
         options={{ title: 'Complete Your Profile' }}
       />
-      <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
       <Stack.Screen
-        name="ConversationsList"
-        component={ConversationsListScreen}
-        options={{ title: 'Conversations' }}
+        name="NotificationFeed"
+        component={NotificationFeedScreen}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="BusinessJobs"
@@ -100,5 +90,26 @@ export const BaristaStack: React.FC = () => {
         options={{ title: 'Jobs' }}
       />
     </Stack.Navigator>
+  );
+};
+
+const JobFeedHeader: React.FC<{ navigation: any; t: (key: string) => string }> = ({
+  navigation,
+  t,
+}) => {
+  const unreadCount = useNotificationFeedStore(state => state.unreadCount);
+  return (
+    <ScreenHeaderWithActions
+      title="Find Jobs"
+      actions={[
+        {
+          icon: 'bell-outline',
+          badgeCount: unreadCount,
+          onPress: () => navigation.navigate('NotificationFeed'),
+          testID: 'bell',
+        },
+        { label: 'My Applications', onPress: () => navigation.navigate('Applications') },
+      ]}
+    />
   );
 };

@@ -3,14 +3,14 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BaristaFeedScreen } from '../screens/business/BaristaFeedScreen';
 import { ViewBaristaProfileScreen } from '../screens/business/ViewBaristaProfileScreen';
 import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
-import { ChatScreen } from '../screens/chat/ChatScreen';
+import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
 import { COLORS } from '../config/constants';
 
 export type BusinessSearchStackParamList = {
   BaristaFeed: undefined;
   ViewBaristaProfile: { baristaId: string };
   UserReviews: { userId: string };
-  Chat: { applicationId?: string; conversationId?: string };
+  NotificationFeed: undefined;
 };
 
 const Stack = createNativeStackNavigator<BusinessSearchStackParamList>();
@@ -30,7 +30,7 @@ export const BusinessSearchStack: React.FC = () => {
       <Stack.Screen
         name="BaristaFeed"
         component={BaristaFeedScreen}
-        options={{ title: 'Поиск баристы' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="ViewBaristaProfile"
@@ -42,7 +42,11 @@ export const BusinessSearchStack: React.FC = () => {
         component={UserReviewsScreen}
         options={{ title: 'Все отзывы' }}
       />
-      <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
+      <Stack.Screen
+        name="NotificationFeed"
+        component={NotificationFeedScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 };

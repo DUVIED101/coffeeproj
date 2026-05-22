@@ -100,7 +100,9 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
         profile.userId,
         null
       );
-      navigation.navigate('Chat', { conversationId: conversation.id });
+      navigation
+        .getParent()
+        ?.navigate('Chats', { screen: 'Chat', params: { conversationId: conversation.id } });
     } catch (error: unknown) {
       console.error('Error starting conversation:', error);
       const message = getErrorMessage(error);

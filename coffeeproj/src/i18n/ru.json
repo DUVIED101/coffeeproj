@@ -192,6 +192,19 @@
       "cancelled": "Смена была отменена."
     }
   },
+  "chats": {
+    "title": "Сообщения"
+  },
+  "notifications": {
+    "feed": {
+      "title": "Уведомления",
+      "empty": "Уведомлений пока нет",
+      "markAllRead": "Прочитать всё",
+      "clearAll": "Очистить",
+      "clearConfirmTitle": "Очистить уведомления?",
+      "clearConfirmBody": "Все уведомления будут удалены безвозвратно."
+    }
+  },
   "portfolioPhotos": {
     "counter": "{{count}}/{{max}} фото",
     "limitReached": "Можно загрузить максимум {{max}} фото в портфолио"

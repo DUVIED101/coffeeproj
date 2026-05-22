@@ -16,18 +16,16 @@ const navigateTab = (tabName: string, child?: { screen: string; params?: object 
   );
 };
 
-const dispatchPayload = (payload: PushNotificationPayload): void => {
+export const dispatchPayload = (payload: PushNotificationPayload): void => {
   const accountType = useAuthStore.getState().user?.accountType;
   const kind = payload.data?.kind ?? payload.kind;
   const conversationId = payload.data?.conversationId;
 
-  const stackTab = accountType === 'business' ? 'Business' : 'Jobs';
-
   if (kind === 'new_message') {
     if (conversationId) {
-      navigateTab(stackTab, { screen: 'Chat', params: { conversationId } });
+      navigateTab('Chats', { screen: 'Chat', params: { conversationId } });
     } else {
-      navigateTab(stackTab, { screen: 'ConversationsList' });
+      navigateTab('Chats', { screen: 'ConversationsList' });
     }
     return;
   }
@@ -41,7 +39,7 @@ const dispatchPayload = (payload: PushNotificationPayload): void => {
     if (accountType === 'barista') {
       navigateTab('Jobs', { screen: 'Applications' });
     } else {
-      navigateTab(stackTab);
+      navigateTab('Business');
     }
     return;
   }

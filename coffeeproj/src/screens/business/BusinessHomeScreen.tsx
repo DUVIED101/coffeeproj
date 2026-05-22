@@ -26,6 +26,7 @@ import { JobService } from '../../services/JobService';
 import { ApplicationService } from '../../services/ApplicationService';
 import { BusinessService } from '../../services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
+import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { COLORS, RADII } from '../../config/constants';
 import { classifyShiftLifecycle } from '../../utils/shiftLifecycle';
 import type { Job, JobStatus } from '../../types';
@@ -59,6 +60,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
   const [activeTab, setActiveTab] = useState<TabType>('jobs');
   const { user } = useAuthStore();
   const { t } = useTranslation();
+  const unreadCount = useNotificationFeedStore(state => state.unreadCount);
 
   // Resolve the businessId on every focus so the screen reflects newly created
   // profiles without an app restart. Param value (if any) seeds the initial render.
@@ -139,11 +141,18 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
       header: () => (
         <ScreenHeaderWithActions
           title="My Business"
-          actions={[{ label: 'Chats', onPress: () => navigation.navigate('ConversationsList') }]}
+          actions={[
+            {
+              icon: 'bell-outline',
+              badgeCount: unreadCount,
+              onPress: () => navigation.navigate('NotificationFeed'),
+              testID: 'bell',
+            },
+          ]}
         />
       ),
     });
-  }, [navigation]);
+  }, [navigation, unreadCount]);
 
   const loadJobs = useCallback(async () => {
     if (!user?.id || !businessId) return;
@@ -225,7 +234,9 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
 
   const handleShiftCardPressChat = useCallback(
     (application: Application) => {
-      navigation.navigate('Chat', { applicationId: application.id });
+      navigation
+        .getParent()
+        ?.navigate('Chats', { screen: 'Chat', params: { applicationId: application.id } });
     },
     [navigation]
   );

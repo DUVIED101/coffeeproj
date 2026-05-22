@@ -1,5 +1,5 @@
 import type { ConversationId } from './chat';
-import type { ApplicationId, UserId } from './ids';
+import type { ApplicationId, NotificationId, UserId } from './ids';
 
 type Brand<K, T> = K & { __brand: T };
 
@@ -33,4 +33,17 @@ export type ApnsTokenRow = {
   environment: ApnsEnvironment;
   lastSeenAt: string;
   createdAt: string;
+};
+
+export type NotificationData = NonNullable<PushNotificationPayload['data']>;
+
+export type Notification = {
+  id: NotificationId;
+  userId: UserId;
+  kind: NotificationKind;
+  title: string | null;
+  body: string | null;
+  data: NotificationData;
+  readAt: Date | null;
+  createdAt: Date;
 };

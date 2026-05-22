@@ -3,16 +3,19 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   FlatList,
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../config/constants';
 import { ChatService } from '../../services/ChatService';
 import { useAuthStore } from '../../stores/authStore';
+import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
+import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import type { Conversation } from '../../types/chat';
 
 const getStatusColor = (status?: string): string => {
@@ -91,6 +94,8 @@ const ConversationItem = React.memo<{
 
 export function ConversationsListScreen({ navigation }: any) {
   const user = useAuthStore(state => state.user);
+  const unreadCount = useNotificationFeedStore(state => state.unreadCount);
+  const { t } = useTranslation();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -158,7 +163,7 @@ export function ConversationsListScreen({ navigation }: any) {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
@@ -167,10 +172,18 @@ export function ConversationsListScreen({ navigation }: any) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Conversations</Text>
-      </View>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+      <ScreenHeaderWithActions
+        title={t('chats.title')}
+        actions={[
+          {
+            icon: 'bell-outline',
+            badgeCount: unreadCount,
+            onPress: () => navigation.navigate('NotificationFeed'),
+            testID: 'bell',
+          },
+        ]}
+      />
 
       <FlatList
         data={conversations}

@@ -6,8 +6,7 @@ import { JobDetailsScreen } from '../screens/business/JobDetailsScreen';
 import { ApplicantsScreen } from '../screens/business/ApplicantsScreen';
 import { ViewBaristaProfileScreen } from '../screens/business/ViewBaristaProfileScreen';
 import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
-import { ChatScreen } from '../screens/chat/ChatScreen';
-import { ConversationsListScreen } from '../screens/chat/ConversationsListScreen';
+import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
 
 export type BusinessStackParamList = {
   BusinessHome: { businessId?: string };
@@ -16,8 +15,7 @@ export type BusinessStackParamList = {
   Applicants: { jobId: string };
   ViewBaristaProfile: { baristaId: string };
   UserReviews: { userId: string };
-  Chat: { applicationId?: string; conversationId?: string };
-  ConversationsList: undefined;
+  NotificationFeed: undefined;
 };
 
 const Stack = createNativeStackNavigator<BusinessStackParamList>();
@@ -60,11 +58,10 @@ export const BusinessStack: React.FC = () => {
         component={UserReviewsScreen}
         options={{ title: 'Все отзывы' }}
       />
-      <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
       <Stack.Screen
-        name="ConversationsList"
-        component={ConversationsListScreen}
-        options={{ title: 'Conversations' }}
+        name="NotificationFeed"
+        component={NotificationFeedScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

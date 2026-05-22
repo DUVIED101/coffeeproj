@@ -130,7 +130,11 @@ export function ChatScreen({ navigation, route }: any) {
         ? [
             {
               label: 'Вакансии',
-              onPress: () => navigation.navigate('BusinessJobs', { businessOwnerId, businessName }),
+              onPress: () =>
+                navigation.getParent()?.navigate('Jobs', {
+                  screen: 'BusinessJobs',
+                  params: { businessOwnerId, businessName },
+                }),
             },
           ]
         : undefined;

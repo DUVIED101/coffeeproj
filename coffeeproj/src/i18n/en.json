@@ -188,6 +188,19 @@
       "cancelled": "The shift was cancelled."
     }
   },
+  "chats": {
+    "title": "Messages"
+  },
+  "notifications": {
+    "feed": {
+      "title": "Notifications",
+      "empty": "No notifications yet",
+      "markAllRead": "Mark all as read",
+      "clearAll": "Clear",
+      "clearConfirmTitle": "Clear notifications?",
+      "clearConfirmBody": "All notifications will be permanently deleted."
+    }
+  },
   "portfolioPhotos": {
     "counter": "{{count}}/{{max}} photos",
     "limitReached": "You can upload up to {{max}} portfolio photos"

@@ -3,20 +3,22 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   FlatList,
   ActivityIndicator,
   RefreshControl,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { BaristaSearchService } from '../../services/BaristaSearchService';
 import { BusinessService } from '../../services/BusinessService';
 import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
+import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { BaristaCard } from '../../components/BaristaCard';
 import { BaristaFilterBar } from '../../components/BaristaFilterBar';
+import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import type { BaristaProfile, BaristaFilters } from '../../types/baristaProfile';
 import type { UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
@@ -36,6 +38,7 @@ const BaristaCardItem = React.memo<{
 
 export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
   const userId = useAuthStore(s => s.user?.id);
+  const unreadCount = useNotificationFeedStore(s => s.unreadCount);
   const [baristas, setBaristas] = useState<BaristaProfile[]>([]);
   const [aggregates, setAggregates] = useState<Map<UserId, UserReviewAggregate>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
@@ -127,7 +130,7 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
@@ -136,10 +139,18 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Поиск баристы</Text>
-      </View>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+      <ScreenHeaderWithActions
+        title="Поиск баристы"
+        actions={[
+          {
+            icon: 'bell-outline',
+            badgeCount: unreadCount,
+            onPress: () => navigation.navigate('NotificationFeed'),
+            testID: 'bell',
+          },
+        ]}
+      />
 
       <BaristaFilterBar
         onFilterChange={handleFilterChange}

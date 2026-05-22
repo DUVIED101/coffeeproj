@@ -474,7 +474,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleChatPress = useCallback(
     (applicationId: string) => {
-      navigation.navigate('Chat', { applicationId });
+      navigation.getParent()?.navigate('Chats', { screen: 'Chat', params: { applicationId } });
     },
     [navigation]
   );
