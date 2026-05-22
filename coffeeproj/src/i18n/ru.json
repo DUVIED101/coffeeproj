@@ -22,6 +22,7 @@
     "noResults": "Станции не найдены",
     "selectedCount": "{{count}} станций",
     "nearbySection": "Рядом с вами",
+    "allSection": "Все станции",
     "cityTab": {
       "spb": "СПб",
       "moscow": "Москва"
@@ -153,6 +154,7 @@
       "markCompleteSuccess": "Работа отмечена как завершённая",
       "markCompleteFailure": "Не удалось отметить работу как завершённую. Попробуйте ещё раз.",
       "markCompleteAction": "Отметить работу завершённой",
+      "availableAfter": "Доступно с {{time}}",
       "withdrawAction": "Отозвать отклик"
     },
     "cancelShift": {

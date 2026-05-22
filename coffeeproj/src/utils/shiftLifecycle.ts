@@ -24,6 +24,8 @@ const shiftBoundary = (shift: ShiftDetails): { start: Date; end: Date } => {
   return { start, end };
 };
 
+export const getShiftEnd = (shift: ShiftDetails): Date => shiftBoundary(shift).end;
+
 const PENDING_STATUSES: ApplicationStatus[] = ['pending', 'under_review'];
 
 export const classifyShiftLifecycle = (

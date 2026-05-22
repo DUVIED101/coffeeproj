@@ -153,16 +153,27 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
     );
   };
 
+  const hasNearbySection = nearbyStations.length > 0 && !searchQuery.trim();
+
   const renderSectionHeader = ({
     section,
   }: {
     section: { key: 'nearby' | 'all'; data: StationRow[] };
   }) => {
-    if (section.key !== 'nearby') return null;
+    if (section.key === 'nearby') {
+      return (
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>
+            {t('metro.nearbySection', { defaultValue: 'Рядом с вами' })}
+          </Text>
+        </View>
+      );
+    }
+    if (!hasNearbySection) return null;
     return (
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionHeaderText}>
-          {t('metro.nearbySection', { defaultValue: 'Рядом с вами' })}
+          {t('metro.allSection', { defaultValue: 'Все станции' })}
         </Text>
       </View>
     );

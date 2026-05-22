@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
@@ -18,10 +18,13 @@ import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ChatService } from '../../services/ChatService';
+import { JobService } from '../../services/JobService';
 import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { ReviewModal } from '../../components/ReviewModal';
+import { getShiftEnd } from '../../utils/shiftLifecycle';
 import type { Application, ApplicationStatus } from '../../types/application';
+import type { ShiftDetails } from '../../types/job';
 import type { ApplicationId, UserId } from '../../types/ids';
 import type { ApplicationReview } from '../../types/review';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
@@ -80,6 +83,8 @@ interface ApplicantItemProps {
   needsReview: boolean;
   reviewBannerLabel: string;
   cancelLabel: string;
+  shiftEndReached: boolean;
+  shiftWaitingLabel: string;
 }
 
 const ApplicantItem = React.memo<ApplicantItemProps>(
@@ -99,6 +104,8 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     needsReview,
     reviewBannerLabel,
     cancelLabel,
+    shiftEndReached,
+    shiftWaitingLabel,
   }) => {
     const handleAccept = useCallback(() => onAccept(applicationId), [onAccept, applicationId]);
     const handleReject = useCallback(() => onReject(applicationId), [onReject, applicationId]);
@@ -138,8 +145,10 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     const statusColor = getStatusColor(application.status);
     const statusText = getStatusText(application.status);
     const isActionable = application.status === 'pending' || application.status === 'under_review';
-    const canConfirmCompletion =
+    const showConfirmCompletionSection =
       application.status === 'accepted' && !application.completedByBusiness;
+    const canConfirmCompletion = showConfirmCompletionSection && shiftEndReached;
+    const isWaitingForShiftEnd = showConfirmCompletionSection && !shiftEndReached;
     const canCancelShift = application.status === 'accepted';
 
     return (
@@ -193,17 +202,25 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
           )}
         </TouchableOpacity>
 
-        {canConfirmCompletion && (
-          <TouchableOpacity
-            style={styles.confirmCompletionButton}
-            onPress={handleConfirmCompletion}
-            disabled={isProcessing}>
-            {isProcessing ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.confirmCompletionButtonText}>Confirm Completion</Text>
+        {showConfirmCompletionSection && (
+          <>
+            <TouchableOpacity
+              style={[
+                styles.confirmCompletionButton,
+                !canConfirmCompletion && styles.confirmCompletionButtonDisabled,
+              ]}
+              onPress={handleConfirmCompletion}
+              disabled={isProcessing || !canConfirmCompletion}>
+              {isProcessing ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.confirmCompletionButtonText}>Confirm Completion</Text>
+              )}
+            </TouchableOpacity>
+            {isWaitingForShiftEnd && (
+              <Text style={styles.shiftWaitingText}>{shiftWaitingLabel}</Text>
             )}
-          </TouchableOpacity>
+          </>
         )}
 
         {canCancelShift && (
@@ -272,7 +289,45 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
     applicationId: ApplicationId;
     rateeId: UserId;
   } | null>(null);
+  const [shiftDetails, setShiftDetails] = useState<ShiftDetails | null>(null);
+  const [now, setNow] = useState<Date>(() => new Date());
   const promptedAppIds = useRef<Set<string>>(new Set());
+
+  const shiftEnd = useMemo(() => (shiftDetails ? getShiftEnd(shiftDetails) : null), [shiftDetails]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadJob = async () => {
+      try {
+        const job = await JobService.getJobById(jobId);
+        if (!cancelled) setShiftDetails(job.shiftDetails);
+      } catch (error) {
+        console.error('Error loading job for shift gating:', error);
+      }
+    };
+    loadJob();
+    return () => {
+      cancelled = true;
+    };
+  }, [jobId]);
+
+  useEffect(() => {
+    if (!shiftEnd) return;
+    const msUntilEnd = shiftEnd.getTime() - Date.now();
+    if (msUntilEnd <= 0) return;
+    const timeoutId = setTimeout(() => setNow(new Date()), msUntilEnd + 1000);
+    return () => clearTimeout(timeoutId);
+  }, [shiftEnd]);
+
+  const shiftEndReached = !shiftEnd || now.getTime() >= shiftEnd.getTime();
+  const shiftEndLabel = shiftEnd
+    ? shiftEnd.toLocaleString('ru-RU', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : '';
 
   const markProcessing = useCallback((id: string, on: boolean) => {
     setProcessingIds(prev => {
@@ -475,6 +530,12 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const reviewBannerLabel = t('reviews.banner.prompt');
   const cancelLabel = t('applications.cancelShift.action');
+  const shiftWaitingLabel = shiftEndLabel
+    ? t('applications.details.availableAfter', {
+        time: shiftEndLabel,
+        defaultValue: 'Available after {{time}}',
+      })
+    : '';
 
   const renderApplicant = useCallback(
     ({ item }: { item: Application }) => (
@@ -494,6 +555,8 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         needsReview={item.status === 'completed' && !reviewedIds.has(item.id)}
         reviewBannerLabel={reviewBannerLabel}
         cancelLabel={cancelLabel}
+        shiftEndReached={shiftEndReached}
+        shiftWaitingLabel={shiftWaitingLabel}
       />
     ),
     [
@@ -509,6 +572,8 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
       reviewedIds,
       reviewBannerLabel,
       cancelLabel,
+      shiftEndReached,
+      shiftWaitingLabel,
     ]
   );
 
@@ -772,10 +837,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  confirmCompletionButtonDisabled: {
+    backgroundColor: COLORS.textSecondary,
+  },
   confirmCompletionButtonText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  shiftWaitingText: {
+    marginTop: -4,
+    marginBottom: 12,
+    textAlign: 'center',
+    fontSize: 12,
+    color: COLORS.textSecondary,
   },
   cancelShiftButton: {
     paddingVertical: 12,

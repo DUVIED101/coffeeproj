@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ReviewService } from '../../services/ReviewService';
 import { ReviewModal } from '../../components/ReviewModal';
+import { getShiftEnd } from '../../utils/shiftLifecycle';
 import type { Application } from '../../types/application';
 import type { ApplicationId, UserId } from '../../types/ids';
 import type { ApplicationReview } from '../../types/review';
@@ -49,6 +50,20 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
   const job = application.job;
   const businessOwnerId = job?.businessOwnerId as UserId | undefined;
   const applicationId = application.id as ApplicationId;
+
+  const shiftEnd = useMemo(
+    () => (job?.shiftDetails ? getShiftEnd(job.shiftDetails) : null),
+    [job?.shiftDetails]
+  );
+  const [now, setNow] = useState<Date>(() => new Date());
+
+  useEffect(() => {
+    if (!shiftEnd) return;
+    const msUntilEnd = shiftEnd.getTime() - Date.now();
+    if (msUntilEnd <= 0) return;
+    const timeoutId = setTimeout(() => setNow(new Date()), msUntilEnd + 1000);
+    return () => clearTimeout(timeoutId);
+  }, [shiftEnd]);
 
   useEffect(() => {
     let cancelled = false;
@@ -199,7 +214,18 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
     currentStatus === 'completed' && !existingReview && !showReviewModal && !!businessOwnerId;
 
   const canWithdraw = currentStatus === 'pending' || currentStatus === 'under_review';
-  const canMarkComplete = currentStatus === 'accepted' && !completedByBarista;
+  const shiftEndReached = !shiftEnd || now.getTime() >= shiftEnd.getTime();
+  const canMarkComplete = currentStatus === 'accepted' && !completedByBarista && shiftEndReached;
+  const showMarkCompleteSection = currentStatus === 'accepted' && !completedByBarista;
+  const isWaitingForShiftEnd = showMarkCompleteSection && !shiftEndReached;
+  const shiftEndLabel = shiftEnd
+    ? shiftEnd.toLocaleString(locale, {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : '';
   const canCancelShift = currentStatus === 'accepted';
   const showCompletionStatus = currentStatus === 'accepted' || currentStatus === 'completed';
 
@@ -314,25 +340,35 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
       )}
 
       {/* Action Buttons */}
-      {(canWithdraw || canMarkComplete || canCancelShift) && (
+      {(canWithdraw || showMarkCompleteSection || canCancelShift) && (
         <View style={styles.footer}>
-          {canMarkComplete && (
-            <TouchableOpacity
-              style={styles.completeButton}
-              onPress={handleMarkComplete}
-              disabled={isMarkingComplete}>
-              {isMarkingComplete ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.completeButtonText}>
-                  {t('applications.details.markCompleteAction')}
+          {showMarkCompleteSection && (
+            <>
+              <TouchableOpacity
+                style={[styles.completeButton, !canMarkComplete && styles.completeButtonDisabled]}
+                onPress={handleMarkComplete}
+                disabled={isMarkingComplete || !canMarkComplete}>
+                {isMarkingComplete ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.completeButtonText}>
+                    {t('applications.details.markCompleteAction')}
+                  </Text>
+                )}
+              </TouchableOpacity>
+              {isWaitingForShiftEnd && (
+                <Text style={styles.availableAfterText}>
+                  {t('applications.details.availableAfter', {
+                    time: shiftEndLabel,
+                    defaultValue: 'Available after {{time}}',
+                  })}
                 </Text>
               )}
-            </TouchableOpacity>
+            </>
           )}
           {canCancelShift && (
             <TouchableOpacity
-              style={[styles.cancelShiftButton, canMarkComplete && { marginTop: 12 }]}
+              style={[styles.cancelShiftButton, showMarkCompleteSection && { marginTop: 12 }]}
               onPress={handleCancelShift}
               disabled={isCancellingShift}>
               {isCancellingShift ? (
@@ -481,10 +517,19 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     alignItems: 'center',
   },
+  completeButtonDisabled: {
+    backgroundColor: COLORS.textSecondary,
+  },
   completeButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  availableAfterText: {
+    marginTop: 8,
+    textAlign: 'center',
+    fontSize: 13,
+    color: COLORS.textSecondary,
   },
   cancelShiftButton: {
     paddingVertical: 16,

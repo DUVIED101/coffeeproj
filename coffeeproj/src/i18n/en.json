@@ -22,6 +22,7 @@
     "noResults": "No stations found",
     "selectedCount": "{{count}} stations",
     "nearbySection": "Near you",
+    "allSection": "All stations",
     "cityTab": {
       "spb": "SPB",
       "moscow": "Moscow"
@@ -149,6 +150,7 @@
       "markCompleteSuccess": "Work marked as completed",
       "markCompleteFailure": "Failed to mark work as completed. Please try again.",
       "markCompleteAction": "Mark Work as Completed",
+      "availableAfter": "Available after {{time}}",
       "withdrawAction": "Withdraw Application"
     },
     "cancelShift": {
