@@ -33,12 +33,21 @@ const DEFAULT_PREFS: PrefsState = {
   conversationStarted: true,
 };
 
-const PREF_ROWS: ReadonlyArray<{ key: PrefKey; labelKey: string }> = [
+type PrefRow = { key: PrefKey; labelKey: string };
+
+const BARISTA_PREF_ROWS: ReadonlyArray<PrefRow> = [
+  { key: 'newMessage', labelKey: 'settings.notifications.newMessage' },
+  { key: 'conversationStarted', labelKey: 'settings.notifications.conversationStarted' },
+  { key: 'applicationAccepted', labelKey: 'settings.notifications.applicationAccepted' },
+  { key: 'applicationRejected', labelKey: 'settings.notifications.applicationRejected' },
+  { key: 'shiftCancelled', labelKey: 'settings.notifications.shiftCancelled' },
+  { key: 'newReview', labelKey: 'settings.notifications.newReview' },
+];
+
+const BUSINESS_PREF_ROWS: ReadonlyArray<PrefRow> = [
   { key: 'newMessage', labelKey: 'settings.notifications.newMessage' },
   { key: 'conversationStarted', labelKey: 'settings.notifications.conversationStarted' },
   { key: 'newApplication', labelKey: 'settings.notifications.newApplication' },
-  { key: 'applicationAccepted', labelKey: 'settings.notifications.applicationAccepted' },
-  { key: 'applicationRejected', labelKey: 'settings.notifications.applicationRejected' },
   { key: 'applicationWithdrawn', labelKey: 'settings.notifications.applicationWithdrawn' },
   { key: 'shiftCancelled', labelKey: 'settings.notifications.shiftCancelled' },
   { key: 'newReview', labelKey: 'settings.notifications.newReview' },
@@ -48,6 +57,8 @@ export const NotificationsScreen: React.FC = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
   const userId = useAuthStore(s => s.user?.id);
+  const accountType = useAuthStore(s => s.user?.accountType);
+  const prefRows = accountType === 'business' ? BUSINESS_PREF_ROWS : BARISTA_PREF_ROWS;
 
   const [prefs, setPrefs] = useState<PrefsState>(DEFAULT_PREFS);
   const [isLoading, setIsLoading] = useState(true);
@@ -115,7 +126,7 @@ export const NotificationsScreen: React.FC = () => {
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
-          {PREF_ROWS.map((row, index) => (
+          {prefRows.map((row, index) => (
             <React.Fragment key={row.key}>
               {index > 0 && <View style={styles.separator} />}
               <View style={styles.row}>
