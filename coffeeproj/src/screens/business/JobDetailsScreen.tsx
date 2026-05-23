@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RouteProp } from '@react-navigation/native';
+import { useFocusEffect, type RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
 import { useAuthStore } from '../../stores/authStore';
@@ -37,11 +37,7 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
 
-  useEffect(() => {
-    loadJob();
-  }, [jobId]);
-
-  const loadJob = async () => {
+  const loadJob = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -53,7 +49,14 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [jobId]);
+
+  // Refresh on every focus so returning from EditJob picks up the saved changes.
+  useFocusEffect(
+    useCallback(() => {
+      loadJob();
+    }, [loadJob])
+  );
 
   const handleViewApplicants = () => {
     navigation.navigate('Applicants', { jobId });
@@ -153,7 +156,10 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const hasApplicants = job.applicationCount > 0;
   const canClose = job.status === 'open' || job.status === 'in_review';
   const canReopen = job.status === 'filled' || job.status === 'cancelled';
-  const showFooter = hasApplicants || canClose || canReopen;
+  const canEdit = job.status === 'open';
+  const showFooter = hasApplicants || canClose || canReopen || canEdit;
+
+  const handleEdit = () => navigation.navigate('EditJob', { jobId });
 
   return (
     <SafeAreaView style={styles.container}>
@@ -316,6 +322,14 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
               <Text style={styles.viewApplicantsButtonText}>
                 View {job.applicationCount} Applicant{job.applicationCount !== 1 ? 's' : ''}
               </Text>
+            </TouchableOpacity>
+          )}
+          {canEdit && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.outlineAction]}
+              onPress={handleEdit}
+              disabled={isUpdatingStatus}>
+              <Text style={styles.outlineActionText}>{t('job.actions.edit')}</Text>
             </TouchableOpacity>
           )}
           {canClose && (

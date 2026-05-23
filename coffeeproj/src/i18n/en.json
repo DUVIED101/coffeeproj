@@ -268,7 +268,8 @@
     "actions": {
       "markFilled": "Mark as filled",
       "cancel": "Cancel job",
-      "reopen": "Reopen job"
+      "reopen": "Reopen job",
+      "edit": "Edit job"
     },
     "markFilled": {
       "confirmTitle": "Mark as filled",

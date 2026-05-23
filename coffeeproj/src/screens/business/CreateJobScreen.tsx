@@ -16,6 +16,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { RouteProp } from '@react-navigation/native';
 import { COLORS, EQUIPMENT_TYPES, RADII } from '../../config/constants';
 import { JobService } from '../../services/JobService';
 import { BusinessService } from '../../services/BusinessService';
@@ -26,7 +27,17 @@ import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import type { MainTabsParamList } from '../../navigation/MainTabs';
 
 type Props = {
-  navigation: NativeStackNavigationProp<BusinessStackParamList, 'CreateJob'>;
+  navigation: NativeStackNavigationProp<BusinessStackParamList, 'CreateJob' | 'EditJob'>;
+  route: RouteProp<BusinessStackParamList, 'CreateJob' | 'EditJob'>;
+};
+
+const DAY_NAMES = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+const parseTimeString = (time: string): Date => {
+  const [h, m] = time.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h ?? 0, m ?? 0, 0, 0);
+  return d;
 };
 
 const EQUIPMENT_OPTIONS: readonly Equipment[] = EQUIPMENT_TYPES;
@@ -35,13 +46,20 @@ const TAG_OPTIONS = ['urgent', 'flexible', 'training-provided'];
 
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
-export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
+export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
+
+  const editJobId =
+    route.name === 'EditJob'
+      ? (route.params as BusinessStackParamList['EditJob'] | undefined)?.jobId
+      : undefined;
+  const isEditMode = !!editJobId;
 
   const [branches, setBranches] = useState<Branch[]>([]);
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [isLoadingBranches, setIsLoadingBranches] = useState(true);
+  const [isLoadingJob, setIsLoadingJob] = useState(isEditMode);
   const [isSaving, setIsSaving] = useState(false);
 
   const [jobType, setJobType] = useState<JobType>('temporary');
@@ -72,6 +90,65 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
   useEffect(() => {
     loadBranches();
   }, []);
+
+  useEffect(() => {
+    navigation.setOptions({ title: isEditMode ? 'Edit Job' : 'Create Job' });
+  }, [navigation, isEditMode]);
+
+  useEffect(() => {
+    if (!editJobId) return;
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const job = await JobService.getJobById(editJobId);
+        if (cancelled || !job) {
+          if (!cancelled && !job) {
+            Alert.alert('Error', 'Job not found');
+            navigation.goBack();
+          }
+          return;
+        }
+        if (job.status !== 'open') {
+          Alert.alert('Error', 'Only open jobs can be edited');
+          navigation.goBack();
+          return;
+        }
+        setJobType(job.jobType);
+        setSelectedBranchId(job.branchId);
+        setTitle(job.title);
+        setDescription(job.description ?? '');
+        setRequirements(job.requirements.length > 0 ? job.requirements : ['']);
+        setSelectedEquipment(job.requiredEquipmentExperience);
+        setStartDate(new Date(job.shiftDetails.startDate));
+        setEndDate(job.shiftDetails.endDate ? new Date(job.shiftDetails.endDate) : undefined);
+        setStartTime(parseTimeString(job.shiftDetails.startTime));
+        setEndTime(parseTimeString(job.shiftDetails.endTime));
+        setIsRecurring(job.shiftDetails.isRecurring);
+        if (job.shiftDetails.recurringDays) {
+          setSelectedDays(
+            job.shiftDetails.recurringDays
+              .map(day => DAY_NAMES.indexOf(day))
+              .filter(idx => idx >= 0)
+          );
+        }
+        setCompensationType(job.compensation.type);
+        setCompensationAmount(String(job.compensation.amount));
+        setSelectedTags(job.tags ?? []);
+      } catch (err) {
+        console.error('Error loading job for edit:', err);
+        if (!cancelled) {
+          Alert.alert('Error', 'Failed to load job');
+          navigation.goBack();
+        }
+      } finally {
+        if (!cancelled) setIsLoadingJob(false);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [editJobId, navigation]);
 
   const loadBranches = async () => {
     if (!user?.id) return;
@@ -217,16 +294,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
         throw new Error('Branch not found');
       }
 
-      const dayNames = [
-        'monday',
-        'tuesday',
-        'wednesday',
-        'thursday',
-        'friday',
-        'saturday',
-        'sunday',
-      ];
-      const recurringDays = isRecurring ? selectedDays.map(index => dayNames[index]) : undefined;
+      const recurringDays = isRecurring ? selectedDays.map(index => DAY_NAMES[index]) : undefined;
 
       const filteredRequirements = requirements.filter(r => r.trim() !== '');
 
@@ -268,24 +336,28 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
         tags: selectedTags,
       };
 
-      await JobService.createJob(jobData);
-
-      Alert.alert('Success', 'Job created successfully', [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ]);
+      if (editJobId) {
+        const { businessId: _b, businessOwnerId: _o, ...updatePayload } = jobData;
+        await JobService.updateJob(editJobId, updatePayload, user.id);
+        Alert.alert('Success', 'Job updated successfully', [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      } else {
+        await JobService.createJob(jobData);
+        Alert.alert('Success', 'Job created successfully', [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      }
     } catch (error) {
-      console.error('Error creating job:', error);
-      Alert.alert('Error', 'Failed to create job');
+      console.error(editJobId ? 'Error updating job:' : 'Error creating job:', error);
+      Alert.alert('Error', editJobId ? 'Failed to update job' : 'Failed to create job');
     } finally {
       setIsSaving(false);
       isSubmittingRef.current = false;
     }
   };
 
-  if (isLoadingBranches) {
+  if (isLoadingBranches || isLoadingJob) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>

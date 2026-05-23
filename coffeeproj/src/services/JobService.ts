@@ -286,6 +286,52 @@ export class JobService {
   }
 
   /**
+   * Update an open job. Refuses to update jobs that have moved past 'open'
+   * (filled/cancelled/expired) so already-promised shifts stay frozen.
+   * Ownership is enforced by matching business_owner_id alongside the jobId.
+   */
+  static async updateJob(
+    jobId: string,
+    data: Omit<CreateJobData, 'businessId' | 'businessOwnerId'>,
+    ownerUserId: string
+  ): Promise<void> {
+    try {
+      const { data: updated, error } = await supabase
+        .from('jobs')
+        .update({
+          branch_id: data.branchId,
+          job_type: data.jobType,
+          title: data.title,
+          description: data.description,
+          requirements: data.requirements,
+          required_equipment_experience: data.requiredEquipmentExperience,
+          location: data.location,
+          shift_details: data.shiftDetails,
+          compensation: data.compensation,
+          payment: {
+            ...data.payment,
+            platformFee: data.payment.totalAmount * 0.15,
+            totalWithFee: data.payment.totalAmount * 1.15,
+          },
+          tags: data.tags ?? [],
+          expires_at: data.expiresAt ?? null,
+        })
+        .eq('id', jobId)
+        .eq('business_owner_id', ownerUserId)
+        .eq('status', 'open')
+        .select('id');
+
+      if (error) throw error;
+      if (!updated || updated.length === 0) {
+        throw new Error('Not authorized or job is no longer open');
+      }
+    } catch (error) {
+      console.error('Error in updateJob:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Update job status. Requires ownerUserId as defence-in-depth:
    * the update only matches rows owned by the caller.
    */

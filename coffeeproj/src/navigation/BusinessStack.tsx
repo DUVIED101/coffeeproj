@@ -11,6 +11,7 @@ import { NotificationFeedScreen } from '../screens/notifications/NotificationFee
 export type BusinessStackParamList = {
   BusinessHome: { businessId?: string };
   CreateJob: undefined;
+  EditJob: { jobId: string };
   JobDetails: { jobId: string };
   Applicants: { jobId: string };
   ViewBaristaProfile: { baristaId: string };
@@ -38,6 +39,7 @@ export const BusinessStack: React.FC = () => {
         component={CreateJobScreen}
         options={{ title: 'Create Job' }}
       />
+      <Stack.Screen name="EditJob" component={CreateJobScreen} options={{ title: 'Edit Job' }} />
       <Stack.Screen
         name="JobDetails"
         component={JobDetailsScreen}
