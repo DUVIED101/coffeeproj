@@ -213,6 +213,38 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
   const showReviewBanner =
     currentStatus === 'completed' && !existingReview && !showReviewModal && !!businessOwnerId;
 
+  const formatJobDate = (iso: string): string => {
+    return new Date(iso).toLocaleDateString(locale, {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
+  const formatRecurringDays = (days: string[]): string => {
+    const dayMap: Record<string, string> =
+      locale === 'ru-RU'
+        ? {
+            monday: 'Пн',
+            tuesday: 'Вт',
+            wednesday: 'Ср',
+            thursday: 'Чт',
+            friday: 'Пт',
+            saturday: 'Сб',
+            sunday: 'Вс',
+          }
+        : {
+            monday: 'Mon',
+            tuesday: 'Tue',
+            wednesday: 'Wed',
+            thursday: 'Thu',
+            friday: 'Fri',
+            saturday: 'Sat',
+            sunday: 'Sun',
+          };
+    return days.map(d => dayMap[d] ?? d).join(', ');
+  };
+
   const canWithdraw = currentStatus === 'pending' || currentStatus === 'under_review';
   const shiftEndReached = !shiftEnd || now.getTime() >= shiftEnd.getTime();
   const canMarkComplete = currentStatus === 'accepted' && !completedByBarista && shiftEndReached;
@@ -251,12 +283,56 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
           <Text style={styles.jobTitle}>{job?.title || ''}</Text>
           <Text style={styles.businessName}>{job?.businessName || ''}</Text>
           {job?.branchName && <Text style={styles.branchName}>{job.branchName}</Text>}
-          {job?.metroStation && (
-            <Text style={styles.metroStation}>
-              {t('applications.details.metroPrefix', { station: job.metroStation })}
-            </Text>
-          )}
-          {job?.compensation && (
+        </View>
+
+        {/* Location */}
+        {(job?.location?.address || job?.metroStation) && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('applications.details.location')}</Text>
+            {job?.location?.address && <Text style={styles.address}>{job.location.address}</Text>}
+            {job?.metroStation && (
+              <Text style={styles.metroStation}>
+                {t('applications.details.metroPrefix', { station: job.metroStation })}
+              </Text>
+            )}
+          </View>
+        )}
+
+        {/* Shift Details */}
+        {job?.shiftDetails && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('applications.details.shiftDetails')}</Text>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t('applications.details.shiftDate')}</Text>
+              <Text style={styles.detailValue}>{formatJobDate(job.shiftDetails.startDate)}</Text>
+            </View>
+            {job.shiftDetails.endDate && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('applications.details.shiftEndDate')}</Text>
+                <Text style={styles.detailValue}>{formatJobDate(job.shiftDetails.endDate)}</Text>
+              </View>
+            )}
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t('applications.details.shiftTime')}</Text>
+              <Text style={styles.detailValue}>
+                {job.shiftDetails.startTime} – {job.shiftDetails.endTime}
+              </Text>
+            </View>
+            {job.shiftDetails.isRecurring && job.shiftDetails.recurringDays && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('applications.details.shiftRecurring')}</Text>
+                <Text style={styles.detailValue}>
+                  {formatRecurringDays(job.shiftDetails.recurringDays)}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Compensation */}
+        {job?.compensation && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('applications.details.compensation')}</Text>
             <Text style={styles.compensation}>
               {job.compensation.amount.toLocaleString(locale)} ₽{' · '}
               {job.compensation.type === 'hourly'
@@ -265,8 +341,20 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
                   ? t('applications.details.perDay')
                   : t('applications.details.fixed')}
             </Text>
-          )}
-        </View>
+          </View>
+        )}
+
+        {/* Equipment */}
+        {job?.requiredEquipmentExperience && job.requiredEquipmentExperience.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('applications.details.equipment')}</Text>
+            {job.requiredEquipmentExperience.map((eq, idx) => (
+              <Text key={idx} style={styles.requirementItem}>
+                • {eq}
+              </Text>
+            ))}
+          </View>
+        )}
 
         {/* Description */}
         {job?.description && (
@@ -285,6 +373,26 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
                 • {req}
               </Text>
             ))}
+          </View>
+        )}
+
+        {/* Meta (job type, posted date) */}
+        {job && (
+          <View style={styles.section}>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t('applications.details.jobType')}</Text>
+              <Text style={styles.detailValue}>
+                {job.jobType === 'temporary'
+                  ? t('applications.details.jobTypeTemporary')
+                  : t('applications.details.jobTypePermanent')}
+              </Text>
+            </View>
+            {job.postedAt && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('applications.details.postedOn')}</Text>
+                <Text style={styles.detailValue}>{formatJobDate(job.postedAt)}</Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -493,6 +601,29 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     lineHeight: 22,
     marginBottom: 4,
+  },
+  address: {
+    fontSize: 15,
+    color: COLORS.text,
+    lineHeight: 22,
+    marginBottom: 4,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
+  },
+  detailLabel: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+  },
+  detailValue: {
+    fontSize: 15,
+    color: COLORS.text,
+    fontWeight: '500',
+    textAlign: 'right',
+    flexShrink: 1,
+    marginLeft: 12,
   },
   footer: {
     backgroundColor: '#fff',

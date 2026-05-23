@@ -155,7 +155,20 @@
       "markCompleteFailure": "Не удалось отметить работу как завершённую. Попробуйте ещё раз.",
       "markCompleteAction": "Отметить работу завершённой",
       "availableAfter": "Доступно с {{time}}",
-      "withdrawAction": "Отозвать отклик"
+      "withdrawAction": "Отозвать отклик",
+      "location": "Расположение",
+      "shiftDetails": "Детали смены",
+      "shiftDate": "Дата",
+      "shiftEndDate": "Дата окончания",
+      "shiftTime": "Время",
+      "shiftRecurring": "Повторяется",
+      "equipment": "Оборудование",
+      "compensation": "Оплата",
+      "jobType": "Тип занятости",
+      "jobTypeTemporary": "Временная",
+      "jobTypePermanent": "Постоянная",
+      "postedOn": "Опубликовано",
+      "address": "Адрес"
     },
     "cancelShift": {
       "confirmTitle": "Отменить смену?",

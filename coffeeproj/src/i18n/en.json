@@ -151,7 +151,20 @@
       "markCompleteFailure": "Failed to mark work as completed. Please try again.",
       "markCompleteAction": "Mark Work as Completed",
       "availableAfter": "Available after {{time}}",
-      "withdrawAction": "Withdraw Application"
+      "withdrawAction": "Withdraw Application",
+      "location": "Location",
+      "shiftDetails": "Shift Details",
+      "shiftDate": "Date",
+      "shiftEndDate": "End Date",
+      "shiftTime": "Time",
+      "shiftRecurring": "Recurring",
+      "equipment": "Equipment",
+      "compensation": "Compensation",
+      "jobType": "Job Type",
+      "jobTypeTemporary": "Temporary",
+      "jobTypePermanent": "Permanent",
+      "postedOn": "Posted",
+      "address": "Address"
     },
     "cancelShift": {
       "confirmTitle": "Cancel shift?",

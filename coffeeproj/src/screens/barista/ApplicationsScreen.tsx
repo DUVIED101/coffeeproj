@@ -108,7 +108,7 @@ const ApplicationItem = React.memo<{
       </Text>
 
       <TouchableOpacity style={styles.chatButton} onPress={handleChatPress}>
-        <Text style={styles.chatButtonText}>💬 Message Business</Text>
+        <Text style={styles.chatButtonText}>Message Business</Text>
         {unreadCount > 0 && (
           <View style={styles.unreadBadge}>
             <Text style={styles.unreadBadgeText}>{unreadCount}</Text>

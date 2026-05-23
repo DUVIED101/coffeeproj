@@ -171,7 +171,10 @@ export function ChatScreen({ navigation, route }: any) {
     }
 
     const channel = ChatService.subscribeToMessages(conversationId, newMessage => {
-      setMessages(prevMessages => [...prevMessages, newMessage]);
+      setMessages(prevMessages => {
+        if (prevMessages.some(m => m.id === newMessage.id)) return prevMessages;
+        return [...prevMessages, newMessage];
+      });
 
       if (newMessage.senderId !== userId) {
         ChatService.markAsRead(conversationId, userId).catch(error => {
