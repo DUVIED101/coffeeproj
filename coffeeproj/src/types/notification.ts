@@ -1,5 +1,5 @@
 import type { ConversationId } from './chat';
-import type { ApplicationId, NotificationId, UserId } from './ids';
+import type { ApplicationId, JobId, NotificationId, ReviewId, UserId } from './ids';
 
 type Brand<K, T> = K & { __brand: T };
 
@@ -11,7 +11,12 @@ export type NotificationKind =
   | 'application_accepted'
   | 'application_rejected'
   | 'work_completion_requested'
-  | 'work_completion_confirmed';
+  | 'work_completion_confirmed'
+  | 'new_application'
+  | 'application_withdrawn'
+  | 'shift_cancelled'
+  | 'new_review'
+  | 'conversation_started';
 
 export type PushNotificationPayload = {
   kind: NotificationKind;
@@ -23,6 +28,8 @@ export type PushNotificationPayload = {
     kind: NotificationKind;
     applicationId?: ApplicationId;
     conversationId?: ConversationId;
+    jobId?: JobId;
+    reviewId?: ReviewId;
   };
 };
 

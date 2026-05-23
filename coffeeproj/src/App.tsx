@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { AppNavigator } from './navigation/AppNavigator';
 import { useNotificationSetup } from './hooks/useNotificationSetup';
 import { routePushPayload } from './navigation/navigationRef';
 import { initI18n } from './i18n';
+import { InAppToast } from './components/InAppToast';
 import type { PushNotificationPayload } from './types/notification';
 import 'react-native-gesture-handler';
 
@@ -12,8 +15,19 @@ const handlePushNotification = (payload: PushNotificationPayload): void => {
 
 function AppContent(): React.JSX.Element {
   useNotificationSetup({ onNotification: handlePushNotification });
-  return <AppNavigator />;
+  return (
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <View style={appStyles.root}>
+        <AppNavigator />
+        <InAppToast />
+      </View>
+    </SafeAreaProvider>
+  );
 }
+
+const appStyles = StyleSheet.create({
+  root: { flex: 1 },
+});
 
 function App(): React.JSX.Element {
   const [i18nReady, setI18nReady] = useState(false);

@@ -8,10 +8,15 @@ let pendingPayload: PushNotificationPayload | null = null;
 
 const navigateTab = (tabName: string, child?: { screen: string; params?: object }): void => {
   if (!navigationRef.isReady()) return;
+  // `initial: false` tells the nested stack navigator to keep its initialRouteName
+  // (e.g. ConversationsList) at the bottom of the back stack, so back from a
+  // deep screen (e.g. Chat) pops within the stack rather than falling through
+  // to whichever tab was previously focused.
+  const params = child ? { ...child, initial: false } : undefined;
   navigationRef.dispatch(
     CommonActions.navigate({
       name: tabName,
-      params: child,
+      params,
     })
   );
 };
@@ -20,8 +25,9 @@ export const dispatchPayload = (payload: PushNotificationPayload): void => {
   const accountType = useAuthStore.getState().user?.accountType;
   const kind = payload.data?.kind ?? payload.kind;
   const conversationId = payload.data?.conversationId;
+  const jobId = payload.data?.jobId;
 
-  if (kind === 'new_message') {
+  if (kind === 'new_message' || kind === 'conversation_started') {
     if (conversationId) {
       navigateTab('Chats', { screen: 'Chat', params: { conversationId } });
     } else {
@@ -30,14 +36,35 @@ export const dispatchPayload = (payload: PushNotificationPayload): void => {
     return;
   }
 
+  if (kind === 'new_application' || kind === 'application_withdrawn') {
+    if (jobId) {
+      navigateTab('Business', { screen: 'Applicants', params: { jobId } });
+    } else {
+      navigateTab('Business');
+    }
+    return;
+  }
+
+  if (kind === 'new_review') {
+    if (accountType === 'barista') {
+      navigateTab('Profile');
+    } else {
+      navigateTab('Profile');
+    }
+    return;
+  }
+
   if (
     kind === 'application_accepted' ||
     kind === 'application_rejected' ||
     kind === 'work_completion_requested' ||
-    kind === 'work_completion_confirmed'
+    kind === 'work_completion_confirmed' ||
+    kind === 'shift_cancelled'
   ) {
     if (accountType === 'barista') {
       navigateTab('Jobs', { screen: 'Applications' });
+    } else if (jobId) {
+      navigateTab('Business', { screen: 'Applicants', params: { jobId } });
     } else {
       navigateTab('Business');
     }

@@ -41,13 +41,16 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate {
     RNCPushNotificationIOS.didReceiveRemoteNotification(userInfo, fetchCompletionHandler: completionHandler)
   }
 
-  // Foreground presentation: show banner + sound while app is open.
+  // Foreground presentation: suppress the iOS native banner so our custom
+  // InAppToast (driven by Supabase Realtime on the notifications table) owns
+  // the foreground UX. The badge is still updated so the app icon count stays
+  // accurate, and the notification is added to Notification Center via .list.
   func userNotificationCenter(
     _ center: UNUserNotificationCenter,
     willPresent notification: UNNotification,
     withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
   ) {
-    completionHandler([.banner, .sound, .badge, .list])
+    completionHandler([.badge, .list])
   }
 
   // Notification tap: forwards the payload to JS so navigationRef can route.

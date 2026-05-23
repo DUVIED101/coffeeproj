@@ -480,7 +480,11 @@
       "newMessage": "New messages",
       "applicationAccepted": "Application accepted",
       "applicationRejected": "Application rejected",
-      "deliveryPending": "Push notifications will be enabled in an upcoming update"
+      "newApplication": "New job applications",
+      "applicationWithdrawn": "Application withdrawn",
+      "shiftCancelled": "Shift cancelled",
+      "newReview": "New review",
+      "conversationStarted": "New chat"
     },
     "visibility": {
       "title": "Visibility",

@@ -488,7 +488,11 @@
       "newMessage": "Новые сообщения",
       "applicationAccepted": "Отклик принят",
       "applicationRejected": "Отклик отклонён",
-      "deliveryPending": "Push-уведомления будут включены в ближайшем обновлении"
+      "newApplication": "Новые отклики на вакансии",
+      "applicationWithdrawn": "Отклик отозван",
+      "shiftCancelled": "Отмена смены",
+      "newReview": "Новый отзыв",
+      "conversationStarted": "Новый чат"
     },
     "visibility": {
       "title": "Видимость",

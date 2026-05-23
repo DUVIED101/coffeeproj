@@ -273,7 +273,9 @@ export class JobService {
         createdAt: job.created_at,
         updatedAt: job.updated_at,
         businessName: job.business_name,
+        businessLogoUrl: job.business_logo_url ?? undefined,
         branchName: job.branch_name,
+        branchPhotos: job.branch_photos ?? [],
         metroStation: job.metro_station,
         distance: job.distance_meters,
       }));

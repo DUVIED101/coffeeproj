@@ -15,13 +15,34 @@ type PrefsState = {
   newMessage: boolean;
   applicationAccepted: boolean;
   applicationRejected: boolean;
+  newApplication: boolean;
+  applicationWithdrawn: boolean;
+  shiftCancelled: boolean;
+  newReview: boolean;
+  conversationStarted: boolean;
 };
 
 const DEFAULT_PREFS: PrefsState = {
   newMessage: true,
   applicationAccepted: true,
   applicationRejected: true,
+  newApplication: true,
+  applicationWithdrawn: true,
+  shiftCancelled: true,
+  newReview: true,
+  conversationStarted: true,
 };
+
+const PREF_ROWS: ReadonlyArray<{ key: PrefKey; labelKey: string }> = [
+  { key: 'newMessage', labelKey: 'settings.notifications.newMessage' },
+  { key: 'conversationStarted', labelKey: 'settings.notifications.conversationStarted' },
+  { key: 'newApplication', labelKey: 'settings.notifications.newApplication' },
+  { key: 'applicationAccepted', labelKey: 'settings.notifications.applicationAccepted' },
+  { key: 'applicationRejected', labelKey: 'settings.notifications.applicationRejected' },
+  { key: 'applicationWithdrawn', labelKey: 'settings.notifications.applicationWithdrawn' },
+  { key: 'shiftCancelled', labelKey: 'settings.notifications.shiftCancelled' },
+  { key: 'newReview', labelKey: 'settings.notifications.newReview' },
+];
 
 export const NotificationsScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -50,6 +71,11 @@ export const NotificationsScreen: React.FC = () => {
             newMessage: loaded.newMessage,
             applicationAccepted: loaded.applicationAccepted,
             applicationRejected: loaded.applicationRejected,
+            newApplication: loaded.newApplication,
+            applicationWithdrawn: loaded.applicationWithdrawn,
+            shiftCancelled: loaded.shiftCancelled,
+            newReview: loaded.newReview,
+            conversationStarted: loaded.conversationStarted,
           });
         }
       } catch (err) {
@@ -88,40 +114,21 @@ export const NotificationsScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.banner}>
-          <Text style={styles.bannerText}>{t('settings.notifications.deliveryPending')}</Text>
-        </View>
-
         <View style={styles.card}>
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>{t('settings.notifications.newMessage')}</Text>
-            <Switch
-              value={prefs.newMessage}
-              onValueChange={v => handleToggle('newMessage', v)}
-              trackColor={{ false: COLORS.border, true: COLORS.primary }}
-              thumbColor="#fff"
-            />
-          </View>
-          <View style={styles.separator} />
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>{t('settings.notifications.applicationAccepted')}</Text>
-            <Switch
-              value={prefs.applicationAccepted}
-              onValueChange={v => handleToggle('applicationAccepted', v)}
-              trackColor={{ false: COLORS.border, true: COLORS.primary }}
-              thumbColor="#fff"
-            />
-          </View>
-          <View style={styles.separator} />
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>{t('settings.notifications.applicationRejected')}</Text>
-            <Switch
-              value={prefs.applicationRejected}
-              onValueChange={v => handleToggle('applicationRejected', v)}
-              trackColor={{ false: COLORS.border, true: COLORS.primary }}
-              thumbColor="#fff"
-            />
-          </View>
+          {PREF_ROWS.map((row, index) => (
+            <React.Fragment key={row.key}>
+              {index > 0 && <View style={styles.separator} />}
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>{t(row.labelKey)}</Text>
+                <Switch
+                  value={prefs[row.key]}
+                  onValueChange={v => handleToggle(row.key, v)}
+                  trackColor={{ false: COLORS.border, true: COLORS.primary }}
+                  thumbColor="#fff"
+                />
+              </View>
+            </React.Fragment>
+          ))}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -138,19 +145,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingVertical: 16,
-  },
-  banner: {
-    backgroundColor: COLORS.backgroundSecondary,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 12,
-    marginHorizontal: 16,
-    padding: 12,
-    marginBottom: 12,
-  },
-  bannerText: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
   },
   card: {
     backgroundColor: COLORS.background,

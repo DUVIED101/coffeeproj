@@ -79,4 +79,66 @@ describe('mapNotificationRow', () => {
 
     expect(result.data).toEqual({ kind: 'work_completion_confirmed' });
   });
+
+  it('maps a new_application row with jobId in data', () => {
+    const result = mapNotificationRow({
+      id: ROW_ID,
+      user_id: ROW_USER_ID,
+      kind: 'new_application',
+      title: 'Новая заявка',
+      body: 'Бариста откликнулся',
+      data: {
+        kind: 'new_application',
+        applicationId: 'app-1' as never,
+        jobId: 'job-1' as never,
+      },
+      read_at: null,
+      created_at: CREATED_AT_ISO,
+    });
+
+    expect(result.data).toEqual({
+      kind: 'new_application',
+      applicationId: 'app-1',
+      jobId: 'job-1',
+    });
+  });
+
+  it('maps a new_review row with reviewId in data', () => {
+    const result = mapNotificationRow({
+      id: ROW_ID,
+      user_id: ROW_USER_ID,
+      kind: 'new_review',
+      title: 'Новый отзыв',
+      body: '5 звёзд',
+      data: {
+        kind: 'new_review',
+        reviewId: 'rev-1' as never,
+        applicationId: 'app-1' as never,
+      },
+      read_at: null,
+      created_at: CREATED_AT_ISO,
+    });
+
+    expect(result.data).toEqual({
+      kind: 'new_review',
+      reviewId: 'rev-1',
+      applicationId: 'app-1',
+    });
+  });
+
+  it('maps a shift_cancelled row', () => {
+    const result = mapNotificationRow({
+      id: ROW_ID,
+      user_id: ROW_USER_ID,
+      kind: 'shift_cancelled',
+      title: 'Смена отменена',
+      body: 'Работодатель отменил',
+      data: { kind: 'shift_cancelled', applicationId: 'app-1' as never, jobId: 'job-1' as never },
+      read_at: null,
+      created_at: CREATED_AT_ISO,
+    });
+
+    expect(result.kind).toEqual('shift_cancelled');
+    expect(result.data.applicationId).toEqual('app-1');
+  });
 });

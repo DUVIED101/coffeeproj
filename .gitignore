@@ -50,12 +50,18 @@ coffeeproj/test-rls-check.js
 coffeeproj/test-search-jobs.js
 coffeeproj/test-search-detailed.js
 
-# Internal docs — pending removal from history before making repo public.
+# Internal docs and dev scripts — pending removal from history before making repo public.
 # Files remain locally but should not be tracked going forward.
 # See docs/pre-public-cleanup.md for the filter-repo procedure.
-/IMPLEMENTATION_PLAN.md
+/ARCHITECTURE.md
 /BUG_BACKLOG.md
+/CLAUDE.md
+/IMPLEMENTATION_PLAN.md
 /PRD.md
+coffeeproj/README.md
 docs/push-notifications-setup.md
 docs/testflight-setup.md
+docs/resend-custom-domain.md
 docs/pre-public-cleanup.md
+coffeeproj/scripts/seed-simulation.js
+coffeeproj/scripts/seed-test-jobs.js

@@ -12,20 +12,43 @@ type NotificationKind =
   | "application_accepted"
   | "application_rejected"
   | "work_completion_requested"
-  | "work_completion_confirmed";
+  | "work_completion_confirmed"
+  | "new_application"
+  | "application_withdrawn"
+  | "shift_cancelled"
+  | "new_review"
+  | "conversation_started";
 
-type GatedKind = "new_message" | "application_accepted" | "application_rejected";
+type GatedKind =
+  | "new_message"
+  | "application_accepted"
+  | "application_rejected"
+  | "new_application"
+  | "application_withdrawn"
+  | "shift_cancelled"
+  | "new_review"
+  | "conversation_started";
 
 type NotificationPrefsRow = {
   new_message: boolean;
   application_accepted: boolean;
   application_rejected: boolean;
+  new_application: boolean;
+  application_withdrawn: boolean;
+  shift_cancelled: boolean;
+  new_review: boolean;
+  conversation_started: boolean;
 };
 
 const GATED_KIND_COLUMNS: Readonly<Record<GatedKind, keyof NotificationPrefsRow>> = {
   new_message: "new_message",
   application_accepted: "application_accepted",
   application_rejected: "application_rejected",
+  new_application: "new_application",
+  application_withdrawn: "application_withdrawn",
+  shift_cancelled: "shift_cancelled",
+  new_review: "new_review",
+  conversation_started: "conversation_started",
 };
 
 function isGatedKind(kind: NotificationKind): kind is GatedKind {
@@ -53,6 +76,11 @@ const KNOWN_KINDS: ReadonlySet<NotificationKind> = new Set<NotificationKind>([
   "application_rejected",
   "work_completion_requested",
   "work_completion_confirmed",
+  "new_application",
+  "application_withdrawn",
+  "shift_cancelled",
+  "new_review",
+  "conversation_started",
 ]);
 
 const JWT_TTL_SECONDS = 3300;
@@ -257,7 +285,9 @@ async function isKindEnabled(
   const column = GATED_KIND_COLUMNS[kind];
   const { data, error } = await supabase
     .from("notification_preferences")
-    .select("new_message, application_accepted, application_rejected")
+    .select(
+      "new_message, application_accepted, application_rejected, new_application, application_withdrawn, shift_cancelled, new_review, conversation_started",
+    )
     .eq("user_id", recipientId)
     .single();
   if (error) {

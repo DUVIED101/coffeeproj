@@ -4,7 +4,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
@@ -133,6 +132,7 @@ export function ChatScreen({ navigation, route }: any) {
               onPress: () =>
                 navigation.getParent()?.navigate('Jobs', {
                   screen: 'BusinessJobs',
+                  initial: false,
                   params: { businessOwnerId, businessName },
                 }),
             },
@@ -250,21 +250,21 @@ export function ChatScreen({ navigation, route }: any) {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (!conversation) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Conversation not found</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -272,7 +272,7 @@ export function ChatScreen({ navigation, route }: any) {
     conversation.applicationStatus === 'rejected' || conversation.applicationStatus === 'withdrawn';
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -343,7 +343,7 @@ export function ChatScreen({ navigation, route }: any) {
           </View>
         )}
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

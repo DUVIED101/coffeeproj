@@ -5,13 +5,42 @@ import type {
   UpdateNotificationPreferences,
 } from '../types/notificationPreferences';
 
+type PrefsRow = {
+  user_id: string;
+  new_message: boolean;
+  application_accepted: boolean;
+  application_rejected: boolean;
+  new_application: boolean;
+  application_withdrawn: boolean;
+  shift_cancelled: boolean;
+  new_review: boolean;
+  conversation_started: boolean;
+  updated_at: string;
+};
+
+const CAMEL_TO_SNAKE: Readonly<Record<keyof UpdateNotificationPreferences, keyof PrefsRow>> = {
+  newMessage: 'new_message',
+  applicationAccepted: 'application_accepted',
+  applicationRejected: 'application_rejected',
+  newApplication: 'new_application',
+  applicationWithdrawn: 'application_withdrawn',
+  shiftCancelled: 'shift_cancelled',
+  newReview: 'new_review',
+  conversationStarted: 'conversation_started',
+};
+
 export class NotificationPreferencesService {
-  private static mapPrefs(db: any): NotificationPreferences {
+  private static mapPrefs(db: PrefsRow): NotificationPreferences {
     return {
       userId: db.user_id as UserId,
       newMessage: db.new_message,
       applicationAccepted: db.application_accepted,
       applicationRejected: db.application_rejected,
+      newApplication: db.new_application,
+      applicationWithdrawn: db.application_withdrawn,
+      shiftCancelled: db.shift_cancelled,
+      newReview: db.new_review,
+      conversationStarted: db.conversation_started,
       updatedAt: db.updated_at,
     };
   }
@@ -31,7 +60,7 @@ export class NotificationPreferencesService {
         throw error;
       }
 
-      return data ? this.mapPrefs(data) : null;
+      return data ? this.mapPrefs(data as PrefsRow) : null;
     } catch (error) {
       console.error('Error in getPreferences:', error);
       throw error;
@@ -45,14 +74,11 @@ export class NotificationPreferencesService {
     try {
       const row: Record<string, unknown> = { user_id: userId };
 
-      if (updates.newMessage !== undefined) {
-        row.new_message = updates.newMessage;
-      }
-      if (updates.applicationAccepted !== undefined) {
-        row.application_accepted = updates.applicationAccepted;
-      }
-      if (updates.applicationRejected !== undefined) {
-        row.application_rejected = updates.applicationRejected;
+      for (const key of Object.keys(updates) as Array<keyof UpdateNotificationPreferences>) {
+        const value = updates[key];
+        if (value !== undefined) {
+          row[CAMEL_TO_SNAKE[key]] = value;
+        }
       }
 
       const { data, error } = await supabase
@@ -64,7 +90,7 @@ export class NotificationPreferencesService {
       if (error) throw error;
       if (!data) throw new Error('Failed to upsert notification preferences');
 
-      return this.mapPrefs(data);
+      return this.mapPrefs(data as PrefsRow);
     } catch (error) {
       console.error('Error in upsertPreferences:', error);
       throw error;

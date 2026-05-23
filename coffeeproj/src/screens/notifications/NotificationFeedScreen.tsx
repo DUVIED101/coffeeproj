@@ -27,6 +27,11 @@ const ICON_BY_KIND: Record<NotificationKind, string> = {
   application_rejected: 'close-circle-outline',
   work_completion_requested: 'clock-outline',
   work_completion_confirmed: 'briefcase-check-outline',
+  new_application: 'account-plus-outline',
+  application_withdrawn: 'account-remove-outline',
+  shift_cancelled: 'calendar-remove-outline',
+  new_review: 'star-outline',
+  conversation_started: 'message-plus-outline',
 };
 
 const formatTimestamp = (date: Date): string => {

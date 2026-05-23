@@ -533,7 +533,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
                     value={startTime}
                     mode="time"
                     is24Hour={true}
-                    display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                     themeVariant="light"
                     textColor="#000000"
                     onChange={(_event, selectedTime) => {
@@ -569,7 +569,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation }) => {
                     value={endTime}
                     mode="time"
                     is24Hour={true}
-                    display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                     themeVariant="light"
                     textColor="#000000"
                     onChange={(_event, selectedTime) => {
