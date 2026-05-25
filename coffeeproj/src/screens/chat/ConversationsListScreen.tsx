@@ -38,13 +38,14 @@ const ConversationItem = React.memo<{
   conversation: Conversation;
   onPress: (conversation: Conversation) => void;
   isBarista: boolean;
-}>(({ conversation, onPress, isBarista }) => {
+  fallbackTitle: string;
+}>(({ conversation, onPress, isBarista, fallbackTitle }) => {
   const unreadCount = isBarista
     ? conversation.unreadCountBarista
     : conversation.unreadCountBusiness;
 
   const otherPartyName = isBarista ? conversation.businessName : conversation.baristaName;
-  const title = conversation.jobTitle || otherPartyName || 'Chat';
+  const title = conversation.jobTitle || otherPartyName || fallbackTitle;
   const showSubtitle = !!otherPartyName && title !== otherPartyName;
 
   const statusColor = getStatusColor(conversation.applicationStatus);
@@ -139,24 +140,33 @@ export function ConversationsListScreen({ navigation }: any) {
     [navigation]
   );
 
+  const fallbackTitle = t('chat.fallbackTitle', { defaultValue: 'Chat' });
+
   const renderConversation = useCallback(
     ({ item }: { item: Conversation }) => (
       <ConversationItem
         conversation={item}
         onPress={handleConversationPress}
         isBarista={user?.accountType === 'barista'}
+        fallbackTitle={fallbackTitle}
       />
     ),
-    [handleConversationPress, user?.accountType]
+    [handleConversationPress, user?.accountType, fallbackTitle]
   );
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>No conversations yet</Text>
+      <Text style={styles.emptyText}>
+        {t('conversations.emptyTitle', { defaultValue: 'No conversations yet' })}
+      </Text>
       <Text style={styles.emptySubtext}>
         {user?.accountType === 'barista'
-          ? 'Apply to jobs to start conversations with businesses'
-          : 'Conversations will appear here when baristas apply to your jobs'}
+          ? t('conversations.emptyBarista', {
+              defaultValue: 'Apply to jobs to start conversations with businesses',
+            })
+          : t('conversations.emptyBusiness', {
+              defaultValue: 'Conversations will appear here when baristas apply to your jobs',
+            })}
       </Text>
     </View>
   );

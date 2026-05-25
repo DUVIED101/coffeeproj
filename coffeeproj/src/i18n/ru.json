@@ -582,6 +582,13 @@
     }
   },
   "chat": {
+    "fallbackTitle": "Чат",
+    "headerJobsAction": "Вакансии",
+    "loadFailed": "Чат не найден",
+    "emptyTitle": "Сообщений пока нет",
+    "emptySubtitle": "Отправьте сообщение, чтобы начать диалог",
+    "inputPlaceholder": "Введите сообщение...",
+    "send": "Отправить",
     "closed": {
       "title": "Чат закрыт",
       "rejected": "Бизнес выбрал другого кандидата.",
@@ -590,6 +597,11 @@
   },
   "chats": {
     "title": "Сообщения"
+  },
+  "conversations": {
+    "emptyTitle": "Диалогов пока нет",
+    "emptyBarista": "Откликнитесь на вакансии, чтобы начать диалог с бизнесом",
+    "emptyBusiness": "Диалоги появятся, когда бариста начнут откликаться на ваши вакансии"
   },
   "notifications": {
     "feed": {
@@ -987,6 +999,63 @@
     "vk": "ВКонтакте",
     "website": "Сайт",
     "other": "Другое"
+  },
+  "socialLinksEditor": {
+    "addLink": "+ Добавить",
+    "removeRecord": "Удалить запись",
+    "removeConfirmBody": "Удалить эту социальную сеть?",
+    "placeholders": {
+      "instagram": "@handle",
+      "telegram": "@channel",
+      "vk": "vk.com/...",
+      "website": "https://...",
+      "other": "URL или контакт"
+    }
+  },
+  "workExperienceEditor": {
+    "employerPlaceholder": "Surf Coffee",
+    "positionPlaceholder": "Бариста"
+  },
+  "monthYearPicker": {
+    "placeholder": "Выбрать",
+    "cancel": "Отмена",
+    "done": "Готово"
+  },
+  "certificatesEditor": {
+    "addButton": "+ Добавить",
+    "draftPlaceholder": "Название сертификата",
+    "removeA11y": "Удалить {{name}}",
+    "duplicateTitle": "Уже добавлено",
+    "duplicateBody": "\"{{name}}\" уже в списке.",
+    "removeTitle": "Удалить сертификат",
+    "removeBody": "Удалить \"{{name}}\"?"
+  },
+  "baristaFilterBar": {
+    "branchPreset": "Рядом с моими точками",
+    "equipment": "Оборудование",
+    "metroPlaceholder": "Метро",
+    "shift": "Смена",
+    "experience": "Опыт",
+    "experienceWithValue": "Опыт {{value}}+",
+    "experienceAny": "Любой",
+    "hourlyCapPlaceholder": "До ₽/час",
+    "hourlyCap": "до ₽{{amount}}/час",
+    "hourlyCapOption": "до ₽{{amount}}",
+    "city": "Город: {{name}}",
+    "chooseEquipment": "Выберите оборудование",
+    "chooseShift": "Выберите смену",
+    "chooseExperience": "Минимальный опыт",
+    "chooseHourlyCap": "Максимальная ставка",
+    "clear": "Очистить",
+    "done": "Готово",
+    "reset": "Сбросить"
+  },
+  "branchPhotoGallery": {
+    "removeA11y": "Удалить фото",
+    "viewA11y": "Открыть фото {{index}}"
+  },
+  "imageViewer": {
+    "closeA11y": "Закрыть"
   },
   "common": {
     "save": "Сохранить",

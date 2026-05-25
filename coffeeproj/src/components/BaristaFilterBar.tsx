@@ -8,10 +8,11 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { BaristaFilters, ShiftTime } from '../types/baristaProfile';
 import type { Equipment } from '../types/business';
 import type { CityCode } from '../types/city';
-import { DEFAULT_CITY, CITY_CODES, CITY_LABELS_RU } from '../types/city';
+import { DEFAULT_CITY, CITY_CODES } from '../types/city';
 import { COLORS } from '../config/constants';
 import { MetroSelector } from './MetroSelector';
 
@@ -29,15 +30,15 @@ const EQUIPMENT_OPTIONS: Equipment[] = [
   'Slayer',
 ];
 
-const SHIFT_OPTIONS: { value: ShiftTime; label: string }[] = [
-  { value: 'morning', label: 'Утро' },
-  { value: 'afternoon', label: 'День' },
-  { value: 'evening', label: 'Вечер' },
-  { value: 'night', label: 'Ночь' },
+const SHIFT_OPTIONS: { value: ShiftTime; labelKey: string }[] = [
+  { value: 'morning', labelKey: 'shiftTimes.morning' },
+  { value: 'afternoon', labelKey: 'shiftTimes.afternoon' },
+  { value: 'evening', labelKey: 'shiftTimes.evening' },
+  { value: 'night', labelKey: 'shiftTimes.night' },
 ];
 
-const EXPERIENCE_OPTIONS = [
-  { value: 0, label: 'Любой' },
+const EXPERIENCE_OPTIONS: { value: number; label?: string }[] = [
+  { value: 0 },
   { value: 1, label: '1+' },
   { value: 3, label: '3+' },
   { value: 5, label: '5+' },
@@ -45,11 +46,11 @@ const EXPERIENCE_OPTIONS = [
 ];
 
 const HOURLY_CAP_OPTIONS = [
-  { value: 300, label: 'до ₽300' },
-  { value: 500, label: 'до ₽500' },
-  { value: 800, label: 'до ₽800' },
-  { value: 1000, label: 'до ₽1000' },
-  { value: 1500, label: 'до ₽1500' },
+  { value: 300, amount: '300' },
+  { value: 500, amount: '500' },
+  { value: 800, amount: '800' },
+  { value: 1000, amount: '1000' },
+  { value: 1500, amount: '1500' },
 ];
 
 const arraysEqualAsSet = (a?: string[], b?: string[]): boolean => {
@@ -63,6 +64,7 @@ const dedupe = (values: string[]): string[] => Array.from(new Set(values));
 
 export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
   ({ onFilterChange, currentFilters, branchMetroStations }) => {
+    const { t } = useTranslation();
     const [showEquipmentModal, setShowEquipmentModal] = useState(false);
     const [showShiftModal, setShowShiftModal] = useState(false);
     const [showExperienceModal, setShowExperienceModal] = useState(false);
@@ -174,12 +176,21 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
     const hasCity = currentFilters.city !== undefined;
 
     const experienceLabel = hasMinExperience
-      ? `Опыт ${currentFilters.minYearsExperience}+`
-      : 'Опыт';
+      ? t('baristaFilterBar.experienceWithValue', {
+          value: currentFilters.minYearsExperience,
+          defaultValue: `Опыт ${currentFilters.minYearsExperience}+`,
+        })
+      : t('baristaFilterBar.experience', { defaultValue: 'Опыт' });
     const hourlyCapLabel = hasHourlyCap
-      ? `до ₽${currentFilters.hourlyRateMax?.toLocaleString('ru-RU')}/час`
-      : 'До ₽/час';
-    const cityLabel = `Город: ${CITY_LABELS_RU[activeCity]}`;
+      ? t('baristaFilterBar.hourlyCap', {
+          amount: currentFilters.hourlyRateMax?.toLocaleString('ru-RU'),
+          defaultValue: `до ₽${currentFilters.hourlyRateMax?.toLocaleString('ru-RU')}/час`,
+        })
+      : t('baristaFilterBar.hourlyCapPlaceholder', { defaultValue: 'До ₽/час' });
+    const cityLabel = t('baristaFilterBar.city', {
+      name: t(`city.codes.${activeCity}`),
+      defaultValue: `Город: ${t(`city.codes.${activeCity}`)}`,
+    });
 
     const showBranchPreset = !!branchMetroStations && branchMetroStations.length > 0;
 
@@ -195,7 +206,7 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
               onPress={handleBranchPresetToggle}>
               <Text
                 style={[styles.filterChipText, branchPresetActive && styles.filterChipTextActive]}>
-                Рядом с моими точками
+                {t('baristaFilterBar.branchPreset', { defaultValue: 'Рядом с моими точками' })}
               </Text>
             </TouchableOpacity>
           )}
@@ -208,7 +219,7 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
                 styles.filterChipText,
                 selectedEquipmentCount > 0 && styles.filterChipTextActive,
               ]}>
-              Оборудование
+              {t('baristaFilterBar.equipment', { defaultValue: 'Оборудование' })}
               {selectedEquipmentCount > 0 && ` (${selectedEquipmentCount})`}
             </Text>
           </TouchableOpacity>
@@ -220,7 +231,7 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
               onCityChange={handleCityChange}
               value={currentFilters.metroStations ?? []}
               onChange={handleMetroChange}
-              placeholder="Метро"
+              placeholder={t('baristaFilterBar.metroPlaceholder', { defaultValue: 'Метро' })}
             />
           </View>
 
@@ -232,7 +243,7 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
                 styles.filterChipText,
                 selectedShiftCount > 0 && styles.filterChipTextActive,
               ]}>
-              Смена
+              {t('baristaFilterBar.shift', { defaultValue: 'Смена' })}
               {selectedShiftCount > 0 && ` (${selectedShiftCount})`}
             </Text>
           </TouchableOpacity>
@@ -270,7 +281,9 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
           <Pressable style={styles.modalOverlay} onPress={() => setShowEquipmentModal(false)}>
             <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Выберите оборудование</Text>
+                <Text style={styles.modalTitle}>
+                  {t('baristaFilterBar.chooseEquipment', { defaultValue: 'Выберите оборудование' })}
+                </Text>
                 <TouchableOpacity onPress={() => setShowEquipmentModal(false)}>
                   <Text style={styles.closeButton}>✕</Text>
                 </TouchableOpacity>
@@ -302,13 +315,17 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
                   <TouchableOpacity
                     style={[styles.doneButton, styles.clearButton]}
                     onPress={handleClearEquipment}>
-                    <Text style={[styles.doneButtonText, styles.clearButtonText]}>Очистить</Text>
+                    <Text style={[styles.doneButtonText, styles.clearButtonText]}>
+                      {t('baristaFilterBar.clear', { defaultValue: 'Очистить' })}
+                    </Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity
                   style={[styles.doneButton, selectedEquipmentCount > 0 && styles.doneButtonHalf]}
                   onPress={() => setShowEquipmentModal(false)}>
-                  <Text style={styles.doneButtonText}>Готово</Text>
+                  <Text style={styles.doneButtonText}>
+                    {t('baristaFilterBar.done', { defaultValue: 'Готово' })}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -323,7 +340,9 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
           <Pressable style={styles.modalOverlay} onPress={() => setShowShiftModal(false)}>
             <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Выберите смену</Text>
+                <Text style={styles.modalTitle}>
+                  {t('baristaFilterBar.chooseShift', { defaultValue: 'Выберите смену' })}
+                </Text>
                 <TouchableOpacity onPress={() => setShowShiftModal(false)}>
                   <Text style={styles.closeButton}>✕</Text>
                 </TouchableOpacity>
@@ -342,7 +361,7 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
                           styles.optionItemText,
                           isSelected && styles.optionItemTextSelected,
                         ]}>
-                        {option.label}
+                        {t(option.labelKey)}
                       </Text>
                       {isSelected && <Text style={styles.checkmark}>✓</Text>}
                     </TouchableOpacity>
@@ -355,13 +374,17 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
                   <TouchableOpacity
                     style={[styles.doneButton, styles.clearButton]}
                     onPress={handleClearShifts}>
-                    <Text style={[styles.doneButtonText, styles.clearButtonText]}>Очистить</Text>
+                    <Text style={[styles.doneButtonText, styles.clearButtonText]}>
+                      {t('baristaFilterBar.clear', { defaultValue: 'Очистить' })}
+                    </Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity
                   style={[styles.doneButton, selectedShiftCount > 0 && styles.doneButtonHalf]}
                   onPress={() => setShowShiftModal(false)}>
-                  <Text style={styles.doneButtonText}>Готово</Text>
+                  <Text style={styles.doneButtonText}>
+                    {t('baristaFilterBar.done', { defaultValue: 'Готово' })}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -376,7 +399,9 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
           <Pressable style={styles.modalOverlay} onPress={() => setShowExperienceModal(false)}>
             <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Минимальный опыт</Text>
+                <Text style={styles.modalTitle}>
+                  {t('baristaFilterBar.chooseExperience', { defaultValue: 'Минимальный опыт' })}
+                </Text>
                 <TouchableOpacity onPress={() => setShowExperienceModal(false)}>
                   <Text style={styles.closeButton}>✕</Text>
                 </TouchableOpacity>
@@ -388,6 +413,10 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
                     option.value === 0
                       ? currentFilters.minYearsExperience === undefined
                       : currentFilters.minYearsExperience === option.value;
+                  const label =
+                    option.value === 0
+                      ? t('baristaFilterBar.experienceAny', { defaultValue: 'Любой' })
+                      : (option.label ?? `${option.value}+`);
                   return (
                     <TouchableOpacity
                       key={option.value}
@@ -398,7 +427,7 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
                           styles.optionItemText,
                           isSelected && styles.optionItemTextSelected,
                         ]}>
-                        {option.label}
+                        {label}
                       </Text>
                       {isSelected && <Text style={styles.checkmark}>✓</Text>}
                     </TouchableOpacity>
@@ -417,7 +446,9 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
           <Pressable style={styles.modalOverlay} onPress={() => setShowHourlyCapModal(false)}>
             <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Максимальная ставка</Text>
+                <Text style={styles.modalTitle}>
+                  {t('baristaFilterBar.chooseHourlyCap', { defaultValue: 'Максимальная ставка' })}
+                </Text>
                 <TouchableOpacity onPress={() => setShowHourlyCapModal(false)}>
                   <Text style={styles.closeButton}>✕</Text>
                 </TouchableOpacity>
@@ -436,7 +467,10 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
                           styles.optionItemText,
                           isSelected && styles.optionItemTextSelected,
                         ]}>
-                        {option.label}
+                        {t('baristaFilterBar.hourlyCapOption', {
+                          amount: option.amount,
+                          defaultValue: `до ₽${option.amount}`,
+                        })}
                       </Text>
                       {isSelected && <Text style={styles.checkmark}>✓</Text>}
                     </TouchableOpacity>
@@ -448,7 +482,9 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
                 <TouchableOpacity
                   style={styles.resetButton}
                   onPress={() => handleHourlyCapSelect(undefined)}>
-                  <Text style={styles.resetButtonText}>Сбросить</Text>
+                  <Text style={styles.resetButtonText}>
+                    {t('baristaFilterBar.reset', { defaultValue: 'Сбросить' })}
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>

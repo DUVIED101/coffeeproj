@@ -136,7 +136,9 @@ export const WorkExperienceEditor: React.FC<Props> = ({
               style={styles.input}
               value={exp.employer}
               onChangeText={text => update(index, { employer: text })}
-              placeholder="Surf Coffee"
+              placeholder={t('workExperienceEditor.employerPlaceholder', {
+                defaultValue: 'Surf Coffee',
+              })}
               placeholderTextColor={COLORS.textSecondary}
               maxLength={EMPLOYER_MAX}
               editable={!disabled}
@@ -149,7 +151,9 @@ export const WorkExperienceEditor: React.FC<Props> = ({
               style={styles.input}
               value={exp.position}
               onChangeText={text => update(index, { position: text })}
-              placeholder="Бариста"
+              placeholder={t('workExperienceEditor.positionPlaceholder', {
+                defaultValue: 'Бариста',
+              })}
               placeholderTextColor={COLORS.textSecondary}
               maxLength={POSITION_MAX}
               editable={!disabled}

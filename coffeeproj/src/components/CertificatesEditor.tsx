@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../config/constants';
 
 type Props = {
@@ -17,6 +18,7 @@ export const CertificatesEditor: React.FC<Props> = ({
   onAdd,
   onRemove,
 }) => {
+  const { t } = useTranslation();
   const [isAdding, setIsAdding] = useState(false);
   const [draft, setDraft] = useState('');
 
@@ -34,7 +36,13 @@ export const CertificatesEditor: React.FC<Props> = ({
     const name = draft.trim();
     if (!name || isBusy) return;
     if (certificates.includes(name)) {
-      Alert.alert('Уже добавлено', `"${name}" уже в списке.`);
+      Alert.alert(
+        t('certificatesEditor.duplicateTitle', { defaultValue: 'Уже добавлено' }),
+        t('certificatesEditor.duplicateBody', {
+          name,
+          defaultValue: `"${name}" уже в списке.`,
+        })
+      );
       return;
     }
     await onAdd(name);
@@ -43,10 +51,14 @@ export const CertificatesEditor: React.FC<Props> = ({
   };
 
   const confirmRemove = (cert: string): void => {
-    Alert.alert('Удалить сертификат', `Удалить "${cert}"?`, [
-      { text: 'Отмена', style: 'cancel' },
-      { text: 'Удалить', style: 'destructive', onPress: () => onRemove(cert) },
-    ]);
+    Alert.alert(
+      t('certificatesEditor.removeTitle', { defaultValue: 'Удалить сертификат' }),
+      t('certificatesEditor.removeBody', { name: cert, defaultValue: `Удалить "${cert}"?` }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('common.delete'), style: 'destructive', onPress: () => onRemove(cert) },
+      ]
+    );
   };
 
   return (
@@ -60,7 +72,10 @@ export const CertificatesEditor: React.FC<Props> = ({
           <TouchableOpacity
             onPress={() => confirmRemove(cert)}
             hitSlop={8}
-            accessibilityLabel={`Удалить ${cert}`}
+            accessibilityLabel={t('certificatesEditor.removeA11y', {
+              name: cert,
+              defaultValue: `Удалить ${cert}`,
+            })}
             style={styles.removeButton}>
             <Text style={styles.removeText}>×</Text>
           </TouchableOpacity>
@@ -74,7 +89,9 @@ export const CertificatesEditor: React.FC<Props> = ({
             style={styles.input}
             value={draft}
             onChangeText={setDraft}
-            placeholder="Название сертификата"
+            placeholder={t('certificatesEditor.draftPlaceholder', {
+              defaultValue: 'Название сертификата',
+            })}
             placeholderTextColor={COLORS.textSecondary}
             maxLength={MAX_NAME_LENGTH}
             editable={!isBusy}
@@ -97,7 +114,9 @@ export const CertificatesEditor: React.FC<Props> = ({
         </View>
       ) : (
         <TouchableOpacity onPress={startAdding} disabled={isBusy} style={styles.addButton}>
-          <Text style={styles.addButtonText}>+ Добавить</Text>
+          <Text style={styles.addButtonText}>
+            {t('certificatesEditor.addButton', { defaultValue: '+ Добавить' })}
+          </Text>
         </TouchableOpacity>
       )}
     </View>

@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { COLORS, RADII } from '../config/constants';
 import { PHOTO_LIMIT } from '../utils/storage';
 
@@ -28,6 +29,7 @@ const Thumbnail = memo(function Thumbnail({
   busy,
   onRemove,
   onPress,
+  t,
 }: {
   uri: string;
   index: number;
@@ -35,6 +37,7 @@ const Thumbnail = memo(function Thumbnail({
   busy: boolean;
   onRemove?: (uri: string, index: number) => void;
   onPress?: (index: number) => void;
+  t: TFunction;
 }) {
   const handleRemove = useCallback(() => onRemove?.(uri, index), [onRemove, uri, index]);
   const handlePress = useCallback(() => onPress?.(index), [onPress, index]);
@@ -53,7 +56,7 @@ const Thumbnail = memo(function Thumbnail({
           disabled={busy}
           onPress={handleRemove}
           accessibilityRole="button"
-          accessibilityLabel="Remove photo">
+          accessibilityLabel={t('branchPhotoGallery.removeA11y', { defaultValue: 'Remove photo' })}>
           {busy ? (
             <ActivityIndicator color="#fff" size="small" />
           ) : (
@@ -71,7 +74,10 @@ const Thumbnail = memo(function Thumbnail({
         onPress={handlePress}
         activeOpacity={0.8}
         accessibilityRole="button"
-        accessibilityLabel={`View photo ${index + 1}`}>
+        accessibilityLabel={t('branchPhotoGallery.viewA11y', {
+          index: index + 1,
+          defaultValue: `View photo ${index + 1}`,
+        })}>
         {content}
       </TouchableOpacity>
     );
@@ -100,9 +106,10 @@ export const BranchPhotoGallery: React.FC<BranchPhotoGalleryProps> = ({
         busy={busyIndex === index}
         onRemove={onRemove}
         onPress={onPhotoPress}
+        t={t}
       />
     ),
-    [editable, busyIndex, onRemove, onPhotoPress]
+    [editable, busyIndex, onRemove, onPhotoPress, t]
   );
 
   const keyExtractor = useCallback((url: string, idx: number) => `${idx}-${url}`, []);

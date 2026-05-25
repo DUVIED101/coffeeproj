@@ -1,5 +1,6 @@
 import React from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { COLORS } from '../config/constants';
 import type { SocialLink, SocialPlatform } from '../types/business';
 
@@ -11,18 +12,42 @@ type Props = {
 
 const MAX_VALUE_LENGTH = 200;
 
-const PLATFORM_OPTIONS: { value: SocialPlatform; label: string; placeholder: string }[] = [
-  { value: 'instagram', label: 'Instagram', placeholder: '@handle' },
-  { value: 'telegram', label: 'Telegram', placeholder: '@channel' },
-  { value: 'vk', label: 'VK', placeholder: 'vk.com/...' },
-  { value: 'website', label: 'Сайт', placeholder: 'https://...' },
-  { value: 'other', label: 'Другое', placeholder: 'URL или контакт' },
+const PLATFORM_KEYS: { value: SocialPlatform; labelKey: string; placeholderKey: string }[] = [
+  {
+    value: 'instagram',
+    labelKey: 'socialLinks.instagram',
+    placeholderKey: 'socialLinksEditor.placeholders.instagram',
+  },
+  {
+    value: 'telegram',
+    labelKey: 'socialLinks.telegram',
+    placeholderKey: 'socialLinksEditor.placeholders.telegram',
+  },
+  {
+    value: 'vk',
+    labelKey: 'socialLinks.vk',
+    placeholderKey: 'socialLinksEditor.placeholders.vk',
+  },
+  {
+    value: 'website',
+    labelKey: 'socialLinks.website',
+    placeholderKey: 'socialLinksEditor.placeholders.website',
+  },
+  {
+    value: 'other',
+    labelKey: 'socialLinks.other',
+    placeholderKey: 'socialLinksEditor.placeholders.other',
+  },
 ];
 
-const getPlaceholder = (platform: SocialPlatform): string =>
-  PLATFORM_OPTIONS.find(o => o.value === platform)?.placeholder ?? '';
-
 export const SocialLinksEditor: React.FC<Props> = ({ links, onChange, disabled = false }) => {
+  const { t } = useTranslation();
+
+  const getPlaceholder = (platform: SocialPlatform): string => {
+    const entry = PLATFORM_KEYS.find(o => o.value === platform);
+    return entry ? t(entry.placeholderKey) : '';
+  };
+
   const updateLink = (index: number, patch: Partial<SocialLink>): void => {
     const next = links.map((link, i) => (i === index ? { ...link, ...patch } : link));
     onChange(next);
@@ -33,14 +58,18 @@ export const SocialLinksEditor: React.FC<Props> = ({ links, onChange, disabled =
   };
 
   const confirmRemove = (index: number): void => {
-    Alert.alert('Удалить запись', 'Удалить эту социальную сеть?', [
-      { text: 'Отмена', style: 'cancel' },
-      {
-        text: 'Удалить',
-        style: 'destructive',
-        onPress: () => onChange(links.filter((_, i) => i !== index)),
-      },
-    ]);
+    Alert.alert(
+      t('socialLinksEditor.removeRecord', { defaultValue: 'Удалить запись' }),
+      t('socialLinksEditor.removeConfirmBody', { defaultValue: 'Удалить эту социальную сеть?' }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: () => onChange(links.filter((_, i) => i !== index)),
+        },
+      ]
+    );
   };
 
   const rows = links.length > 0 ? links : [{ platform: 'instagram' as SocialPlatform, value: '' }];
@@ -50,7 +79,7 @@ export const SocialLinksEditor: React.FC<Props> = ({ links, onChange, disabled =
       {rows.map((link, index) => (
         <View key={index} style={styles.row}>
           <View style={styles.platformsRow}>
-            {PLATFORM_OPTIONS.map(opt => {
+            {PLATFORM_KEYS.map(opt => {
               const isActive = link.platform === opt.value;
               return (
                 <TouchableOpacity
@@ -66,7 +95,7 @@ export const SocialLinksEditor: React.FC<Props> = ({ links, onChange, disabled =
                   style={[styles.platformChip, isActive && styles.platformChipActive]}>
                   <Text
                     style={[styles.platformChipText, isActive && styles.platformChipTextActive]}>
-                    {opt.label}
+                    {t(opt.labelKey)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -97,7 +126,9 @@ export const SocialLinksEditor: React.FC<Props> = ({ links, onChange, disabled =
                 hitSlop={8}
                 disabled={disabled}
                 accessibilityRole="button"
-                accessibilityLabel="Удалить запись"
+                accessibilityLabel={t('socialLinksEditor.removeRecord', {
+                  defaultValue: 'Удалить запись',
+                })}
                 style={styles.removeButton}>
                 <Text style={styles.removeText}>×</Text>
               </TouchableOpacity>
@@ -107,7 +138,9 @@ export const SocialLinksEditor: React.FC<Props> = ({ links, onChange, disabled =
       ))}
 
       <TouchableOpacity onPress={addLink} disabled={disabled} style={styles.addButton}>
-        <Text style={styles.addButtonText}>+ Добавить</Text>
+        <Text style={styles.addButtonText}>
+          {t('socialLinksEditor.addLink', { defaultValue: '+ Добавить' })}
+        </Text>
       </TouchableOpacity>
     </View>
   );

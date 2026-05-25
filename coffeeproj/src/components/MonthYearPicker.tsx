@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useTranslation } from 'react-i18next';
 import { COLORS, RADII } from '../config/constants';
 
 type Props = {
@@ -23,11 +24,14 @@ export const MonthYearPicker: React.FC<Props> = ({
   value,
   onChange,
   label,
-  placeholder = 'Выбрать',
+  placeholder,
   disabled = false,
   minYear = 1960,
   maxYear,
 }) => {
+  const { t } = useTranslation();
+  const resolvedPlaceholder =
+    placeholder ?? t('monthYearPicker.placeholder', { defaultValue: 'Выбрать' });
   const [isOpen, setIsOpen] = useState(false);
   const [draftDate, setDraftDate] = useState<Date | null>(null);
 
@@ -71,10 +75,10 @@ export const MonthYearPicker: React.FC<Props> = ({
         style={[styles.button, disabled && styles.buttonDisabled]}
         onPress={openPicker}
         accessibilityRole="button"
-        accessibilityLabel={label ?? placeholder}
+        accessibilityLabel={label ?? resolvedPlaceholder}
         disabled={disabled}>
         <Text style={[styles.text, !value && styles.placeholderText]}>
-          {value ? formatMonthYear(value.year, value.month) : placeholder}
+          {value ? formatMonthYear(value.year, value.month) : resolvedPlaceholder}
         </Text>
       </TouchableOpacity>
 
@@ -110,10 +114,14 @@ export const MonthYearPicker: React.FC<Props> = ({
               />
               <View style={styles.sheetActions}>
                 <TouchableOpacity onPress={closePicker} style={styles.cancelButton}>
-                  <Text style={styles.cancelText}>Отмена</Text>
+                  <Text style={styles.cancelText}>
+                    {t('monthYearPicker.cancel', { defaultValue: 'Отмена' })}
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleDone} style={styles.doneButton}>
-                  <Text style={styles.doneText}>Готово</Text>
+                  <Text style={styles.doneText}>
+                    {t('monthYearPicker.done', { defaultValue: 'Готово' })}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </Pressable>

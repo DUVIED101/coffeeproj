@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   visible: boolean;
@@ -26,6 +27,7 @@ export const FullscreenImageViewer: React.FC<Props> = ({
   initialIndex = 0,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const listRef = useRef<FlatList<string>>(null);
   const [index, setIndex] = useState(initialIndex);
 
@@ -41,7 +43,7 @@ export const FullscreenImageViewer: React.FC<Props> = ({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <TouchableOpacity
-          accessibilityLabel="Close"
+          accessibilityLabel={t('imageViewer.closeA11y', { defaultValue: 'Close' })}
           style={styles.closeButton}
           onPress={onClose}
           hitSlop={12}>

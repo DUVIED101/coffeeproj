@@ -576,6 +576,13 @@
     }
   },
   "chat": {
+    "fallbackTitle": "Chat",
+    "headerJobsAction": "Jobs",
+    "loadFailed": "Conversation not found",
+    "emptyTitle": "No messages yet",
+    "emptySubtitle": "Send a message to start the conversation",
+    "inputPlaceholder": "Type a message...",
+    "send": "Send",
     "closed": {
       "title": "Chat closed",
       "rejected": "The business selected another candidate.",
@@ -584,6 +591,11 @@
   },
   "chats": {
     "title": "Messages"
+  },
+  "conversations": {
+    "emptyTitle": "No conversations yet",
+    "emptyBarista": "Apply to jobs to start conversations with businesses",
+    "emptyBusiness": "Conversations will appear here when baristas apply to your jobs"
   },
   "notifications": {
     "feed": {
@@ -973,6 +985,63 @@
     "vk": "VK",
     "website": "Website",
     "other": "Other"
+  },
+  "socialLinksEditor": {
+    "addLink": "+ Add",
+    "removeRecord": "Remove entry",
+    "removeConfirmBody": "Remove this social link?",
+    "placeholders": {
+      "instagram": "@handle",
+      "telegram": "@channel",
+      "vk": "vk.com/...",
+      "website": "https://...",
+      "other": "URL or contact"
+    }
+  },
+  "workExperienceEditor": {
+    "employerPlaceholder": "Surf Coffee",
+    "positionPlaceholder": "Barista"
+  },
+  "monthYearPicker": {
+    "placeholder": "Select",
+    "cancel": "Cancel",
+    "done": "Done"
+  },
+  "certificatesEditor": {
+    "addButton": "+ Add",
+    "draftPlaceholder": "Certificate name",
+    "removeA11y": "Remove {{name}}",
+    "duplicateTitle": "Already added",
+    "duplicateBody": "\"{{name}}\" is already in the list.",
+    "removeTitle": "Remove certificate",
+    "removeBody": "Remove \"{{name}}\"?"
+  },
+  "baristaFilterBar": {
+    "branchPreset": "Near my branches",
+    "equipment": "Equipment",
+    "metroPlaceholder": "Metro",
+    "shift": "Shift",
+    "experience": "Experience",
+    "experienceWithValue": "Exp {{value}}+",
+    "experienceAny": "Any",
+    "hourlyCapPlaceholder": "Up to ₽/hr",
+    "hourlyCap": "up to ₽{{amount}}/hr",
+    "hourlyCapOption": "up to ₽{{amount}}",
+    "city": "City: {{name}}",
+    "chooseEquipment": "Choose equipment",
+    "chooseShift": "Choose shift",
+    "chooseExperience": "Minimum experience",
+    "chooseHourlyCap": "Maximum hourly rate",
+    "clear": "Clear",
+    "done": "Done",
+    "reset": "Reset"
+  },
+  "branchPhotoGallery": {
+    "removeA11y": "Remove photo",
+    "viewA11y": "View photo {{index}}"
+  },
+  "imageViewer": {
+    "closeA11y": "Close"
   },
   "common": {
     "save": "Save",

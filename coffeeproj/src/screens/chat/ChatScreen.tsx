@@ -128,7 +128,7 @@ export function ChatScreen({ navigation, route }: any) {
       user?.accountType === 'barista' && businessOwnerId
         ? [
             {
-              label: 'Вакансии',
+              label: t('chat.headerJobsAction', { defaultValue: 'Вакансии' }),
               onPress: () =>
                 navigation.getParent()?.navigate('Jobs', {
                   screen: 'BusinessJobs',
@@ -140,7 +140,8 @@ export function ChatScreen({ navigation, route }: any) {
         : undefined;
     const otherPartyName =
       user?.accountType === 'barista' ? businessName : conversation?.baristaName;
-    const title = otherPartyName || conversation?.jobTitle || 'Chat';
+    const title =
+      otherPartyName || conversation?.jobTitle || t('chat.fallbackTitle', { defaultValue: 'Chat' });
     navigation.setOptions({
       header: () => (
         <ScreenHeaderWithActions
@@ -157,6 +158,7 @@ export function ChatScreen({ navigation, route }: any) {
     conversation?.businessName,
     conversation?.baristaName,
     conversation?.jobTitle,
+    t,
   ]);
 
   const conversationId = conversation?.id;
@@ -246,8 +248,12 @@ export function ChatScreen({ navigation, route }: any) {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>No messages yet</Text>
-      <Text style={styles.emptySubtext}>Send a message to start the conversation</Text>
+      <Text style={styles.emptyText}>
+        {t('chat.emptyTitle', { defaultValue: 'No messages yet' })}
+      </Text>
+      <Text style={styles.emptySubtext}>
+        {t('chat.emptySubtitle', { defaultValue: 'Send a message to start the conversation' })}
+      </Text>
     </View>
   );
 
@@ -265,7 +271,9 @@ export function ChatScreen({ navigation, route }: any) {
     return (
       <View style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Conversation not found</Text>
+          <Text style={styles.errorText}>
+            {t('chat.loadFailed', { defaultValue: 'Conversation not found' })}
+          </Text>
         </View>
       </View>
     );
@@ -282,7 +290,7 @@ export function ChatScreen({ navigation, route }: any) {
         keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
         <View style={styles.header}>
           <Text style={styles.title} numberOfLines={1}>
-            {conversation.jobTitle || 'Chat'}
+            {conversation.jobTitle || t('chat.fallbackTitle', { defaultValue: 'Chat' })}
           </Text>
           {user?.accountType === 'barista' && conversation.businessName && (
             <Text style={styles.subtitle} numberOfLines={1}>
@@ -320,7 +328,7 @@ export function ChatScreen({ navigation, route }: any) {
               style={styles.textInput}
               value={messageText}
               onChangeText={setMessageText}
-              placeholder="Type a message..."
+              placeholder={t('chat.inputPlaceholder', { defaultValue: 'Type a message...' })}
               placeholderTextColor={COLORS.textSecondary}
               multiline
               maxLength={2000}
@@ -340,7 +348,9 @@ export function ChatScreen({ navigation, route }: any) {
               {isSending ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.sendButtonText}>Send</Text>
+                <Text style={styles.sendButtonText}>
+                  {t('chat.send', { defaultValue: 'Send' })}
+                </Text>
               )}
             </TouchableOpacity>
           </View>
