@@ -497,6 +497,22 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   if (!profile) {
     return (
       <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+        <ScreenHeaderWithActions
+          title={t('barista.profile.title', { defaultValue: 'Профиль' })}
+          actions={[
+            {
+              icon: 'bell-outline',
+              badgeCount: unreadCount,
+              onPress: () => navigation.navigate('NotificationFeed'),
+              testID: 'bell',
+            },
+            {
+              icon: 'cog-outline',
+              onPress: () => navigation.navigate('Settings'),
+              testID: 'settings',
+            },
+          ]}
+        />
         <View style={styles.emptyContainer}>
           <MaterialCommunityIcons name="coffee-outline" size={56} color={COLORS.textSecondary} />
           <Text style={styles.emptyTitle}>
