@@ -15,6 +15,8 @@ import { COLORS } from '../../config/constants';
 import { changeLanguage, getCurrentLanguage } from '../../i18n';
 import type { SupportedLanguage } from '../../i18n';
 import type { SettingsStackParamList } from '../../navigation/SettingsStack';
+import { supabase } from '../../config/supabase';
+import { useAuthStore } from '../../stores/authStore';
 
 type Navigation = NativeStackNavigationProp<SettingsStackParamList, 'Language'>;
 
@@ -42,6 +44,16 @@ export const LanguageScreen: React.FC = () => {
       setIsChanging(true);
       try {
         await changeLanguage(lang);
+        const userId = useAuthStore.getState().user?.id;
+        if (userId) {
+          // Best-effort: persist language to DB for server-rendered notifications.
+          // Failure here is non-fatal — client-side i18n still works via AsyncStorage.
+          const { error } = await supabase
+            .from('users')
+            .update({ language: lang })
+            .eq('id', userId);
+          if (error) console.warn('Could not persist users.language:', error.message);
+        }
         navigation.goBack();
       } catch (err) {
         console.error('Error in changeLanguage:', err);

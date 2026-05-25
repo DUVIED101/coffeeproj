@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase';
+import { getCurrentLanguage } from '../i18n';
 import type { AccountType, LegalForm, SocialPlatform } from '../types';
 
 export interface BusinessSignupData {
@@ -30,6 +31,7 @@ export class AuthService {
     try {
       const metadata: Record<string, string> = {
         account_type: accountType,
+        language: getCurrentLanguage(),
       };
       if (phoneNumber !== undefined) {
         metadata.phone_number = phoneNumber;
