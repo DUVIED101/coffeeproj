@@ -53,11 +53,11 @@ type Props = {
   navigation: NativeStackNavigationProp<ProfileStackParamList, 'BaristaProfile'>;
 };
 
-const SHIFT_TIMES: { value: ShiftTime; label: string }[] = [
-  { value: 'morning', label: 'Morning' },
-  { value: 'afternoon', label: 'Afternoon' },
-  { value: 'evening', label: 'Evening' },
-  { value: 'night', label: 'Night' },
+const SHIFT_TIME_KEYS: { value: ShiftTime; labelKey: string }[] = [
+  { value: 'morning', labelKey: 'shiftTimes.morning' },
+  { value: 'afternoon', labelKey: 'shiftTimes.afternoon' },
+  { value: 'evening', labelKey: 'shiftTimes.evening' },
+  { value: 'night', labelKey: 'shiftTimes.night' },
 ];
 
 const getCompletenessColor = (completeness: number): string => {
@@ -66,15 +66,16 @@ const getCompletenessColor = (completeness: number): string => {
   return COLORS.success;
 };
 
-const formatMonthYear = (year: number, month: number): string => {
+const formatMonthYear = (year: number, month: number, locale: string): string => {
   const d = new Date(year, month - 1, 1);
-  const formatted = d.toLocaleDateString('ru-RU', { month: 'short', year: 'numeric' });
+  const formatted = d.toLocaleDateString(locale, { month: 'short', year: 'numeric' });
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 };
 
 const WorkExperienceList: React.FC<{ experiences: WorkExperience[] }> = React.memo(
   ({ experiences }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
 
     if (experiences.length === 0) {
       return <Text style={styles.emptyText}>{t('barista.workExperience.empty')}</Text>;
@@ -83,13 +84,13 @@ const WorkExperienceList: React.FC<{ experiences: WorkExperience[] }> = React.me
     return (
       <>
         {experiences.map(exp => {
-          const start = formatMonthYear(exp.startYear, exp.startMonth);
+          const start = formatMonthYear(exp.startYear, exp.startMonth, locale);
           const rangeLabel =
             exp.isCurrent || exp.endYear === null || exp.endMonth === null
               ? t('barista.workExperience.currentRange', { start })
               : t('barista.workExperience.rangeWithEnd', {
                   start,
-                  end: formatMonthYear(exp.endYear, exp.endMonth),
+                  end: formatMonthYear(exp.endYear, exp.endMonth, locale),
                 });
           const duration = computeDuration({
             startYear: exp.startYear,
@@ -124,7 +125,7 @@ WorkExperienceList.displayName = 'WorkExperienceList';
 export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const user = useAuthStore(state => state.user);
   const unreadCount = useNotificationFeedStore(state => state.unreadCount);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [profile, setProfile] = useState<BaristaProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -198,7 +199,12 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   const loadProfile = async () => {
     if (!user?.id) {
-      Alert.alert('Error', 'User not authenticated');
+      Alert.alert(
+        t('baristaProfileScreen.errorTitle', { defaultValue: 'Ошибка' }),
+        t('baristaProfileScreen.errorNotAuthenticated', {
+          defaultValue: 'Пользователь не авторизован',
+        })
+      );
       return;
     }
 
@@ -220,7 +226,10 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
       populateFields(enriched);
     } catch (error: unknown) {
       console.error('Error loading profile:', error);
-      Alert.alert('Error', 'Failed to load profile');
+      Alert.alert(
+        t('baristaProfileScreen.errorTitle', { defaultValue: 'Ошибка' }),
+        t('baristaProfileScreen.errorLoad', { defaultValue: 'Не удалось загрузить профиль' })
+      );
     } finally {
       setIsLoading(false);
     }
@@ -279,10 +288,12 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, []);
 
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
+
   const formatDisplayDate = (dateString: string): string => {
-    if (!dateString) return 'Select date';
+    if (!dateString) return t('baristaProfileScreen.selectDate', { defaultValue: 'Выберите дату' });
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -303,10 +314,20 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
       setIsSaving(true);
       await BaristaProfileService.uploadAvatar(user.id, result.assets[0].uri);
       await loadProfile();
-      Alert.alert('Success', 'Avatar uploaded successfully!');
+      Alert.alert(
+        t('baristaProfileScreen.successTitle', { defaultValue: 'Готово' }),
+        t('baristaProfileScreen.successAvatar', {
+          defaultValue: 'Аватар успешно загружен!',
+        })
+      );
     } catch (error: unknown) {
       console.error('Error uploading avatar:', error);
-      Alert.alert('Error', 'Failed to upload avatar. Please try again.');
+      Alert.alert(
+        t('baristaProfileScreen.errorTitle', { defaultValue: 'Ошибка' }),
+        t('baristaProfileScreen.errorAvatarUpload', {
+          defaultValue: 'Не удалось загрузить аватар. Попробуйте ещё раз.',
+        })
+      );
     } finally {
       setIsSaving(false);
     }
@@ -322,7 +343,12 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
       await loadProfile();
     } catch (error: unknown) {
       console.error('Error saving certificate:', error);
-      Alert.alert('Error', 'Failed to save certificate. Please try again.');
+      Alert.alert(
+        t('baristaProfileScreen.errorTitle', { defaultValue: 'Ошибка' }),
+        t('baristaProfileScreen.errorSaveCert', {
+          defaultValue: 'Не удалось сохранить сертификат. Попробуйте ещё раз.',
+        })
+      );
     } finally {
       setIsSaving(false);
     }
@@ -338,7 +364,12 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
       await loadProfile();
     } catch (error: unknown) {
       console.error('Error removing certificate:', error);
-      Alert.alert('Error', 'Failed to remove certificate.');
+      Alert.alert(
+        t('baristaProfileScreen.errorTitle', { defaultValue: 'Ошибка' }),
+        t('baristaProfileScreen.errorRemoveCert', {
+          defaultValue: 'Не удалось удалить сертификат.',
+        })
+      );
     } finally {
       setIsSaving(false);
     }
@@ -405,31 +436,47 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
         })
       );
     } else if (uploadedCount < accepted.length) {
-      Alert.alert('Error', 'Some photos failed to upload. Please try again.');
+      Alert.alert(
+        t('baristaProfileScreen.errorTitle', { defaultValue: 'Ошибка' }),
+        t('baristaProfileScreen.errorSomePhotosFailed', {
+          defaultValue: 'Часть фотографий не загрузилась. Попробуйте ещё раз.',
+        })
+      );
     }
   };
 
   const handleRemovePortfolioPhoto = (photoUrl: string): void => {
     if (!user?.id) return;
-    Alert.alert('Удалить фото', 'Удалить это фото из портфолио?', [
-      { text: 'Отмена', style: 'cancel' },
-      {
-        text: 'Удалить',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            setIsSaving(true);
-            await BaristaProfileService.removePortfolioPhoto(user.id, photoUrl);
-            await loadProfile();
-          } catch (error: unknown) {
-            console.error('Error removing portfolio photo:', error);
-            Alert.alert('Error', 'Failed to remove photo. Please try again.');
-          } finally {
-            setIsSaving(false);
-          }
+    Alert.alert(
+      t('baristaProfileScreen.removePhotoTitle', { defaultValue: 'Удалить фото' }),
+      t('baristaProfileScreen.removePhotoBody', {
+        defaultValue: 'Удалить это фото из портфолио?',
+      }),
+      [
+        { text: t('common.cancel', { defaultValue: 'Отмена' }), style: 'cancel' },
+        {
+          text: t('baristaProfileScreen.remove', { defaultValue: 'Удалить' }),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsSaving(true);
+              await BaristaProfileService.removePortfolioPhoto(user.id, photoUrl);
+              await loadProfile();
+            } catch (error: unknown) {
+              console.error('Error removing portfolio photo:', error);
+              Alert.alert(
+                t('baristaProfileScreen.errorTitle', { defaultValue: 'Ошибка' }),
+                t('baristaProfileScreen.errorRemovePhoto', {
+                  defaultValue: 'Не удалось удалить фото. Попробуйте ещё раз.',
+                })
+              );
+            } finally {
+              setIsSaving(false);
+            }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const handleEdit = () => {
@@ -445,7 +492,12 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleSave = async () => {
     if (!user?.id) {
-      Alert.alert('Error', 'User not authenticated');
+      Alert.alert(
+        t('baristaProfileScreen.errorTitle', { defaultValue: 'Ошибка' }),
+        t('baristaProfileScreen.errorNotAuthenticated', {
+          defaultValue: 'Пользователь не авторизован',
+        })
+      );
       return;
     }
 
@@ -475,10 +527,18 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
 
       setProfile({ ...updatedProfile, workExperiences: savedExperiences });
       setIsEditing(false);
-      Alert.alert('Success', 'Profile updated successfully!');
+      Alert.alert(
+        t('baristaProfileScreen.successTitle', { defaultValue: 'Готово' }),
+        t('baristaProfileScreen.successProfile', { defaultValue: 'Профиль успешно обновлён!' })
+      );
     } catch (error: unknown) {
       console.error('Error updating profile:', error);
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
+      Alert.alert(
+        t('baristaProfileScreen.errorTitle', { defaultValue: 'Ошибка' }),
+        t('baristaProfileScreen.errorUpdate', {
+          defaultValue: 'Не удалось обновить профиль. Попробуйте ещё раз.',
+        })
+      );
     } finally {
       setIsSaving(false);
     }
@@ -498,7 +558,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
         <ScreenHeaderWithActions
-          title={t('barista.profile.title', { defaultValue: 'Профиль' })}
+          title={t('baristaProfileScreen.title', { defaultValue: 'Профиль' })}
           actions={[
             {
               icon: 'bell-outline',
@@ -544,7 +604,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
       <ScreenHeaderWithActions
-        title={t('barista.profile.title', { defaultValue: 'Профиль' })}
+        title={t('baristaProfileScreen.title', { defaultValue: 'Профиль' })}
         actions={[
           {
             icon: 'bell-outline',
@@ -578,7 +638,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
               {profile.avatarUrl ? (
                 <TouchableOpacity
                   onPress={() => openViewer([profile.avatarUrl as string], 0)}
-                  accessibilityLabel="View avatar fullscreen">
+                  accessibilityLabel={t('baristaProfileScreen.viewAvatarA11y', {
+                    defaultValue: 'Открыть аватар на весь экран',
+                  })}>
                   <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
                 </TouchableOpacity>
               ) : (
@@ -594,7 +656,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 onPress={handleAvatarUpload}
                 disabled={isSaving}>
                 <Text style={styles.avatarUploadButtonText}>
-                  {profile.avatarUrl ? 'Change' : 'Add Photo'}
+                  {profile.avatarUrl
+                    ? t('baristaProfileScreen.changePhoto', { defaultValue: 'Изменить' })
+                    : t('baristaProfileScreen.addPhoto', { defaultValue: 'Добавить фото' })}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -638,18 +702,28 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Personal Info</Text>
+              <Text style={styles.sectionTitle}>
+                {t('baristaProfileScreen.personalInfo', { defaultValue: 'Личная информация' })}
+              </Text>
               {!isEditing ? (
                 <TouchableOpacity onPress={handleEdit}>
-                  <Text style={styles.editButton}>Edit</Text>
+                  <Text style={styles.editButton}>
+                    {t('baristaProfileScreen.edit', { defaultValue: 'Изменить' })}
+                  </Text>
                 </TouchableOpacity>
               ) : (
                 <View style={styles.editActions}>
                   <TouchableOpacity onPress={handleCancel}>
-                    <Text style={styles.cancelButton}>Cancel</Text>
+                    <Text style={styles.cancelButton}>
+                      {t('baristaProfileScreen.cancel', { defaultValue: 'Отмена' })}
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity onPress={handleSave} disabled={isSaving}>
-                    <Text style={styles.saveButton}>{isSaving ? 'Saving...' : 'Save'}</Text>
+                    <Text style={styles.saveButton}>
+                      {isSaving
+                        ? t('baristaProfileScreen.saving', { defaultValue: 'Сохранение…' })
+                        : t('baristaProfileScreen.save', { defaultValue: 'Сохранить' })}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -657,7 +731,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
 
             {isEditing ? (
               <>
-                <Text style={styles.label}>First Name</Text>
+                <Text style={styles.label}>
+                  {t('baristaProfileScreen.firstName', { defaultValue: 'Имя' })}
+                </Text>
                 <TextInput
                   style={styles.input}
                   value={firstName}
@@ -665,7 +741,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   editable={isEditing}
                 />
 
-                <Text style={styles.label}>Last Name</Text>
+                <Text style={styles.label}>
+                  {t('baristaProfileScreen.lastName', { defaultValue: 'Фамилия' })}
+                </Text>
                 <TextInput
                   style={styles.input}
                   value={lastName}
@@ -673,7 +751,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   editable={isEditing}
                 />
 
-                <Text style={styles.label}>City</Text>
+                <Text style={styles.label}>
+                  {t('baristaProfileScreen.city', { defaultValue: 'Город' })}
+                </Text>
                 <CityToggle
                   value={city}
                   onChange={nextCity => {
@@ -682,13 +762,17 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   }}
                 />
 
-                <Text style={styles.label}>Date of Birth</Text>
+                <Text style={styles.label}>
+                  {t('baristaProfileScreen.dateOfBirth', { defaultValue: 'Дата рождения' })}
+                </Text>
                 <TouchableOpacity
                   style={styles.datePickerButton}
                   onPress={() => setShowDatePicker(true)}>
                   <Text
                     style={[styles.datePickerText, !dateOfBirth && styles.datePickerPlaceholder]}>
-                    {dateOfBirth ? formatDisplayDate(dateOfBirth) : 'Select date'}
+                    {dateOfBirth
+                      ? formatDisplayDate(dateOfBirth)
+                      : t('baristaProfileScreen.selectDate', { defaultValue: 'Выберите дату' })}
                   </Text>
                 </TouchableOpacity>
                 {showDatePicker && (
@@ -706,7 +790,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                     <TouchableOpacity
                       style={styles.datePickerDoneButton}
                       onPress={() => setShowDatePicker(false)}>
-                      <Text style={styles.datePickerDoneText}>Done</Text>
+                      <Text style={styles.datePickerDoneText}>
+                        {t('baristaProfileScreen.done', { defaultValue: 'Готово' })}
+                      </Text>
                     </TouchableOpacity>
                   </>
                 )}
@@ -714,7 +800,12 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
             ) : (
               <>
                 {profile.dateOfBirth && (
-                  <Text style={styles.infoText}>Born: {profile.dateOfBirth}</Text>
+                  <Text style={styles.infoText}>
+                    {t('baristaProfileScreen.born', {
+                      date: profile.dateOfBirth,
+                      defaultValue: 'Дата рождения: {{date}}',
+                    })}
+                  </Text>
                 )}
               </>
             )}
@@ -725,7 +816,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
               style={styles.historyRow}
               onPress={() => navigation.navigate('ShiftHistory')}>
               <View style={styles.historyRowLeft}>
-                <Text style={styles.historyRowTitle}>История смен</Text>
+                <Text style={styles.historyRowTitle}>
+                  {t('baristaProfileScreen.shiftHistory', { defaultValue: 'История смен' })}
+                </Text>
               </View>
               <Text style={styles.historyRowChevron}>›</Text>
             </TouchableOpacity>
@@ -735,7 +828,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 style={[styles.historyRow, styles.historyRowSecondary]}
                 onPress={() => navigation.navigate('UserReviews', { userId: user.id as string })}>
                 <View style={styles.historyRowLeft}>
-                  <Text style={styles.historyRowTitle}>Все отзывы</Text>
+                  <Text style={styles.historyRowTitle}>
+                    {t('baristaProfileScreen.allReviews', { defaultValue: 'Все отзывы' })}
+                  </Text>
                   {aggregate && aggregate.reviewCount > 0 ? (
                     <StarRow
                       rating={aggregate.averageRating}
@@ -744,7 +839,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                       size={14}
                     />
                   ) : (
-                    <Text style={styles.historyRowSubtitle}>Без оценок</Text>
+                    <Text style={styles.historyRowSubtitle}>
+                      {t('reviews.noRatingsShort', { defaultValue: 'Без оценок' })}
+                    </Text>
                   )}
                 </View>
                 <Text style={styles.historyRowChevron}>›</Text>
@@ -753,11 +850,17 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Professional Info</Text>
+            <Text style={styles.sectionTitle}>
+              {t('baristaProfileScreen.professionalInfo', {
+                defaultValue: 'Профессиональная информация',
+              })}
+            </Text>
 
             {isEditing ? (
               <>
-                <Text style={styles.label}>Bio</Text>
+                <Text style={styles.label}>
+                  {t('baristaProfileScreen.bio', { defaultValue: 'О себе' })}
+                </Text>
                 <TextInput
                   style={[styles.input, styles.textArea]}
                   value={bio}
@@ -769,7 +872,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   editable={isEditing}
                 />
 
-                <Text style={styles.label}>Years of Experience</Text>
+                <Text style={styles.label}>
+                  {t('baristaProfileScreen.yearsExperience', { defaultValue: 'Стаж в годах' })}
+                </Text>
                 <TextInput
                   style={styles.input}
                   value={yearsOfExperience}
@@ -779,7 +884,11 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   returnKeyType="done"
                 />
 
-                <Text style={styles.label}>Equipment Experience</Text>
+                <Text style={styles.label}>
+                  {t('baristaProfileScreen.equipmentExperience', {
+                    defaultValue: 'Опыт работы с оборудованием',
+                  })}
+                </Text>
                 <View style={styles.chipsContainer}>
                   {EQUIPMENT_TYPES.map(equipment => (
                     <TouchableOpacity
@@ -800,7 +909,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   ))}
                 </View>
 
-                <Text style={styles.label}>Certifications</Text>
+                <Text style={styles.label}>
+                  {t('baristaProfileScreen.certifications', { defaultValue: 'Сертификаты' })}
+                </Text>
                 <CertificatesEditor
                   certificates={profile?.certifications ?? certifications}
                   isBusy={isSaving}
@@ -812,11 +923,20 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
               <>
                 {profile.bio && <Text style={styles.bioText}>{profile.bio}</Text>}
                 {profile.yearsOfExperience !== undefined && (
-                  <Text style={styles.infoText}>Experience: {profile.yearsOfExperience} years</Text>
+                  <Text style={styles.infoText}>
+                    {t('baristaProfileScreen.experience', {
+                      years: t('barista.experienceYears', {
+                        count: profile.yearsOfExperience,
+                      }),
+                      defaultValue: 'Стаж: {{years}}',
+                    })}
+                  </Text>
                 )}
                 {profile.equipmentExperience.length > 0 && (
                   <>
-                    <Text style={styles.label}>Equipment</Text>
+                    <Text style={styles.label}>
+                      {t('baristaProfileScreen.equipment', { defaultValue: 'Оборудование' })}
+                    </Text>
                     <View style={styles.chipsContainer}>
                       {profile.equipmentExperience.map(equipment => (
                         <View key={equipment} style={[styles.chip, styles.chipSelected]}>
@@ -830,7 +950,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 )}
                 {profile.certifications.length > 0 && (
                   <>
-                    <Text style={styles.label}>Certifications</Text>
+                    <Text style={styles.label}>
+                      {t('baristaProfileScreen.certifications', { defaultValue: 'Сертификаты' })}
+                    </Text>
                     {profile.certifications.map((cert, index) => (
                       <Text key={`${index}-${cert}`} style={styles.certificationItem}>
                         {index + 1}. {cert}
@@ -871,11 +993,19 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Work Preferences</Text>
+            <Text style={styles.sectionTitle}>
+              {t('baristaProfileScreen.workPreferences', {
+                defaultValue: 'Предпочтения по работе',
+              })}
+            </Text>
 
             {isEditing ? (
               <>
-                <Text style={styles.label}>Preferred Metro Stations</Text>
+                <Text style={styles.label}>
+                  {t('baristaProfileScreen.preferredMetro', {
+                    defaultValue: 'Предпочитаемые станции метро',
+                  })}
+                </Text>
                 <MetroSelector
                   multiSelect
                   city={city}
@@ -888,9 +1018,13 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   userLocation={userLocation}
                 />
 
-                <Text style={styles.label}>Preferred Shift Times</Text>
+                <Text style={styles.label}>
+                  {t('baristaProfileScreen.preferredShiftTimes', {
+                    defaultValue: 'Предпочитаемые смены',
+                  })}
+                </Text>
                 <View style={styles.chipsContainer}>
-                  {SHIFT_TIMES.map(({ value, label }) => (
+                  {SHIFT_TIME_KEYS.map(({ value, labelKey }) => (
                     <TouchableOpacity
                       key={value}
                       style={[
@@ -903,20 +1037,24 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                           styles.chipText,
                           selectedShiftTimes.includes(value) && styles.chipTextSelected,
                         ]}>
-                        {label}
+                        {t(labelKey)}
                       </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
 
-                <Text style={styles.label}>Hourly Rate Range (RUB)</Text>
+                <Text style={styles.label}>
+                  {t('baristaProfileScreen.hourlyRange', {
+                    defaultValue: 'Желаемая ставка в час (RUB)',
+                  })}
+                </Text>
                 <View style={styles.row}>
                   <TextInput
                     style={[styles.input, styles.halfInput]}
                     value={hourlyRateMin}
                     onChangeText={setHourlyRateMin}
                     keyboardType="numeric"
-                    placeholder="Min"
+                    placeholder={t('baristaSetup.minPlaceholder', { defaultValue: 'Мин' })}
                     editable={isEditing}
                     returnKeyType="done"
                   />
@@ -926,7 +1064,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                     value={hourlyRateMax}
                     onChangeText={setHourlyRateMax}
                     keyboardType="numeric"
-                    placeholder="Max"
+                    placeholder={t('baristaSetup.maxPlaceholder', { defaultValue: 'Макс' })}
                     editable={isEditing}
                     returnKeyType="done"
                   />
@@ -936,27 +1074,36 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
               <>
                 {profile.preferredMetroStations.length > 0 && (
                   <>
-                    <Text style={styles.label}>Metro Stations</Text>
+                    <Text style={styles.label}>
+                      {t('baristaProfileScreen.metroStations', { defaultValue: 'Станции метро' })}
+                    </Text>
                     <Text style={styles.infoText}>{profile.preferredMetroStations.join(', ')}</Text>
                   </>
                 )}
                 {profile.preferredShiftTimes.length > 0 && (
                   <>
-                    <Text style={styles.label}>Shift Times</Text>
+                    <Text style={styles.label}>
+                      {t('baristaProfileScreen.shiftTimes', { defaultValue: 'Смены' })}
+                    </Text>
                     <View style={styles.chipsContainer}>
-                      {profile.preferredShiftTimes.map(shift => (
-                        <View key={shift} style={[styles.chip, styles.chipSelected]}>
-                          <Text style={[styles.chipText, styles.chipTextSelected]}>
-                            {SHIFT_TIMES.find(s => s.value === shift)?.label}
-                          </Text>
-                        </View>
-                      ))}
+                      {profile.preferredShiftTimes.map(shift => {
+                        const entry = SHIFT_TIME_KEYS.find(s => s.value === shift);
+                        return (
+                          <View key={shift} style={[styles.chip, styles.chipSelected]}>
+                            <Text style={[styles.chipText, styles.chipTextSelected]}>
+                              {entry ? t(entry.labelKey) : shift}
+                            </Text>
+                          </View>
+                        );
+                      })}
                     </View>
                   </>
                 )}
                 {(profile.hourlyRateMin || profile.hourlyRateMax) && (
                   <>
-                    <Text style={styles.label}>Hourly Rate</Text>
+                    <Text style={styles.label}>
+                      {t('baristaProfileScreen.hourlyRate', { defaultValue: 'Ставка в час' })}
+                    </Text>
                     <Text style={styles.infoText}>
                       {profile.hourlyRateMin && `${profile.hourlyRateMin} RUB`}
                       {profile.hourlyRateMin && profile.hourlyRateMax && ' - '}
@@ -970,7 +1117,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
 
           <View style={styles.section}>
             <View style={styles.portfolioHeader}>
-              <Text style={styles.sectionTitle}>Portfolio</Text>
+              <Text style={styles.sectionTitle}>
+                {t('baristaProfileScreen.portfolio', { defaultValue: 'Портфолио' })}
+              </Text>
               <Text style={styles.portfolioCounter}>
                 {t('portfolioPhotos.counter', {
                   count: profile.portfolioPhotos.length,
@@ -985,7 +1134,10 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   <View key={index} style={styles.portfolioItem}>
                     <TouchableOpacity
                       onPress={() => openViewer(profile.portfolioPhotos, index)}
-                      accessibilityLabel={`View portfolio photo ${index + 1}`}>
+                      accessibilityLabel={t('baristaProfileScreen.viewPortfolioPhotoA11y', {
+                        index: index + 1,
+                        defaultValue: 'Открыть фото портфолио {{index}}',
+                      })}>
                       <Image source={{ uri: photo }} style={styles.portfolioPhoto} />
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -994,14 +1146,20 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                       disabled={isSaving}
                       hitSlop={8}
                       accessibilityRole="button"
-                      accessibilityLabel="Remove photo">
+                      accessibilityLabel={t('baristaProfileScreen.removePhotoA11y', {
+                        defaultValue: 'Удалить фото',
+                      })}>
                       <Text style={styles.portfolioRemoveButtonText}>×</Text>
                     </TouchableOpacity>
                   </View>
                 ))}
               </View>
             ) : (
-              <Text style={styles.emptyText}>No portfolio photos yet</Text>
+              <Text style={styles.emptyText}>
+                {t('baristaProfileScreen.noPortfolioPhotos', {
+                  defaultValue: 'Фото портфолио пока нет',
+                })}
+              </Text>
             )}
 
             <TouchableOpacity
@@ -1012,7 +1170,11 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
               onPress={handlePortfolioPhotoUpload}
               disabled={isSaving || profile.portfolioPhotos.length >= PHOTO_LIMIT}>
               <Text style={styles.uploadButtonText}>
-                {isSaving ? 'Uploading...' : '+ Add Portfolio Photo'}
+                {isSaving
+                  ? t('baristaProfileScreen.uploading', { defaultValue: 'Загрузка…' })
+                  : t('baristaProfileScreen.addPortfolioPhoto', {
+                      defaultValue: '+ Добавить фото в портфолио',
+                    })}
               </Text>
             </TouchableOpacity>
           </View>
@@ -1022,7 +1184,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
               <TouchableOpacity
                 style={styles.toggleButton}
                 onPress={() => setIsActivelyLooking(!isActivelyLooking)}>
-                <Text style={styles.toggleLabel}>Actively Looking for Work</Text>
+                <Text style={styles.toggleLabel}>
+                  {t('baristaProfileScreen.actively', { defaultValue: 'Активно ищу работу' })}
+                </Text>
                 <View style={[styles.toggleSwitch, isActivelyLooking && styles.toggleSwitchActive]}>
                   <View
                     style={[styles.toggleThumb, isActivelyLooking && styles.toggleThumbActive]}

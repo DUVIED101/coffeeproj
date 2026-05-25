@@ -85,12 +85,16 @@ const ShiftHistoryCard = React.memo<{
 
       {entry.baristaReview ? (
         <View style={styles.ownReviewRow}>
-          <Text style={styles.ownReviewLabel}>Your review:</Text>
+          <Text style={styles.ownReviewLabel}>
+            {t('shiftHistory.yourReview', { defaultValue: 'Ваш отзыв:' })}
+          </Text>
           <StarRow rating={entry.baristaReview.rating} size={14} />
         </View>
       ) : canRate ? (
         <TouchableOpacity style={styles.rateButton} onPress={handleRate} activeOpacity={0.7}>
-          <Text style={styles.rateButtonText}>Rate business</Text>
+          <Text style={styles.rateButtonText}>
+            {t('shiftHistory.rateBusiness', { defaultValue: 'Оценить бизнес' })}
+          </Text>
         </TouchableOpacity>
       ) : null}
     </TouchableOpacity>

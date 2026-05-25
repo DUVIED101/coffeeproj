@@ -10,6 +10,8 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
@@ -47,18 +49,18 @@ const getStatusColor = (status: ApplicationStatus): string => {
   }
 };
 
-const getStatusText = (status: ApplicationStatus): string => {
+const getStatusText = (status: ApplicationStatus, t: TFunction): string => {
   switch (status) {
     case 'pending':
-      return 'Pending';
+      return t('applications.status.pending', { defaultValue: 'На рассмотрении' });
     case 'under_review':
-      return 'Under Review';
+      return t('applications.status.underReview', { defaultValue: 'Рассматривается' });
     case 'accepted':
-      return 'Accepted';
+      return t('applications.status.accepted', { defaultValue: 'Принято' });
     case 'rejected':
-      return 'Rejected';
+      return t('applications.status.rejected', { defaultValue: 'Отклонено' });
     case 'withdrawn':
-      return 'Withdrawn';
+      return t('applications.status.withdrawn', { defaultValue: 'Отозвано' });
     default:
       return status;
   }
@@ -70,8 +72,10 @@ const ApplicationItem = React.memo<{
   onChatPress: (applicationId: string) => void;
   unreadCount: number;
 }>(({ application, onPress, onChatPress, unreadCount }) => {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
   const statusColor = getStatusColor(application.status);
-  const statusText = getStatusText(application.status);
+  const statusText = getStatusText(application.status, t);
 
   const handlePress = useCallback(() => onPress(application), [onPress, application]);
   const handleChatPress = useCallback(
@@ -83,32 +87,40 @@ const ApplicationItem = React.memo<{
     <TouchableOpacity style={styles.applicationCard} onPress={handlePress}>
       <View style={styles.applicationHeader}>
         <Text style={styles.jobTitle} numberOfLines={1}>
-          {application.job?.title || 'Job'}
+          {application.job?.title || t('applications.fallbackJob', { defaultValue: 'Вакансия' })}
         </Text>
         <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
           <Text style={styles.statusText}>{statusText}</Text>
         </View>
       </View>
-      <Text style={styles.businessName}>{application.job?.businessName || 'Business'}</Text>
+      <Text style={styles.businessName}>
+        {application.job?.businessName ||
+          t('applications.fallbackBusiness', { defaultValue: 'Бизнес' })}
+      </Text>
       {application.job?.branchName && (
         <Text style={styles.branchName}>{application.job.branchName}</Text>
       )}
       {application.job?.compensation && (
         <Text style={styles.compensation}>
-          {application.job.compensation.amount.toLocaleString('ru-RU')} ₽{' · '}
+          {application.job.compensation.amount.toLocaleString(locale)} ₽{' · '}
           {application.job.compensation.type === 'hourly'
-            ? 'per hour'
+            ? t('applications.perHour', { defaultValue: 'за час' })
             : application.job.compensation.type === 'daily'
-              ? 'per day'
-              : 'fixed'}
+              ? t('applications.perDay', { defaultValue: 'за день' })
+              : t('applications.fixed', { defaultValue: 'фикс.' })}
         </Text>
       )}
       <Text style={styles.appliedDate}>
-        Applied: {new Date(application.createdAt).toLocaleDateString('ru-RU')}
+        {t('applications.appliedShort', {
+          date: new Date(application.createdAt).toLocaleDateString(locale),
+          defaultValue: 'Откликнулись: {{date}}',
+        })}
       </Text>
 
       <TouchableOpacity style={styles.chatButton} onPress={handleChatPress}>
-        <Text style={styles.chatButtonText}>Message Business</Text>
+        <Text style={styles.chatButtonText}>
+          {t('applications.messageBusiness', { defaultValue: 'Написать бизнесу' })}
+        </Text>
         {unreadCount > 0 && (
           <View style={styles.unreadBadge}>
             <Text style={styles.unreadBadgeText}>{unreadCount}</Text>
@@ -120,6 +132,7 @@ const ApplicationItem = React.memo<{
 });
 
 export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
+  const { t } = useTranslation();
   const user = useAuthStore(state => state.user);
 
   const [applications, setApplications] = useState<Application[]>([]);
@@ -196,8 +209,14 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>No applications yet</Text>
-      <Text style={styles.emptySubtext}>Start applying to jobs to see your applications here</Text>
+      <Text style={styles.emptyText}>
+        {t('applications.empty', { defaultValue: 'Пока нет откликов' })}
+      </Text>
+      <Text style={styles.emptySubtext}>
+        {t('applications.emptyHint', {
+          defaultValue: 'Откликнитесь на вакансии — они появятся здесь',
+        })}
+      </Text>
     </View>
   );
 
@@ -214,7 +233,7 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>My Applications</Text>
+        <Text style={styles.title}>{t('applications.title', { defaultValue: 'Мои отклики' })}</Text>
       </View>
 
       <FlatList

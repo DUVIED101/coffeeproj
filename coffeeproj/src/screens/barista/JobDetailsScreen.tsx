@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
@@ -36,6 +37,8 @@ type Props = {
 };
 
 export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
   const { jobId, distance } = route.params;
   const user = useAuthStore(state => state.user);
 
@@ -76,7 +79,7 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       } catch (err) {
         if (cancelled) return;
         console.error('Error loading job details:', err);
-        setError('Failed to load job details');
+        setError(t('jobDetails.loadFailed', { defaultValue: 'Не удалось загрузить вакансию' }));
       } finally {
         if (cancelled) return;
         setHasCheckedApplication(true);
@@ -97,7 +100,7 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       setJob(jobData);
     } catch (err) {
       console.error('Error loading job:', err);
-      setError('Failed to load job details');
+      setError(t('jobDetails.loadFailed', { defaultValue: 'Не удалось загрузить вакансию' }));
     } finally {
       setIsLoading(false);
     }
@@ -129,15 +132,15 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const getStatusText = (status: string): string => {
     switch (status) {
       case 'pending':
-        return 'Pending';
+        return t('jobDetails.status.pending', { defaultValue: 'На рассмотрении' });
       case 'under_review':
-        return 'Under Review';
+        return t('jobDetails.status.underReview', { defaultValue: 'Рассматривается' });
       case 'accepted':
-        return 'Accepted';
+        return t('jobDetails.status.accepted', { defaultValue: 'Принято' });
       case 'rejected':
-        return 'Rejected';
+        return t('jobDetails.status.rejected', { defaultValue: 'Отклонено' });
       case 'withdrawn':
-        return 'Withdrawn';
+        return t('jobDetails.status.withdrawn', { defaultValue: 'Отозвано' });
       default:
         return status;
     }
@@ -146,14 +149,20 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const formatDistance = (meters: number | undefined): string => {
     if (!meters) return '';
     if (meters < 1000) {
-      return `${Math.round(meters)} м`;
+      return t('jobDetails.metersAway', {
+        m: Math.round(meters),
+        defaultValue: '{{m}} м',
+      });
     }
-    return `${(meters / 1000).toFixed(1)} км`;
+    return t('jobDetails.kilometersAway', {
+      km: (meters / 1000).toFixed(1),
+      defaultValue: '{{km}} км',
+    });
   };
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
+    return date.toLocaleDateString(locale, {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -161,15 +170,26 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const formatRecurringDays = (days: string[]): string => {
-    const dayMap: Record<string, string> = {
-      monday: 'Пн',
-      tuesday: 'Вт',
-      wednesday: 'Ср',
-      thursday: 'Чт',
-      friday: 'Пт',
-      saturday: 'Сб',
-      sunday: 'Вс',
-    };
+    const dayMap: Record<string, string> =
+      locale === 'ru-RU'
+        ? {
+            monday: 'Пн',
+            tuesday: 'Вт',
+            wednesday: 'Ср',
+            thursday: 'Чт',
+            friday: 'Пт',
+            saturday: 'Сб',
+            sunday: 'Вс',
+          }
+        : {
+            monday: 'Mon',
+            tuesday: 'Tue',
+            wednesday: 'Wed',
+            thursday: 'Thu',
+            friday: 'Fri',
+            saturday: 'Sat',
+            sunday: 'Sun',
+          };
     return days.map(day => dayMap[day] || day).join(', ');
   };
 
@@ -187,9 +207,13 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error || 'Job not found'}</Text>
+          <Text style={styles.errorText}>
+            {error || t('jobDetails.notFound', { defaultValue: 'Вакансия не найдена' })}
+          </Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadJob}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+            <Text style={styles.retryButtonText}>
+              {t('jobDetails.retry', { defaultValue: 'Повторить' })}
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -230,40 +254,59 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Location</Text>
+          <Text style={styles.sectionTitle}>
+            {t('jobDetails.location', { defaultValue: 'Расположение' })}
+          </Text>
           <Text style={styles.address}>{job.location.address}</Text>
           {job.metroStation && (
             <View style={styles.metroContainer}>
-              <Text style={styles.metroLabel}>Metro:</Text>
+              <Text style={styles.metroLabel}>
+                {t('jobDetails.metroLabel', { defaultValue: 'Метро:' })}
+              </Text>
               <Text style={styles.metroStation}>{job.metroStation}</Text>
             </View>
           )}
           {displayDistance !== undefined && (
-            <Text style={styles.distance}>{formatDistance(displayDistance)} от вас</Text>
+            <Text style={styles.distance}>
+              {t('jobDetails.distanceFromYou', {
+                distance: formatDistance(displayDistance),
+                defaultValue: '{{distance}} от вас',
+              })}
+            </Text>
           )}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Shift Details</Text>
+          <Text style={styles.sectionTitle}>
+            {t('jobDetails.shiftDetails', { defaultValue: 'Детали смены' })}
+          </Text>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Date:</Text>
+            <Text style={styles.detailLabel}>
+              {t('jobDetails.date', { defaultValue: 'Дата:' })}
+            </Text>
             <Text style={styles.detailValue}>{formatDate(job.shiftDetails.startDate)}</Text>
           </View>
           {job.shiftDetails.endDate && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>End Date:</Text>
+              <Text style={styles.detailLabel}>
+                {t('jobDetails.endDate', { defaultValue: 'Дата окончания:' })}
+              </Text>
               <Text style={styles.detailValue}>{formatDate(job.shiftDetails.endDate)}</Text>
             </View>
           )}
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Time:</Text>
+            <Text style={styles.detailLabel}>
+              {t('jobDetails.time', { defaultValue: 'Время:' })}
+            </Text>
             <Text style={styles.detailValue}>
               {job.shiftDetails.startTime} - {job.shiftDetails.endTime}
             </Text>
           </View>
           {job.shiftDetails.isRecurring && job.shiftDetails.recurringDays && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Recurring:</Text>
+              <Text style={styles.detailLabel}>
+                {t('jobDetails.recurring', { defaultValue: 'Повторяется:' })}
+              </Text>
               <Text style={styles.detailValue}>
                 {formatRecurringDays(job.shiftDetails.recurringDays)}
               </Text>
@@ -272,29 +315,35 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Compensation</Text>
+          <Text style={styles.sectionTitle}>
+            {t('jobDetails.compensation', { defaultValue: 'Оплата' })}
+          </Text>
           <Text style={styles.compensationAmount}>
-            {job.compensation.amount.toLocaleString('ru-RU')} ₽
+            {job.compensation.amount.toLocaleString(locale)} ₽
           </Text>
           <Text style={styles.compensationType}>
             {job.compensation.type === 'hourly'
-              ? 'per hour'
+              ? t('jobDetails.perHour', { defaultValue: 'за час' })
               : job.compensation.type === 'daily'
-                ? 'per day'
-                : 'fixed rate'}
+                ? t('jobDetails.perDay', { defaultValue: 'за день' })
+                : t('jobDetails.fixed', { defaultValue: 'фиксированная оплата' })}
           </Text>
         </View>
 
         {job.description && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Description</Text>
+            <Text style={styles.sectionTitle}>
+              {t('jobDetails.description', { defaultValue: 'Описание' })}
+            </Text>
             <Text style={styles.description}>{job.description}</Text>
           </View>
         )}
 
         {job.requirements && job.requirements.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Requirements</Text>
+            <Text style={styles.sectionTitle}>
+              {t('jobDetails.requirements', { defaultValue: 'Требования' })}
+            </Text>
             {job.requirements.map((req, index) => (
               <Text key={index} style={styles.bulletItem}>
                 • {req}
@@ -305,7 +354,11 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {job.requiredEquipmentExperience && job.requiredEquipmentExperience.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Required Equipment Experience</Text>
+            <Text style={styles.sectionTitle}>
+              {t('jobDetails.requiredEquipment', {
+                defaultValue: 'Требуемый опыт работы с оборудованием',
+              })}
+            </Text>
             {job.requiredEquipmentExperience.map((equipment, index) => (
               <Text key={index} style={styles.bulletItem}>
                 • {equipment}
@@ -316,17 +369,25 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
         <View style={styles.section}>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Job Type:</Text>
+            <Text style={styles.detailLabel}>
+              {t('jobDetails.jobType', { defaultValue: 'Тип занятости:' })}
+            </Text>
             <Text style={styles.detailValue}>
-              {job.jobType === 'temporary' ? 'Temporary' : 'Permanent'}
+              {job.jobType === 'temporary'
+                ? t('jobDetails.jobTypeTemporary', { defaultValue: 'Временная' })
+                : t('jobDetails.jobTypePermanent', { defaultValue: 'Постоянная' })}
             </Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Applications:</Text>
+            <Text style={styles.detailLabel}>
+              {t('jobDetails.applications', { defaultValue: 'Откликов:' })}
+            </Text>
             <Text style={styles.detailValue}>{job.applicationCount}</Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Posted:</Text>
+            <Text style={styles.detailLabel}>
+              {t('jobDetails.posted', { defaultValue: 'Опубликовано:' })}
+            </Text>
             <Text style={styles.detailValue}>{formatDate(job.postedAt)}</Text>
           </View>
         </View>
@@ -335,7 +396,9 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       {existingApplication ? (
         <View style={styles.footer}>
           <View style={styles.applicationStatus}>
-            <Text style={styles.applicationStatusLabel}>Application Status:</Text>
+            <Text style={styles.applicationStatusLabel}>
+              {t('jobDetails.applicationStatus', { defaultValue: 'Статус отклика:' })}
+            </Text>
             <View
               style={[
                 styles.statusBadge,
@@ -345,7 +408,10 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
           </View>
           <Text style={styles.applicationDate}>
-            Applied: {new Date(existingApplication.createdAt).toLocaleDateString('ru-RU')}
+            {t('jobDetails.applied', {
+              date: new Date(existingApplication.createdAt).toLocaleDateString(locale),
+              defaultValue: 'Откликнулись: {{date}}',
+            })}
           </Text>
         </View>
       ) : (
@@ -357,7 +423,9 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             ]}
             onPress={handleApply}
             disabled={!hasCheckedApplication || isNavigating}>
-            <Text style={styles.applyButtonText}>Apply for this Job</Text>
+            <Text style={styles.applyButtonText}>
+              {t('jobDetails.applyCta', { defaultValue: 'Откликнуться на вакансию' })}
+            </Text>
           </TouchableOpacity>
         </View>
       )}

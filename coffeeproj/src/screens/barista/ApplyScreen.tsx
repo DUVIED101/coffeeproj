@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
@@ -34,6 +35,7 @@ type Props = {
 };
 
 export const ApplyScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { t } = useTranslation();
   const { job } = route.params;
   const user = useAuthStore(state => state.user);
   const headerHeight = useHeaderHeight();
@@ -43,7 +45,10 @@ export const ApplyScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleSubmit = async () => {
     if (!user?.id) {
-      Alert.alert('Error', 'User not authenticated');
+      Alert.alert(
+        t('apply.errorTitle', { defaultValue: 'Ошибка' }),
+        t('apply.errorNotAuthenticated', { defaultValue: 'Пользователь не авторизован' })
+      );
       return;
     }
 
@@ -56,21 +61,33 @@ export const ApplyScreen: React.FC<Props> = ({ navigation, route }) => {
         coverLetter: coverLetter.trim() || undefined,
       });
 
-      Alert.alert('Success', 'Application submitted!', [
-        {
-          text: 'OK',
-          onPress: () => {
-            navigation.goBack();
+      Alert.alert(
+        t('apply.successTitle', { defaultValue: 'Готово' }),
+        t('apply.success', { defaultValue: 'Отклик отправлен!' }),
+        [
+          {
+            text: t('common.ok', { defaultValue: 'ОК' }),
+            onPress: () => {
+              navigation.goBack();
+            },
           },
-        },
-      ]);
+        ]
+      );
     } catch (error: unknown) {
       console.error('Error submitting application:', error);
 
       if (getErrorMessage(error) === 'You have already applied to this job') {
-        Alert.alert('Already Applied', 'You have already applied to this job');
+        Alert.alert(
+          t('apply.duplicateTitle', { defaultValue: 'Отклик уже отправлен' }),
+          t('apply.duplicate', { defaultValue: 'Вы уже откликнулись на эту вакансию' })
+        );
       } else {
-        Alert.alert('Error', 'Failed to submit application. Please try again.');
+        Alert.alert(
+          t('apply.errorTitle', { defaultValue: 'Ошибка' }),
+          t('apply.errorFailed', {
+            defaultValue: 'Не удалось отправить отклик. Попробуйте ещё раз.',
+          })
+        );
       }
     } finally {
       setIsSubmitting(false);
@@ -88,7 +105,9 @@ export const ApplyScreen: React.FC<Props> = ({ navigation, route }) => {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled">
           <View style={styles.jobSummary}>
-            <Text style={styles.sectionTitle}>Job Summary</Text>
+            <Text style={styles.sectionTitle}>
+              {t('apply.jobSummary', { defaultValue: 'О вакансии' })}
+            </Text>
             <Text style={styles.jobTitle}>{job.title}</Text>
             <Text style={styles.businessName}>{job.businessName}</Text>
             {job.branchName && <Text style={styles.branchName}>{job.branchName}</Text>}
@@ -98,19 +117,23 @@ export const ApplyScreen: React.FC<Props> = ({ navigation, route }) => {
               </Text>
               <Text style={styles.compensationType}>
                 {job.compensation.type === 'hourly'
-                  ? 'per hour'
+                  ? t('apply.perHour', { defaultValue: 'за час' })
                   : job.compensation.type === 'daily'
-                    ? 'per day'
-                    : 'fixed rate'}
+                    ? t('apply.perDay', { defaultValue: 'за день' })
+                    : t('apply.fixed', { defaultValue: 'фиксированная оплата' })}
               </Text>
             </View>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Cover Letter (optional)</Text>
+            <Text style={styles.sectionTitle}>
+              {t('apply.coverLetter', { defaultValue: 'Сопроводительное письмо (опционально)' })}
+            </Text>
             <TextInput
               style={styles.textInput}
-              placeholder="Tell the employer why you're a great fit for this job..."
+              placeholder={t('apply.coverLetterPlaceholder', {
+                defaultValue: 'Расскажите работодателю, почему вы подходите для этой вакансии…',
+              })}
               placeholderTextColor={COLORS.textSecondary}
               value={coverLetter}
               onChangeText={setCoverLetter}
@@ -119,7 +142,12 @@ export const ApplyScreen: React.FC<Props> = ({ navigation, route }) => {
               textAlignVertical="top"
               maxLength={1000}
             />
-            <Text style={styles.characterCount}>{coverLetter.length}/1000</Text>
+            <Text style={styles.characterCount}>
+              {t('apply.charCounter', {
+                count: coverLetter.length,
+                defaultValue: '{{count}}/1000',
+              })}
+            </Text>
           </View>
         </ScrollView>
 
@@ -131,7 +159,9 @@ export const ApplyScreen: React.FC<Props> = ({ navigation, route }) => {
             {isSubmitting ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.submitButtonText}>Submit Application</Text>
+              <Text style={styles.submitButtonText}>
+                {t('apply.submitCta', { defaultValue: 'Отправить отклик' })}
+              </Text>
             )}
           </TouchableOpacity>
         </View>

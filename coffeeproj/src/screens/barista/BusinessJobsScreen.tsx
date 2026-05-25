@@ -9,6 +9,7 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BaristaStackParamList } from '../../navigation/BaristaStack';
 import { COLORS } from '../../config/constants';
@@ -24,6 +25,7 @@ const JobCardItem = React.memo<{
 }>(({ job, onPressJobId }) => <JobCard job={job} onPress={onPressJobId} />);
 
 export const BusinessJobsScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { t } = useTranslation();
   const { businessOwnerId, businessName } = route.params;
 
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -31,8 +33,10 @@ export const BusinessJobsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    navigation.setOptions({ title: businessName ?? 'Jobs' });
-  }, [navigation, businessName]);
+    navigation.setOptions({
+      title: businessName ?? t('businessJobs.fallbackTitle', { defaultValue: 'Вакансии' }),
+    });
+  }, [navigation, businessName, t]);
 
   const loadJobs = useCallback(async () => {
     try {
@@ -40,12 +44,17 @@ export const BusinessJobsScreen: React.FC<Props> = ({ navigation, route }) => {
       setJobs(data);
     } catch (error) {
       console.error('Error loading business jobs:', error);
-      Alert.alert('Ошибка', 'Не удалось загрузить вакансии этого бизнеса.');
+      Alert.alert(
+        t('businessJobs.loadFailedTitle', { defaultValue: 'Ошибка' }),
+        t('businessJobs.loadFailedBody', {
+          defaultValue: 'Не удалось загрузить вакансии этого бизнеса.',
+        })
+      );
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [businessOwnerId]);
+  }, [businessOwnerId, t]);
 
   useEffect(() => {
     loadJobs();
@@ -70,8 +79,14 @@ export const BusinessJobsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>Нет открытых вакансий</Text>
-      <Text style={styles.emptySubtext}>У этого бизнеса сейчас нет открытых вакансий.</Text>
+      <Text style={styles.emptyText}>
+        {t('businessJobs.empty', { defaultValue: 'Нет открытых вакансий' })}
+      </Text>
+      <Text style={styles.emptySubtext}>
+        {t('businessJobs.emptySubtitle', {
+          defaultValue: 'У этого бизнеса сейчас нет открытых вакансий.',
+        })}
+      </Text>
     </View>
   );
 

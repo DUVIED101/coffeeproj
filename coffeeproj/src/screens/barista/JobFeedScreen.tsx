@@ -10,6 +10,7 @@ import {
   Alert,
   TouchableOpacity,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
@@ -35,29 +36,30 @@ type Props = {
   navigation: NativeStackNavigationProp<BaristaStackParamList, 'JobFeed'>;
 };
 
-const formatDistance = (distanceMeters?: number): string => {
-  if (!distanceMeters) return '';
-  const km = (distanceMeters / 1000).toFixed(1);
-  return `${km} км от вас`;
-};
-
 const JobCardWithDistance = React.memo<{
   job: Job;
   onPressJobId: (jobId: string) => void;
   ownerAggregate?: UserReviewAggregate;
 }>(({ job, onPressJobId, ownerAggregate }) => {
+  const { t } = useTranslation();
+  const distanceLabel =
+    job.distance !== undefined
+      ? t('jobFeed.distanceFromYou', {
+          km: (job.distance / 1000).toFixed(1),
+          defaultValue: '{{km}} км от вас',
+        })
+      : '';
   return (
     <View>
       <JobCard job={job} onPress={onPressJobId} ownerAggregate={ownerAggregate} />
-      {job.distance !== undefined && (
-        <Text style={styles.distanceText}>{formatDistance(job.distance)}</Text>
-      )}
+      {job.distance !== undefined && <Text style={styles.distanceText}>{distanceLabel}</Text>}
     </View>
   );
 });
 
 export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
   const { user } = useAuthStore();
+  const { t } = useTranslation();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -94,9 +96,12 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
       } else {
         setLocationPermissionDenied(true);
         Alert.alert(
-          'Доступ к геолокации',
-          'Для поиска работы рядом с вами необходим доступ к вашему местоположению. Вы можете использовать фильтры по метро.',
-          [{ text: 'OK' }]
+          t('jobFeed.locationPermissionTitle', { defaultValue: 'Доступ к геолокации' }),
+          t('jobFeed.locationPermissionBody', {
+            defaultValue:
+              'Для поиска работы рядом с вами необходим доступ к вашему местоположению. Вы можете использовать фильтры по метро.',
+          }),
+          [{ text: t('common.ok', { defaultValue: 'OK' }) }]
         );
       }
     } catch (error) {
@@ -140,7 +145,12 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
       }
     } catch (error) {
       console.error('❌ Error loading jobs:', error);
-      Alert.alert('Ошибка', 'Не удалось загрузить вакансии. Попробуйте еще раз.');
+      Alert.alert(
+        t('jobFeed.loadFailedTitle', { defaultValue: 'Ошибка' }),
+        t('jobFeed.loadFailedBody', {
+          defaultValue: 'Не удалось загрузить вакансии. Попробуйте еще раз.',
+        })
+      );
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -176,11 +186,17 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>Нет доступных вакансий</Text>
+      <Text style={styles.emptyText}>
+        {t('jobFeed.empty', { defaultValue: 'Нет доступных вакансий' })}
+      </Text>
       <Text style={styles.emptySubtext}>
         {locationPermissionDenied
-          ? 'Попробуйте использовать фильтры по метро или типу работы'
-          : 'Попробуйте изменить фильтры поиска'}
+          ? t('jobFeed.emptyHintMetro', {
+              defaultValue: 'Попробуйте использовать фильтры по метро или типу работы',
+            })
+          : t('jobFeed.emptyHintFilters', {
+              defaultValue: 'Попробуйте изменить фильтры поиска',
+            })}
       </Text>
     </View>
   );
@@ -198,7 +214,7 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Поиск работы</Text>
+        <Text style={styles.title}>{t('jobFeed.title', { defaultValue: 'Поиск работы' })}</Text>
       </View>
 
       {showProfileBanner && (
@@ -206,11 +222,18 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.profileBanner}
           onPress={() => navigation.navigate('BaristaProfileSetup')}>
           <View style={styles.bannerContent}>
-            <Text style={styles.bannerTitle}>Complete Your Profile</Text>
+            <Text style={styles.bannerTitle}>
+              {t('jobFeed.profileBannerTitle', { defaultValue: 'Заполните профиль' })}
+            </Text>
             <Text style={styles.bannerSubtitle}>
               {!baristaProfile
-                ? 'Create your profile to stand out to employers'
-                : `Your profile is ${baristaProfile.profileCompleteness}% complete`}
+                ? t('jobFeed.profileBannerSubtitleNoProfile', {
+                    defaultValue: 'Создайте профиль, чтобы выделяться среди кандидатов',
+                  })
+                : t('jobFeed.profileBannerSubtitlePercent', {
+                    percent: baristaProfile.profileCompleteness,
+                    defaultValue: 'Профиль заполнен на {{percent}}%',
+                  })}
             </Text>
           </View>
           <Text style={styles.bannerArrow}>›</Text>

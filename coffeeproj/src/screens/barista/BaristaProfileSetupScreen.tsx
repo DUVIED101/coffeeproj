@@ -14,6 +14,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS, EQUIPMENT_TYPES } from '../../config/constants';
@@ -44,15 +45,24 @@ type Props = {
   navigation: NativeStackNavigationProp<BaristaStackParamList, 'BaristaProfileSetup'>;
 };
 
-const STEPS = ['Basic Info', 'Professional', 'Preferences', 'Portfolio', 'Work Experience'];
-const SHIFT_TIMES: { value: ShiftTime; label: string }[] = [
-  { value: 'morning', label: 'Morning (6AM-12PM)' },
-  { value: 'afternoon', label: 'Afternoon (12PM-6PM)' },
-  { value: 'evening', label: 'Evening (6PM-12AM)' },
-  { value: 'night', label: 'Night (12AM-6AM)' },
+const STEP_KEYS = [
+  'baristaSetup.stepBasicInfo',
+  'baristaSetup.stepProfessional',
+  'baristaSetup.stepPreferences',
+  'baristaSetup.stepPortfolio',
+  'baristaSetup.stepWorkExperience',
+] as const;
+
+const SHIFT_TIME_KEYS: { value: ShiftTime; labelKey: string }[] = [
+  { value: 'morning', labelKey: 'shiftTimes.morningRange' },
+  { value: 'afternoon', labelKey: 'shiftTimes.afternoonRange' },
+  { value: 'evening', labelKey: 'shiftTimes.eveningRange' },
+  { value: 'night', labelKey: 'shiftTimes.nightRange' },
 ];
 
 export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
   const user = useAuthStore(state => state.user);
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -169,9 +179,9 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   }, []);
 
   const formatDisplayDate = (dateString: string): string => {
-    if (!dateString) return 'Select date';
+    if (!dateString) return t('baristaSetup.selectDate', { defaultValue: 'Выберите дату' });
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -181,7 +191,12 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const validateStep = (): boolean => {
     if (currentStep === 0) {
       if (!firstName.trim() || !lastName.trim()) {
-        Alert.alert('Validation Error', 'Please fill in all required fields');
+        Alert.alert(
+          t('baristaSetup.validationTitle', { defaultValue: 'Проверьте данные' }),
+          t('baristaSetup.validationRequired', {
+            defaultValue: 'Заполните все обязательные поля',
+          })
+        );
         return false;
       }
     }
@@ -198,7 +213,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
-    if (currentStep < STEPS.length - 1) {
+    if (currentStep < STEP_KEYS.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
       handleSubmit();
@@ -213,7 +228,10 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleSubmit = async () => {
     if (!user?.id) {
-      Alert.alert('Error', 'User not authenticated');
+      Alert.alert(
+        t('baristaSetup.errorTitle', { defaultValue: 'Ошибка' }),
+        t('baristaSetup.errorNotAuthenticated', { defaultValue: 'Пользователь не авторизован' })
+      );
       return;
     }
 
@@ -251,25 +269,34 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       await WorkExperienceService.replaceAll(profileId, workExperiences);
 
       Alert.alert(
-        'Success',
-        existingProfile ? 'Profile updated successfully!' : 'Profile created successfully!',
+        t('baristaSetup.successTitle', { defaultValue: 'Готово' }),
+        existingProfile
+          ? t('baristaSetup.successUpdated', { defaultValue: 'Профиль успешно обновлён!' })
+          : t('baristaSetup.successCreated', { defaultValue: 'Профиль успешно создан!' }),
         [
           {
-            text: 'OK',
+            text: t('common.ok', { defaultValue: 'ОК' }),
             onPress: () => navigation.replace('BaristaProfile'),
           },
         ]
       );
     } catch (error: unknown) {
       console.error('Error creating profile:', error);
-      Alert.alert('Error', 'Failed to create profile. Please try again.');
+      Alert.alert(
+        t('baristaSetup.errorTitle', { defaultValue: 'Ошибка' }),
+        t('baristaSetup.errorCreate', {
+          defaultValue: 'Не удалось создать профиль. Попробуйте ещё раз.',
+        })
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const stepsLabels = STEP_KEYS.map(key => t(key));
+
   const renderProgressIndicator = () => (
-    <ProgressIndicator steps={STEPS} currentStep={currentStep} />
+    <ProgressIndicator steps={stepsLabels} currentStep={currentStep} />
   );
 
   const renderStepContent = () => {
@@ -277,42 +304,59 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       case 0:
         return (
           <View>
-            <Text style={styles.stepTitle}>Basic Information</Text>
-            <Text style={styles.stepSubtitle}>Tell us about yourself</Text>
+            <Text style={styles.stepTitle}>
+              {t('baristaSetup.step1Title', { defaultValue: 'Основная информация' })}
+            </Text>
+            <Text style={styles.stepSubtitle}>
+              {t('baristaSetup.step1Subtitle', { defaultValue: 'Расскажите о себе' })}
+            </Text>
 
             <Text style={styles.label}>
-              First Name <Text style={styles.required}>*</Text>
+              {t('baristaSetup.fieldFirstName', { defaultValue: 'Имя' })}{' '}
+              <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your first name"
+              placeholder={t('baristaSetup.fieldFirstNamePlaceholder', {
+                defaultValue: 'Введите имя',
+              })}
               placeholderTextColor={COLORS.textSecondary}
               value={firstName}
               onChangeText={setFirstName}
             />
 
             <Text style={styles.label}>
-              Last Name <Text style={styles.required}>*</Text>
+              {t('baristaSetup.fieldLastName', { defaultValue: 'Фамилия' })}{' '}
+              <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your last name"
+              placeholder={t('baristaSetup.fieldLastNamePlaceholder', {
+                defaultValue: 'Введите фамилию',
+              })}
               placeholderTextColor={COLORS.textSecondary}
               value={lastName}
               onChangeText={setLastName}
             />
 
             <Text style={styles.label}>
-              City <Text style={styles.required}>*</Text>
+              {t('baristaSetup.fieldCity', { defaultValue: 'Город' })}{' '}
+              <Text style={styles.required}>*</Text>
             </Text>
             <CityToggle value={city} onChange={handleCityChange} />
 
-            <Text style={styles.label}>Date of Birth (optional)</Text>
+            <Text style={styles.label}>
+              {t('baristaSetup.fieldDateOfBirth', {
+                defaultValue: 'Дата рождения (опционально)',
+              })}
+            </Text>
             <TouchableOpacity
               style={styles.datePickerButton}
               onPress={() => setShowDatePicker(true)}>
               <Text style={[styles.datePickerText, !dateOfBirth && styles.datePickerPlaceholder]}>
-                {dateOfBirth ? formatDisplayDate(dateOfBirth) : 'Select date'}
+                {dateOfBirth
+                  ? formatDisplayDate(dateOfBirth)
+                  : t('baristaSetup.selectDate', { defaultValue: 'Выберите дату' })}
               </Text>
             </TouchableOpacity>
             {showDatePicker && (
@@ -330,7 +374,9 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 <TouchableOpacity
                   style={styles.datePickerDoneButton}
                   onPress={() => setShowDatePicker(false)}>
-                  <Text style={styles.datePickerDoneText}>Done</Text>
+                  <Text style={styles.datePickerDoneText}>
+                    {t('baristaSetup.done', { defaultValue: 'Готово' })}
+                  </Text>
                 </TouchableOpacity>
               </>
             )}
@@ -340,13 +386,23 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       case 1:
         return (
           <View>
-            <Text style={styles.stepTitle}>Professional Information</Text>
-            <Text style={styles.stepSubtitle}>Showcase your coffee expertise</Text>
+            <Text style={styles.stepTitle}>
+              {t('baristaSetup.step2Title', { defaultValue: 'Профессиональная информация' })}
+            </Text>
+            <Text style={styles.stepSubtitle}>
+              {t('baristaSetup.step2Subtitle', {
+                defaultValue: 'Покажите свой опыт в кофейной индустрии',
+              })}
+            </Text>
 
-            <Text style={styles.label}>Bio (optional)</Text>
+            <Text style={styles.label}>
+              {t('baristaSetup.fieldBio', { defaultValue: 'О себе (опционально)' })}
+            </Text>
             <TextInput
               style={[styles.input, styles.textArea]}
-              placeholder="Tell employers about your passion for coffee..."
+              placeholder={t('baristaSetup.fieldBioPlaceholder', {
+                defaultValue: 'Расскажите работодателям о своей страсти к кофе…',
+              })}
               placeholderTextColor={COLORS.textSecondary}
               value={bio}
               onChangeText={setBio}
@@ -355,12 +411,23 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               textAlignVertical="top"
               maxLength={500}
             />
-            <Text style={styles.characterCount}>{bio.length}/500</Text>
+            <Text style={styles.characterCount}>
+              {t('baristaSetup.fieldBioCounter', {
+                count: bio.length,
+                defaultValue: '{{count}}/500',
+              })}
+            </Text>
 
-            <Text style={styles.label}>Years of Experience (optional)</Text>
+            <Text style={styles.label}>
+              {t('baristaSetup.fieldYearsExperience', {
+                defaultValue: 'Стаж в годах (опционально)',
+              })}
+            </Text>
             <TextInput
               style={styles.input}
-              placeholder="0-50"
+              placeholder={t('baristaSetup.fieldYearsExperiencePlaceholder', {
+                defaultValue: '0-50',
+              })}
               placeholderTextColor={COLORS.textSecondary}
               value={yearsOfExperience}
               onChangeText={setYearsOfExperience}
@@ -368,7 +435,11 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               returnKeyType="done"
             />
 
-            <Text style={styles.label}>Equipment Experience (optional)</Text>
+            <Text style={styles.label}>
+              {t('baristaSetup.fieldEquipment', {
+                defaultValue: 'Опыт работы с оборудованием (опционально)',
+              })}
+            </Text>
             <View style={styles.chipsContainer}>
               {EQUIPMENT_TYPES.map(equipment => (
                 <TouchableOpacity
@@ -394,10 +465,20 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       case 2:
         return (
           <View>
-            <Text style={styles.stepTitle}>Work Preferences</Text>
-            <Text style={styles.stepSubtitle}>Help us match you with the right jobs</Text>
+            <Text style={styles.stepTitle}>
+              {t('baristaSetup.step3Title', { defaultValue: 'Предпочтения по работе' })}
+            </Text>
+            <Text style={styles.stepSubtitle}>
+              {t('baristaSetup.step3Subtitle', {
+                defaultValue: 'Это поможет подбирать подходящие вакансии',
+              })}
+            </Text>
 
-            <Text style={styles.label}>Preferred Metro Stations (optional)</Text>
+            <Text style={styles.label}>
+              {t('baristaSetup.fieldMetro', {
+                defaultValue: 'Предпочитаемые станции метро (опционально)',
+              })}
+            </Text>
             <MetroSelector
               multiSelect
               city={city}
@@ -407,9 +488,13 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               userLocation={userLocation}
             />
 
-            <Text style={styles.label}>Preferred Shift Times (optional)</Text>
+            <Text style={styles.label}>
+              {t('baristaSetup.fieldShiftTimes', {
+                defaultValue: 'Предпочитаемые смены (опционально)',
+              })}
+            </Text>
             <View style={styles.chipsContainer}>
-              {SHIFT_TIMES.map(({ value, label }) => (
+              {SHIFT_TIME_KEYS.map(({ value, labelKey }) => (
                 <TouchableOpacity
                   key={value}
                   style={[styles.chip, selectedShiftTimes.includes(value) && styles.chipSelected]}
@@ -419,17 +504,21 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                       styles.chipText,
                       selectedShiftTimes.includes(value) && styles.chipTextSelected,
                     ]}>
-                    {label}
+                    {t(labelKey)}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={styles.label}>Hourly Rate Range (RUB, optional)</Text>
+            <Text style={styles.label}>
+              {t('baristaSetup.fieldHourlyRange', {
+                defaultValue: 'Желаемая ставка в час (RUB, опционально)',
+              })}
+            </Text>
             <View style={styles.row}>
               <TextInput
                 style={[styles.input, styles.halfInput]}
-                placeholder="Min"
+                placeholder={t('baristaSetup.minPlaceholder', { defaultValue: 'Мин' })}
                 placeholderTextColor={COLORS.textSecondary}
                 value={hourlyRateMin}
                 onChangeText={setHourlyRateMin}
@@ -439,7 +528,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.separator}>-</Text>
               <TextInput
                 style={[styles.input, styles.halfInput]}
-                placeholder="Max"
+                placeholder={t('baristaSetup.maxPlaceholder', { defaultValue: 'Макс' })}
                 placeholderTextColor={COLORS.textSecondary}
                 value={hourlyRateMax}
                 onChangeText={setHourlyRateMax}
@@ -453,8 +542,14 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       case 3:
         return (
           <View>
-            <Text style={styles.stepTitle}>Portfolio</Text>
-            <Text style={styles.stepSubtitle}>Add certifications (optional)</Text>
+            <Text style={styles.stepTitle}>
+              {t('baristaSetup.step4Title', { defaultValue: 'Портфолио' })}
+            </Text>
+            <Text style={styles.stepSubtitle}>
+              {t('baristaSetup.step4Subtitle', {
+                defaultValue: 'Добавьте сертификаты (опционально)',
+              })}
+            </Text>
 
             <CertificatesEditor
               certificates={certifications}
@@ -468,7 +563,12 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                   } catch (error: unknown) {
                     console.error('Error saving certificate:', error);
                     setCertifications(certifications);
-                    Alert.alert('Error', 'Failed to save certificate.');
+                    Alert.alert(
+                      t('baristaSetup.errorTitle', { defaultValue: 'Ошибка' }),
+                      t('baristaSetup.errorSaveCert', {
+                        defaultValue: 'Не удалось сохранить сертификат.',
+                      })
+                    );
                   }
                 }
               }}
@@ -481,7 +581,12 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                   } catch (error: unknown) {
                     console.error('Error removing certificate:', error);
                     setCertifications(certifications);
-                    Alert.alert('Error', 'Failed to remove certificate.');
+                    Alert.alert(
+                      t('baristaSetup.errorTitle', { defaultValue: 'Ошибка' }),
+                      t('baristaSetup.errorRemoveCert', {
+                        defaultValue: 'Не удалось удалить сертификат.',
+                      })
+                    );
                   }
                 }
               }}
@@ -492,8 +597,14 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       case 4:
         return (
           <View>
-            <Text style={styles.stepTitle}>Work Experience</Text>
-            <Text style={styles.stepSubtitle}>List places where you have worked (optional)</Text>
+            <Text style={styles.stepTitle}>
+              {t('baristaSetup.step5Title', { defaultValue: 'Опыт работы' })}
+            </Text>
+            <Text style={styles.stepSubtitle}>
+              {t('baristaSetup.step5Subtitle', {
+                defaultValue: 'Укажите места, где вы работали (опционально)',
+              })}
+            </Text>
 
             <WorkExperienceEditor
               experiences={workExperiences}
@@ -513,7 +624,9 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading profile...</Text>
+          <Text style={styles.loadingText}>
+            {t('baristaSetup.loadingProfile', { defaultValue: 'Загрузка профиля…' })}
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -523,12 +636,16 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>
-          {existingProfile ? 'Edit Your Profile' : 'Create Your Profile'}
+          {existingProfile
+            ? t('baristaSetup.editTitle', { defaultValue: 'Редактирование профиля' })
+            : t('baristaSetup.createTitle', { defaultValue: 'Создание профиля' })}
         </Text>
         <Text style={styles.headerSubtitle}>
           {existingProfile
-            ? 'Update your information'
-            : 'Complete your profile to get better job matches'}
+            ? t('baristaSetup.editSubtitle', { defaultValue: 'Обновите свою информацию' })
+            : t('baristaSetup.createSubtitle', {
+                defaultValue: 'Заполните профиль, чтобы получать больше подходящих вакансий',
+              })}
         </Text>
       </View>
 
@@ -552,7 +669,9 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.buttonRow}>
           {currentStep > 0 && (
             <TouchableOpacity style={styles.secondaryButton} onPress={handleBack}>
-              <Text style={styles.secondaryButtonText}>Back</Text>
+              <Text style={styles.secondaryButtonText}>
+                {t('baristaSetup.back', { defaultValue: 'Назад' })}
+              </Text>
             </TouchableOpacity>
           )}
 
@@ -564,7 +683,9 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.primaryButtonText}>
-                {currentStep === STEPS.length - 1 ? 'Finish' : 'Next'}
+                {currentStep === STEP_KEYS.length - 1
+                  ? t('baristaSetup.finish', { defaultValue: 'Готово' })
+                  : t('baristaSetup.next', { defaultValue: 'Далее' })}
               </Text>
             )}
           </TouchableOpacity>
