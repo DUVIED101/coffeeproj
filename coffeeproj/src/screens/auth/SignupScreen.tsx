@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
@@ -25,6 +26,7 @@ import {
   getPasswordError,
   getPhoneError,
   normalizePhone,
+  MAX_PASSWORD_LENGTH,
 } from '../../utils/validation';
 import type { AuthStackParamList } from '../../navigation/AuthStack';
 
@@ -34,7 +36,14 @@ type Props = {
 };
 
 export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { t } = useTranslation();
   const { accountType } = route.params;
+
+  const translateValidationError = (key: string | null): string | null => {
+    if (!key) return null;
+    if (key === 'auth.errors.passwordTooLong') return t(key, { max: MAX_PASSWORD_LENGTH });
+    return t(key);
+  };
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,27 +59,23 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
   const validateForm = (): boolean => {
     let isValid = true;
 
-    // Validate email
-    const emailErr = getEmailError(email);
+    const emailErr = translateValidationError(getEmailError(email));
     setEmailError(emailErr);
     if (emailErr) isValid = false;
 
-    // Validate password
-    const passwordErr = getPasswordError(password);
+    const passwordErr = translateValidationError(getPasswordError(password));
     setPasswordError(passwordErr);
     if (passwordErr) isValid = false;
 
-    // Validate confirm password
     if (password !== confirmPassword) {
-      setConfirmPasswordError('Passwords do not match');
+      setConfirmPasswordError(t('auth.signup.passwordsDoNotMatch'));
       isValid = false;
     } else {
       setConfirmPasswordError(null);
     }
 
-    // Validate phone (optional)
     if (phoneNumber) {
-      const phoneErr = getPhoneError(phoneNumber);
+      const phoneErr = translateValidationError(getPhoneError(phoneNumber));
       setPhoneError(phoneErr);
       if (phoneErr) isValid = false;
     }
@@ -106,17 +111,17 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
       console.error('Signup error:', error);
 
       const message = getErrorMessage(error);
-      let errorMessage = 'Failed to create account. Please try again.';
+      let errorMessage = t('auth.signup.errorGeneric');
 
       if (message.includes('already registered')) {
-        errorMessage = 'This email is already registered. Please login instead.';
+        errorMessage = t('auth.signup.errorEmailTaken');
       } else if (message.includes('Invalid email')) {
-        errorMessage = 'Please enter a valid email address.';
+        errorMessage = t('auth.signup.errorInvalidEmail');
       } else if (message.includes('Password')) {
         errorMessage = message;
       }
 
-      Alert.alert('Signup Failed', errorMessage, [{ text: 'OK' }]);
+      Alert.alert(t('auth.signup.failedTitle'), errorMessage, [{ text: t('common.ok') }]);
     } finally {
       setIsLoading(false);
     }
@@ -135,16 +140,18 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
             onPress={() => navigation.goBack()}
             hitSlop={12}
             accessibilityRole="button"
-            accessibilityLabel="Back"
+            accessibilityLabel={t('auth.common.back')}
             style={styles.backButton}>
             <Text style={styles.backArrow}>‹</Text>
           </TouchableOpacity>
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.title}>{t('auth.signup.title')}</Text>
             <Text style={styles.subtitle}>
-              Sign up as {accountType === 'barista' ? 'a Barista' : 'a Business'}
+              {accountType === 'barista'
+                ? t('auth.signup.subtitleBarista')
+                : t('auth.signup.subtitleBusiness')}
             </Text>
           </View>
 
@@ -152,7 +159,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
           <View style={styles.form}>
             {/* Email Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={styles.label}>{t('auth.signup.emailLabel')}</Text>
               <TextInput
                 style={[styles.input, emailError ? styles.inputError : null]}
                 value={email}
@@ -160,7 +167,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
                   setEmail(text);
                   setEmailError(null);
                 }}
-                placeholder="your.email@example.com"
+                placeholder={t('auth.signup.emailPlaceholder')}
                 placeholderTextColor={COLORS.textSecondary}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -172,7 +179,8 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
             {/* Phone Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                Phone Number <Text style={styles.optional}>(optional)</Text>
+                {t('auth.signup.phoneLabel')}{' '}
+                <Text style={styles.optional}>{t('auth.signup.phoneOptional')}</Text>
               </Text>
               <TextInput
                 style={[styles.input, phoneError ? styles.inputError : null]}
@@ -181,7 +189,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
                   setPhoneNumber(text);
                   setPhoneError(null);
                 }}
-                placeholder="+7 (XXX) XXX-XX-XX"
+                placeholder={t('auth.signup.phonePlaceholder')}
                 placeholderTextColor={COLORS.textSecondary}
                 keyboardType="phone-pad"
                 returnKeyType="done"
@@ -191,32 +199,30 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
 
             {/* Password Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>{t('auth.signup.passwordLabel')}</Text>
               <PasswordInput
                 value={password}
                 onChangeText={text => {
                   setPassword(text);
                   setPasswordError(null);
                 }}
-                placeholder="••••••••"
+                placeholder={t('auth.signup.passwordPlaceholder')}
                 hasError={!!passwordError}
               />
               {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
-              <Text style={styles.hint}>
-                At least 8 characters, 1 uppercase, 1 lowercase, 1 number
-              </Text>
+              <Text style={styles.hint}>{t('auth.signup.passwordHint')}</Text>
             </View>
 
             {/* Confirm Password Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Confirm Password</Text>
+              <Text style={styles.label}>{t('auth.signup.confirmPasswordLabel')}</Text>
               <PasswordInput
                 value={confirmPassword}
                 onChangeText={text => {
                   setConfirmPassword(text);
                   setConfirmPasswordError(null);
                 }}
-                placeholder="••••••••"
+                placeholder={t('auth.signup.passwordPlaceholder')}
                 hasError={!!confirmPasswordError}
               />
               {confirmPasswordError && <Text style={styles.errorText}>{confirmPasswordError}</Text>}
@@ -232,19 +238,19 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
                 <ActivityIndicator color={COLORS.background} />
               ) : (
                 <Text style={styles.buttonText}>
-                  {accountType === 'business' ? 'Continue' : 'Create Account'}
+                  {accountType === 'business' ? t('auth.signup.ctaContinue') : t('auth.signup.cta')}
                 </Text>
               )}
             </TouchableOpacity>
 
-            <SocialAuthButtons accountType={accountType} separatorLabel="или" />
+            <SocialAuthButtons accountType={accountType} separatorLabel={t('auth.social.or')} />
           </View>
 
           {/* Footer */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
+            <Text style={styles.footerText}>{t('auth.signup.haveAccount')}</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.linkText}>Log In</Text>
+              <Text style={styles.linkText}>{t('auth.signup.loginLink')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

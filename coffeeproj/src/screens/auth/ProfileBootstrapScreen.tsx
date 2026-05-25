@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../../config/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { COLORS } from '../../config/constants';
@@ -12,6 +13,7 @@ type SignupMetadata = {
 };
 
 export const ProfileBootstrapScreen: React.FC = () => {
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const [isWorking, setIsWorking] = useState(true);
 
@@ -102,20 +104,20 @@ export const ProfileBootstrapScreen: React.FC = () => {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.message}>Setting up your profile…</Text>
+        <Text style={styles.message}>{t('auth.profileBootstrap.working')}</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Profile setup failed</Text>
+      <Text style={styles.title}>{t('auth.profileBootstrap.failedTitle')}</Text>
       <Text style={styles.errorText}>{error}</Text>
       <TouchableOpacity style={styles.primaryButton} onPress={attempt} activeOpacity={0.8}>
-        <Text style={styles.primaryButtonText}>Retry</Text>
+        <Text style={styles.primaryButtonText}>{t('auth.profileBootstrap.retry')}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.secondaryButton} onPress={handleSignOut} activeOpacity={0.8}>
-        <Text style={styles.secondaryButtonText}>Sign out</Text>
+        <Text style={styles.secondaryButtonText}>{t('auth.profileBootstrap.signOut')}</Text>
       </TouchableOpacity>
     </View>
   );

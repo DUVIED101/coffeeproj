@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { appleAuth } from '@invertase/react-native-apple-authentication';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { authorize, type AuthConfiguration } from 'react-native-app-auth';
@@ -41,6 +42,7 @@ const ensureGoogleConfigured = (): boolean => {
 };
 
 export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel }) => {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState<Provider | null>(null);
 
   const handleApple = useCallback(async () => {
@@ -62,16 +64,16 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
     } catch (err: unknown) {
       const code = (err as { code?: string }).code;
       if (code === appleAuth.Error.CANCELED) return;
-      Alert.alert('Apple Sign In', getErrorMessage(err));
+      Alert.alert(t('auth.social.appleErrorTitle'), getErrorMessage(err));
     } finally {
       setBusy(null);
     }
-  }, [accountType, busy]);
+  }, [accountType, busy, t]);
 
   const handleGoogle = useCallback(async () => {
     if (busy) return;
     if (!ensureGoogleConfigured()) {
-      Alert.alert('Google Sign In', 'GOOGLE_IOS_CLIENT_ID не настроен в .env');
+      Alert.alert(t('auth.social.googleErrorTitle'), t('auth.social.googleConfigMissing'));
       return;
     }
     setBusy('google');
@@ -93,16 +95,16 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
     } catch (err: unknown) {
       const code = (err as { code?: string }).code;
       if (code === statusCodes.SIGN_IN_CANCELLED) return;
-      Alert.alert('Google Sign In', getErrorMessage(err));
+      Alert.alert(t('auth.social.googleErrorTitle'), getErrorMessage(err));
     } finally {
       setBusy(null);
     }
-  }, [accountType, busy]);
+  }, [accountType, busy, t]);
 
   const handleYandex = useCallback(async () => {
     if (busy) return;
     if (!YANDEX_CLIENT_ID) {
-      Alert.alert('Yandex ID', 'YANDEX_CLIENT_ID не настроен в .env');
+      Alert.alert(t('auth.social.yandexErrorTitle'), t('auth.social.yandexConfigMissing'));
       return;
     }
     setBusy('yandex');
@@ -117,11 +119,11 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
     } catch (err: unknown) {
       const message = getErrorMessage(err);
       if (message.toLowerCase().includes('user cancelled')) return;
-      Alert.alert('Yandex ID', message);
+      Alert.alert(t('auth.social.yandexErrorTitle'), message);
     } finally {
       setBusy(null);
     }
-  }, [accountType, busy]);
+  }, [accountType, busy, t]);
 
   return (
     <View style={styles.container}>
@@ -140,7 +142,7 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
           disabled={busy !== null}
           activeOpacity={0.8}
           accessibilityRole="button"
-          accessibilityLabel="Войти через Apple">
+          accessibilityLabel={t('auth.social.appleLabel')}>
           {busy === 'apple' ? (
             <ActivityIndicator color="#fff" />
           ) : (
@@ -154,7 +156,7 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
           disabled={busy !== null}
           activeOpacity={0.8}
           accessibilityRole="button"
-          accessibilityLabel="Войти через Google">
+          accessibilityLabel={t('auth.social.googleLabel')}>
           {busy === 'google' ? (
             <ActivityIndicator color={COLORS.text} />
           ) : (
@@ -168,7 +170,7 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
           disabled={busy !== null}
           activeOpacity={0.8}
           accessibilityRole="button"
-          accessibilityLabel="Войти через Яндекс ID">
+          accessibilityLabel={t('auth.social.yandexLabel')}>
           {busy === 'yandex' ? (
             <ActivityIndicator color="#fff" />
           ) : (

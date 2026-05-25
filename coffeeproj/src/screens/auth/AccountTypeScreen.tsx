@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../config/constants';
@@ -16,6 +17,8 @@ type Props = {
 };
 
 export const AccountTypeScreen: React.FC<Props> = ({ navigation }) => {
+  const { t } = useTranslation();
+
   const handleSelectType = (accountType: AccountType) => {
     navigation.navigate('Signup', { accountType });
   };
@@ -27,8 +30,8 @@ export const AccountTypeScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Welcome to CoffeeProj</Text>
-          <Text style={styles.subtitle}>Connect baristas with coffee shops across Russia</Text>
+          <Text style={styles.title}>{t('auth.accountType.welcome')}</Text>
+          <Text style={styles.subtitle}>{t('auth.accountType.subtitle')}</Text>
         </View>
 
         {/* Account Type Selection */}
@@ -38,8 +41,8 @@ export const AccountTypeScreen: React.FC<Props> = ({ navigation }) => {
             onPress={() => handleSelectType('barista')}
             activeOpacity={0.8}>
             <MaterialCommunityIcons name="coffee" size={48} color={COLORS.primary} />
-            <Text style={styles.buttonTitle}>I'm a Barista</Text>
-            <Text style={styles.buttonDescription}>Find coffee shop jobs and opportunities</Text>
+            <Text style={styles.buttonTitle}>{t('auth.accountType.baristaTitle')}</Text>
+            <Text style={styles.buttonDescription}>{t('auth.accountType.baristaDescription')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -47,16 +50,18 @@ export const AccountTypeScreen: React.FC<Props> = ({ navigation }) => {
             onPress={() => handleSelectType('business')}
             activeOpacity={0.8}>
             <MaterialCommunityIcons name="storefront" size={48} color={COLORS.secondary} />
-            <Text style={styles.buttonTitle}>I'm a Business</Text>
-            <Text style={styles.buttonDescription}>Post jobs and hire talented baristas</Text>
+            <Text style={styles.buttonTitle}>{t('auth.accountType.businessTitle')}</Text>
+            <Text style={styles.buttonDescription}>
+              {t('auth.accountType.businessDescription')}
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Login Link */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an account? </Text>
+          <Text style={styles.footerText}>{t('auth.accountType.haveAccount')}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.linkText}>Log In</Text>
+            <Text style={styles.linkText}>{t('auth.accountType.loginLink')}</Text>
           </TouchableOpacity>
         </View>
       </View>

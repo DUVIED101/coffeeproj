@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { AuthService } from '../../services/AuthService';
@@ -33,6 +34,7 @@ type Props = {
 };
 
 export const LoginScreen: React.FC<Props> = ({ navigation }) => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -43,14 +45,12 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const validateForm = (): boolean => {
     let isValid = true;
 
-    // Validate email
-    const emailErr = getEmailError(email);
-    setEmailError(emailErr);
-    if (emailErr) isValid = false;
+    const emailErrKey = getEmailError(email);
+    setEmailError(emailErrKey ? t(emailErrKey) : null);
+    if (emailErrKey) isValid = false;
 
-    // Validate password (just check if not empty for login)
     if (!password) {
-      setPasswordError('Password is required');
+      setPasswordError(t('auth.login.passwordRequired'));
       isValid = false;
     } else {
       setPasswordError(null);
@@ -67,10 +67,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     setIsLoading(true);
 
     try {
-      const { session, user } = await AuthService.signInWithEmail(
-        email.trim().toLowerCase(),
-        password
-      );
+      const { user } = await AuthService.signInWithEmail(email.trim().toLowerCase(), password);
 
       console.log('Login successful:', user.id);
 
@@ -79,17 +76,17 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       console.error('Login error:', error);
 
       const message = getErrorMessage(error);
-      let errorMessage = 'Failed to log in. Please try again.';
+      let errorMessage = t('auth.login.errorGeneric');
 
       if (message.includes('Invalid login credentials')) {
-        errorMessage = 'Invalid email or password. Please try again.';
+        errorMessage = t('auth.login.errorInvalidCredentials');
       } else if (message.includes('Email not confirmed')) {
-        errorMessage = 'Please confirm your email address before logging in.';
+        errorMessage = t('auth.login.errorEmailNotConfirmed');
       } else if (message.includes('Invalid email')) {
-        errorMessage = 'Please enter a valid email address.';
+        errorMessage = t('auth.errors.emailInvalid');
       }
 
-      Alert.alert('Login Failed', errorMessage, [{ text: 'OK' }]);
+      Alert.alert(t('auth.login.failedTitle'), errorMessage, [{ text: t('common.ok') }]);
     } finally {
       setIsLoading(false);
     }
@@ -97,15 +94,15 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleForgotPassword = async () => {
     if (!email) {
-      Alert.alert('Enter Email', 'Please enter your email address to reset your password.', [
-        { text: 'OK' },
+      Alert.alert(t('auth.login.enterEmailTitle'), t('auth.login.enterEmailBody'), [
+        { text: t('common.ok') },
       ]);
       return;
     }
 
-    const emailErr = getEmailError(email);
-    if (emailErr) {
-      Alert.alert('Invalid Email', emailErr, [{ text: 'OK' }]);
+    const emailErrKey = getEmailError(email);
+    if (emailErrKey) {
+      Alert.alert(t('auth.errors.emailInvalid'), t(emailErrKey), [{ text: t('common.ok') }]);
       return;
     }
 
@@ -113,26 +110,20 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await AuthService.resetPassword(normalizedEmail);
 
-      Alert.alert(
-        'Код отправлен',
-        'Мы выслали 6-значный код на вашу почту. Введите его на следующем экране.',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('PasswordReset', { email: normalizedEmail }),
-          },
-        ]
-      );
+      Alert.alert(t('auth.login.codeSentTitle'), t('auth.login.codeSentBody'), [
+        {
+          text: t('common.ok'),
+          onPress: () => navigation.navigate('PasswordReset', { email: normalizedEmail }),
+        },
+      ]);
     } catch (error: unknown) {
       console.error('Password reset error:', error);
       const message = getErrorMessage(error);
       const isRateLimit = /rate|limit|too many/i.test(message);
       Alert.alert(
-        isRateLimit ? 'Слишком часто' : 'Ошибка',
-        isRateLimit
-          ? 'Превышен лимит запросов. Подождите несколько минут и попробуйте снова.'
-          : message,
-        [{ text: 'OK' }]
+        isRateLimit ? t('auth.login.tooManyAttemptsTitle') : t('common.error'),
+        isRateLimit ? t('auth.login.tooManyAttemptsBody') : message,
+        [{ text: t('common.ok') }]
       );
     }
   };
@@ -148,15 +139,15 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
           keyboardShouldPersistTaps="handled">
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Log in to your account</Text>
+            <Text style={styles.title}>{t('auth.login.title')}</Text>
+            <Text style={styles.subtitle}>{t('auth.login.subtitle')}</Text>
           </View>
 
           {/* Form */}
           <View style={styles.form}>
             {/* Email Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={styles.label}>{t('auth.login.emailLabel')}</Text>
               <TextInput
                 style={[styles.input, emailError ? styles.inputError : null]}
                 value={email}
@@ -164,7 +155,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                   setEmail(text);
                   setEmailError(null);
                 }}
-                placeholder="your.email@example.com"
+                placeholder={t('auth.login.emailPlaceholder')}
                 placeholderTextColor={COLORS.textSecondary}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -175,14 +166,14 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
             {/* Password Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>{t('auth.login.passwordLabel')}</Text>
               <PasswordInput
                 value={password}
                 onChangeText={text => {
                   setPassword(text);
                   setPasswordError(null);
                 }}
-                placeholder="••••••••"
+                placeholder={t('auth.login.passwordPlaceholder')}
                 hasError={!!passwordError}
               />
               {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
@@ -190,7 +181,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
             {/* Forgot Password */}
             <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              <Text style={styles.forgotPasswordText}>{t('auth.login.forgotPassword')}</Text>
             </TouchableOpacity>
 
             {/* Login Button */}
@@ -202,18 +193,18 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               {isLoading ? (
                 <ActivityIndicator color={COLORS.background} />
               ) : (
-                <Text style={styles.buttonText}>Log In</Text>
+                <Text style={styles.buttonText}>{t('auth.login.cta')}</Text>
               )}
             </TouchableOpacity>
 
-            <SocialAuthButtons separatorLabel="или" />
+            <SocialAuthButtons separatorLabel={t('auth.social.or')} />
           </View>
 
           {/* Footer */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account? </Text>
+            <Text style={styles.footerText}>{t('auth.login.noAccount')}</Text>
             <TouchableOpacity onPress={() => navigation.navigate('AccountType')}>
-              <Text style={styles.linkText}>Sign Up</Text>
+              <Text style={styles.linkText}>{t('auth.login.signupLink')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

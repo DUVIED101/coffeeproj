@@ -28,23 +28,21 @@ export const isValidSocialValue = (platform: SocialPlatform, raw: string): boole
 export const validateEmployerDetails = (input: EmployerDetailsInput): string | null => {
   const name = input.businessName.trim();
   if (name.length === 0) {
-    return input.legalForm === 'organization'
-      ? 'Введите наименование юрлица'
-      : 'Введите наименование ИП';
+    return input.legalForm === 'organization' ? 'auth.errors.noOrgName' : 'auth.errors.noIpName';
   }
   if (name.length < 2) {
-    return 'Слишком короткое значение';
+    return 'auth.errors.nameTooShort';
   }
 
   if (input.website !== undefined && input.website.trim().length > 0) {
     if (!isValidWebsite(input.website)) {
-      return 'Введите корректный URL сайта';
+      return 'auth.errors.invalidWebsite';
     }
   }
 
   if (input.socialLink !== undefined && input.socialLink.value.trim().length > 0) {
     if (!isValidSocialValue(input.socialLink.platform, input.socialLink.value)) {
-      return 'Введите корректную ссылку или хэндл';
+      return 'auth.errors.invalidSocial';
     }
   }
 

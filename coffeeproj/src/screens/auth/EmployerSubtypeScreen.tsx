@@ -8,6 +8,7 @@ import {
   StatusBar,
   ScrollView,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -22,27 +23,28 @@ type Props = {
 
 type SubtypeOption = {
   legalForm: LegalForm;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   icon: string;
 };
 
 const OPTIONS: SubtypeOption[] = [
   {
     legalForm: 'organization',
-    title: 'Организация',
-    description: 'Юридическое лицо (ООО, АО и т.п.)',
+    titleKey: 'auth.employerSubtype.organizationTitle',
+    descriptionKey: 'auth.employerSubtype.organizationDescription',
     icon: 'office-building',
   },
   {
     legalForm: 'individual_entrepreneur',
-    title: 'ИП',
-    description: 'Индивидуальный предприниматель',
+    titleKey: 'auth.employerSubtype.ipTitle',
+    descriptionKey: 'auth.employerSubtype.ipDescription',
     icon: 'account-tie',
   },
 ];
 
 export const EmployerSubtypeScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { t } = useTranslation();
   const { email, password, phoneNumber, hasSession } = route.params;
 
   const handleSelect = (legalForm: LegalForm): void => {
@@ -63,33 +65,36 @@ export const EmployerSubtypeScreen: React.FC<Props> = ({ navigation, route }) =>
           onPress={() => navigation.goBack()}
           hitSlop={12}
           accessibilityRole="button"
-          accessibilityLabel="Назад"
+          accessibilityLabel={t('auth.common.back')}
           style={styles.backButton}>
           <Text style={styles.backArrow}>‹</Text>
         </TouchableOpacity>
 
         <View style={styles.header}>
-          <Text style={styles.title}>Тип регистрации</Text>
-          <Text style={styles.subtitle}>В качестве кого вы регистрируетесь?</Text>
+          <Text style={styles.title}>{t('auth.employerSubtype.title')}</Text>
+          <Text style={styles.subtitle}>{t('auth.employerSubtype.subtitle')}</Text>
         </View>
 
         <View style={styles.options}>
-          {OPTIONS.map(option => (
-            <TouchableOpacity
-              key={option.legalForm}
-              style={styles.option}
-              onPress={() => handleSelect(option.legalForm)}
-              activeOpacity={0.8}
-              accessibilityRole="button"
-              accessibilityLabel={option.title}>
-              <MaterialCommunityIcons name={option.icon} size={36} color={COLORS.primary} />
-              <View style={styles.optionText}>
-                <Text style={styles.optionTitle}>{option.title}</Text>
-                <Text style={styles.optionDescription}>{option.description}</Text>
-              </View>
-              <Text style={styles.chevron}>›</Text>
-            </TouchableOpacity>
-          ))}
+          {OPTIONS.map(option => {
+            const title = t(option.titleKey);
+            return (
+              <TouchableOpacity
+                key={option.legalForm}
+                style={styles.option}
+                onPress={() => handleSelect(option.legalForm)}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={title}>
+                <MaterialCommunityIcons name={option.icon} size={36} color={COLORS.primary} />
+                <View style={styles.optionText}>
+                  <Text style={styles.optionTitle}>{title}</Text>
+                  <Text style={styles.optionDescription}>{t(option.descriptionKey)}</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </ScrollView>
     </SafeAreaView>

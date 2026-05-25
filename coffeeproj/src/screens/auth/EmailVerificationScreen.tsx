@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
@@ -28,6 +29,7 @@ type Props = {
 const CODE_LENGTH = 6;
 
 export const EmailVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { t } = useTranslation();
   const { email } = route.params;
 
   const [code, setCode] = useState('');
@@ -36,7 +38,10 @@ export const EmailVerificationScreen: React.FC<Props> = ({ navigation, route }) 
 
   const handleSubmit = async (): Promise<void> => {
     if (code.length !== CODE_LENGTH) {
-      Alert.alert('Неверный код', `Введите ${CODE_LENGTH}-значный код из письма.`);
+      Alert.alert(
+        t('auth.verify.invalidCodeTitle'),
+        t('auth.verify.invalidCodeBody', { count: CODE_LENGTH })
+      );
       return;
     }
 
@@ -46,11 +51,11 @@ export const EmailVerificationScreen: React.FC<Props> = ({ navigation, route }) 
     } catch (error: unknown) {
       const message = getErrorMessage(error);
       const friendly = message.toLowerCase().includes('expired')
-        ? 'Срок действия кода истёк. Запросите новый.'
+        ? t('auth.verify.expired')
         : message.toLowerCase().includes('invalid')
-          ? 'Неверный код. Проверьте письмо и попробуйте снова.'
+          ? t('auth.verify.invalidEntered')
           : message;
-      Alert.alert('Не удалось подтвердить', friendly);
+      Alert.alert(t('auth.verify.failedTitle'), friendly);
     } finally {
       setIsSubmitting(false);
     }
@@ -60,9 +65,9 @@ export const EmailVerificationScreen: React.FC<Props> = ({ navigation, route }) 
     setIsResending(true);
     try {
       await AuthService.resendSignupOtp(email);
-      Alert.alert('Код отправлен', 'Проверьте почту — мы выслали новый код.');
+      Alert.alert(t('auth.verify.codeResentTitle'), t('auth.verify.codeResentBody'));
     } catch (error: unknown) {
-      Alert.alert('Ошибка', getErrorMessage(error));
+      Alert.alert(t('common.error'), getErrorMessage(error));
     } finally {
       setIsResending(false);
     }
@@ -81,27 +86,26 @@ export const EmailVerificationScreen: React.FC<Props> = ({ navigation, route }) 
             onPress={() => navigation.goBack()}
             hitSlop={12}
             accessibilityRole="button"
-            accessibilityLabel="Назад"
+            accessibilityLabel={t('auth.common.back')}
             style={styles.backButton}>
             <Text style={styles.backArrow}>‹</Text>
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <Text style={styles.title}>Подтвердите email</Text>
+            <Text style={styles.title}>{t('auth.verify.title')}</Text>
             <Text style={styles.subtitle}>
-              Мы отправили {CODE_LENGTH}-значный код на {email}. Введите его, чтобы завершить
-              регистрацию.
+              {t('auth.verify.subtitle', { count: CODE_LENGTH, email })}
             </Text>
           </View>
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Код из письма</Text>
+              <Text style={styles.label}>{t('auth.verify.codeLabel')}</Text>
               <TextInput
                 style={styles.input}
                 value={code}
                 onChangeText={text => setCode(text.replace(/\D/g, '').slice(0, CODE_LENGTH))}
-                placeholder="123456"
+                placeholder={t('auth.verify.codePlaceholder')}
                 placeholderTextColor={COLORS.textSecondary}
                 keyboardType="number-pad"
                 maxLength={CODE_LENGTH}
@@ -118,7 +122,7 @@ export const EmailVerificationScreen: React.FC<Props> = ({ navigation, route }) 
               {isSubmitting ? (
                 <ActivityIndicator color={COLORS.background} />
               ) : (
-                <Text style={styles.buttonText}>Подтвердить</Text>
+                <Text style={styles.buttonText}>{t('auth.verify.cta')}</Text>
               )}
             </TouchableOpacity>
 
@@ -127,7 +131,7 @@ export const EmailVerificationScreen: React.FC<Props> = ({ navigation, route }) 
               disabled={isResending}
               style={styles.resendWrap}>
               <Text style={styles.resendText}>
-                {isResending ? 'Отправляем…' : 'Отправить код ещё раз'}
+                {isResending ? t('auth.verify.resending') : t('auth.verify.resend')}
               </Text>
             </TouchableOpacity>
           </View>

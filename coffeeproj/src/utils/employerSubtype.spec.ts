@@ -45,7 +45,7 @@ describe('validateEmployerDetails', () => {
         legalForm: 'organization',
         businessName: '   ',
       })
-    ).toBe('Введите наименование юрлица');
+    ).toBe('auth.errors.noOrgName');
   });
 
   it('returns the ИП error when name is empty for individual_entrepreneur', () => {
@@ -54,7 +54,7 @@ describe('validateEmployerDetails', () => {
         legalForm: 'individual_entrepreneur',
         businessName: '',
       })
-    ).toBe('Введите наименование ИП');
+    ).toBe('auth.errors.noIpName');
   });
 
   it('returns null when only the required name is provided', () => {
@@ -83,7 +83,7 @@ describe('validateEmployerDetails', () => {
         businessName: 'ООО Кофейня',
         website: 'not a url',
       })
-    ).toBe('Введите корректный URL сайта');
+    ).toBe('auth.errors.invalidWebsite');
   });
 
   it('allows an optional valid social link', () => {
@@ -103,7 +103,7 @@ describe('validateEmployerDetails', () => {
         businessName: 'ИП Иванов И.И.',
         socialLink: { platform: 'telegram', value: '!' },
       })
-    ).toBe('Введите корректную ссылку или хэндл');
+    ).toBe('auth.errors.invalidSocial');
   });
 
   it('ignores empty optional fields', () => {

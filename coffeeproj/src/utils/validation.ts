@@ -13,14 +13,14 @@ export const validateEmail = (email: string): boolean => {
 };
 
 /**
- * Validate email and return error message if invalid
+ * Validate email and return error key if invalid. Caller maps via t().
  */
 export const getEmailError = (email: string): string | null => {
   if (!email) {
-    return 'Email is required';
+    return 'auth.errors.emailRequired';
   }
   if (!validateEmail(email)) {
-    return 'Please enter a valid email address';
+    return 'auth.errors.emailInvalid';
   }
   return null;
 };
@@ -40,26 +40,27 @@ export const validatePassword = (password: string): boolean => {
 };
 
 /**
- * Get password validation error message
+ * Get password validation error key. Caller maps via t().
+ * For passwordTooLong the max can be interpolated: t(key, { max: MAX_PASSWORD_LENGTH }).
  */
 export const getPasswordError = (password: string): string | null => {
   if (!password) {
-    return 'Password is required';
+    return 'auth.errors.passwordRequired';
   }
   if (password.length < 8) {
-    return 'Password must be at least 8 characters';
+    return 'auth.errors.passwordTooShort';
   }
   if (password.length > MAX_PASSWORD_LENGTH) {
-    return `Password must be at most ${MAX_PASSWORD_LENGTH} characters`;
+    return 'auth.errors.passwordTooLong';
   }
   if (!/[A-Z]/.test(password)) {
-    return 'Password must contain at least one uppercase letter';
+    return 'auth.errors.passwordNoUpper';
   }
   if (!/[a-z]/.test(password)) {
-    return 'Password must contain at least one lowercase letter';
+    return 'auth.errors.passwordNoLower';
   }
   if (!/[0-9]/.test(password)) {
-    return 'Password must contain at least one number';
+    return 'auth.errors.passwordNoNumber';
   }
   return null;
 };
@@ -74,7 +75,7 @@ export const validatePhone = (phone: string): boolean => {
 };
 
 /**
- * Get phone validation error message
+ * Get phone validation error key. Caller maps via t().
  */
 export const getPhoneError = (phone: string): string | null => {
   if (!phone) {
@@ -84,7 +85,7 @@ export const getPhoneError = (phone: string): string | null => {
   const cleanPhone = phone.replace(/[\s-()]/g, '');
 
   if (!validatePhone(cleanPhone)) {
-    return 'Please enter a valid Russian phone number';
+    return 'auth.errors.phoneInvalid';
   }
   return null;
 };

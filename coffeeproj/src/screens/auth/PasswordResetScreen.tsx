@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
@@ -29,6 +30,7 @@ type Props = {
 const CODE_LENGTH = 6;
 
 export const PasswordResetScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { t } = useTranslation();
   const { email } = route.params;
 
   const [code, setCode] = useState('');
@@ -39,15 +41,21 @@ export const PasswordResetScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleSubmit = async (): Promise<void> => {
     if (code.length !== CODE_LENGTH) {
-      Alert.alert('Неверный код', `Введите ${CODE_LENGTH}-значный код из письма.`);
+      Alert.alert(
+        t('auth.passwordReset.invalidCodeTitle'),
+        t('auth.passwordReset.invalidCodeBody', { count: CODE_LENGTH })
+      );
       return;
     }
     if (newPassword.length < 8) {
-      Alert.alert('Слабый пароль', 'Пароль должен быть не менее 8 символов.');
+      Alert.alert(
+        t('auth.passwordReset.weakPasswordTitle'),
+        t('auth.passwordReset.weakPasswordBody')
+      );
       return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert('Пароли не совпадают', 'Введите одинаковый пароль в оба поля.');
+      Alert.alert(t('auth.passwordReset.mismatchTitle'), t('auth.passwordReset.mismatchBody'));
       return;
     }
 
@@ -56,15 +64,15 @@ export const PasswordResetScreen: React.FC<Props> = ({ navigation, route }) => {
       await AuthService.verifyPasswordResetOtp(email, code.trim());
       await AuthService.updatePassword(newPassword);
       await AuthService.signOut();
-      Alert.alert('Пароль обновлён', 'Войдите с новым паролем.', [
+      Alert.alert(t('auth.passwordReset.successTitle'), t('auth.passwordReset.successBody'), [
         {
-          text: 'OK',
+          text: t('common.ok'),
           onPress: () => navigation.reset({ index: 0, routes: [{ name: 'Login' }] }),
         },
       ]);
     } catch (error: unknown) {
       const message = getErrorMessage(error);
-      Alert.alert('Не удалось сбросить пароль', message);
+      Alert.alert(t('auth.passwordReset.errorTitle'), message);
     } finally {
       setIsSubmitting(false);
     }
@@ -74,9 +82,9 @@ export const PasswordResetScreen: React.FC<Props> = ({ navigation, route }) => {
     setIsResending(true);
     try {
       await AuthService.resetPassword(email);
-      Alert.alert('Код отправлен', 'Проверьте почту — мы выслали новый код.');
+      Alert.alert(t('auth.passwordReset.codeResentTitle'), t('auth.passwordReset.codeResentBody'));
     } catch (error: unknown) {
-      Alert.alert('Ошибка', getErrorMessage(error));
+      Alert.alert(t('common.error'), getErrorMessage(error));
     } finally {
       setIsResending(false);
     }
@@ -95,27 +103,26 @@ export const PasswordResetScreen: React.FC<Props> = ({ navigation, route }) => {
             onPress={() => navigation.goBack()}
             hitSlop={12}
             accessibilityRole="button"
-            accessibilityLabel="Назад"
+            accessibilityLabel={t('auth.common.back')}
             style={styles.backButton}>
             <Text style={styles.backArrow}>‹</Text>
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <Text style={styles.title}>Сброс пароля</Text>
+            <Text style={styles.title}>{t('auth.passwordReset.title')}</Text>
             <Text style={styles.subtitle}>
-              Мы отправили {CODE_LENGTH}-значный код на {email}. Введите его ниже и задайте новый
-              пароль.
+              {t('auth.passwordReset.subtitle', { count: CODE_LENGTH, email })}
             </Text>
           </View>
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Код из письма</Text>
+              <Text style={styles.label}>{t('auth.passwordReset.codeLabel')}</Text>
               <TextInput
                 style={styles.input}
                 value={code}
                 onChangeText={text => setCode(text.replace(/\D/g, '').slice(0, CODE_LENGTH))}
-                placeholder="123456"
+                placeholder={t('auth.passwordReset.codePlaceholder')}
                 placeholderTextColor={COLORS.textSecondary}
                 keyboardType="number-pad"
                 maxLength={CODE_LENGTH}
@@ -125,20 +132,20 @@ export const PasswordResetScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Новый пароль</Text>
+              <Text style={styles.label}>{t('auth.passwordReset.newPasswordLabel')}</Text>
               <PasswordInput
                 value={newPassword}
                 onChangeText={setNewPassword}
-                placeholder="Минимум 8 символов"
+                placeholder={t('auth.passwordReset.newPasswordPlaceholder')}
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Повторите пароль</Text>
+              <Text style={styles.label}>{t('auth.passwordReset.confirmPasswordLabel')}</Text>
               <PasswordInput
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
-                placeholder="Повторите новый пароль"
+                placeholder={t('auth.passwordReset.confirmPasswordPlaceholder')}
               />
             </View>
 
@@ -150,7 +157,7 @@ export const PasswordResetScreen: React.FC<Props> = ({ navigation, route }) => {
               {isSubmitting ? (
                 <ActivityIndicator color={COLORS.background} />
               ) : (
-                <Text style={styles.buttonText}>Сменить пароль</Text>
+                <Text style={styles.buttonText}>{t('auth.passwordReset.submit')}</Text>
               )}
             </TouchableOpacity>
 
@@ -159,7 +166,7 @@ export const PasswordResetScreen: React.FC<Props> = ({ navigation, route }) => {
               disabled={isResending}
               style={styles.resendWrap}>
               <Text style={styles.resendText}>
-                {isResending ? 'Отправляем…' : 'Отправить код ещё раз'}
+                {isResending ? t('auth.passwordReset.resending') : t('auth.passwordReset.resend')}
               </Text>
             </TouchableOpacity>
           </View>

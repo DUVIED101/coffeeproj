@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
@@ -38,11 +39,16 @@ const SOCIAL_PLATFORMS: { value: SocialPlatform; label: string }[] = [
 ];
 
 export const EmployerDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { t } = useTranslation();
   const { email, password, phoneNumber, legalForm, hasSession } = route.params;
 
   const isOrganization = legalForm === 'organization';
-  const nameLabel = isOrganization ? 'Наименование юрлица' : 'Наименование ИП';
-  const namePlaceholder = isOrganization ? 'ООО «Кофейня №1»' : 'ИП Иванов И.И.';
+  const nameLabel = isOrganization
+    ? t('auth.employerDetails.nameOrgLabel')
+    : t('auth.employerDetails.nameIpLabel');
+  const namePlaceholder = isOrganization
+    ? t('auth.employerDetails.nameOrgPlaceholder')
+    : t('auth.employerDetails.nameIpPlaceholder');
 
   const [businessName, setBusinessName] = useState('');
   const [linkMode, setLinkMode] = useState<LinkMode>('website');
@@ -67,7 +73,7 @@ export const EmployerDetailsScreen: React.FC<Props> = ({ navigation, route }) =>
   const handleContinue = async (): Promise<void> => {
     const error = validateEmployerDetails(signupData);
     if (error) {
-      Alert.alert('Проверьте данные', error);
+      Alert.alert(t('auth.employerDetails.validationTitle'), t(error));
       return;
     }
 
@@ -97,15 +103,15 @@ export const EmployerDetailsScreen: React.FC<Props> = ({ navigation, route }) =>
       navigation.navigate('EmailVerification', { email, accountType: 'business' });
     } catch (err: unknown) {
       const message = getErrorMessage(err);
-      let errorMessage = 'Не удалось завершить регистрацию. Попробуйте ещё раз.';
+      let errorMessage = t('auth.employerDetails.errorGeneric');
       if (message.includes('already registered')) {
-        errorMessage = 'Этот email уже зарегистрирован. Войдите в существующий аккаунт.';
+        errorMessage = t('auth.employerDetails.errorEmailTaken');
       } else if (message.includes('rate limit')) {
-        errorMessage = 'Слишком много попыток. Подождите немного и попробуйте снова.';
+        errorMessage = t('auth.employerDetails.errorRateLimit');
       } else if (message.length > 0) {
         errorMessage = message;
       }
-      Alert.alert('Ошибка', errorMessage);
+      Alert.alert(t('auth.employerDetails.errorTitle'), errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -124,16 +130,14 @@ export const EmployerDetailsScreen: React.FC<Props> = ({ navigation, route }) =>
             onPress={() => navigation.goBack()}
             hitSlop={12}
             accessibilityRole="button"
-            accessibilityLabel="Назад"
+            accessibilityLabel={t('auth.common.back')}
             style={styles.backButton}>
             <Text style={styles.backArrow}>‹</Text>
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <Text style={styles.title}>Данные для регистрации</Text>
-            <Text style={styles.subtitle}>
-              Заполните поля — это сведения о работодателе, под которым вы регистрируетесь.
-            </Text>
+            <Text style={styles.title}>{t('auth.employerDetails.title')}</Text>
+            <Text style={styles.subtitle}>{t('auth.employerDetails.subtitle')}</Text>
           </View>
 
           <View style={styles.form}>
@@ -152,7 +156,8 @@ export const EmployerDetailsScreen: React.FC<Props> = ({ navigation, route }) =>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                Ссылка <Text style={styles.optional}>(необязательно)</Text>
+                {t('auth.employerDetails.linkLabel')}{' '}
+                <Text style={styles.optional}>{t('auth.employerDetails.linkOptional')}</Text>
               </Text>
 
               <View style={styles.segment}>
@@ -165,7 +170,7 @@ export const EmployerDetailsScreen: React.FC<Props> = ({ navigation, route }) =>
                       styles.segmentText,
                       linkMode === 'website' && styles.segmentTextActive,
                     ]}>
-                    Сайт
+                    {t('auth.employerDetails.tabWebsite')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -174,7 +179,7 @@ export const EmployerDetailsScreen: React.FC<Props> = ({ navigation, route }) =>
                   activeOpacity={0.8}>
                   <Text
                     style={[styles.segmentText, linkMode === 'social' && styles.segmentTextActive]}>
-                    Соцсеть
+                    {t('auth.employerDetails.tabSocial')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -184,7 +189,7 @@ export const EmployerDetailsScreen: React.FC<Props> = ({ navigation, route }) =>
                   style={styles.input}
                   value={website}
                   onChangeText={setWebsite}
-                  placeholder="https://my-coffee.ru"
+                  placeholder={t('auth.employerDetails.websitePlaceholder')}
                   placeholderTextColor={COLORS.textSecondary}
                   keyboardType="url"
                   autoCapitalize="none"
@@ -216,7 +221,7 @@ export const EmployerDetailsScreen: React.FC<Props> = ({ navigation, route }) =>
                     style={styles.input}
                     value={socialValue}
                     onChangeText={setSocialValue}
-                    placeholder="@my_coffee"
+                    placeholder={t('auth.employerDetails.socialPlaceholder')}
                     placeholderTextColor={COLORS.textSecondary}
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -233,7 +238,11 @@ export const EmployerDetailsScreen: React.FC<Props> = ({ navigation, route }) =>
               {isSubmitting ? (
                 <ActivityIndicator color={COLORS.background} />
               ) : (
-                <Text style={styles.buttonText}>{hasSession ? 'Сохранить' : 'Продолжить'}</Text>
+                <Text style={styles.buttonText}>
+                  {hasSession
+                    ? t('auth.employerDetails.saveCta')
+                    : t('auth.employerDetails.continueCta')}
+                </Text>
               )}
             </TouchableOpacity>
           </View>

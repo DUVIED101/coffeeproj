@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import i18next from 'i18next';
 import { COLORS } from '../config/constants';
 
 interface Props {
@@ -31,11 +32,13 @@ export class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       return (
         <View style={styles.container}>
-          <Text style={styles.title}>Что-то пошло не так</Text>
-          <Text style={styles.message}>{this.state.error?.message ?? 'Unknown error'}</Text>
+          <Text style={styles.title}>{i18next.t('common.somethingWentWrong')}</Text>
+          <Text style={styles.message}>
+            {this.state.error?.message ?? i18next.t('common.unknownError')}
+          </Text>
           <TouchableOpacity style={styles.button} onPress={this.reset}>
             <Text style={styles.buttonText}>
-              {this.props.fallbackLabel ?? 'Перезагрузить экран'}
+              {this.props.fallbackLabel ?? i18next.t('common.reloadScreen')}
             </Text>
           </TouchableOpacity>
         </View>
