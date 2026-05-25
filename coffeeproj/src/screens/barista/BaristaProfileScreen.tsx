@@ -17,8 +17,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { launchImageLibrary } from 'react-native-image-picker';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS, EQUIPMENT_TYPES } from '../../config/constants';
+import { COLORS, EQUIPMENT_TYPES, RADII } from '../../config/constants';
 import {
   BaristaProfileService,
   PortfolioPhotoLimitError,
@@ -206,7 +207,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
       const profileData = await BaristaProfileService.getProfileByUserId(user.id);
 
       if (!profileData) {
-        navigation.replace('BaristaProfileSetup');
+        setProfile(null);
         return;
       }
 
@@ -494,7 +495,30 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   }
 
   if (!profile) {
-    return null;
+    return (
+      <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+        <View style={styles.emptyContainer}>
+          <MaterialCommunityIcons name="coffee-outline" size={56} color={COLORS.textSecondary} />
+          <Text style={styles.emptyTitle}>
+            {t('baristaProfile.noProfileTitle', { defaultValue: 'Профиль ещё не создан' })}
+          </Text>
+          <Text style={styles.emptySubtitle}>
+            {t('baristaProfile.noProfileSubtitle', {
+              defaultValue:
+                'Создайте профиль, чтобы откликаться на вакансии и получать предложения от заведений.',
+            })}
+          </Text>
+          <TouchableOpacity
+            style={styles.emptyCta}
+            onPress={() => navigation.navigate('BaristaProfileSetup')}
+            activeOpacity={0.85}>
+            <Text style={styles.emptyCtaText}>
+              {t('baristaProfile.createCta', { defaultValue: 'Создать профиль' })}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   const completeness = computeProfileCompleteness(profile);
@@ -1013,6 +1037,37 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+    gap: 12,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.text,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  emptyCta: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: RADII.pill,
+  },
+  emptyCtaText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
   },
   flex: {
     flex: 1,

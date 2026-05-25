@@ -1,4 +1,14 @@
 PODS:
+  - AppAuth (2.0.0):
+    - AppAuth/Core (= 2.0.0)
+    - AppAuth/ExternalUserAgent (= 2.0.0)
+  - AppAuth/Core (2.0.0)
+  - AppAuth/ExternalUserAgent (2.0.0):
+    - AppAuth/Core
+  - AppCheckCore (11.2.0):
+    - GoogleUtilities/Environment (~> 8.0)
+    - GoogleUtilities/UserDefaults (~> 8.0)
+    - PromisesObjC (~> 2.4)
   - boost (1.83.0)
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.73.9)
@@ -11,10 +21,29 @@ PODS:
     - ReactCommon/turbomodule/core (= 0.73.9)
   - fmt (6.2.1)
   - glog (0.3.5)
+  - GoogleSignIn (9.1.0):
+    - AppAuth (~> 2.0)
+    - AppCheckCore (~> 11.0)
+    - GTMAppAuth (~> 5.0)
+    - GTMSessionFetcher/Core (~> 3.3)
+  - GoogleUtilities/Environment (8.1.0):
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Logger (8.1.0):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Privacy (8.1.0)
+  - GoogleUtilities/UserDefaults (8.1.0):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
+  - GTMAppAuth (5.0.0):
+    - AppAuth/Core (~> 2.0)
+    - GTMSessionFetcher/Core (< 4.0, >= 3.3)
+  - GTMSessionFetcher/Core (3.5.0)
   - hermes-engine (0.73.9):
     - hermes-engine/Pre-built (= 0.73.9)
   - hermes-engine/Pre-built (0.73.9)
   - libevent (2.1.12)
+  - PromisesObjC (2.4.0)
   - RCT-Folly (2022.05.16.00):
     - boost
     - DoubleConversion
@@ -886,6 +915,9 @@ PODS:
   - React-Mapbuffer (0.73.9):
     - glog
     - React-debug
+  - react-native-app-auth (8.3.0):
+    - AppAuth (>= 1.7.6)
+    - React-Core
   - react-native-document-picker (9.3.1):
     - glog
     - RCT-Folly (= 2022.05.16.00)
@@ -1065,6 +1097,8 @@ PODS:
     - React-jsi (= 0.73.9)
     - React-logger (= 0.73.9)
     - React-perflogger (= 0.73.9)
+  - RNAppleAuthentication (2.5.1):
+    - React-Core
   - RNCAsyncStorage (1.24.0):
     - React-Core
   - RNCPushNotificationIOS (1.12.0):
@@ -1074,6 +1108,9 @@ PODS:
   - RNGestureHandler (2.30.0):
     - glog
     - RCT-Folly (= 2022.05.16.00)
+    - React-Core
+  - RNGoogleSignin (16.1.2):
+    - GoogleSignIn (~> 9.0)
     - React-Core
   - RNScreens (3.37.0):
     - glog
@@ -1118,6 +1155,7 @@ DEPENDENCIES:
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector-modern`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
+  - react-native-app-auth (from `../node_modules/react-native-app-auth`)
   - react-native-document-picker (from `../node_modules/react-native-document-picker`)
   - react-native-geolocation-service (from `../node_modules/react-native-geolocation-service`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
@@ -1142,18 +1180,27 @@ DEPENDENCIES:
   - React-runtimescheduler (from `../node_modules/react-native/ReactCommon/react/renderer/runtimescheduler`)
   - React-utils (from `../node_modules/react-native/ReactCommon/react/utils`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
+  - "RNAppleAuthentication (from `../node_modules/@invertase/react-native-apple-authentication`)"
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCPushNotificationIOS (from `../node_modules/@react-native-community/push-notification-ios`)"
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
+  - "RNGoogleSignin (from `../node_modules/@react-native-google-signin/google-signin`)"
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
   trunk:
+    - AppAuth
+    - AppCheckCore
     - fmt
+    - GoogleSignIn
+    - GoogleUtilities
+    - GTMAppAuth
+    - GTMSessionFetcher
     - libevent
+    - PromisesObjC
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -1212,6 +1259,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/logger"
   React-Mapbuffer:
     :path: "../node_modules/react-native/ReactCommon"
+  react-native-app-auth:
+    :path: "../node_modules/react-native-app-auth"
   react-native-document-picker:
     :path: "../node_modules/react-native-document-picker"
   react-native-geolocation-service:
@@ -1260,6 +1309,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/react/utils"
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
+  RNAppleAuthentication:
+    :path: "../node_modules/@invertase/react-native-apple-authentication"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNCPushNotificationIOS:
@@ -1268,6 +1319,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-community/datetimepicker"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
+  RNGoogleSignin:
+    :path: "../node_modules/@react-native-google-signin/google-signin"
   RNScreens:
     :path: "../node_modules/react-native-screens"
   RNVectorIcons:
@@ -1276,14 +1329,21 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
+  AppAuth: 1c1a8afa7e12f2ec3a294d9882dfa5ab7d3cb063
+  AppCheckCore: cc8fd0a3a230ddd401f326489c99990b013f0c4f
   boost: d3f49c53809116a5d38da093a8aa78bf551aed09
   DoubleConversion: fea03f2699887d960129cc54bba7e52542b6f953
   FBLazyVector: 98c189b92292d4bfeac13ffa8df3ce3d84e2fc5b
   FBReactNativeSpec: 4fe1d8c2fadc7949344b197d933f76b40401aac5
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
   glog: c5d68082e772fa1c511173d6b30a9de2c05a69a2
+  GoogleSignIn: fcee2257188d5eda57a5e2b6a715550ffff9206d
+  GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
+  GTMAppAuth: 217a876b249c3c585a54fd6f73e6b58c4f5c4238
+  GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
   hermes-engine: ed62e0dcd013bf4a3b487f164feec1c4e705b5b5
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
+  PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RCT-Folly: cd21f1661364f975ae76b3308167ad66b09f53f5
   RCTRequired: d362a61864a64315aee00faea8dee6cf5b3f4aad
   RCTTypeSafety: 09baf60faeab02492dc8bf04ce5af1dda645b86d
@@ -1305,6 +1365,7 @@ SPEC CHECKSUMS:
   React-jsinspector: aee04d04ef553d5e30e52a4de2af958cb060069f
   React-logger: ef76a6d8e04672f19be9b3a49f6ecc4c7141399b
   React-Mapbuffer: 3dd48fdc197c566c90774761e4799e86b1937572
+  react-native-app-auth: 2f5a3155dec63b23bb19654c806cb649ba31dc14
   react-native-document-picker: 4425fea5360a9e3ec5f268681194bf88ae67ec65
   react-native-geolocation-service: 32b2c2a3b91e70ce2a8d0c684801aaeb0a07e0ec
   react-native-image-picker: bb3a66064010886b9472200945841e2cf79e1b52
@@ -1329,10 +1390,12 @@ SPEC CHECKSUMS:
   React-runtimescheduler: 0143f14b1b4b6b68be0f68f75391e5ba9fedb733
   React-utils: 3914b10f3e2b95e78ab7cc53c98541d504ae387f
   ReactCommon: 03a07a32cbaf798b01e7025001d6fa5a862709f6
+  RNAppleAuthentication: a89c9804592b38ed4ab11f0aee68d05ba12ad432
   RNCAsyncStorage: b6410dead2732b5c72a7fdb1ecb5651bbcf4674b
   RNCPushNotificationIOS: 85957a0534fd1309b4c028ccbe5b1baf9ab5cf57
   RNDateTimePicker: a4679e6488003e5fb68502b50ffb1b74b8b31ca0
   RNGestureHandler: ad7bdf3340a16d433d58023d4bddde2d633904f9
+  RNGoogleSignin: b11289afb825c32c250272e4d92446f71091814e
   RNScreens: 3ce54903891fd6281865ad3e7cfe4c2bb438c70c
   RNVectorIcons: 24c506ef3aab67787a85607b8d4a312ce8f6f3b0
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17

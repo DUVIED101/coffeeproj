@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'rea
 import { supabase } from '../../config/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { COLORS } from '../../config/constants';
+import { readPendingAccountType, clearPendingAccountType } from '../../utils/socialAuthStash';
 import type { AccountType, User } from '../../types';
 
 type SignupMetadata = {
@@ -24,7 +25,11 @@ export const ProfileBootstrapScreen: React.FC = () => {
       }
 
       const meta = (session.user.user_metadata ?? {}) as SignupMetadata;
-      const accountType: AccountType = meta.account_type === 'business' ? 'business' : 'barista';
+      const pendingAccountType = await readPendingAccountType();
+      const accountType: AccountType =
+        meta.account_type === 'business' || meta.account_type === 'barista'
+          ? (meta.account_type as AccountType)
+          : (pendingAccountType ?? 'barista');
 
       const { error: upsertError } = await supabase.from('users').upsert(
         {
@@ -39,6 +44,15 @@ export const ProfileBootstrapScreen: React.FC = () => {
       if (upsertError) {
         throw new Error(upsertError.message);
       }
+
+      if (pendingAccountType && !meta.account_type) {
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({ account_type: pendingAccountType })
+          .eq('id', session.user.id);
+        if (updateError) throw new Error(updateError.message);
+      }
+      await clearPendingAccountType();
 
       const { data, error: selectError } = await supabase
         .from('users')

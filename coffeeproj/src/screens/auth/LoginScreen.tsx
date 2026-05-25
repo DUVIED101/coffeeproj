@@ -17,6 +17,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { AuthService } from '../../services/AuthService';
 import { PasswordInput } from '../../components/PasswordInput';
+import { SocialAuthButtons } from '../../components/SocialAuthButtons';
 import { getEmailError } from '../../utils/validation';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 
@@ -204,6 +205,8 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.buttonText}>Log In</Text>
               )}
             </TouchableOpacity>
+
+            <SocialAuthButtons separatorLabel="или" />
           </View>
 
           {/* Footer */}

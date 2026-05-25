@@ -29,6 +29,7 @@ import type { SocialLink } from '../../types/business';
 import type { CityCode } from '../../types/city';
 import { DEFAULT_CITY, CITY_LABELS_RU, toCityCode } from '../../types/city';
 import { PHOTO_LIMIT, MAX_PHOTO_BYTES, isFileTooLarge } from '../../utils/storage';
+import { geocodeAddress } from '../../utils/geocode';
 
 type SetupStackParamList = {
   BusinessProfileSetup: undefined;
@@ -54,31 +55,6 @@ const EQUIPMENT_OPTIONS: Equipment[] = [
   'Sanremo',
   'Rocket Espresso',
 ];
-
-const geocodeAddress = async (addressLine: string, cityLine: string): Promise<GeoPoint | null> => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10_000);
-  try {
-    const fullAddress = `${addressLine}, ${cityLine}, Russia`;
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(fullAddress)}&format=json&limit=1`,
-      {
-        headers: { 'User-Agent': 'CoffeeProj/1.0' },
-        signal: controller.signal,
-      }
-    );
-    const data = await response.json();
-    if (data && data.length > 0) {
-      return { latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) };
-    }
-    return null;
-  } catch (error) {
-    console.error('Geocoding error:', error);
-    return null;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-};
 
 export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const { t } = useTranslation();
@@ -108,6 +84,11 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const [branchCity, setBranchCity] = useState<CityCode>(DEFAULT_CITY);
   const [branchMetro, setBranchMetro] = useState('');
   const [branchEquipment, setBranchEquipment] = useState<Equipment[]>([]);
+  const [addressCoords, setAddressCoords] = useState<GeoPoint | null>(null);
+  const [addressLookupStatus, setAddressLookupStatus] = useState<
+    'idle' | 'searching' | 'found' | 'notFound'
+  >('idle');
+  const geocodedKeyRef = useRef<string | null>(null);
 
   // Step 4 — Photos for the first branch (deferred URIs until finish)
   const [pendingBranchPhotoUris, setPendingBranchPhotoUris] = useState<string[]>([]);
@@ -141,6 +122,9 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
             setBranchCity(toCityCode(first.city));
             setBranchMetro(first.metroStation ?? '');
             setBranchEquipment(first.equipment);
+            setAddressCoords(first.coordinates);
+            setAddressLookupStatus('found');
+            geocodedKeyRef.current = `${first.address.trim()}|${toCityCode(first.city)}`;
           }
         }
       } catch (error) {
@@ -151,6 +135,37 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
     };
     load();
   }, [user?.id]);
+
+  useEffect(() => {
+    const trimmedAddress = branchAddress.trim();
+    if (!trimmedAddress) {
+      setAddressCoords(null);
+      setAddressLookupStatus('idle');
+      geocodedKeyRef.current = null;
+      return;
+    }
+    const key = `${trimmedAddress}|${branchCity}`;
+    if (geocodedKeyRef.current === key) return;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(async () => {
+      setAddressLookupStatus('searching');
+      const coords = await geocodeAddress(
+        trimmedAddress,
+        CITY_LABELS_RU[branchCity],
+        controller.signal
+      );
+      if (controller.signal.aborted) return;
+      geocodedKeyRef.current = key;
+      setAddressCoords(coords);
+      setAddressLookupStatus(coords ? 'found' : 'notFound');
+    }, 500);
+
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [branchAddress, branchCity]);
 
   const handlePickLogo = useCallback(async () => {
     const result = await launchImageLibrary({
@@ -305,12 +320,16 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       const currentFirstBranch =
         existingFirstBranch ?? (await BusinessService.getBranches(business.id))[0] ?? null;
 
+      const trimmedAddress = branchAddress.trim();
+      const cachedKey = `${trimmedAddress}|${branchCity}`;
       const coordinates =
-        currentFirstBranch &&
-        branchAddress.trim() === currentFirstBranch.address &&
-        branchCity === currentFirstBranch.city
-          ? currentFirstBranch.coordinates
-          : await geocodeAddress(branchAddress.trim(), CITY_LABELS_RU[branchCity]);
+        addressCoords && geocodedKeyRef.current === cachedKey
+          ? addressCoords
+          : currentFirstBranch &&
+              trimmedAddress === currentFirstBranch.address &&
+              branchCity === currentFirstBranch.city
+            ? currentFirstBranch.coordinates
+            : await geocodeAddress(trimmedAddress, CITY_LABELS_RU[branchCity]);
 
       if (!coordinates) {
         Alert.alert(
@@ -388,6 +407,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
     branchCity,
     branchMetro,
     branchEquipment,
+    addressCoords,
     pendingBranchPhotoUris,
     navigation,
     t,
@@ -568,6 +588,25 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 value={branchAddress}
                 onChangeText={setBranchAddress}
               />
+              {addressLookupStatus === 'searching' && (
+                <Text style={styles.addressHintMuted}>
+                  {t('branches.form.addressLookup.searching', { defaultValue: 'Ищем адрес…' })}
+                </Text>
+              )}
+              {addressLookupStatus === 'found' && (
+                <Text style={styles.addressHintFound}>
+                  {t('branches.form.addressLookup.found', {
+                    defaultValue: 'Адрес найден — внизу подсказки по метро',
+                  })}
+                </Text>
+              )}
+              {addressLookupStatus === 'notFound' && (
+                <Text style={styles.addressHintNotFound}>
+                  {t('branches.form.addressLookup.notFound', {
+                    defaultValue: 'Адрес не найден — уточните формулировку',
+                  })}
+                </Text>
+              )}
 
               <Text style={styles.label}>
                 {t('branches.form.city')} <Text style={styles.required}>*</Text>
@@ -589,6 +628,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 }}
                 value={branchMetro || null}
                 onChange={v => setBranchMetro(v ?? '')}
+                userLocation={addressCoords ?? undefined}
               />
 
               <Text style={styles.label}>{t('branches.form.equipment')}</Text>
@@ -722,6 +762,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#fff',
     color: COLORS.text,
+  },
+  addressHintMuted: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  addressHintFound: {
+    color: COLORS.success,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  addressHintNotFound: {
+    color: COLORS.warning,
+    fontSize: 12,
+    marginTop: 4,
   },
   textArea: {
     height: 100,

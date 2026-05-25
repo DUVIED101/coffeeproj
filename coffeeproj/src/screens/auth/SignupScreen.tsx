@@ -16,9 +16,9 @@ import {
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
-import type { AccountType } from '../../types';
 import { AuthService } from '../../services/AuthService';
 import { PasswordInput } from '../../components/PasswordInput';
+import { SocialAuthButtons } from '../../components/SocialAuthButtons';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 import {
   getEmailError,
@@ -26,12 +26,7 @@ import {
   getPhoneError,
   normalizePhone,
 } from '../../utils/validation';
-
-type AuthStackParamList = {
-  AccountType: undefined;
-  Signup: { accountType: AccountType };
-  Login: undefined;
-};
+import type { AuthStackParamList } from '../../navigation/AuthStack';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Signup'>;
@@ -88,23 +83,25 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
       return;
     }
 
-    setIsLoading(true);
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPhone = phoneNumber ? normalizePhone(phoneNumber) : undefined;
 
-    try {
-      const normalizedPhone = phoneNumber ? normalizePhone(phoneNumber) : undefined;
-
-      const { user } = await AuthService.signUpWithEmail(
-        email.trim().toLowerCase(),
+    if (accountType === 'business') {
+      navigation.navigate('EmployerSubtype', {
+        email: normalizedEmail,
         password,
-        accountType,
-        normalizedPhone
-      );
+        phoneNumber: normalizedPhone,
+      });
+      return;
+    }
 
-      console.log('Signup successful:', user.id);
-
-      // No setUser / alert here. The auth listener flips isAuthenticated; the
-      // AppNavigator routes to ProfileBootstrapScreen which creates the
-      // public.users row and then to MainTabs.
+    setIsLoading(true);
+    try {
+      await AuthService.signUpWithEmail(normalizedEmail, password, 'barista', normalizedPhone);
+      navigation.navigate('EmailVerification', {
+        email: normalizedEmail,
+        accountType: 'barista',
+      });
     } catch (error: unknown) {
       console.error('Signup error:', error);
 
@@ -116,8 +113,6 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
       } else if (message.includes('Invalid email')) {
         errorMessage = 'Please enter a valid email address.';
       } else if (message.includes('Password')) {
-        errorMessage = message;
-      } else if (message.includes('Email confirmation is required')) {
         errorMessage = message;
       }
 
@@ -236,9 +231,13 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
               {isLoading ? (
                 <ActivityIndicator color={COLORS.background} />
               ) : (
-                <Text style={styles.buttonText}>Create Account</Text>
+                <Text style={styles.buttonText}>
+                  {accountType === 'business' ? 'Continue' : 'Create Account'}
+                </Text>
               )}
             </TouchableOpacity>
+
+            <SocialAuthButtons accountType={accountType} separatorLabel="или" />
           </View>
 
           {/* Footer */}

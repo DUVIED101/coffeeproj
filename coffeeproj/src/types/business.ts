@@ -26,12 +26,15 @@ export interface SocialLink {
   value: string;
 }
 
+export type LegalForm = 'organization' | 'individual_entrepreneur';
+
 export interface Business {
   id: string;
   ownerId: string;
   name: string;
   description?: string;
   businessType: BusinessType;
+  legalForm?: LegalForm;
   isVerified: boolean;
   isAcceptingApplications?: boolean;
   logoUrl?: string;
@@ -71,6 +74,7 @@ export interface CreateBusinessData {
   name: string;
   description?: string;
   businessType: BusinessType;
+  legalForm?: LegalForm;
   logoUrl?: string;
   website?: string;
   socialLinks?: SocialLink[];
@@ -81,6 +85,7 @@ export interface UpdateBusinessData {
   name?: string;
   description?: string;
   businessType?: BusinessType;
+  legalForm?: LegalForm;
   isAcceptingApplications?: boolean;
   logoUrl?: string;
   website?: string;

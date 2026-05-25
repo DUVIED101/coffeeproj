@@ -304,6 +304,11 @@
     "subtitle": "Open the Profile tab and complete the setup to start using the Business section.",
     "cta": "Go to Profile"
   },
+  "baristaProfile": {
+    "noProfileTitle": "No profile yet",
+    "noProfileSubtitle": "Create your profile to start applying to jobs and getting offers from coffee shops.",
+    "createCta": "Create profile"
+  },
   "businessProfile": {
     "noBusinessTitle": "No business profile yet",
     "noBusinessSubtitle": "Create your business profile to start posting jobs and managing branches.",

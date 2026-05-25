@@ -4,7 +4,9 @@ import React_RCTAppDelegate
 import UserNotifications
 
 @main
-class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate {
+class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate, RNAppAuthAuthorizationFlowManager {
+  public weak var authorizationFlowManagerDelegate: RNAppAuthAuthorizationFlowManagerDelegate?
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -61,6 +63,22 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate {
   ) {
     RNCPushNotificationIOS.didReceive(response)
     completionHandler()
+  }
+
+  // Handle OAuth redirects: react-native-app-auth (Yandex) + Google Sign-In.
+  override func application(
+    _ application: UIApplication,
+    open url: URL,
+    options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+  ) -> Bool {
+    if let delegate = authorizationFlowManagerDelegate,
+       delegate.resumeExternalUserAgentFlow(with: url) {
+      return true
+    }
+    if GIDSignIn.sharedInstance.handle(url) {
+      return true
+    }
+    return super.application(application, open: url, options: options)
   }
 
   override func sourceURL(for bridge: RCTBridge) -> URL? {

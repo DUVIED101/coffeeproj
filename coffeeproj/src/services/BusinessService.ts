@@ -36,6 +36,7 @@ export class BusinessService {
       name: db.name,
       description: db.description,
       businessType: db.business_type,
+      legalForm: db.legal_form ?? undefined,
       isVerified: db.is_verified,
       isAcceptingApplications: db.is_accepting_applications ?? true,
       logoUrl: db.logo_url ?? undefined,
@@ -80,6 +81,7 @@ export class BusinessService {
           name: data.name,
           description: data.description,
           business_type: data.businessType,
+          legal_form: data.legalForm,
           logo_url: data.logoUrl,
           website: data.website,
           social_links: data.socialLinks ?? [],
@@ -98,6 +100,7 @@ export class BusinessService {
               name: data.name,
               description: data.description,
               businessType: data.businessType,
+              legalForm: data.legalForm,
               logoUrl: data.logoUrl,
               website: data.website,
               socialLinks: data.socialLinks,
@@ -178,6 +181,9 @@ export class BusinessService {
       }
       if (updates.businessType !== undefined) {
         dbUpdates.business_type = updates.businessType;
+      }
+      if (updates.legalForm !== undefined) {
+        dbUpdates.legal_form = updates.legalForm;
       }
       if (updates.isAcceptingApplications !== undefined) {
         dbUpdates.is_accepting_applications = updates.isAcceptingApplications;

@@ -1,29 +1,55 @@
 import { supabase } from '../config/supabase';
-import type { AccountType } from '../types';
+import type { AccountType, LegalForm, SocialPlatform } from '../types';
+
+export interface BusinessSignupData {
+  legalForm: LegalForm;
+  businessName: string;
+  website?: string;
+  socialLink?: {
+    platform: SocialPlatform;
+    value: string;
+  };
+}
 
 export class AuthService {
   /**
-   * Sign up with email and password. Auth-only — the public.users row is
-   * created by ProfileBootstrapScreen after navigation routes there on the
-   * isAuthenticated && !user state.
-   * IMPORTANT: Requires email confirmation to be DISABLED in Supabase dashboard.
+   * Sign up with email and password. Email confirmation is required: signUp()
+   * emails the user a 6-digit code and does NOT return a session. The caller
+   * must navigate to EmailVerificationScreen and verify the code there.
+   *
+   * For business accounts, pass `businessSignupData` so the trigger can create
+   * the `businesses` row atomically with `public.users` once email is confirmed.
    */
   static async signUpWithEmail(
     email: string,
     password: string,
     accountType: AccountType,
-    phoneNumber?: string
+    phoneNumber?: string,
+    businessSignupData?: BusinessSignupData
   ): Promise<{ user: any }> {
     try {
+      const metadata: Record<string, string> = {
+        account_type: accountType,
+      };
+      if (phoneNumber !== undefined) {
+        metadata.phone_number = phoneNumber;
+      }
+      if (businessSignupData) {
+        metadata.legal_form = businessSignupData.legalForm;
+        metadata.business_name = businessSignupData.businessName;
+        if (businessSignupData.website) {
+          metadata.website = businessSignupData.website;
+        }
+        if (businessSignupData.socialLink) {
+          metadata.social_platform = businessSignupData.socialLink.platform;
+          metadata.social_value = businessSignupData.socialLink.value;
+        }
+      }
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            account_type: accountType,
-            ...(phoneNumber !== undefined ? { phone_number: phoneNumber } : {}),
-          },
-        },
+        options: { data: metadata },
       });
 
       if (authError) {
@@ -40,15 +66,108 @@ export class AuthService {
         throw authError;
       }
       if (!authData.user) throw new Error('No user returned from signup');
-      if (!authData.session) {
-        throw new Error(
-          'Email confirmation is required. Please check your email and contact support if this continues.'
-        );
-      }
 
       return { user: authData.user };
     } catch (error) {
       console.error('Signup error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Exchange the 6-digit code from the signup confirmation email for an
+   * authenticated session. On success the auth listener emits SIGNED_IN.
+   */
+  static async verifySignupOtp(email: string, token: string): Promise<void> {
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: 'email',
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error in verifySignupOtp:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Re-send the 6-digit signup confirmation code.
+   */
+  static async resendSignupOtp(email: string): Promise<void> {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error in resendSignupOtp:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Sign in with Apple. `nonce` must match the one passed to
+   * appleAuth.performRequest so Supabase can verify the id_token.
+   */
+  static async signInWithApple(idToken: string, nonce: string): Promise<void> {
+    try {
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: idToken,
+        nonce,
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error in signInWithApple:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Sign in with Google. `idToken` comes from @react-native-google-signin/google-signin.
+   */
+  static async signInWithGoogle(idToken: string): Promise<void> {
+    try {
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: idToken,
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error in signInWithGoogle:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Sign in with Yandex ID. Yandex isn't a built-in Supabase provider, so the
+   * access token is exchanged via the `yandex-oauth-exchange` Edge Function,
+   * which verifies the token, finds-or-creates the auth user, and returns a
+   * one-shot magic-link token_hash. We verify it locally to get a session.
+   */
+  static async signInWithYandex(yandexAccessToken: string): Promise<void> {
+    try {
+      const { data, error } = await supabase.functions.invoke<{
+        token_hash: string;
+        email: string;
+      }>('yandex-oauth-exchange', {
+        body: { accessToken: yandexAccessToken },
+      });
+      if (error) throw error;
+      if (!data?.token_hash || !data?.email) {
+        throw new Error('yandex_exchange_invalid_response');
+      }
+
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        token_hash: data.token_hash,
+        type: 'magiclink',
+      });
+      if (verifyError) throw verifyError;
+    } catch (error) {
+      console.error('Error in signInWithYandex:', error);
       throw error;
     }
   }
