@@ -59,7 +59,7 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>QuickBarista использует геолокацию, чтобы показывать вакансии рядом с вами.</string>
+	<string>БыстроБариста использует геолокацию, чтобы показывать вакансии рядом с вами.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Нужен доступ к фото для загрузки изображений профиля и заведения.</string>
 	<key>UIAppFonts</key>
