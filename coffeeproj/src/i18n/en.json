@@ -385,9 +385,27 @@
   "applicants": {
     "title": "Applicants",
     "empty": "No applicants yet",
+    "emptySubtitle": "Applications will appear here when baristas apply to this job",
     "accept": "Accept",
     "reject": "Reject",
-    "coverLetter": "Cover Letter"
+    "coverLetter": "Cover Letter",
+    "coverLetterLabel": "Cover Letter:",
+    "appliedOn": "Applied: {{date}}",
+    "viewProfile": "View Profile",
+    "chat": "Chat",
+    "confirmCompletion": "Confirm Completion",
+    "totalCount": "{{count}} total",
+    "experienceYears": "{{count}} years experience",
+    "experienceYears_one": "{{count}} year experience",
+    "experienceYears_other": "{{count}} years experience",
+    "noEmail": "No email",
+    "acceptSuccess": "Application accepted",
+    "rejectSuccess": "Application rejected",
+    "acceptFailure": "Failed to accept application",
+    "rejectFailure": "Failed to reject application",
+    "loadFailed": "Failed to load applicants",
+    "confirmCompletionSuccess": "Work completion confirmed",
+    "confirmCompletionFailure": "Failed to confirm completion"
   },
   "auth": {
     "password": {
@@ -654,13 +672,172 @@
     }
   },
   "business": {
+    "home": {
+      "title": "My Business",
+      "emptyJobs": "No {{status}} jobs yet"
+    },
     "jobs": {
-      "showArchived": "Show archived"
+      "showArchived": "Show archived",
+      "status": {
+        "open": "Open",
+        "in_review": "In Review",
+        "filled": "Filled",
+        "expired": "Expired",
+        "cancelled": "Cancelled"
+      }
     },
     "tabs": {
       "jobs": "Jobs",
       "shifts": "Shifts"
     }
+  },
+  "baristaFeed": {
+    "title": "Find a Barista",
+    "empty": "No baristas match the filters",
+    "emptyHint": "Try changing your search filters",
+    "loadFailedTitle": "Error",
+    "loadFailedBody": "Failed to load baristas"
+  },
+  "createJob": {
+    "titleCreate": "Create Job",
+    "titleEdit": "Edit Job",
+    "sections": {
+      "jobType": "Job Type",
+      "shiftDetails": "Shift Details",
+      "compensation": "Compensation",
+      "paymentSummary": "Payment Summary"
+    },
+    "fields": {
+      "branch": "Branch",
+      "title": "Title",
+      "titlePlaceholder": "e.g. Experienced Barista",
+      "description": "Description",
+      "descriptionPlaceholder": "Job description...",
+      "requirements": "Requirements",
+      "requirementPlaceholder": "Requirement {{index}}",
+      "removeRequirement": "Remove",
+      "addRequirement": "+ Add Requirement",
+      "equipment": "Equipment Experience",
+      "startDate": "Start Date",
+      "endDate": "End Date (Optional)",
+      "selectDate": "Select date",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "isRecurring": "Is Recurring",
+      "recurringDays": "Recurring Days",
+      "compensationType": "Type",
+      "amountRub": "Amount (RUB)",
+      "amountPlaceholder": "0",
+      "tags": "Tags"
+    },
+    "compensationOption": {
+      "hourly": "Hourly",
+      "daily": "Daily",
+      "fixed": "Fixed"
+    },
+    "jobType": {
+      "temporary": "Temporary",
+      "permanent": "Permanent"
+    },
+    "paymentSummary": {
+      "totalHours": "Total Hours: {{hours}}",
+      "totalAmount": "Total Amount: ₽{{amount}}",
+      "platformFee": "Platform Fee (15%): ₽{{amount}}",
+      "totalWithFee": "Total With Fee: ₽{{amount}}"
+    },
+    "weekdays": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    },
+    "tags": {
+      "urgent": "Urgent",
+      "flexible": "Flexible",
+      "training-provided": "Training provided"
+    },
+    "actionCreate": "Create Job",
+    "actionSave": "Save Changes",
+    "done": "Done",
+    "branchesEmptyTitle": "No branches found",
+    "branchesEmptySubtitle": "Please add a branch before creating a job",
+    "errors": {
+      "branchRequired": "Branch is required",
+      "titleRequired": "Title is required",
+      "compensationRequired": "Valid compensation amount is required",
+      "recurringDaysRequired": "Select at least one day for recurring shifts",
+      "endTimeDiffersFromStart": "End time must differ from start time",
+      "userNotAuthenticated": "User not authenticated",
+      "businessNotFound": "Business not found",
+      "branchNotFound": "Branch not found",
+      "loadJobFailed": "Failed to load job",
+      "loadBranchesFailed": "Failed to load branches",
+      "createFailed": "Failed to create job",
+      "updateFailed": "Failed to update job",
+      "jobNotFound": "Job not found",
+      "onlyOpenEditable": "Only open jobs can be edited",
+      "validationTitle": "Validation Error",
+      "validationBody": "Please fill in all required fields"
+    },
+    "createdSuccess": "Job created successfully",
+    "updatedSuccess": "Job updated successfully"
+  },
+  "businessJobDetails": {
+    "applicationsLabel": "Applications",
+    "noApplicantsYet": "No applicants yet",
+    "applicantsCount": "{{count}} applicants",
+    "applicantsCount_one": "{{count}} applicant",
+    "applicantsCount_other": "{{count}} applicants",
+    "location": "Location",
+    "metroLabel": "Metro:",
+    "shiftDetails": "Shift Details",
+    "date": "Date:",
+    "time": "Time:",
+    "recurring": "Recurring:",
+    "compensation": "Compensation",
+    "perHour": "per hour",
+    "perDay": "per day",
+    "fixed": "fixed rate",
+    "platformFee": "Platform Fee (15%):",
+    "totalCost": "Total Cost:",
+    "description": "Description",
+    "requirements": "Requirements",
+    "requiredEquipment": "Required Equipment Experience",
+    "jobType": "Job Type:",
+    "jobTypeTemporary": "Temporary",
+    "jobTypePermanent": "Permanent",
+    "status": "Status:",
+    "posted": "Posted:",
+    "viewApplicants": "View Applicants ({{count}})",
+    "errorLoadFailed": "Failed to load job details",
+    "errorNotFound": "Job not found"
+  },
+  "viewBarista": {
+    "about": "About",
+    "equipmentExperience": "Equipment Experience",
+    "certifications": "Certifications",
+    "languages": "Languages",
+    "preferredMetro": "Preferred Metro Stations",
+    "preferredShiftTimes": "Preferred Shift Times",
+    "hourlyRate": "Hourly Rate",
+    "portfolio": "Portfolio",
+    "yearsExperience": "{{count}} years of experience",
+    "yearsExperience_one": "{{count}} year of experience",
+    "yearsExperience_other": "{{count}} years of experience",
+    "allReviews": "All Reviews",
+    "message": "Message",
+    "viewAvatarA11y": "View avatar fullscreen",
+    "viewPortfolioPhotoA11y": "View portfolio photo {{index}}",
+    "rateLimitTitle": "Rate limited",
+    "rateLimitBody": "Too many new conversations in the last hour.",
+    "openChatFailureTitle": "Error",
+    "openChatFailureBody": "Failed to open the conversation. Please try again.",
+    "errorTitle": "Error",
+    "errorNotFound": "Barista profile not found",
+    "errorLoad": "Failed to load barista profile"
   },
   "businessGate": {
     "title": "Create your business profile first",
@@ -673,6 +850,7 @@
     "createCta": "Create profile"
   },
   "businessProfile": {
+    "title": "Business profile",
     "noBusinessTitle": "No business profile yet",
     "noBusinessSubtitle": "Create your business profile to start posting jobs and managing branches.",
     "createCta": "Create business profile",

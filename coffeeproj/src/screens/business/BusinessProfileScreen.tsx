@@ -174,7 +174,7 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
       <ScreenHeaderWithActions
-        title={t('businessProfile.title', { defaultValue: 'Профиль бизнеса' })}
+        title={t('businessProfile.title')}
         actions={[
           {
             icon: 'bell-outline',

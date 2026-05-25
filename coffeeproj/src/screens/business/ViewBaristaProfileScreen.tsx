@@ -36,12 +36,7 @@ type Props = {
   route: RouteProp<BusinessStackParamList, 'ViewBaristaProfile'>;
 };
 
-const SHIFT_TIMES: { value: ShiftTime; label: string }[] = [
-  { value: 'morning', label: 'Morning' },
-  { value: 'afternoon', label: 'Afternoon' },
-  { value: 'evening', label: 'Evening' },
-  { value: 'night', label: 'Night' },
-];
+const SHIFT_TIME_VALUES: readonly ShiftTime[] = ['morning', 'afternoon', 'evening', 'night'];
 
 const formatMonthYearShort = (year: number, month: number): string => {
   const d = new Date(year, month - 1, 1);
@@ -109,14 +104,14 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
       console.error('Error starting conversation:', error);
       const message = getErrorMessage(error);
       if (message.includes('Rate limit exceeded')) {
-        Alert.alert('Ограничение', 'Слишком много новых диалогов за последний час.');
+        Alert.alert(t('viewBarista.rateLimitTitle'), t('viewBarista.rateLimitBody'));
       } else {
-        Alert.alert('Ошибка', 'Не удалось открыть диалог. Попробуйте еще раз.');
+        Alert.alert(t('viewBarista.openChatFailureTitle'), t('viewBarista.openChatFailureBody'));
       }
     } finally {
       setIsStartingConversation(false);
     }
-  }, [currentUser?.id, profile, isStartingConversation, navigation]);
+  }, [currentUser?.id, profile, isStartingConversation, navigation, t]);
 
   const loadProfile = async () => {
     try {
@@ -124,8 +119,8 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
       const profileData = await BaristaProfileService.getProfileByUserId(baristaId);
 
       if (!profileData) {
-        Alert.alert('Error', 'Barista profile not found', [
-          { text: 'OK', onPress: () => navigation.goBack() },
+        Alert.alert(t('viewBarista.errorTitle'), t('viewBarista.errorNotFound'), [
+          { text: t('common.ok'), onPress: () => navigation.goBack() },
         ]);
         return;
       }
@@ -136,8 +131,8 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
       setProfile({ ...profileData, workExperiences });
     } catch (error: unknown) {
       console.error('Error loading profile:', error);
-      Alert.alert('Error', 'Failed to load barista profile', [
-        { text: 'OK', onPress: () => navigation.goBack() },
+      Alert.alert(t('viewBarista.errorTitle'), t('viewBarista.errorLoad'), [
+        { text: t('common.ok'), onPress: () => navigation.goBack() },
       ]);
     } finally {
       setIsLoading(false);
@@ -175,7 +170,7 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
             {profile.avatarUrl ? (
               <TouchableOpacity
                 onPress={() => openViewer([profile.avatarUrl as string], 0)}
-                accessibilityLabel="View avatar fullscreen">
+                accessibilityLabel={t('viewBarista.viewAvatarA11y')}>
                 <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
               </TouchableOpacity>
             ) : (
@@ -193,7 +188,9 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
             </Text>
             <Text style={styles.city}>{profile.city}</Text>
             {profile.yearsOfExperience !== undefined && (
-              <Text style={styles.experience}>{profile.yearsOfExperience} years of experience</Text>
+              <Text style={styles.experience}>
+                {t('viewBarista.yearsExperience', { count: profile.yearsOfExperience })}
+              </Text>
             )}
             {aggregate && aggregate.reviewCount > 0 && (
               <View style={styles.aggregateRow}>
@@ -211,13 +208,13 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
         <TouchableOpacity
           style={styles.reviewsLink}
           onPress={() => navigation.navigate('UserReviews', { userId: baristaId })}>
-          <Text style={styles.reviewsLinkLabel}>Все отзывы</Text>
+          <Text style={styles.reviewsLinkLabel}>{t('viewBarista.allReviews')}</Text>
           <Text style={styles.reviewsLinkChevron}>›</Text>
         </TouchableOpacity>
 
         {profile.bio && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About</Text>
+            <Text style={styles.sectionTitle}>{t('viewBarista.about')}</Text>
             <Text style={styles.bioText}>{profile.bio}</Text>
           </View>
         )}
@@ -277,7 +274,7 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
 
         {profile.equipmentExperience.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Equipment Experience</Text>
+            <Text style={styles.sectionTitle}>{t('viewBarista.equipmentExperience')}</Text>
             <View style={styles.chipsContainer}>
               {profile.equipmentExperience.map(equipment => (
                 <View key={equipment} style={styles.chip}>
@@ -290,7 +287,7 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
 
         {profile.certifications.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Certifications</Text>
+            <Text style={styles.sectionTitle}>{t('viewBarista.certifications')}</Text>
             {profile.certifications.map((cert, index) => (
               <Text key={`${index}-${cert}`} style={styles.certificationItem}>
                 {index + 1}. {cert}
@@ -301,14 +298,14 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
 
         {profile.languages.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Languages</Text>
+            <Text style={styles.sectionTitle}>{t('viewBarista.languages')}</Text>
             <Text style={styles.infoText}>{profile.languages.join(', ')}</Text>
           </View>
         )}
 
         {profile.preferredMetroStations.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Preferred Metro Stations</Text>
+            <Text style={styles.sectionTitle}>{t('viewBarista.preferredMetro')}</Text>
             <View style={styles.chipsContainer}>
               {profile.preferredMetroStations.map(station => (
                 <View key={station} style={styles.chip}>
@@ -321,12 +318,12 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
 
         {profile.preferredShiftTimes.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Preferred Shift Times</Text>
+            <Text style={styles.sectionTitle}>{t('viewBarista.preferredShiftTimes')}</Text>
             <View style={styles.chipsContainer}>
               {profile.preferredShiftTimes.map(shift => (
                 <View key={shift} style={styles.chip}>
                   <Text style={styles.chipText}>
-                    {SHIFT_TIMES.find(s => s.value === shift)?.label}
+                    {SHIFT_TIME_VALUES.includes(shift) ? t(`shiftTimes.${shift}`) : shift}
                   </Text>
                 </View>
               ))}
@@ -335,7 +332,7 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hourly Rate</Text>
+          <Text style={styles.sectionTitle}>{t('viewBarista.hourlyRate')}</Text>
           <Text style={styles.infoText}>
             {(() => {
               const min =
@@ -352,13 +349,15 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
 
         {profile.portfolioPhotos.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Portfolio</Text>
+            <Text style={styles.sectionTitle}>{t('viewBarista.portfolio')}</Text>
             <View style={styles.portfolioGrid}>
               {profile.portfolioPhotos.map((photo, index) => (
                 <TouchableOpacity
                   key={index}
                   onPress={() => openViewer(profile.portfolioPhotos, index)}
-                  accessibilityLabel={`View portfolio photo ${index + 1}`}>
+                  accessibilityLabel={t('viewBarista.viewPortfolioPhotoA11y', {
+                    index: index + 1,
+                  })}>
                   <Image source={{ uri: photo }} style={styles.portfolioPhoto} />
                 </TouchableOpacity>
               ))}
@@ -376,7 +375,7 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
               {isStartingConversation ? (
                 <ActivityIndicator color={COLORS.background} />
               ) : (
-                <Text style={styles.messageButtonText}>Написать</Text>
+                <Text style={styles.messageButtonText}>{t('viewBarista.message')}</Text>
               )}
             </TouchableOpacity>
           </View>

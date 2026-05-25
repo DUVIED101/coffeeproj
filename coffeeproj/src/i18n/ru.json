@@ -389,9 +389,29 @@
   "applicants": {
     "title": "Кандидаты",
     "empty": "Пока нет кандидатов",
+    "emptySubtitle": "Отклики появятся здесь, когда бариста начнут подавать заявки на эту вакансию",
     "accept": "Принять",
     "reject": "Отклонить",
-    "coverLetter": "Сопроводительное письмо"
+    "coverLetter": "Сопроводительное письмо",
+    "coverLetterLabel": "Сопроводительное письмо:",
+    "appliedOn": "Откликнулись: {{date}}",
+    "viewProfile": "Открыть профиль",
+    "chat": "Чат",
+    "confirmCompletion": "Подтвердить завершение",
+    "totalCount": "всего: {{count}}",
+    "experienceYears": "{{count}} лет опыта",
+    "experienceYears_one": "{{count}} год опыта",
+    "experienceYears_few": "{{count}} года опыта",
+    "experienceYears_many": "{{count}} лет опыта",
+    "experienceYears_other": "{{count}} лет опыта",
+    "noEmail": "Без email",
+    "acceptSuccess": "Отклик принят",
+    "rejectSuccess": "Отклик отклонён",
+    "acceptFailure": "Не удалось принять отклик",
+    "rejectFailure": "Не удалось отклонить отклик",
+    "loadFailed": "Не удалось загрузить кандидатов",
+    "confirmCompletionSuccess": "Завершение работы подтверждено",
+    "confirmCompletionFailure": "Не удалось подтвердить завершение"
   },
   "auth": {
     "password": {
@@ -658,13 +678,176 @@
     }
   },
   "business": {
+    "home": {
+      "title": "Мой бизнес",
+      "emptyJobs": "Нет вакансий со статусом «{{status}}»"
+    },
     "jobs": {
-      "showArchived": "Show archived"
+      "showArchived": "Показывать архив",
+      "status": {
+        "open": "Открыто",
+        "in_review": "На рассмотрении",
+        "filled": "Заполнено",
+        "expired": "Истекло",
+        "cancelled": "Отменено"
+      }
     },
     "tabs": {
       "jobs": "Вакансии",
       "shifts": "Смены"
     }
+  },
+  "baristaFeed": {
+    "title": "Поиск бариста",
+    "empty": "Нет бариста по фильтрам",
+    "emptyHint": "Попробуйте изменить фильтры поиска",
+    "loadFailedTitle": "Ошибка",
+    "loadFailedBody": "Не удалось загрузить баристов"
+  },
+  "createJob": {
+    "titleCreate": "Создание вакансии",
+    "titleEdit": "Редактирование вакансии",
+    "sections": {
+      "jobType": "Тип занятости",
+      "shiftDetails": "Детали смены",
+      "compensation": "Оплата",
+      "paymentSummary": "Сводка по оплате"
+    },
+    "fields": {
+      "branch": "Точка",
+      "title": "Название",
+      "titlePlaceholder": "Напр., Опытный бариста",
+      "description": "Описание",
+      "descriptionPlaceholder": "Описание вакансии…",
+      "requirements": "Требования",
+      "requirementPlaceholder": "Требование {{index}}",
+      "removeRequirement": "Удалить",
+      "addRequirement": "+ Добавить требование",
+      "equipment": "Опыт работы с оборудованием",
+      "startDate": "Дата начала",
+      "endDate": "Дата окончания (опционально)",
+      "selectDate": "Выберите дату",
+      "startTime": "Время начала",
+      "endTime": "Время окончания",
+      "isRecurring": "Повторяющаяся смена",
+      "recurringDays": "Дни повторения",
+      "compensationType": "Тип оплаты",
+      "amountRub": "Сумма (₽)",
+      "amountPlaceholder": "0",
+      "tags": "Теги"
+    },
+    "compensationOption": {
+      "hourly": "Почасовая",
+      "daily": "Дневная",
+      "fixed": "Фиксированная"
+    },
+    "jobType": {
+      "temporary": "Временная",
+      "permanent": "Постоянная"
+    },
+    "paymentSummary": {
+      "totalHours": "Всего часов: {{hours}}",
+      "totalAmount": "Сумма: ₽{{amount}}",
+      "platformFee": "Комиссия платформы (15%): ₽{{amount}}",
+      "totalWithFee": "Итого с комиссией: ₽{{amount}}"
+    },
+    "weekdays": {
+      "mon": "Пн",
+      "tue": "Вт",
+      "wed": "Ср",
+      "thu": "Чт",
+      "fri": "Пт",
+      "sat": "Сб",
+      "sun": "Вс"
+    },
+    "tags": {
+      "urgent": "Срочно",
+      "flexible": "Гибкий график",
+      "training-provided": "Обучение"
+    },
+    "actionCreate": "Создать вакансию",
+    "actionSave": "Сохранить изменения",
+    "done": "Готово",
+    "branchesEmptyTitle": "Нет точек",
+    "branchesEmptySubtitle": "Сначала добавьте точку, чтобы публиковать вакансии",
+    "errors": {
+      "branchRequired": "Выберите точку",
+      "titleRequired": "Укажите название",
+      "compensationRequired": "Укажите корректную сумму оплаты",
+      "recurringDaysRequired": "Выберите хотя бы один день для повторяющейся смены",
+      "endTimeDiffersFromStart": "Время окончания должно отличаться от времени начала",
+      "userNotAuthenticated": "Пользователь не авторизован",
+      "businessNotFound": "Бизнес не найден",
+      "branchNotFound": "Точка не найдена",
+      "loadJobFailed": "Не удалось загрузить вакансию",
+      "loadBranchesFailed": "Не удалось загрузить точки",
+      "createFailed": "Не удалось создать вакансию",
+      "updateFailed": "Не удалось обновить вакансию",
+      "jobNotFound": "Вакансия не найдена",
+      "onlyOpenEditable": "Редактировать можно только открытые вакансии",
+      "validationTitle": "Проверьте данные",
+      "validationBody": "Заполните все обязательные поля"
+    },
+    "createdSuccess": "Вакансия успешно создана",
+    "updatedSuccess": "Вакансия успешно обновлена"
+  },
+  "businessJobDetails": {
+    "applicationsLabel": "Отклики",
+    "noApplicantsYet": "Пока нет кандидатов",
+    "applicantsCount": "{{count}} кандидатов",
+    "applicantsCount_one": "{{count}} кандидат",
+    "applicantsCount_few": "{{count}} кандидата",
+    "applicantsCount_many": "{{count}} кандидатов",
+    "applicantsCount_other": "{{count}} кандидатов",
+    "location": "Расположение",
+    "metroLabel": "Метро:",
+    "shiftDetails": "Детали смены",
+    "date": "Дата:",
+    "time": "Время:",
+    "recurring": "Повторяется:",
+    "compensation": "Оплата",
+    "perHour": "за час",
+    "perDay": "за день",
+    "fixed": "фиксированная оплата",
+    "platformFee": "Комиссия платформы (15%):",
+    "totalCost": "Итого:",
+    "description": "Описание",
+    "requirements": "Требования",
+    "requiredEquipment": "Требуемый опыт работы с оборудованием",
+    "jobType": "Тип занятости:",
+    "jobTypeTemporary": "Временная",
+    "jobTypePermanent": "Постоянная",
+    "status": "Статус:",
+    "posted": "Опубликовано:",
+    "viewApplicants": "Открыть кандидатов ({{count}})",
+    "errorLoadFailed": "Не удалось загрузить вакансию",
+    "errorNotFound": "Вакансия не найдена"
+  },
+  "viewBarista": {
+    "about": "О себе",
+    "equipmentExperience": "Опыт работы с оборудованием",
+    "certifications": "Сертификаты",
+    "languages": "Языки",
+    "preferredMetro": "Предпочитаемые станции метро",
+    "preferredShiftTimes": "Предпочитаемые смены",
+    "hourlyRate": "Желаемая ставка в час",
+    "portfolio": "Портфолио",
+    "yearsExperience": "{{count}} лет опыта",
+    "yearsExperience_one": "{{count}} год опыта",
+    "yearsExperience_few": "{{count}} года опыта",
+    "yearsExperience_many": "{{count}} лет опыта",
+    "yearsExperience_other": "{{count}} лет опыта",
+    "allReviews": "Все отзывы",
+    "message": "Написать",
+    "viewAvatarA11y": "Открыть аватар на весь экран",
+    "viewPortfolioPhotoA11y": "Открыть фото портфолио {{index}}",
+    "rateLimitTitle": "Ограничение",
+    "rateLimitBody": "Слишком много новых диалогов за последний час.",
+    "openChatFailureTitle": "Ошибка",
+    "openChatFailureBody": "Не удалось открыть диалог. Попробуйте ещё раз.",
+    "errorTitle": "Ошибка",
+    "errorNotFound": "Профиль бариста не найден",
+    "errorLoad": "Не удалось загрузить профиль бариста"
   },
   "businessGate": {
     "title": "Сначала создайте профиль бизнеса",
@@ -677,6 +860,7 @@
     "createCta": "Создать профиль"
   },
   "businessProfile": {
+    "title": "Профиль бизнеса",
     "noBusinessTitle": "Профиль бизнеса ещё не создан",
     "noBusinessSubtitle": "Создайте профиль бизнеса, чтобы публиковать вакансии и управлять точками.",
     "createCta": "Создать профиль",

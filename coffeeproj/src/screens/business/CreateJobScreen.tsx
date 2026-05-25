@@ -44,7 +44,7 @@ const EQUIPMENT_OPTIONS: readonly Equipment[] = EQUIPMENT_TYPES;
 
 const TAG_OPTIONS = ['urgent', 'flexible', 'training-provided'];
 
-const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+const WEEKDAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 
 export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
   const { t } = useTranslation();
@@ -92,8 +92,10 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
   }, []);
 
   useEffect(() => {
-    navigation.setOptions({ title: isEditMode ? 'Edit Job' : 'Create Job' });
-  }, [navigation, isEditMode]);
+    navigation.setOptions({
+      title: isEditMode ? t('createJob.titleEdit') : t('createJob.titleCreate'),
+    });
+  }, [navigation, isEditMode, t]);
 
   useEffect(() => {
     if (!editJobId) return;
@@ -103,13 +105,13 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
         const job = await JobService.getJobById(editJobId);
         if (cancelled || !job) {
           if (!cancelled && !job) {
-            Alert.alert('Error', 'Job not found');
+            Alert.alert(t('common.error'), t('createJob.errors.jobNotFound'));
             navigation.goBack();
           }
           return;
         }
         if (job.status !== 'open') {
-          Alert.alert('Error', 'Only open jobs can be edited');
+          Alert.alert(t('common.error'), t('createJob.errors.onlyOpenEditable'));
           navigation.goBack();
           return;
         }
@@ -137,7 +139,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
       } catch (err) {
         console.error('Error loading job for edit:', err);
         if (!cancelled) {
-          Alert.alert('Error', 'Failed to load job');
+          Alert.alert(t('common.error'), t('createJob.errors.loadJobFailed'));
           navigation.goBack();
         }
       } finally {
@@ -148,7 +150,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     return () => {
       cancelled = true;
     };
-  }, [editJobId, navigation]);
+  }, [editJobId, navigation, t]);
 
   const loadBranches = async () => {
     if (!user?.id) return;
@@ -165,7 +167,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
       }
     } catch (error) {
       console.error('Error loading branches:', error);
-      Alert.alert('Error', 'Failed to load branches');
+      Alert.alert(t('common.error'), t('createJob.errors.loadBranchesFailed'));
     } finally {
       setIsLoadingBranches(false);
     }
@@ -247,21 +249,21 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     const newErrors: { [key: string]: string } = {};
 
     if (!selectedBranchId) {
-      newErrors.branch = 'Branch is required';
+      newErrors.branch = t('createJob.errors.branchRequired');
     }
     if (!title.trim()) {
-      newErrors.title = 'Title is required';
+      newErrors.title = t('createJob.errors.titleRequired');
     }
     if (!compensationAmount || parseFloat(compensationAmount) <= 0) {
-      newErrors.compensation = 'Valid compensation amount is required';
+      newErrors.compensation = t('createJob.errors.compensationRequired');
     }
     if (isRecurring && selectedDays.length === 0) {
-      newErrors.recurringDays = 'Select at least one day for recurring shifts';
+      newErrors.recurringDays = t('createJob.errors.recurringDaysRequired');
     }
     const startMinutes = startTime.getHours() * 60 + startTime.getMinutes();
     const endMinutes = endTime.getHours() * 60 + endTime.getMinutes();
     if (startMinutes === endMinutes) {
-      newErrors.endTime = 'End time must differ from start time';
+      newErrors.endTime = t('createJob.errors.endTimeDiffersFromStart');
     }
 
     setErrors(newErrors);
@@ -271,12 +273,12 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
   const handleSave = async () => {
     if (isSubmittingRef.current) return;
     if (!validate()) {
-      Alert.alert('Validation Error', 'Please fill in all required fields');
+      Alert.alert(t('createJob.errors.validationTitle'), t('createJob.errors.validationBody'));
       return;
     }
 
     if (!user?.id) {
-      Alert.alert('Error', 'User not authenticated');
+      Alert.alert(t('common.error'), t('createJob.errors.userNotAuthenticated'));
       return;
     }
 
@@ -286,12 +288,12 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     try {
       const business = await BusinessService.getBusinessByOwnerId(user.id);
       if (!business) {
-        throw new Error('Business not found');
+        throw new Error(t('createJob.errors.businessNotFound'));
       }
 
       const selectedBranch = branches.find(b => b.id === selectedBranchId);
       if (!selectedBranch) {
-        throw new Error('Branch not found');
+        throw new Error(t('createJob.errors.branchNotFound'));
       }
 
       const recurringDays = isRecurring ? selectedDays.map(index => DAY_NAMES[index]) : undefined;
@@ -339,18 +341,21 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
       if (editJobId) {
         const { businessId: _b, businessOwnerId: _o, ...updatePayload } = jobData;
         await JobService.updateJob(editJobId, updatePayload, user.id);
-        Alert.alert('Success', 'Job updated successfully', [
-          { text: 'OK', onPress: () => navigation.goBack() },
+        Alert.alert(t('common.success'), t('createJob.updatedSuccess'), [
+          { text: t('common.ok'), onPress: () => navigation.goBack() },
         ]);
       } else {
         await JobService.createJob(jobData);
-        Alert.alert('Success', 'Job created successfully', [
-          { text: 'OK', onPress: () => navigation.goBack() },
+        Alert.alert(t('common.success'), t('createJob.createdSuccess'), [
+          { text: t('common.ok'), onPress: () => navigation.goBack() },
         ]);
       }
     } catch (error) {
       console.error(editJobId ? 'Error updating job:' : 'Error creating job:', error);
-      Alert.alert('Error', editJobId ? 'Failed to update job' : 'Failed to create job');
+      Alert.alert(
+        t('common.error'),
+        editJobId ? t('createJob.errors.updateFailed') : t('createJob.errors.createFailed')
+      );
     } finally {
       setIsSaving(false);
       isSubmittingRef.current = false;
@@ -371,8 +376,8 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No branches found</Text>
-          <Text style={styles.emptySubtext}>Please add a branch before creating a job</Text>
+          <Text style={styles.emptyText}>{t('createJob.branchesEmptyTitle')}</Text>
+          <Text style={styles.emptySubtext}>{t('createJob.branchesEmptySubtitle')}</Text>
           <TouchableOpacity
             style={[styles.emptyCta, !businessId && styles.saveButtonDisabled]}
             onPress={() => {
@@ -396,7 +401,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.content}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Job Type</Text>
+          <Text style={styles.sectionTitle}>{t('createJob.sections.jobType')}</Text>
           <View style={styles.segmentedControl}>
             <TouchableOpacity
               style={[styles.segmentButton, jobType === 'temporary' && styles.segmentButtonActive]}
@@ -406,7 +411,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                   styles.segmentButtonText,
                   jobType === 'temporary' && styles.segmentButtonTextActive,
                 ]}>
-                Temporary
+                {t('createJob.jobType.temporary')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -417,7 +422,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                   styles.segmentButtonText,
                   jobType === 'permanent' && styles.segmentButtonTextActive,
                 ]}>
-                Permanent
+                {t('createJob.jobType.permanent')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -425,7 +430,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
 
         <View style={styles.section}>
           <Text style={styles.label}>
-            Branch <Text style={styles.required}>*</Text>
+            {t('createJob.fields.branch')} <Text style={styles.required}>*</Text>
           </Text>
           <View style={styles.branchList}>
             {branches.map(branch => (
@@ -451,11 +456,11 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
 
         <View style={styles.section}>
           <Text style={styles.label}>
-            Title <Text style={styles.required}>*</Text>
+            {t('createJob.fields.title')} <Text style={styles.required}>*</Text>
           </Text>
           <TextInput
             style={[styles.input, errors.title ? styles.inputError : null]}
-            placeholder="e.g. Experienced Barista"
+            placeholder={t('createJob.fields.titlePlaceholder')}
             value={title}
             onChangeText={text => {
               setTitle(text);
@@ -468,10 +473,10 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Description</Text>
+          <Text style={styles.label}>{t('createJob.fields.description')}</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
-            placeholder="Job description..."
+            placeholder={t('createJob.fields.descriptionPlaceholder')}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -480,12 +485,12 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Requirements</Text>
+          <Text style={styles.label}>{t('createJob.fields.requirements')}</Text>
           {requirements.map((requirement, index) => (
             <View key={index} style={styles.requirementRow}>
               <TextInput
                 style={[styles.input, styles.requirementInput]}
-                placeholder={`Requirement ${index + 1}`}
+                placeholder={t('createJob.fields.requirementPlaceholder', { index: index + 1 })}
                 value={requirement}
                 onChangeText={text => updateRequirement(index, text)}
                 returnKeyType="done"
@@ -494,18 +499,20 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                 <TouchableOpacity
                   style={styles.removeButton}
                   onPress={() => removeRequirement(index)}>
-                  <Text style={styles.removeButtonText}>Remove</Text>
+                  <Text style={styles.removeButtonText}>
+                    {t('createJob.fields.removeRequirement')}
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
           ))}
           <TouchableOpacity style={styles.addButton} onPress={addRequirement}>
-            <Text style={styles.addButtonText}>+ Add Requirement</Text>
+            <Text style={styles.addButtonText}>{t('createJob.fields.addRequirement')}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Equipment Experience</Text>
+          <Text style={styles.label}>{t('createJob.fields.equipment')}</Text>
           <View style={styles.equipmentGrid}>
             {EQUIPMENT_OPTIONS.map(equipment => (
               <TouchableOpacity
@@ -528,10 +535,10 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Shift Details</Text>
+          <Text style={styles.sectionTitle}>{t('createJob.sections.shiftDetails')}</Text>
 
           <Text style={styles.label}>
-            Start Date <Text style={styles.required}>*</Text>
+            {t('createJob.fields.startDate')} <Text style={styles.required}>*</Text>
           </Text>
           <TouchableOpacity style={styles.dateButton} onPress={() => setShowStartDatePicker(true)}>
             <Text style={styles.dateButtonText}>{formatDate(startDate)}</Text>
@@ -555,16 +562,16 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
               <TouchableOpacity
                 style={styles.pickerDoneButton}
                 onPress={() => setShowStartDatePicker(false)}>
-                <Text style={styles.pickerDoneText}>Done</Text>
+                <Text style={styles.pickerDoneText}>{t('createJob.done')}</Text>
               </TouchableOpacity>
             </>
           )}
           {errors.startDate && <Text style={styles.errorText}>{errors.startDate}</Text>}
 
-          <Text style={styles.label}>End Date (Optional)</Text>
+          <Text style={styles.label}>{t('createJob.fields.endDate')}</Text>
           <TouchableOpacity style={styles.dateButton} onPress={() => setShowEndDatePicker(true)}>
             <Text style={styles.dateButtonText}>
-              {endDate ? formatDate(endDate) : 'Select date'}
+              {endDate ? formatDate(endDate) : t('createJob.fields.selectDate')}
             </Text>
           </TouchableOpacity>
           {showEndDatePicker && (
@@ -584,7 +591,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
               <TouchableOpacity
                 style={styles.pickerDoneButton}
                 onPress={() => setShowEndDatePicker(false)}>
-                <Text style={styles.pickerDoneText}>Done</Text>
+                <Text style={styles.pickerDoneText}>{t('createJob.done')}</Text>
               </TouchableOpacity>
             </>
           )}
@@ -592,7 +599,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           <View style={styles.timeRow}>
             <View style={styles.timeInput}>
               <Text style={styles.label}>
-                Start Time <Text style={styles.required}>*</Text>
+                {t('createJob.fields.startTime')} <Text style={styles.required}>*</Text>
               </Text>
               <TouchableOpacity
                 style={styles.dateButton}
@@ -619,7 +626,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                   <TouchableOpacity
                     style={styles.pickerDoneButton}
                     onPress={() => setShowStartTimePicker(false)}>
-                    <Text style={styles.pickerDoneText}>Done</Text>
+                    <Text style={styles.pickerDoneText}>{t('createJob.done')}</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -628,7 +635,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
 
             <View style={styles.timeInput}>
               <Text style={styles.label}>
-                End Time <Text style={styles.required}>*</Text>
+                {t('createJob.fields.endTime')} <Text style={styles.required}>*</Text>
               </Text>
               <TouchableOpacity
                 style={styles.dateButton}
@@ -655,7 +662,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                   <TouchableOpacity
                     style={styles.pickerDoneButton}
                     onPress={() => setShowEndTimePicker(false)}>
-                    <Text style={styles.pickerDoneText}>Done</Text>
+                    <Text style={styles.pickerDoneText}>{t('createJob.done')}</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -664,7 +671,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
 
           <View style={styles.switchRow}>
-            <Text style={styles.label}>Is Recurring</Text>
+            <Text style={styles.label}>{t('createJob.fields.isRecurring')}</Text>
             <Switch
               value={isRecurring}
               onValueChange={setIsRecurring}
@@ -675,10 +682,10 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           {isRecurring && (
             <View>
               <Text style={styles.label}>
-                Recurring Days <Text style={styles.required}>*</Text>
+                {t('createJob.fields.recurringDays')} <Text style={styles.required}>*</Text>
               </Text>
               <View style={styles.daysGrid}>
-                {WEEKDAYS.map((day, index) => (
+                {WEEKDAY_KEYS.map((dayKey, index) => (
                   <TouchableOpacity
                     key={index}
                     style={[styles.dayChip, selectedDays.includes(index) && styles.dayChipSelected]}
@@ -688,7 +695,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                         styles.dayChipText,
                         selectedDays.includes(index) && styles.dayChipTextSelected,
                       ]}>
-                      {day}
+                      {t(`createJob.weekdays.${dayKey}`)}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -699,10 +706,10 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Compensation</Text>
+          <Text style={styles.sectionTitle}>{t('createJob.sections.compensation')}</Text>
 
           <Text style={styles.label}>
-            Type <Text style={styles.required}>*</Text>
+            {t('createJob.fields.compensationType')} <Text style={styles.required}>*</Text>
           </Text>
           <View style={styles.compensationTypes}>
             {(['hourly', 'daily', 'fixed'] as CompensationType[]).map(type => (
@@ -718,14 +725,14 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                     styles.compensationChipText,
                     compensationType === type && styles.compensationChipTextSelected,
                   ]}>
-                  {type === 'hourly' ? 'Hourly' : type === 'daily' ? 'Daily' : 'Fixed'}
+                  {t(`createJob.compensationOption.${type}`)}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
           <Text style={styles.label}>
-            Amount (RUB) <Text style={styles.required}>*</Text>
+            {t('createJob.fields.amountRub')} <Text style={styles.required}>*</Text>
           </Text>
           <TextInput
             style={[styles.input, errors.compensation ? styles.inputError : null]}
@@ -742,22 +749,32 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           {errors.compensation && <Text style={styles.errorText}>{errors.compensation}</Text>}
 
           <View style={styles.paymentSummary}>
-            <Text style={styles.sectionTitle}>Payment Summary</Text>
+            <Text style={styles.sectionTitle}>{t('createJob.sections.paymentSummary')}</Text>
             {compensationType === 'hourly' && (
-              <Text style={styles.paymentLine}>Total Hours: {payment.totalHours.toFixed(2)}</Text>
+              <Text style={styles.paymentLine}>
+                {t('createJob.paymentSummary.totalHours', { hours: payment.totalHours.toFixed(2) })}
+              </Text>
             )}
-            <Text style={styles.paymentLine}>Total Amount: ₽{payment.totalAmount.toFixed(2)}</Text>
             <Text style={styles.paymentLine}>
-              Platform Fee (15%): ₽{payment.platformFee.toFixed(2)}
+              {t('createJob.paymentSummary.totalAmount', {
+                amount: payment.totalAmount.toFixed(2),
+              })}
+            </Text>
+            <Text style={styles.paymentLine}>
+              {t('createJob.paymentSummary.platformFee', {
+                amount: payment.platformFee.toFixed(2),
+              })}
             </Text>
             <Text style={styles.paymentLineTotal}>
-              Total With Fee: ₽{payment.totalWithFee.toFixed(2)}
+              {t('createJob.paymentSummary.totalWithFee', {
+                amount: payment.totalWithFee.toFixed(2),
+              })}
             </Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Tags</Text>
+          <Text style={styles.label}>{t('createJob.fields.tags')}</Text>
           <View style={styles.tagsGrid}>
             {TAG_OPTIONS.map(tag => (
               <TouchableOpacity
@@ -769,7 +786,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                     styles.tagChipText,
                     selectedTags.includes(tag) && styles.tagChipTextSelected,
                   ]}>
-                  {tag}
+                  {t(`createJob.tags.${tag}`, { defaultValue: tag })}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -783,7 +800,9 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           {isSaving ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.saveButtonText}>Create Job</Text>
+            <Text style={styles.saveButtonText}>
+              {isEditMode ? t('createJob.actionSave') : t('createJob.actionCreate')}
+            </Text>
           )}
         </TouchableOpacity>
       </ScrollView>

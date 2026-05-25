@@ -140,7 +140,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     navigation.setOptions({
       header: () => (
         <ScreenHeaderWithActions
-          title="My Business"
+          title={t('business.home.title')}
           actions={[
             {
               icon: 'bell-outline',
@@ -152,7 +152,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
         />
       ),
     });
-  }, [navigation, unreadCount]);
+  }, [navigation, unreadCount, t]);
 
   const loadJobs = useCallback(async () => {
     if (!user?.id || !businessId) return;
@@ -315,11 +315,11 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
   }, [shiftEntries, selectedLifecycle, shiftFilters]);
 
   const ALL_STATUS_TABS: Array<{ label: string; value: JobStatus }> = [
-    { label: 'Open', value: 'open' },
-    { label: 'In Review', value: 'in_review' },
-    { label: 'Filled', value: 'filled' },
-    { label: 'Expired', value: 'expired' },
-    { label: 'Cancelled', value: 'cancelled' },
+    { label: t('business.jobs.status.open'), value: 'open' },
+    { label: t('business.jobs.status.in_review'), value: 'in_review' },
+    { label: t('business.jobs.status.filled'), value: 'filled' },
+    { label: t('business.jobs.status.expired'), value: 'expired' },
+    { label: t('business.jobs.status.cancelled'), value: 'cancelled' },
   ];
   const visibleStatusTabs = showArchived
     ? ALL_STATUS_TABS
@@ -400,7 +400,11 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>No {selectedStatus} jobs yet</Text>
+              <Text style={styles.emptyStateText}>
+                {t('business.home.emptyJobs', {
+                  status: t(`business.jobs.status.${selectedStatus}`).toLowerCase(),
+                })}
+              </Text>
             </View>
           }
         />

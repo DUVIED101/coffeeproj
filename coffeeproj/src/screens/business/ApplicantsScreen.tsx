@@ -28,6 +28,7 @@ import type { ShiftDetails } from '../../types/job';
 import type { ApplicationId, UserId } from '../../types/ids';
 import type { ApplicationReview } from '../../types/review';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
+import type { TFunction } from 'i18next';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'Applicants'>;
@@ -50,18 +51,18 @@ const getStatusColor = (status: ApplicationStatus): string => {
   }
 };
 
-const getStatusText = (status: ApplicationStatus): string => {
+const getStatusText = (status: ApplicationStatus, t: TFunction): string => {
   switch (status) {
     case 'pending':
-      return 'Pending';
+      return t('applications.status.pending');
     case 'under_review':
-      return 'Under Review';
+      return t('applications.status.underReview');
     case 'accepted':
-      return 'Accepted';
+      return t('applications.status.accepted');
     case 'rejected':
-      return 'Rejected';
+      return t('applications.status.rejected');
     case 'withdrawn':
-      return 'Withdrawn';
+      return t('applications.status.withdrawn');
     default:
       return status;
   }
@@ -85,6 +86,7 @@ interface ApplicantItemProps {
   cancelLabel: string;
   shiftEndReached: boolean;
   shiftWaitingLabel: string;
+  t: TFunction;
 }
 
 const ApplicantItem = React.memo<ApplicantItemProps>(
@@ -106,6 +108,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     cancelLabel,
     shiftEndReached,
     shiftWaitingLabel,
+    t,
   }) => {
     const handleAccept = useCallback(() => onAccept(applicationId), [onAccept, applicationId]);
     const handleReject = useCallback(() => onReject(applicationId), [onReject, applicationId]);
@@ -130,7 +133,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
       [onOpenReview, application]
     );
     const baristaProfile = application.baristaProfile;
-    const baristaEmail = application.baristaEmail || 'No email';
+    const baristaEmail = application.baristaEmail || t('applicants.noEmail');
 
     // Get display name - prefer firstName+lastName if both exist and are non-empty
     let displayName = baristaEmail;
@@ -143,7 +146,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     }
 
     const statusColor = getStatusColor(application.status);
-    const statusText = getStatusText(application.status);
+    const statusText = getStatusText(application.status, t);
     const isActionable = application.status === 'pending' || application.status === 'under_review';
     const showConfirmCompletionSection =
       application.status === 'accepted' && !application.completedByBusiness;
@@ -168,7 +171,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
               <Text style={styles.baristaName}>{displayName}</Text>
               {baristaProfile && baristaProfile.yearsOfExperience !== undefined && (
                 <Text style={styles.experienceText}>
-                  {baristaProfile.yearsOfExperience} years experience
+                  {t('applicants.experienceYears', { count: baristaProfile.yearsOfExperience })}
                 </Text>
               )}
             </View>
@@ -180,21 +183,23 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
 
         {application.coverLetter && (
           <View style={styles.coverLetterContainer}>
-            <Text style={styles.coverLetterLabel}>Cover Letter:</Text>
+            <Text style={styles.coverLetterLabel}>{t('applicants.coverLetterLabel')}</Text>
             <Text style={styles.coverLetterText}>{application.coverLetter}</Text>
           </View>
         )}
 
         <Text style={styles.appliedDate}>
-          Applied: {new Date(application.createdAt).toLocaleDateString('ru-RU')}
+          {t('applicants.appliedOn', {
+            date: new Date(application.createdAt).toLocaleDateString('ru-RU'),
+          })}
         </Text>
 
         <TouchableOpacity style={styles.viewProfileButton} onPress={handleViewProfile}>
-          <Text style={styles.viewProfileButtonText}>View Profile</Text>
+          <Text style={styles.viewProfileButtonText}>{t('applicants.viewProfile')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.chatButton} onPress={handleChatPress}>
-          <Text style={styles.chatButtonText}>Chat</Text>
+          <Text style={styles.chatButtonText}>{t('applicants.chat')}</Text>
           {unreadCount > 0 && (
             <View style={styles.unreadBadge}>
               <Text style={styles.unreadBadgeText}>{unreadCount}</Text>
@@ -214,7 +219,9 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
               {isProcessing ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.confirmCompletionButtonText}>Confirm Completion</Text>
+                <Text style={styles.confirmCompletionButtonText}>
+                  {t('applicants.confirmCompletion')}
+                </Text>
               )}
             </TouchableOpacity>
             {isWaitingForShiftEnd && (
@@ -254,7 +261,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
               {isProcessing ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.actionButtonText}>Accept</Text>
+                <Text style={styles.actionButtonText}>{t('applicants.accept')}</Text>
               )}
             </TouchableOpacity>
             <TouchableOpacity
@@ -264,7 +271,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
               {isProcessing ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.actionButtonText}>Reject</Text>
+                <Text style={styles.actionButtonText}>{t('applicants.reject')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -373,11 +380,11 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
       }
     } catch (error) {
       console.error('Error loading applicants:', error);
-      Alert.alert('Error', 'Failed to load applicants');
+      Alert.alert(t('common.error'), t('applicants.loadFailed'));
     } finally {
       setIsLoading(false);
     }
-  }, [jobId]);
+  }, [jobId, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -401,15 +408,15 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         markProcessing(applicationId, true);
         await ApplicationService.updateApplicationStatus(applicationId, 'accepted', user.id);
         await loadApplicants();
-        Alert.alert('Success', 'Application accepted');
+        Alert.alert(t('common.success'), t('applicants.acceptSuccess'));
       } catch (error) {
         console.error('Error accepting application:', error);
-        Alert.alert('Error', 'Failed to accept application');
+        Alert.alert(t('common.error'), t('applicants.acceptFailure'));
       } finally {
         markProcessing(applicationId, false);
       }
     },
-    [user, markProcessing, loadApplicants]
+    [user, markProcessing, loadApplicants, t]
   );
 
   const handleReject = useCallback(
@@ -419,15 +426,15 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         markProcessing(applicationId, true);
         await ApplicationService.updateApplicationStatus(applicationId, 'rejected', user.id);
         await loadApplicants();
-        Alert.alert('Success', 'Application rejected');
+        Alert.alert(t('common.success'), t('applicants.rejectSuccess'));
       } catch (error) {
         console.error('Error rejecting application:', error);
-        Alert.alert('Error', 'Failed to reject application');
+        Alert.alert(t('common.error'), t('applicants.rejectFailure'));
       } finally {
         markProcessing(applicationId, false);
       }
     },
-    [user, markProcessing, loadApplicants]
+    [user, markProcessing, loadApplicants, t]
   );
 
   const handleCancelShift = useCallback(
@@ -509,15 +516,15 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
             });
           }
         }
-        Alert.alert('Success', 'Work completion confirmed');
+        Alert.alert(t('common.success'), t('applicants.confirmCompletionSuccess'));
       } catch (error) {
         console.error('Error confirming completion:', error);
-        Alert.alert('Error', 'Failed to confirm completion');
+        Alert.alert(t('common.error'), t('applicants.confirmCompletionFailure'));
       } finally {
         markProcessing(applicationId, false);
       }
     },
-    [user, markProcessing, loadApplicants, jobId]
+    [user, markProcessing, loadApplicants, jobId, t]
   );
 
   const handleOpenReview = useCallback((application: Application) => {
@@ -561,6 +568,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         cancelLabel={cancelLabel}
         shiftEndReached={shiftEndReached}
         shiftWaitingLabel={shiftWaitingLabel}
+        t={t}
       />
     ),
     [
@@ -578,15 +586,14 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
       cancelLabel,
       shiftEndReached,
       shiftWaitingLabel,
+      t,
     ]
   );
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>No applicants yet</Text>
-      <Text style={styles.emptySubtext}>
-        Applications will appear here when baristas apply to this job
-      </Text>
+      <Text style={styles.emptyText}>{t('applicants.empty')}</Text>
+      <Text style={styles.emptySubtext}>{t('applicants.emptySubtitle')}</Text>
     </View>
   );
 
@@ -603,8 +610,10 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Applicants</Text>
-        <Text style={styles.subtitle}>{applications.length} total</Text>
+        <Text style={styles.title}>{t('applicants.title')}</Text>
+        <Text style={styles.subtitle}>
+          {t('applicants.totalCount', { count: applications.length })}
+        </Text>
       </View>
 
       <FlatList

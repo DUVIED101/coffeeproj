@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { BaristaSearchService } from '../../services/BaristaSearchService';
@@ -37,6 +38,7 @@ const BaristaCardItem = React.memo<{
 ));
 
 export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
+  const { t } = useTranslation();
   const userId = useAuthStore(s => s.user?.id);
   const unreadCount = useNotificationFeedStore(s => s.unreadCount);
   const [baristas, setBaristas] = useState<BaristaProfile[]>([]);
@@ -87,7 +89,7 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error loading baristas:', error);
-      Alert.alert('Ошибка', 'Не удалось загрузить баристов');
+      Alert.alert(t('baristaFeed.loadFailedTitle'), t('baristaFeed.loadFailedBody'));
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -123,8 +125,8 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>Нет баристов по фильтрам</Text>
-      <Text style={styles.emptySubtext}>Попробуйте изменить фильтры поиска</Text>
+      <Text style={styles.emptyText}>{t('baristaFeed.empty')}</Text>
+      <Text style={styles.emptySubtext}>{t('baristaFeed.emptyHint')}</Text>
     </View>
   );
 
@@ -141,7 +143,7 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
       <ScreenHeaderWithActions
-        title="Поиск баристы"
+        title={t('baristaFeed.title')}
         actions={[
           {
             icon: 'bell-outline',

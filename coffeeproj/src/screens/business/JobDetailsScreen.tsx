@@ -45,11 +45,11 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       setJob(data);
     } catch (err) {
       console.error('Error loading job:', err);
-      setError('Failed to load job details');
+      setError(t('businessJobDetails.errorLoadFailed'));
     } finally {
       setIsLoading(false);
     }
-  }, [jobId]);
+  }, [jobId, t]);
 
   // Refresh on every focus so returning from EditJob picks up the saved changes.
   useFocusEffect(
@@ -144,9 +144,9 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error || 'Job not found'}</Text>
+          <Text style={styles.errorText}>{error || t('businessJobDetails.errorNotFound')}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadJob}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+            <Text style={styles.retryButtonText}>{t('common.retry')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -175,11 +175,11 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Application Stats */}
         <View style={styles.statsSection}>
-          <Text style={styles.statLabel}>Applications</Text>
+          <Text style={styles.statLabel}>{t('businessJobDetails.applicationsLabel')}</Text>
           <Text style={styles.statValue}>
             {job.applicationCount === 0
-              ? 'No applicants yet'
-              : `${job.applicationCount} applicant${job.applicationCount !== 1 ? 's' : ''}`}
+              ? t('businessJobDetails.noApplicantsYet')
+              : t('businessJobDetails.applicantsCount', { count: job.applicationCount })}
           </Text>
         </View>
 
@@ -197,11 +197,11 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Location */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Location</Text>
+          <Text style={styles.sectionTitle}>{t('businessJobDetails.location')}</Text>
           <Text style={styles.address}>{job.location.address}</Text>
           {job.metroStation && (
             <View style={styles.metroContainer}>
-              <Text style={styles.metroLabel}>Metro:</Text>
+              <Text style={styles.metroLabel}>{t('businessJobDetails.metroLabel')}</Text>
               <Text style={styles.metroStation}>{job.metroStation}</Text>
             </View>
           )}
@@ -209,23 +209,23 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Shift Details */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Shift Details</Text>
+          <Text style={styles.sectionTitle}>{t('businessJobDetails.shiftDetails')}</Text>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Date:</Text>
+            <Text style={styles.detailLabel}>{t('businessJobDetails.date')}</Text>
             <Text style={styles.detailValue}>
               {formatDate(job.shiftDetails.startDate)}
               {job.shiftDetails.endDate && ` - ${formatDate(job.shiftDetails.endDate)}`}
             </Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Time:</Text>
+            <Text style={styles.detailLabel}>{t('businessJobDetails.time')}</Text>
             <Text style={styles.detailValue}>
               {job.shiftDetails.startTime} - {job.shiftDetails.endTime}
             </Text>
           </View>
           {job.shiftDetails.isRecurring && job.shiftDetails.recurringDays && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Recurring:</Text>
+              <Text style={styles.detailLabel}>{t('businessJobDetails.recurring')}</Text>
               <Text style={styles.detailValue}>
                 {formatRecurringDays(job.shiftDetails.recurringDays)}
               </Text>
@@ -235,27 +235,27 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Compensation */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Compensation</Text>
+          <Text style={styles.sectionTitle}>{t('businessJobDetails.compensation')}</Text>
           <Text style={styles.compensationAmount}>
             {job.compensation.amount.toLocaleString('ru-RU')} ₽
           </Text>
           <Text style={styles.compensationType}>
             {job.compensation.type === 'hourly'
-              ? 'per hour'
+              ? t('businessJobDetails.perHour')
               : job.compensation.type === 'daily'
-                ? 'per day'
-                : 'fixed rate'}
+                ? t('businessJobDetails.perDay')
+                : t('businessJobDetails.fixed')}
           </Text>
           {job.payment && (
             <View style={styles.paymentDetails}>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Platform Fee (15%):</Text>
+                <Text style={styles.detailLabel}>{t('businessJobDetails.platformFee')}</Text>
                 <Text style={styles.detailValue}>
                   {job.payment.platformFee.toLocaleString('ru-RU')} ₽
                 </Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Total Cost:</Text>
+                <Text style={styles.detailLabel}>{t('businessJobDetails.totalCost')}</Text>
                 <Text style={[styles.detailValue, styles.totalCost]}>
                   {job.payment.totalWithFee.toLocaleString('ru-RU')} ₽
                 </Text>
@@ -267,7 +267,7 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         {/* Description */}
         {job.description && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Description</Text>
+            <Text style={styles.sectionTitle}>{t('businessJobDetails.description')}</Text>
             <Text style={styles.description}>{job.description}</Text>
           </View>
         )}
@@ -275,7 +275,7 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         {/* Requirements */}
         {job.requirements && job.requirements.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Requirements</Text>
+            <Text style={styles.sectionTitle}>{t('businessJobDetails.requirements')}</Text>
             {job.requirements.map((req, index) => (
               <Text key={index} style={styles.bulletItem}>
                 • {req}
@@ -287,7 +287,7 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         {/* Required Equipment Experience */}
         {job.requiredEquipmentExperience && job.requiredEquipmentExperience.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Required Equipment Experience</Text>
+            <Text style={styles.sectionTitle}>{t('businessJobDetails.requiredEquipment')}</Text>
             {job.requiredEquipmentExperience.map((equipment, index) => (
               <Text key={index} style={styles.bulletItem}>
                 • {equipment}
@@ -299,17 +299,21 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         {/* Job Info */}
         <View style={styles.section}>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Job Type:</Text>
+            <Text style={styles.detailLabel}>{t('businessJobDetails.jobType')}</Text>
             <Text style={styles.detailValue}>
-              {job.jobType === 'temporary' ? 'Temporary' : 'Permanent'}
+              {job.jobType === 'temporary'
+                ? t('businessJobDetails.jobTypeTemporary')
+                : t('businessJobDetails.jobTypePermanent')}
             </Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Status:</Text>
-            <Text style={styles.detailValue}>{job.status}</Text>
+            <Text style={styles.detailLabel}>{t('businessJobDetails.status')}</Text>
+            <Text style={styles.detailValue}>
+              {t(`business.jobs.status.${job.status}`, { defaultValue: job.status })}
+            </Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Posted:</Text>
+            <Text style={styles.detailLabel}>{t('businessJobDetails.posted')}</Text>
             <Text style={styles.detailValue}>{formatDate(job.postedAt)}</Text>
           </View>
         </View>
@@ -320,7 +324,7 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
           {hasApplicants && (
             <TouchableOpacity style={styles.viewApplicantsButton} onPress={handleViewApplicants}>
               <Text style={styles.viewApplicantsButtonText}>
-                View {job.applicationCount} Applicant{job.applicationCount !== 1 ? 's' : ''}
+                {t('businessJobDetails.viewApplicants', { count: job.applicationCount })}
               </Text>
             </TouchableOpacity>
           )}
