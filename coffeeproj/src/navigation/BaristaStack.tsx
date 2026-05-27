@@ -12,6 +12,7 @@ import { BaristaProfileScreen } from '../screens/barista/BaristaProfileScreen';
 import { BaristaProfileSetupScreen } from '../screens/barista/BaristaProfileSetupScreen';
 import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
 import { BusinessJobsScreen } from '../screens/barista/BusinessJobsScreen';
+import { BusinessPublicProfileScreen } from '../screens/barista/BusinessPublicProfileScreen';
 import { useNotificationFeedStore } from '../stores/notificationFeedStore';
 import type { Job } from '../types';
 import type { Application } from '../types/application';
@@ -27,6 +28,7 @@ export type BaristaStackParamList = {
   BaristaProfileSetup: undefined;
   NotificationFeed: undefined;
   BusinessJobs: { businessOwnerId: string; businessName?: string };
+  BusinessPublicProfile: { businessOwnerId: string };
 };
 
 const Stack = createNativeStackNavigator<BaristaStackParamList>();
@@ -45,39 +47,43 @@ export const BaristaStack: React.FC = () => {
         name="JobFeed"
         component={JobFeedScreen}
         options={({ navigation }) => ({
-          header: () => <JobFeedHeader navigation={navigation} t={t} />,
+          header: () => <JobFeedHeader navigation={navigation} />,
         })}
       />
       <Stack.Screen
         name="JobDetails"
         component={JobDetailsScreen}
-        options={{ title: 'Job Details' }}
+        options={{ title: t('nav.jobDetails') }}
       />
-      <Stack.Screen name="Apply" component={ApplyScreen} options={{ title: 'Apply for Job' }} />
+      <Stack.Screen
+        name="Apply"
+        component={ApplyScreen}
+        options={{ title: t('nav.applyForJob') }}
+      />
       <Stack.Screen
         name="Applications"
         component={ApplicationsScreen}
-        options={{ title: 'My Applications' }}
+        options={{ title: t('nav.myApplications') }}
       />
       <Stack.Screen
         name="ApplicationDetails"
         component={ApplicationDetailsScreen}
-        options={{ title: 'Application Details' }}
+        options={{ title: t('nav.applicationDetails') }}
       />
       <Stack.Screen
         name="ShiftHistory"
         component={ShiftHistoryScreen}
-        options={{ title: 'История смен' }}
+        options={{ title: t('nav.shiftHistory') }}
       />
       <Stack.Screen
         name="BaristaProfile"
         component={BaristaProfileScreen}
-        options={{ title: 'My Profile' }}
+        options={{ title: t('nav.baristaProfile') }}
       />
       <Stack.Screen
         name="BaristaProfileSetup"
         component={BaristaProfileSetupScreen}
-        options={{ title: 'Complete Your Profile' }}
+        options={{ title: t('nav.completeProfile') }}
       />
       <Stack.Screen
         name="NotificationFeed"
@@ -87,20 +93,23 @@ export const BaristaStack: React.FC = () => {
       <Stack.Screen
         name="BusinessJobs"
         component={BusinessJobsScreen}
-        options={{ title: 'Jobs' }}
+        options={{ title: t('nav.businessJobs') }}
+      />
+      <Stack.Screen
+        name="BusinessPublicProfile"
+        component={BusinessPublicProfileScreen}
+        options={{ title: t('nav.businessPublicProfile') }}
       />
     </Stack.Navigator>
   );
 };
 
-const JobFeedHeader: React.FC<{ navigation: any; t: (key: string) => string }> = ({
-  navigation,
-  t,
-}) => {
+const JobFeedHeader: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { t } = useTranslation();
   const unreadCount = useNotificationFeedStore(state => state.unreadCount);
   return (
     <ScreenHeaderWithActions
-      title="Find Jobs"
+      title={t('nav.findJobs')}
       actions={[
         {
           icon: 'bell-outline',
@@ -108,7 +117,10 @@ const JobFeedHeader: React.FC<{ navigation: any; t: (key: string) => string }> =
           onPress: () => navigation.navigate('NotificationFeed'),
           testID: 'bell',
         },
-        { label: 'My Applications', onPress: () => navigation.navigate('Applications') },
+        {
+          label: t('nav.myApplications'),
+          onPress: () => navigation.navigate('Applications'),
+        },
       ]}
     />
   );

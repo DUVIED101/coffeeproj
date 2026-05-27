@@ -30,6 +30,14 @@ import type { CityCode } from '../../types/city';
 import { DEFAULT_CITY, CITY_LABELS_RU, toCityCode } from '../../types/city';
 import { PHOTO_LIMIT, MAX_PHOTO_BYTES, isFileTooLarge } from '../../utils/storage';
 import { geocodeAddress } from '../../utils/geocode';
+import {
+  sanitizeDigitsInput,
+  SHORT_TEXT_MAX_LENGTH,
+  DESCRIPTION_MAX_LENGTH,
+  ADDRESS_MAX_LENGTH,
+  URL_MAX_LENGTH,
+  YEAR_MAX_DIGITS,
+} from '../../utils/validation';
 
 type SetupStackParamList = {
   BusinessProfileSetup: undefined;
@@ -462,6 +470,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 placeholderTextColor={COLORS.textSecondary}
                 value={name}
                 onChangeText={setName}
+                maxLength={SHORT_TEXT_MAX_LENGTH}
                 autoCapitalize="words"
               />
 
@@ -472,6 +481,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 placeholderTextColor={COLORS.textSecondary}
                 value={description}
                 onChangeText={setDescription}
+                maxLength={DESCRIPTION_MAX_LENGTH}
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
@@ -542,6 +552,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 placeholderTextColor={COLORS.textSecondary}
                 value={website}
                 onChangeText={setWebsite}
+                maxLength={URL_MAX_LENGTH}
                 autoCapitalize="none"
                 keyboardType="url"
               />
@@ -555,9 +566,9 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 placeholder="2024"
                 placeholderTextColor={COLORS.textSecondary}
                 value={foundedYear}
-                onChangeText={setFoundedYear}
+                onChangeText={text => setFoundedYear(sanitizeDigitsInput(text, YEAR_MAX_DIGITS))}
                 keyboardType="number-pad"
-                maxLength={4}
+                maxLength={YEAR_MAX_DIGITS}
               />
             </View>
           )}
@@ -576,6 +587,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 placeholderTextColor={COLORS.textSecondary}
                 value={branchName}
                 onChangeText={setBranchName}
+                maxLength={SHORT_TEXT_MAX_LENGTH}
               />
 
               <Text style={styles.label}>
@@ -587,6 +599,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 placeholderTextColor={COLORS.textSecondary}
                 value={branchAddress}
                 onChangeText={setBranchAddress}
+                maxLength={ADDRESS_MAX_LENGTH}
               />
               {addressLookupStatus === 'searching' && (
                 <Text style={styles.addressHintMuted}>

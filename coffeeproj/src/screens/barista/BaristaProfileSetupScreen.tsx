@@ -28,6 +28,14 @@ import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { WorkExperienceEditor } from '../../components/WorkExperienceEditor';
 import { useAuthStore } from '../../stores/authStore';
 import { formatLocalDate } from '../../utils/dateUtils';
+import {
+  sanitizeNameInput,
+  sanitizeYearsInput,
+  sanitizeDigitsInput,
+  NAME_MAX_LENGTH,
+  YEARS_MAX_LENGTH,
+  COMPENSATION_MAX_DIGITS,
+} from '../../utils/validation';
 import { requestLocationPermission, getCurrentLocation } from '../../utils/geolocation';
 import type { GeoPoint } from '../../types/business';
 import type { ShiftTime, BaristaProfile } from '../../types/baristaProfile';
@@ -243,7 +251,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         city,
         dateOfBirth: dateOfBirth.trim() || undefined,
         bio: bio.trim() || undefined,
-        yearsOfExperience: yearsOfExperience ? parseInt(yearsOfExperience, 10) : undefined,
+        yearsOfExperience: yearsOfExperience ? parseFloat(yearsOfExperience) : undefined,
         equipmentExperience: selectedEquipment,
         certifications,
         languages: ['Russian'],
@@ -320,7 +328,8 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               })}
               placeholderTextColor={COLORS.textSecondary}
               value={firstName}
-              onChangeText={setFirstName}
+              onChangeText={text => setFirstName(sanitizeNameInput(text))}
+              maxLength={NAME_MAX_LENGTH}
             />
 
             <Text style={styles.label}>
@@ -334,7 +343,8 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               })}
               placeholderTextColor={COLORS.textSecondary}
               value={lastName}
-              onChangeText={setLastName}
+              onChangeText={text => setLastName(sanitizeNameInput(text))}
+              maxLength={NAME_MAX_LENGTH}
             />
 
             <Text style={styles.label}>
@@ -453,8 +463,9 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               })}
               placeholderTextColor={COLORS.textSecondary}
               value={yearsOfExperience}
-              onChangeText={setYearsOfExperience}
-              keyboardType="numeric"
+              onChangeText={text => setYearsOfExperience(sanitizeYearsInput(text))}
+              maxLength={YEARS_MAX_LENGTH}
+              keyboardType="decimal-pad"
               returnKeyType="done"
             />
 
@@ -543,7 +554,10 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               placeholder={t('baristaSetup.minPlaceholder', { defaultValue: 'Мин' })}
               placeholderTextColor={COLORS.textSecondary}
               value={hourlyRateMin}
-              onChangeText={setHourlyRateMin}
+              onChangeText={text =>
+                setHourlyRateMin(sanitizeDigitsInput(text, COMPENSATION_MAX_DIGITS))
+              }
+              maxLength={COMPENSATION_MAX_DIGITS}
               keyboardType="numeric"
               returnKeyType="done"
             />

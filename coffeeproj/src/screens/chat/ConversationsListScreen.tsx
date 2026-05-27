@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { COLORS } from '../../config/constants';
 import { ChatService } from '../../services/ChatService';
 import { useAuthStore } from '../../stores/authStore';
@@ -38,8 +39,10 @@ const ConversationItem = React.memo<{
   conversation: Conversation;
   onPress: (conversation: Conversation) => void;
   isBarista: boolean;
+  currentUserId?: string;
   fallbackTitle: string;
-}>(({ conversation, onPress, isBarista, fallbackTitle }) => {
+  t: TFunction;
+}>(({ conversation, onPress, isBarista, currentUserId, fallbackTitle, t }) => {
   const unreadCount = isBarista
     ? conversation.unreadCountBarista
     : conversation.unreadCountBusiness;
@@ -50,6 +53,12 @@ const ConversationItem = React.memo<{
 
   const statusColor = getStatusColor(conversation.applicationStatus);
   const handlePress = useCallback(() => onPress(conversation), [onPress, conversation]);
+
+  const lastMessageSenderLabel = conversation.lastMessageText
+    ? conversation.lastMessageSenderId === currentUserId
+      ? t('conversations.youPrefix', { defaultValue: 'Вы' })
+      : otherPartyName || ''
+    : '';
 
   return (
     <TouchableOpacity style={styles.conversationCard} onPress={handlePress}>
@@ -70,6 +79,13 @@ const ConversationItem = React.memo<{
           </View>
         )}
       </View>
+
+      {conversation.lastMessageText && (
+        <Text style={styles.lastMessagePreview} numberOfLines={2}>
+          {lastMessageSenderLabel ? `${lastMessageSenderLabel}: ` : ''}
+          {conversation.lastMessageText}
+        </Text>
+      )}
 
       <View style={styles.conversationFooter}>
         {conversation.applicationStatus && (
@@ -148,10 +164,12 @@ export function ConversationsListScreen({ navigation }: any) {
         conversation={item}
         onPress={handleConversationPress}
         isBarista={user?.accountType === 'barista'}
+        currentUserId={user?.id}
         fallbackTitle={fallbackTitle}
+        t={t}
       />
     ),
-    [handleConversationPress, user?.accountType, fallbackTitle]
+    [handleConversationPress, user?.accountType, user?.id, fallbackTitle, t]
   );
 
   const renderEmpty = () => (
@@ -264,6 +282,11 @@ const styles = StyleSheet.create({
   otherPartyName: {
     fontSize: 14,
     color: COLORS.textSecondary,
+  },
+  lastMessagePreview: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 8,
   },
   unreadBadge: {
     backgroundColor: COLORS.primary,

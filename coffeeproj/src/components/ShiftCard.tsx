@@ -6,6 +6,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { COLORS, RADII } from '../config/constants';
 import type { Application, ShiftLifecycleStatus } from '../types/application';
 import type { Job } from '../types/job';
+import { isCityCode } from '../types/city';
 
 type ShiftCardProps = {
   job: Job;
@@ -72,7 +73,10 @@ export const ShiftCard = React.memo<ShiftCardProps>(
 
     const shiftDate = formatShiftDate(job.shiftDetails.startDate, locale);
     const shiftTime = `${job.shiftDetails.startTime}–${job.shiftDetails.endTime}`;
-    const metroOrBranch = job.metroStation || job.branchName || job.location.city;
+    const cityLabel = isCityCode(job.location.city)
+      ? t(`city.codes.${job.location.city}`)
+      : job.location.city;
+    const metroOrBranch = job.metroStation || job.branchName || cityLabel;
 
     return (
       <TouchableOpacity

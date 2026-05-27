@@ -15,7 +15,7 @@ export const CITY_LABELS_EN: Record<CityCode, string> = {
 };
 
 export const CITY_SHORT_LABELS_RU: Record<CityCode, string> = {
-  spb: 'СПб',
+  spb: 'Санкт-Петербург',
   moscow: 'Москва',
 };
 

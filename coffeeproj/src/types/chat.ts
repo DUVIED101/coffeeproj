@@ -21,6 +21,8 @@ export interface Conversation {
   businessName?: string;
   baristaName?: string;
   applicationStatus?: ApplicationStatus;
+  lastMessageText?: string;
+  lastMessageSenderId?: string;
 }
 
 export interface Message {

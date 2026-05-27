@@ -72,7 +72,12 @@ export const SocialLinksEditor: React.FC<Props> = ({ links, onChange, disabled =
     );
   };
 
-  const rows = links.length > 0 ? links : [{ platform: 'instagram' as SocialPlatform, value: '' }];
+  // When no links are set yet, render one placeholder row with no platform
+  // pre-selected — the user must explicitly tap a chip before the row is
+  // committed. The placeholder row uses `instagram` only to satisfy the type;
+  // `isPlaceholder` suppresses the active-chip highlight.
+  const isPlaceholder = links.length === 0;
+  const rows = isPlaceholder ? [{ platform: 'instagram' as SocialPlatform, value: '' }] : links;
 
   return (
     <View>
@@ -80,7 +85,7 @@ export const SocialLinksEditor: React.FC<Props> = ({ links, onChange, disabled =
         <View key={index} style={styles.row}>
           <View style={styles.platformsRow}>
             {PLATFORM_KEYS.map(opt => {
-              const isActive = link.platform === opt.value;
+              const isActive = !isPlaceholder && link.platform === opt.value;
               return (
                 <TouchableOpacity
                   key={opt.value}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { BusinessHomeScreen } from '../screens/business/BusinessHomeScreen';
 import { CreateJobScreen } from '../screens/business/CreateJobScreen';
 import { JobDetailsScreen } from '../screens/business/JobDetailsScreen';
@@ -22,6 +23,7 @@ export type BusinessStackParamList = {
 const Stack = createNativeStackNavigator<BusinessStackParamList>();
 
 export const BusinessStack: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <Stack.Navigator
       initialRouteName="BusinessHome"
@@ -32,33 +34,37 @@ export const BusinessStack: React.FC = () => {
       <Stack.Screen
         name="BusinessHome"
         component={BusinessHomeScreen}
-        options={{ title: 'My Business' }}
+        options={{ title: t('nav.businessHome') }}
       />
       <Stack.Screen
         name="CreateJob"
         component={CreateJobScreen}
-        options={{ title: 'Create Job' }}
+        options={{ title: t('nav.createJob') }}
       />
-      <Stack.Screen name="EditJob" component={CreateJobScreen} options={{ title: 'Edit Job' }} />
+      <Stack.Screen
+        name="EditJob"
+        component={CreateJobScreen}
+        options={{ title: t('nav.editJob') }}
+      />
       <Stack.Screen
         name="JobDetails"
         component={JobDetailsScreen}
-        options={{ title: 'Job Details' }}
+        options={{ title: t('nav.jobDetails') }}
       />
       <Stack.Screen
         name="Applicants"
         component={ApplicantsScreen}
-        options={{ title: 'Applicants' }}
+        options={{ title: t('nav.applicants') }}
       />
       <Stack.Screen
         name="ViewBaristaProfile"
         component={ViewBaristaProfileScreen}
-        options={{ title: 'Barista Profile' }}
+        options={{ title: t('nav.viewBaristaProfile') }}
       />
       <Stack.Screen
         name="UserReviews"
         component={UserReviewsScreen}
-        options={{ title: 'Все отзывы' }}
+        options={{ title: t('userReviews.title', { defaultValue: 'Все отзывы' }) }}
       />
       <Stack.Screen
         name="NotificationFeed"

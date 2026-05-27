@@ -157,3 +157,57 @@ export const validateMinLength = (value: string, minLength: number): boolean => 
 export const validateMaxLength = (value: string, maxLength: number): boolean => {
   return value.length <= maxLength;
 };
+
+export const NAME_MAX_LENGTH = 25;
+
+// Cyrillic + Latin + space + hyphen + apostrophe (for names like O'Brien). Used
+// as a per-keystroke sanitizer in TextInput onChangeText so users can only ever
+// type allowed characters; non-matching keystrokes are silently dropped.
+const NAME_ALLOWED_RE = /[A-Za-zА-Яа-яЁё\s'\-]/g;
+
+export const sanitizeNameInput = (raw: string): string => {
+  const filtered = raw.match(NAME_ALLOWED_RE)?.join('') ?? '';
+  return filtered.slice(0, NAME_MAX_LENGTH);
+};
+
+// Years of experience: digits with optional decimal (comma or period). We
+// normalize commas to periods so downstream parseFloat works, and cap to a
+// reasonable max length (e.g. "12.5" → 4 chars).
+export const YEARS_MAX_LENGTH = 4;
+
+export const sanitizeYearsInput = (raw: string): string => {
+  // Replace comma with period (Russian decimal convention).
+  const normalized = raw.replace(/,/g, '.');
+  // Keep only digits and a single period.
+  let result = '';
+  let sawDot = false;
+  for (const ch of normalized) {
+    if (ch >= '0' && ch <= '9') {
+      result += ch;
+    } else if (ch === '.' && !sawDot && result.length > 0) {
+      result += ch;
+      sawDot = true;
+    }
+    if (result.length >= YEARS_MAX_LENGTH) break;
+  }
+  return result;
+};
+
+// Integer-only sanitizer: strips everything that isn't a decimal digit and
+// truncates to maxLength. Used for compensation amounts, founded year, etc.
+export const sanitizeDigitsInput = (raw: string, maxLength: number): string => {
+  const filtered = raw.replace(/\D+/g, '');
+  return filtered.slice(0, maxLength);
+};
+
+// Limits for common free-text fields. These are length caps only — we don't
+// restrict character set because users legitimately mix Cyrillic + Latin +
+// punctuation + digits inside titles, descriptions, addresses, etc.
+export const TITLE_MAX_LENGTH = 80;
+export const DESCRIPTION_MAX_LENGTH = 1000;
+export const SHORT_TEXT_MAX_LENGTH = 120;
+export const ADDRESS_MAX_LENGTH = 200;
+export const HANDLE_MAX_LENGTH = 100;
+export const URL_MAX_LENGTH = 200;
+export const COMPENSATION_MAX_DIGITS = 6;
+export const YEAR_MAX_DIGITS = 4;

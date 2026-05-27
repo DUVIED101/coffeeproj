@@ -1,5 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { BaristaProfileScreen } from '../screens/barista/BaristaProfileScreen';
 import { BaristaProfileSetupScreen } from '../screens/barista/BaristaProfileSetupScreen';
 import { ShiftHistoryScreen } from '../screens/barista/ShiftHistoryScreen';
@@ -25,6 +26,7 @@ export type ProfileStackParamList = {
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
 export const ProfileStack: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <Stack.Navigator
       screenOptions={{
@@ -37,27 +39,27 @@ export const ProfileStack: React.FC = () => {
       <Stack.Screen
         name="BaristaProfile"
         component={BaristaProfileScreen}
-        options={{ title: 'Profile', headerShown: false }}
+        options={{ title: t('nav.tabs.profile'), headerShown: false }}
       />
       <Stack.Screen
         name="BaristaProfileSetup"
         component={BaristaProfileSetupScreen}
-        options={{ title: 'Complete Your Profile' }}
+        options={{ title: t('nav.completeProfile') }}
       />
       <Stack.Screen
         name="ShiftHistory"
         component={ShiftHistoryScreen}
-        options={{ title: 'История смен' }}
+        options={{ title: t('nav.shiftHistory') }}
       />
       <Stack.Screen
         name="ApplicationDetails"
         component={ApplicationDetailsScreen}
-        options={{ title: 'Application Details' }}
+        options={{ title: t('nav.applicationDetails') }}
       />
       <Stack.Screen
         name="UserReviews"
         component={UserReviewsScreen}
-        options={{ title: 'Все отзывы' }}
+        options={{ title: t('userReviews.title', { defaultValue: 'Все отзывы' }) }}
       />
       <Stack.Screen
         name="NotificationFeed"

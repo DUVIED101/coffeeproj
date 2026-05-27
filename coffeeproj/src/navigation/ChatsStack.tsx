@@ -1,5 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { ConversationsListScreen } from '../screens/chat/ConversationsListScreen';
 import { ChatScreen } from '../screens/chat/ChatScreen';
 import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
@@ -14,6 +15,7 @@ export type ChatsStackParamList = {
 const Stack = createNativeStackNavigator<ChatsStackParamList>();
 
 export const ChatsStack: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <Stack.Navigator
       initialRouteName="ConversationsList"
@@ -28,7 +30,7 @@ export const ChatsStack: React.FC = () => {
         component={ConversationsListScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
+      <Stack.Screen name="Chat" component={ChatScreen} options={{ title: t('nav.chat') }} />
       <Stack.Screen
         name="NotificationFeed"
         component={NotificationFeedScreen}

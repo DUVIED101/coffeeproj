@@ -1,5 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { BaristaFeedScreen } from '../screens/business/BaristaFeedScreen';
 import { ViewBaristaProfileScreen } from '../screens/business/ViewBaristaProfileScreen';
 import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
@@ -16,6 +17,7 @@ export type BusinessSearchStackParamList = {
 const Stack = createNativeStackNavigator<BusinessSearchStackParamList>();
 
 export const BusinessSearchStack: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <Stack.Navigator
       initialRouteName="BaristaFeed"
@@ -35,12 +37,12 @@ export const BusinessSearchStack: React.FC = () => {
       <Stack.Screen
         name="ViewBaristaProfile"
         component={ViewBaristaProfileScreen}
-        options={{ title: 'Профиль' }}
+        options={{ title: t('nav.viewBaristaProfile') }}
       />
       <Stack.Screen
         name="UserReviews"
         component={UserReviewsScreen}
-        options={{ title: 'Все отзывы' }}
+        options={{ title: t('nav.userReviews') }}
       />
       <Stack.Screen
         name="NotificationFeed"

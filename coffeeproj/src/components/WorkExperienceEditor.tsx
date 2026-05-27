@@ -97,10 +97,26 @@ export const WorkExperienceEditor: React.FC<Props> = ({
                       ? { year: exp.endYear, month: exp.endMonth }
                       : null
                   }
-                  onChange={({ year, month }) =>
-                    update(index, { endYear: year, endMonth: month, isCurrent: false })
-                  }
+                  onChange={({ year, month }) => {
+                    // Reject end-before-start. Caller can either ignore or surface
+                    // an alert — here we silently clamp to the start so the UI
+                    // doesn't accept an inconsistent state.
+                    if (exp.startYear !== null && exp.startMonth !== null) {
+                      const startKey = exp.startYear * 12 + exp.startMonth;
+                      const endKey = year * 12 + month;
+                      if (endKey < startKey) {
+                        update(index, {
+                          endYear: exp.startYear,
+                          endMonth: exp.startMonth,
+                          isCurrent: false,
+                        });
+                        return;
+                      }
+                    }
+                    update(index, { endYear: year, endMonth: month, isCurrent: false });
+                  }}
                   disabled={disabled || exp.isCurrent}
+                  minYear={exp.startYear ?? undefined}
                 />
               </View>
             </View>

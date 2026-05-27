@@ -16,7 +16,7 @@ import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ReviewService } from '../../services/ReviewService';
 import { ReviewModal } from '../../components/ReviewModal';
-import { getShiftEnd } from '../../utils/shiftLifecycle';
+import { getShiftEnd, canCancelShiftNow, getShiftStart } from '../../utils/shiftLifecycle';
 import type { Application } from '../../types/application';
 import type { ApplicationId, UserId } from '../../types/ids';
 import type { ApplicationReview } from '../../types/review';
@@ -64,6 +64,22 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
     const timeoutId = setTimeout(() => setNow(new Date()), msUntilEnd + 1000);
     return () => clearTimeout(timeoutId);
   }, [shiftEnd]);
+
+  const cancelWindowClose = useMemo(
+    () =>
+      job?.shiftDetails
+        ? new Date(getShiftStart(job.shiftDetails).getTime() + 60 * 60 * 1000)
+        : null,
+    [job?.shiftDetails]
+  );
+
+  useEffect(() => {
+    if (!cancelWindowClose) return;
+    const msUntilClose = cancelWindowClose.getTime() - Date.now();
+    if (msUntilClose <= 0) return;
+    const timeoutId = setTimeout(() => setNow(new Date()), msUntilClose + 1000);
+    return () => clearTimeout(timeoutId);
+  }, [cancelWindowClose]);
 
   useEffect(() => {
     let cancelled = false;
@@ -258,7 +274,9 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
         minute: '2-digit',
       })
     : '';
-  const canCancelShift = currentStatus === 'accepted';
+  const canCancelShift =
+    currentStatus === 'accepted' &&
+    (!job?.shiftDetails || canCancelShiftNow(job.shiftDetails, now));
   const showCompletionStatus = currentStatus === 'accepted' || currentStatus === 'completed';
 
   return (

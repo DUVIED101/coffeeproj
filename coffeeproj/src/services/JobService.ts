@@ -277,7 +277,7 @@ export class JobService {
         branchName: job.branch_name,
         branchPhotos: job.branch_photos ?? [],
         metroStation: job.metro_station,
-        distance: job.distance_meters,
+        distance: job.distance_meters ?? undefined,
       }));
     } catch (error) {
       console.error('Error in searchJobs:', error);

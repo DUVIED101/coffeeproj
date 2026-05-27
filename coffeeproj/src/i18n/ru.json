@@ -1,4 +1,32 @@
 {
+  "nav": {
+    "jobDetails": "Вакансия",
+    "applicants": "Кандидаты",
+    "viewBaristaProfile": "Профиль бариста",
+    "businessHome": "Мой бизнес",
+    "createJob": "Создание вакансии",
+    "editJob": "Редактирование вакансии",
+    "applyForJob": "Отклик на вакансию",
+    "myApplications": "Мои отклики",
+    "applicationDetails": "Детали отклика",
+    "shiftHistory": "История смен",
+    "baristaProfile": "Мой профиль",
+    "completeProfile": "Заполните профиль",
+    "businessJobs": "Вакансии",
+    "businessPublicProfile": "Профиль бизнеса",
+    "findJobs": "Поиск работы",
+    "editBusinessProfile": "Редактирование профиля",
+    "branches": "Точки",
+    "businessReviews": "Отзывы",
+    "userReviews": "Все отзывы",
+    "chat": "Чат",
+    "tabs": {
+      "profile": "Профиль",
+      "jobs": "Работа",
+      "business": "Бизнес",
+      "baristas": "Бариста"
+    }
+  },
   "filters": {
     "jobType": {
       "all": "Все",
@@ -24,7 +52,7 @@
     "nearbySection": "Рядом с вами",
     "allSection": "Все станции",
     "cityTab": {
-      "spb": "СПб",
+      "spb": "Санкт-Петербург",
       "moscow": "Москва"
     }
   },
@@ -584,6 +612,7 @@
   "chat": {
     "fallbackTitle": "Чат",
     "headerJobsAction": "Вакансии",
+    "headerProfileAction": "Профиль",
     "loadFailed": "Чат не найден",
     "emptyTitle": "Сообщений пока нет",
     "emptySubtitle": "Отправьте сообщение, чтобы начать диалог",
@@ -601,7 +630,13 @@
   "conversations": {
     "emptyTitle": "Диалогов пока нет",
     "emptyBarista": "Откликнитесь на вакансии, чтобы начать диалог с бизнесом",
-    "emptyBusiness": "Диалоги появятся, когда бариста начнут откликаться на ваши вакансии"
+    "emptyBusiness": "Диалоги появятся, когда бариста начнут откликаться на ваши вакансии",
+    "youPrefix": "Вы"
+  },
+  "businessPublicProfile": {
+    "notFound": "Профиль бизнеса не найден",
+    "viewJobs": "Посмотреть вакансии",
+    "branchesSection": "Точки"
   },
   "notifications": {
     "feed": {
@@ -618,75 +653,75 @@
     "limitReached": "Можно загрузить максимум {{max}} фото в портфолио"
   },
   "branches": {
-    "title": "Branch Management",
-    "add": "+ Add Branch",
-    "addFirst": "Add your first branch to start posting jobs",
-    "cancel": "Cancel",
-    "empty": "No branches yet",
-    "sectionTitle": "Your Branches ({{count}})",
+    "title": "Управление точками",
+    "add": "+ Добавить точку",
+    "addFirst": "Добавьте первую точку, чтобы публиковать вакансии",
+    "cancel": "Отмена",
+    "empty": "Точек пока нет",
+    "sectionTitle": "Ваши точки ({{count}})",
     "form": {
-      "addTitle": "Add New Branch",
-      "editTitle": "Edit Branch",
-      "save": "Save Branch",
-      "update": "Update Branch",
-      "name": "Branch Name",
-      "nameRequired": "Branch name is required",
-      "namePlaceholder": "e.g. Arbat Branch",
-      "address": "Address",
-      "addressRequired": "Address is required",
-      "addressPlaceholder": "e.g. Arbat St, 10",
+      "addTitle": "Новая точка",
+      "editTitle": "Редактирование точки",
+      "save": "Сохранить точку",
+      "update": "Обновить точку",
+      "name": "Название точки",
+      "nameRequired": "Введите название точки",
+      "namePlaceholder": "Например: Точка на Арбате",
+      "address": "Адрес",
+      "addressRequired": "Введите адрес",
+      "addressPlaceholder": "Например: ул. Арбат, 10",
       "addressLookup": {
         "searching": "Ищем адрес…",
         "found": "Адрес найден — внизу подсказки по метро",
         "notFound": "Адрес не найден — уточните формулировку"
       },
-      "city": "City",
-      "metro": "Metro Station",
-      "metroRequired": "Metro station is required",
-      "equipment": "Equipment (Optional)"
+      "city": "Город",
+      "metro": "Станция метро",
+      "metroRequired": "Выберите станцию метро",
+      "equipment": "Оборудование (необязательно)"
     },
     "errors": {
-      "loadFailed": "Failed to load branches",
-      "saveFailed": "Failed to save branch",
-      "deleteFailed": "Failed to delete branch",
-      "addressNotFound": "Could not find coordinates for this address. Please check the address and city.",
-      "addressNotFoundTitle": "Address not found",
-      "hasActiveJobs": "Close {{count}} active jobs before deleting this branch."
+      "loadFailed": "Не удалось загрузить точки",
+      "saveFailed": "Не удалось сохранить точку",
+      "deleteFailed": "Не удалось удалить точку",
+      "addressNotFound": "Не удалось определить координаты по адресу. Проверьте адрес и город.",
+      "addressNotFoundTitle": "Адрес не найден",
+      "hasActiveJobs": "Закройте активные вакансии ({{count}}) перед удалением точки."
     },
     "delete": {
-      "title": "Delete Branch",
-      "confirm": "Are you sure you want to delete \"{{name}}\"?",
-      "success": "Branch deleted successfully"
+      "title": "Удалить точку",
+      "confirm": "Удалить точку «{{name}}»?",
+      "success": "Точка удалена"
     },
     "save": {
-      "success": "Branch added successfully",
-      "updateSuccess": "Branch updated successfully"
+      "success": "Точка добавлена",
+      "updateSuccess": "Точка обновлена"
     }
   },
   "job": {
     "actions": {
-      "markFilled": "Mark as filled",
-      "cancel": "Cancel job",
-      "reopen": "Reopen job",
-      "edit": "Edit job"
+      "markFilled": "Отметить заполненной",
+      "cancel": "Отменить вакансию",
+      "reopen": "Снова открыть",
+      "edit": "Редактировать вакансию"
     },
     "markFilled": {
-      "confirmTitle": "Mark as filled",
-      "confirmBody": "Is the job filled? It will be hidden from the barista feed.",
-      "success": "Job marked as filled"
+      "confirmTitle": "Отметить заполненной",
+      "confirmBody": "Вакансия заполнена? Она будет скрыта из ленты бариста.",
+      "success": "Вакансия отмечена заполненной"
     },
     "cancel": {
-      "confirmTitle": "Cancel job",
-      "confirmBody": "Cancel this job?",
-      "success": "Job cancelled"
+      "confirmTitle": "Отменить вакансию",
+      "confirmBody": "Отменить эту вакансию?",
+      "success": "Вакансия отменена"
     },
     "reopen": {
-      "confirmTitle": "Reopen job",
-      "confirmBody": "Return this job to active? It will appear in the barista feed again.",
-      "success": "Job reopened"
+      "confirmTitle": "Снова открыть вакансию",
+      "confirmBody": "Вернуть вакансию в активные? Она снова появится в ленте бариста.",
+      "success": "Вакансия снова открыта"
     },
     "errors": {
-      "updateFailed": "Failed to update job status"
+      "updateFailed": "Не удалось обновить статус вакансии"
     }
   },
   "business": {

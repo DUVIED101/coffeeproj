@@ -25,6 +25,13 @@ import type { Branch, Equipment } from '../../types/business';
 import type { JobType, CompensationType } from '../../types/job';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import type { MainTabsParamList } from '../../navigation/MainTabs';
+import {
+  sanitizeDigitsInput,
+  TITLE_MAX_LENGTH,
+  DESCRIPTION_MAX_LENGTH,
+  SHORT_TEXT_MAX_LENGTH,
+  COMPENSATION_MAX_DIGITS,
+} from '../../utils/validation';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'CreateJob' | 'EditJob'>;
@@ -173,6 +180,18 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
+  // In create mode, mirror the selected branch's equipment into the job by
+  // default. The user can still deselect/add chips after — this just removes
+  // the busywork of re-entering equipment the branch already has. Edit mode
+  // is left alone so we don't clobber a previously saved job's equipment.
+  useEffect(() => {
+    if (isEditMode) return;
+    if (!selectedBranchId) return;
+    const branch = branches.find(b => b.id === selectedBranchId);
+    if (!branch) return;
+    setSelectedEquipment(branch.equipment);
+  }, [selectedBranchId, branches, isEditMode]);
+
   const toggleEquipment = (equipment: Equipment) => {
     setSelectedEquipment(prev =>
       prev.includes(equipment) ? prev.filter(e => e !== equipment) : [...prev, equipment]
@@ -262,7 +281,15 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     }
     const startMinutes = startTime.getHours() * 60 + startTime.getMinutes();
     const endMinutes = endTime.getHours() * 60 + endTime.getMinutes();
-    if (startMinutes === endMinutes) {
+    // Within a single day (no endDate or endDate == startDate) the end time must
+    // come strictly after the start. Multi-day shifts can have end < start because
+    // the end falls on the next calendar day.
+    const isSingleDay =
+      !endDate ||
+      (endDate.getFullYear() === startDate.getFullYear() &&
+        endDate.getMonth() === startDate.getMonth() &&
+        endDate.getDate() === startDate.getDate());
+    if (isSingleDay && endMinutes <= startMinutes) {
       newErrors.endTime = t('createJob.errors.endTimeDiffersFromStart');
     }
 
@@ -467,6 +494,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
               const { title: _, ...rest } = errors;
               setErrors(rest);
             }}
+            maxLength={TITLE_MAX_LENGTH}
             returnKeyType="done"
           />
           {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
@@ -479,6 +507,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
             placeholder={t('createJob.fields.descriptionPlaceholder')}
             value={description}
             onChangeText={setDescription}
+            maxLength={DESCRIPTION_MAX_LENGTH}
             multiline
             numberOfLines={4}
           />
@@ -493,6 +522,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                 placeholder={t('createJob.fields.requirementPlaceholder', { index: index + 1 })}
                 value={requirement}
                 onChangeText={text => updateRequirement(index, text)}
+                maxLength={SHORT_TEXT_MAX_LENGTH}
                 returnKeyType="done"
               />
               {requirements.length > 1 && (
@@ -554,6 +584,9 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                 onChange={(_event, selectedDate) => {
                   if (selectedDate) {
                     setStartDate(selectedDate);
+                    if (endDate && endDate.getTime() < selectedDate.getTime()) {
+                      setEndDate(undefined);
+                    }
                     const { startDate: _, ...rest } = errors;
                     setErrors(rest);
                   }
@@ -577,11 +610,12 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           {showEndDatePicker && (
             <>
               <DateTimePicker
-                value={endDate || new Date()}
+                value={endDate || startDate}
                 mode="date"
                 display={Platform.OS === 'ios' ? 'inline' : 'default'}
                 themeVariant="light"
                 textColor="#000000"
+                minimumDate={startDate}
                 onChange={(_event, selectedDate) => {
                   if (selectedDate) {
                     setEndDate(selectedDate);
@@ -616,11 +650,25 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                     themeVariant="light"
                     textColor="#000000"
                     onChange={(_event, selectedTime) => {
-                      if (selectedTime) {
-                        setStartTime(selectedTime);
-                        const { startTime: _, ...rest } = errors;
-                        setErrors(rest);
+                      if (!selectedTime) return;
+                      setStartTime(selectedTime);
+                      const isSingleDay =
+                        !endDate ||
+                        (endDate.getFullYear() === startDate.getFullYear() &&
+                          endDate.getMonth() === startDate.getMonth() &&
+                          endDate.getDate() === startDate.getDate());
+                      if (isSingleDay) {
+                        const startMin = selectedTime.getHours() * 60 + selectedTime.getMinutes();
+                        const endMin = endTime.getHours() * 60 + endTime.getMinutes();
+                        if (endMin <= startMin) {
+                          const nextEnd = new Date(selectedTime);
+                          const clampedMin = Math.min(startMin + 1, 23 * 60 + 59);
+                          nextEnd.setHours(Math.floor(clampedMin / 60), clampedMin % 60, 0, 0);
+                          setEndTime(nextEnd);
+                        }
                       }
+                      const { startTime: _, ...rest } = errors;
+                      setErrors(rest);
                     }}
                   />
                   <TouchableOpacity
@@ -652,11 +700,24 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                     themeVariant="light"
                     textColor="#000000"
                     onChange={(_event, selectedTime) => {
-                      if (selectedTime) {
-                        setEndTime(selectedTime);
-                        const { endTime: _, ...rest } = errors;
-                        setErrors(rest);
+                      if (!selectedTime) return;
+                      const isSingleDay =
+                        !endDate ||
+                        (endDate.getFullYear() === startDate.getFullYear() &&
+                          endDate.getMonth() === startDate.getMonth() &&
+                          endDate.getDate() === startDate.getDate());
+                      const startMin = startTime.getHours() * 60 + startTime.getMinutes();
+                      const pickedMin = selectedTime.getHours() * 60 + selectedTime.getMinutes();
+                      let next = selectedTime;
+                      if (isSingleDay && pickedMin <= startMin) {
+                        // Clamp to start + 1 min so the range stays positive.
+                        next = new Date(selectedTime);
+                        const clampedMin = Math.min(startMin + 1, 23 * 60 + 59);
+                        next.setHours(Math.floor(clampedMin / 60), clampedMin % 60, 0, 0);
                       }
+                      setEndTime(next);
+                      const { endTime: _, ...rest } = errors;
+                      setErrors(rest);
                     }}
                   />
                   <TouchableOpacity
@@ -740,10 +801,11 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
             keyboardType="numeric"
             value={compensationAmount}
             onChangeText={text => {
-              setCompensationAmount(text);
+              setCompensationAmount(sanitizeDigitsInput(text, COMPENSATION_MAX_DIGITS));
               const { compensation: _, ...rest } = errors;
               setErrors(rest);
             }}
+            maxLength={COMPENSATION_MAX_DIGITS}
             returnKeyType="done"
           />
           {errors.compensation && <Text style={styles.errorText}>{errors.compensation}</Text>}

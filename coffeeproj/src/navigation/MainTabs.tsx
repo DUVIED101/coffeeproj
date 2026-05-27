@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { createBottomTabNavigator, BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
 import { Pressable } from 'react-native';
@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import { useAuthStore } from '../stores/authStore';
+import { useChatUnreadStore } from '../stores/chatUnreadStore';
 import { COLORS } from '../config/constants';
 import { BusinessStack } from './BusinessStack';
 import { BusinessProfileStack } from './BusinessProfileStack';
@@ -29,6 +30,15 @@ const Tab = createBottomTabNavigator<MainTabsParamList>();
 export const MainTabs: React.FC = () => {
   const { user, isLoading } = useAuthStore();
   const { t } = useTranslation();
+  const chatUnreadCount = useChatUnreadStore(s => s.unreadCount);
+  const refreshChatUnread = useChatUnreadStore(s => s.refresh);
+
+  useEffect(() => {
+    if (!user?.id || !user.accountType) return;
+    refreshChatUnread(user.id, user.accountType);
+    const interval = setInterval(() => refreshChatUnread(user.id, user.accountType!), 30_000);
+    return () => clearInterval(interval);
+  }, [user?.id, user?.accountType, refreshChatUnread]);
 
   if (isLoading || !user) {
     return (
@@ -57,8 +67,8 @@ export const MainTabs: React.FC = () => {
         name="Profile"
         component={user.accountType === 'barista' ? ProfileStack : BusinessProfileStack}
         options={{
-          title: 'Profile',
-          tabBarLabel: 'Profile',
+          title: t('nav.tabs.profile'),
+          tabBarLabel: t('nav.tabs.profile'),
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
             <MaterialCommunityIcons
@@ -73,8 +83,8 @@ export const MainTabs: React.FC = () => {
         name="Jobs"
         component={BaristaStack}
         options={{
-          title: 'Jobs',
-          tabBarLabel: 'Jobs',
+          title: t('nav.tabs.jobs'),
+          tabBarLabel: t('nav.tabs.jobs'),
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
             <MaterialCommunityIcons
@@ -95,8 +105,8 @@ export const MainTabs: React.FC = () => {
         name="Business"
         component={BusinessStack}
         options={{
-          title: 'Business',
-          tabBarLabel: 'Business',
+          title: t('nav.tabs.business'),
+          tabBarLabel: t('nav.tabs.business'),
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
             <MaterialCommunityIcons
@@ -117,8 +127,8 @@ export const MainTabs: React.FC = () => {
         name="Baristas"
         component={BusinessSearchStack}
         options={{
-          title: 'Baristas',
-          tabBarLabel: 'Baristas',
+          title: t('nav.tabs.baristas'),
+          tabBarLabel: t('nav.tabs.baristas'),
           headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
             <MaterialCommunityIcons
@@ -142,6 +152,7 @@ export const MainTabs: React.FC = () => {
           title: t('chats.title'),
           tabBarLabel: t('chats.title'),
           headerShown: false,
+          tabBarBadge: chatUnreadCount > 0 ? chatUnreadCount : undefined,
           tabBarIcon: ({ color, size, focused }) => (
             <MaterialCommunityIcons
               name={focused ? 'chat' : 'chat-outline'}

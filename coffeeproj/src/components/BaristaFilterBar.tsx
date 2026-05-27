@@ -13,7 +13,7 @@ import type { BaristaFilters, ShiftTime } from '../types/baristaProfile';
 import type { Equipment } from '../types/business';
 import type { CityCode } from '../types/city';
 import { DEFAULT_CITY, CITY_CODES } from '../types/city';
-import { COLORS } from '../config/constants';
+import { COLORS, EQUIPMENT_TYPES } from '../config/constants';
 import { MetroSelector } from './MetroSelector';
 
 type BaristaFilterBarProps = {
@@ -22,13 +22,7 @@ type BaristaFilterBarProps = {
   branchMetroStations?: string[];
 };
 
-const EQUIPMENT_OPTIONS: Equipment[] = [
-  'La Marzocco',
-  'Victoria Arduino',
-  'Nuova Simonelli',
-  'Synesso',
-  'Slayer',
-];
+const EQUIPMENT_OPTIONS: readonly Equipment[] = EQUIPMENT_TYPES;
 
 const SHIFT_OPTIONS: { value: ShiftTime; labelKey: string }[] = [
   { value: 'morning', labelKey: 'shiftTimes.morning' },
@@ -69,6 +63,7 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
     const [showShiftModal, setShowShiftModal] = useState(false);
     const [showExperienceModal, setShowExperienceModal] = useState(false);
     const [showHourlyCapModal, setShowHourlyCapModal] = useState(false);
+    const [showCityModal, setShowCityModal] = useState(false);
 
     const branchPresetActive = useMemo(
       () =>
@@ -154,12 +149,13 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
       [currentFilters, onFilterChange]
     );
 
-    const handleCityCycle = useCallback(() => {
-      const current = currentFilters.city ?? DEFAULT_CITY;
-      const currentIdx = CITY_CODES.indexOf(current);
-      const next = CITY_CODES[(currentIdx + 1) % CITY_CODES.length];
-      onFilterChange({ ...currentFilters, city: next, metroStations: undefined });
-    }, [currentFilters, onFilterChange]);
+    const handleCitySelect = useCallback(
+      (nextCity: CityCode | undefined) => {
+        onFilterChange({ ...currentFilters, city: nextCity, metroStations: undefined });
+        setShowCityModal(false);
+      },
+      [currentFilters, onFilterChange]
+    );
 
     const handleCityChange = useCallback(
       (nextCity: CityCode) => {
@@ -187,10 +183,12 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
           defaultValue: `до ₽${currentFilters.hourlyRateMax?.toLocaleString('ru-RU')}/час`,
         })
       : t('baristaFilterBar.hourlyCapPlaceholder', { defaultValue: 'До ₽/час' });
-    const cityLabel = t('baristaFilterBar.city', {
-      name: t(`city.codes.${activeCity}`),
-      defaultValue: `Город: ${t(`city.codes.${activeCity}`)}`,
-    });
+    const cityLabel = hasCity
+      ? t('baristaFilterBar.city', {
+          name: t(`city.codes.${activeCity}`),
+          defaultValue: `Город: ${t(`city.codes.${activeCity}`)}`,
+        })
+      : t('baristaFilterBar.cityPlaceholder', { defaultValue: 'Город' });
 
     const showBranchPreset = !!branchMetroStations && branchMetroStations.length > 0;
 
@@ -266,7 +264,7 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
 
           <TouchableOpacity
             style={[styles.filterChip, hasCity && styles.filterChipActive]}
-            onPress={handleCityCycle}>
+            onPress={() => setShowCityModal(true)}>
             <Text style={[styles.filterChipText, hasCity && styles.filterChipTextActive]}>
               {cityLabel}
             </Text>
@@ -289,7 +287,10 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.optionList}>
+              <ScrollView
+                style={styles.optionScroll}
+                contentContainerStyle={styles.optionList}
+                showsVerticalScrollIndicator={false}>
                 {EQUIPMENT_OPTIONS.map(equipment => {
                   const isSelected = currentFilters.equipment?.includes(equipment) || false;
                   return (
@@ -308,7 +309,7 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
                     </TouchableOpacity>
                   );
                 })}
-              </View>
+              </ScrollView>
 
               <View style={styles.modalButtonsRow}>
                 {selectedEquipmentCount > 0 && (
@@ -490,6 +491,54 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
             </View>
           </Pressable>
         </Modal>
+
+        <Modal
+          visible={showCityModal}
+          animationType="slide"
+          transparent
+          onRequestClose={() => setShowCityModal(false)}>
+          <Pressable style={styles.modalOverlay} onPress={() => setShowCityModal(false)}>
+            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>
+                  {t('baristaFilterBar.chooseCity', { defaultValue: 'Выберите город' })}
+                </Text>
+                <TouchableOpacity onPress={() => setShowCityModal(false)}>
+                  <Text style={styles.closeButton}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.optionList}>
+                <TouchableOpacity
+                  style={[styles.optionItem, !hasCity && styles.optionItemSelected]}
+                  onPress={() => handleCitySelect(undefined)}>
+                  <Text style={[styles.optionItemText, !hasCity && styles.optionItemTextSelected]}>
+                    {t('baristaFilterBar.cityAny', { defaultValue: 'Любой' })}
+                  </Text>
+                  {!hasCity && <Text style={styles.checkmark}>✓</Text>}
+                </TouchableOpacity>
+                {CITY_CODES.map(code => {
+                  const isSelected = currentFilters.city === code;
+                  return (
+                    <TouchableOpacity
+                      key={code}
+                      style={[styles.optionItem, isSelected && styles.optionItemSelected]}
+                      onPress={() => handleCitySelect(code)}>
+                      <Text
+                        style={[
+                          styles.optionItemText,
+                          isSelected && styles.optionItemTextSelected,
+                        ]}>
+                        {t(`city.codes.${code}`)}
+                      </Text>
+                      {isSelected && <Text style={styles.checkmark}>✓</Text>}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          </Pressable>
+        </Modal>
       </View>
     );
   }
@@ -554,6 +603,9 @@ const styles = StyleSheet.create({
   closeButton: {
     fontSize: 24,
     color: COLORS.textSecondary,
+  },
+  optionScroll: {
+    flexShrink: 1,
   },
   optionList: {
     padding: 16,

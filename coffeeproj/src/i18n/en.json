@@ -1,4 +1,32 @@
 {
+  "nav": {
+    "jobDetails": "Job Details",
+    "applicants": "Applicants",
+    "viewBaristaProfile": "Barista Profile",
+    "businessHome": "My Business",
+    "createJob": "Create Job",
+    "editJob": "Edit Job",
+    "applyForJob": "Apply for Job",
+    "myApplications": "My Applications",
+    "applicationDetails": "Application Details",
+    "shiftHistory": "Shift History",
+    "baristaProfile": "My Profile",
+    "completeProfile": "Complete Your Profile",
+    "businessJobs": "Jobs",
+    "businessPublicProfile": "Business Profile",
+    "findJobs": "Find Jobs",
+    "editBusinessProfile": "Edit Profile",
+    "branches": "Branches",
+    "businessReviews": "Reviews",
+    "userReviews": "All Reviews",
+    "chat": "Chat",
+    "tabs": {
+      "profile": "Profile",
+      "jobs": "Jobs",
+      "business": "Business",
+      "baristas": "Baristas"
+    }
+  },
   "filters": {
     "jobType": {
       "all": "All",
@@ -24,7 +52,7 @@
     "nearbySection": "Near you",
     "allSection": "All stations",
     "cityTab": {
-      "spb": "SPB",
+      "spb": "Saint Petersburg",
       "moscow": "Moscow"
     }
   },
@@ -578,6 +606,7 @@
   "chat": {
     "fallbackTitle": "Chat",
     "headerJobsAction": "Jobs",
+    "headerProfileAction": "Profile",
     "loadFailed": "Conversation not found",
     "emptyTitle": "No messages yet",
     "emptySubtitle": "Send a message to start the conversation",
@@ -595,7 +624,13 @@
   "conversations": {
     "emptyTitle": "No conversations yet",
     "emptyBarista": "Apply to jobs to start conversations with businesses",
-    "emptyBusiness": "Conversations will appear here when baristas apply to your jobs"
+    "emptyBusiness": "Conversations will appear here when baristas apply to your jobs",
+    "youPrefix": "You"
+  },
+  "businessPublicProfile": {
+    "notFound": "Business profile not found",
+    "viewJobs": "View jobs",
+    "branchesSection": "Branches"
   },
   "notifications": {
     "feed": {

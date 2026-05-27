@@ -42,17 +42,17 @@ const JobCardWithDistance = React.memo<{
   ownerAggregate?: UserReviewAggregate;
 }>(({ job, onPressJobId, ownerAggregate }) => {
   const { t } = useTranslation();
-  const distanceLabel =
-    job.distance !== undefined
-      ? t('jobFeed.distanceFromYou', {
-          km: (job.distance / 1000).toFixed(1),
-          defaultValue: '{{km}} км от вас',
-        })
-      : '';
+  const hasDistance = job.distance != null;
+  const distanceLabel = hasDistance
+    ? t('jobFeed.distanceFromYou', {
+        km: ((job.distance as number) / 1000).toFixed(1),
+        defaultValue: '{{km}} км от вас',
+      })
+    : '';
   return (
     <View>
       <JobCard job={job} onPress={onPressJobId} ownerAggregate={ownerAggregate} />
-      {job.distance !== undefined && <Text style={styles.distanceText}>{distanceLabel}</Text>}
+      {hasDistance && <Text style={styles.distanceText}>{distanceLabel}</Text>}
     </View>
   );
 });
@@ -95,14 +95,6 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
         }
       } else {
         setLocationPermissionDenied(true);
-        Alert.alert(
-          t('jobFeed.locationPermissionTitle', { defaultValue: 'Доступ к геолокации' }),
-          t('jobFeed.locationPermissionBody', {
-            defaultValue:
-              'Для поиска работы рядом с вами необходим доступ к вашему местоположению. Вы можете использовать фильтры по метро.',
-          }),
-          [{ text: t('common.ok', { defaultValue: 'OK' }) }]
-        );
       }
     } catch (error) {
       console.error('Error initializing location:', error);
@@ -117,7 +109,9 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
       const profile = await BaristaProfileService.getProfileByUserId(user.id);
       setBaristaProfile(profile);
 
-      if (!profile || profile.profileCompleteness < 50) {
+      // Banner threshold matches the apply gate in JobDetailsScreen (20%).
+      // Once a barista's profile is complete enough to apply, we stop nagging.
+      if (!profile || profile.profileCompleteness < 20) {
         setShowProfileBanner(true);
       }
     } catch (error) {
@@ -190,13 +184,9 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
         {t('jobFeed.empty', { defaultValue: 'Нет доступных вакансий' })}
       </Text>
       <Text style={styles.emptySubtext}>
-        {locationPermissionDenied
-          ? t('jobFeed.emptyHintMetro', {
-              defaultValue: 'Попробуйте использовать фильтры по метро или типу работы',
-            })
-          : t('jobFeed.emptyHintFilters', {
-              defaultValue: 'Попробуйте изменить фильтры поиска',
-            })}
+        {t('jobFeed.emptyHintFilters', {
+          defaultValue: 'Попробуйте изменить фильтры поиска',
+        })}
       </Text>
     </View>
   );
@@ -213,10 +203,6 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('jobFeed.title', { defaultValue: 'Поиск работы' })}</Text>
-      </View>
-
       {showProfileBanner && (
         <TouchableOpacity
           style={styles.profileBanner}
@@ -273,17 +259,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.text,
   },
   listContent: {
     padding: 16,

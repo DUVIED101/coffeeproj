@@ -22,7 +22,7 @@ import { JobService } from '../../services/JobService';
 import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { ReviewModal } from '../../components/ReviewModal';
-import { getShiftEnd } from '../../utils/shiftLifecycle';
+import { getShiftEnd, getShiftStart, canCancelShiftNow } from '../../utils/shiftLifecycle';
 import type { Application, ApplicationStatus } from '../../types/application';
 import type { ShiftDetails } from '../../types/job';
 import type { ApplicationId, UserId } from '../../types/ids';
@@ -86,6 +86,7 @@ interface ApplicantItemProps {
   cancelLabel: string;
   shiftEndReached: boolean;
   shiftWaitingLabel: string;
+  cancelWindowOpen: boolean;
   t: TFunction;
 }
 
@@ -108,6 +109,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     cancelLabel,
     shiftEndReached,
     shiftWaitingLabel,
+    cancelWindowOpen,
     t,
   }) => {
     const handleAccept = useCallback(() => onAccept(applicationId), [onAccept, applicationId]);
@@ -152,7 +154,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
       application.status === 'accepted' && !application.completedByBusiness;
     const canConfirmCompletion = showConfirmCompletionSection && shiftEndReached;
     const isWaitingForShiftEnd = showConfirmCompletionSection && !shiftEndReached;
-    const canCancelShift = application.status === 'accepted';
+    const canCancelShift = application.status === 'accepted' && cancelWindowOpen;
 
     return (
       <View style={styles.applicantCard}>
@@ -301,6 +303,11 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
   const promptedAppIds = useRef<Set<string>>(new Set());
 
   const shiftEnd = useMemo(() => (shiftDetails ? getShiftEnd(shiftDetails) : null), [shiftDetails]);
+  const cancelWindowClose = useMemo(
+    () => (shiftDetails ? new Date(getShiftStart(shiftDetails).getTime() + 60 * 60 * 1000) : null),
+    [shiftDetails]
+  );
+  const cancelWindowOpen = shiftDetails ? canCancelShiftNow(shiftDetails, now) : true;
 
   useEffect(() => {
     let cancelled = false;
@@ -325,6 +332,14 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
     const timeoutId = setTimeout(() => setNow(new Date()), msUntilEnd + 1000);
     return () => clearTimeout(timeoutId);
   }, [shiftEnd]);
+
+  useEffect(() => {
+    if (!cancelWindowClose) return;
+    const msUntilClose = cancelWindowClose.getTime() - Date.now();
+    if (msUntilClose <= 0) return;
+    const timeoutId = setTimeout(() => setNow(new Date()), msUntilClose + 1000);
+    return () => clearTimeout(timeoutId);
+  }, [cancelWindowClose]);
 
   const shiftEndReached = !shiftEnd || now.getTime() >= shiftEnd.getTime();
   const shiftEndLabel = shiftEnd
@@ -544,7 +559,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
   const shiftWaitingLabel = shiftEndLabel
     ? t('applications.details.availableAfter', {
         time: shiftEndLabel,
-        defaultValue: 'Available after {{time}}',
+        defaultValue: 'Доступно с {{time}}',
       })
     : '';
 
@@ -568,6 +583,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         cancelLabel={cancelLabel}
         shiftEndReached={shiftEndReached}
         shiftWaitingLabel={shiftWaitingLabel}
+        cancelWindowOpen={cancelWindowOpen}
         t={t}
       />
     ),
@@ -586,6 +602,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
       cancelLabel,
       shiftEndReached,
       shiftWaitingLabel,
+      cancelWindowOpen,
       t,
     ]
   );

@@ -31,6 +31,7 @@ type QueryBuilderMock = {
   overlaps: jest.Mock;
   gte: jest.Mock;
   lte: jest.Mock;
+  or: jest.Mock;
   order: jest.Mock;
   range: jest.Mock;
 };
@@ -98,6 +99,7 @@ const createQueryBuilderMock = (rows: FilterRow[]): QueryBuilderMock => {
   builder.overlaps = jest.fn(chain);
   builder.gte = jest.fn(chain);
   builder.lte = jest.fn(chain);
+  builder.or = jest.fn(chain);
   builder.order = jest.fn(chain);
   builder.range = jest.fn(() => Promise.resolve({ data: rows, error: null }));
 
@@ -135,6 +137,7 @@ describe('searchBaristas', () => {
     expect(builder.eq).toHaveBeenCalledTimes(1);
     expect(builder.overlaps).not.toHaveBeenCalled();
     expect(builder.lte).not.toHaveBeenCalled();
+    expect(builder.or).not.toHaveBeenCalled();
     expect(builder.gte).toHaveBeenCalledWith('profile_completeness', DEFAULT_MIN_COMPLETENESS);
     expect(builder.gte).toHaveBeenCalledTimes(1);
   });
@@ -165,7 +168,9 @@ describe('searchBaristas', () => {
     expect(builder.overlaps).toHaveBeenCalledWith('languages', filters.languages);
     expect(builder.overlaps).toHaveBeenCalledWith('certifications', filters.certifications);
     expect(builder.gte).toHaveBeenCalledWith('years_of_experience', filters.minYearsExperience);
-    expect(builder.lte).toHaveBeenCalledWith('hourly_rate_max', filters.hourlyRateMax);
+    expect(builder.or).toHaveBeenCalledWith(
+      `hourly_rate_max.lte.${filters.hourlyRateMax},hourly_rate_min.lte.${filters.hourlyRateMax}`
+    );
     expect(builder.gte).toHaveBeenCalledWith('profile_completeness', filters.minCompleteness);
     expect(builder.gte).not.toHaveBeenCalledWith('profile_completeness', DEFAULT_MIN_COMPLETENESS);
   });

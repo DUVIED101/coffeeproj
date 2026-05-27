@@ -39,8 +39,7 @@ export function computeProfileCompleteness(profile: BaristaProfile): ProfileComp
       satisfied:
         isNonEmptyString(profile.firstName) &&
         isNonEmptyString(profile.lastName) &&
-        isNonEmptyString(profile.city) &&
-        isNonEmptyString(profile.dateOfBirth),
+        isNonEmptyString(profile.city),
     },
     {
       key: 'bio',
@@ -69,7 +68,8 @@ export function computeProfileCompleteness(profile: BaristaProfile): ProfileComp
     {
       key: 'hourlyRate',
       weight: 10,
-      satisfied: typeof profile.hourlyRateMin === 'number',
+      satisfied:
+        typeof profile.hourlyRateMin === 'number' || typeof profile.hourlyRateMax === 'number',
     },
     {
       key: 'portfolio',

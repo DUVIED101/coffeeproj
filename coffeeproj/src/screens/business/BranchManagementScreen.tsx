@@ -33,6 +33,7 @@ import type { Branch, Equipment, GeoPoint, CityCode } from '../../types';
 import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU } from '../../types/city';
 import { PHOTO_LIMIT, MAX_PHOTO_BYTES, isFileTooLarge } from '../../utils/storage';
 import { geocodeAddress } from '../../utils/geocode';
+import { SHORT_TEXT_MAX_LENGTH, ADDRESS_MAX_LENGTH } from '../../utils/validation';
 
 type BusinessStackParamList = {
   BusinessProfileSetup: undefined;
@@ -519,6 +520,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
                     setName(text);
                     setNameError(null);
                   }}
+                  maxLength={SHORT_TEXT_MAX_LENGTH}
                   editable={!isSaving}
                   returnKeyType="done"
                 />
@@ -537,6 +539,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
                     setAddress(text);
                     setAddressError(null);
                   }}
+                  maxLength={ADDRESS_MAX_LENGTH}
                   editable={!isSaving}
                   returnKeyType="done"
                 />

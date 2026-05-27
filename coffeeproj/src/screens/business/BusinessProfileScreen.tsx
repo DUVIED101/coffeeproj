@@ -150,6 +150,22 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
   if (!business) {
     return (
       <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+        <ScreenHeaderWithActions
+          title={t('businessProfile.title')}
+          actions={[
+            {
+              icon: 'bell-outline',
+              badgeCount: unreadCount,
+              onPress: () => navigation.navigate('NotificationFeed'),
+              testID: 'bell',
+            },
+            {
+              icon: 'cog-outline',
+              onPress: () => navigation.navigate('Settings'),
+              testID: 'settings',
+            },
+          ]}
+        />
         <View style={styles.emptyContainer}>
           <MaterialCommunityIcons
             name="storefront-outline"

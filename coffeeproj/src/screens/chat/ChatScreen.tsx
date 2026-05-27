@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
 } from 'react-native';
 import { FlatList as FlatListComponent } from 'react-native';
@@ -21,6 +22,7 @@ import { ChatService } from '../../services/ChatService';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import type { HeaderAction } from '../../components/ScreenHeaderWithActions';
 import { useAuthStore } from '../../stores/authStore';
+import { useChatUnreadStore } from '../../stores/chatUnreadStore';
 import type { Message, ConversationId, Conversation } from '../../types/chat';
 import { formatDateHeader, isSameDay } from '../../utils/dateUtils';
 
@@ -68,6 +70,7 @@ const MessageBubble = React.memo<{
 export function ChatScreen({ navigation, route }: any) {
   const { applicationId, conversationId: initialConversationId } = route.params;
   const user = useAuthStore(state => state.user);
+  const refreshChatUnread = useChatUnreadStore(s => s.refresh);
   const headerHeight = useHeaderHeight();
   const { t } = useTranslation();
 
@@ -79,6 +82,7 @@ export function ChatScreen({ navigation, route }: any) {
 
   const flatListRef = useRef<FlatList<Message>>(null);
   const realtimeChannelRef = useRef<RealtimeChannel | null>(null);
+  const textInputRef = useRef<TextInput>(null);
 
   const loadConversationAndMessages = useCallback(async () => {
     if (!user?.id) {
@@ -110,34 +114,70 @@ export function ChatScreen({ navigation, route }: any) {
       setMessages(msgs.reverse());
 
       await ChatService.markAsRead(conv.id, user.id);
+      if (user.accountType) {
+        refreshChatUnread(user.id, user.accountType).catch(error => {
+          console.error('Error refreshing chat unread count:', error);
+        });
+      }
     } catch (error) {
       console.error('Error loading conversation:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [applicationId, initialConversationId, user?.id]);
+  }, [applicationId, initialConversationId, user?.id, user?.accountType, refreshChatUnread]);
 
   useEffect(() => {
     loadConversationAndMessages();
   }, [loadConversationAndMessages]);
 
   useEffect(() => {
+    // When the keyboard appears, the FlatList loses its bottom area to it;
+    // jump back to the latest message so the most recent context stays visible.
+    const sub = Keyboard.addListener('keyboardDidShow', () => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    });
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
     const businessOwnerId = conversation?.businessId;
     const businessName = conversation?.businessName;
-    const actions: HeaderAction[] | undefined =
-      user?.accountType === 'barista' && businessOwnerId
-        ? [
-            {
-              label: t('chat.headerJobsAction', { defaultValue: 'Вакансии' }),
-              onPress: () =>
-                navigation.getParent()?.navigate('Jobs', {
-                  screen: 'BusinessJobs',
-                  initial: false,
-                  params: { businessOwnerId, businessName },
-                }),
-            },
-          ]
-        : undefined;
+    const baristaId = conversation?.baristaId;
+    let actions: HeaderAction[] | undefined;
+    if (user?.accountType === 'barista' && businessOwnerId) {
+      actions = [
+        {
+          label: t('chat.headerProfileAction', { defaultValue: 'Профиль' }),
+          onPress: () =>
+            navigation.getParent()?.navigate('Jobs', {
+              screen: 'BusinessPublicProfile',
+              initial: false,
+              params: { businessOwnerId },
+            }),
+        },
+        {
+          label: t('chat.headerJobsAction', { defaultValue: 'Вакансии' }),
+          onPress: () =>
+            navigation.getParent()?.navigate('Jobs', {
+              screen: 'BusinessJobs',
+              initial: false,
+              params: { businessOwnerId, businessName },
+            }),
+        },
+      ];
+    } else if (user?.accountType === 'business' && baristaId) {
+      actions = [
+        {
+          label: t('chat.headerProfileAction', { defaultValue: 'Профиль' }),
+          onPress: () =>
+            navigation.getParent()?.navigate('Baristas', {
+              screen: 'ViewBaristaProfile',
+              initial: false,
+              params: { baristaId },
+            }),
+        },
+      ];
+    }
     const otherPartyName =
       user?.accountType === 'barista' ? businessName : conversation?.baristaName;
     const title =
@@ -156,6 +196,7 @@ export function ChatScreen({ navigation, route }: any) {
     user?.accountType,
     conversation?.businessId,
     conversation?.businessName,
+    conversation?.baristaId,
     conversation?.baristaName,
     conversation?.jobTitle,
     t,
@@ -179,9 +220,15 @@ export function ChatScreen({ navigation, route }: any) {
       });
 
       if (newMessage.senderId !== userId) {
-        ChatService.markAsRead(conversationId, userId).catch(error => {
-          console.error('Error marking message as read:', error);
-        });
+        ChatService.markAsRead(conversationId, userId)
+          .then(() => {
+            if (user?.accountType) {
+              return refreshChatUnread(userId, user.accountType);
+            }
+          })
+          .catch(error => {
+            console.error('Error marking message as read:', error);
+          });
       }
     });
 
@@ -193,7 +240,7 @@ export function ChatScreen({ navigation, route }: any) {
         realtimeChannelRef.current = null;
       }
     };
-  }, [conversationId, userId]);
+  }, [conversationId, userId, user?.accountType, refreshChatUnread]);
 
   const handleSendMessage = useCallback(async () => {
     if (!messageText.trim() || !conversation || !user?.id || isSending) {
@@ -214,6 +261,8 @@ export function ChatScreen({ navigation, route }: any) {
       // Add the sent message to local state immediately.
       // FlatList onContentSizeChange below will scroll to end.
       setMessages(prevMessages => [...prevMessages, sentMessage]);
+      // Keep keyboard open and focus on input so the user can keep typing.
+      textInputRef.current?.focus();
     } catch (error) {
       console.error('Error sending message:', error);
       setMessageText(textToSend);
@@ -283,80 +332,69 @@ export function ChatScreen({ navigation, route }: any) {
     conversation.applicationStatus === 'rejected' || conversation.applicationStatus === 'withdrawn';
 
   return (
-    <View style={styles.container}>
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
-        <View style={styles.header}>
-          <Text style={styles.title} numberOfLines={1}>
-            {conversation.jobTitle || t('chat.fallbackTitle', { defaultValue: 'Chat' })}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
+      <FlatListComponent
+        ref={flatListRef}
+        data={messages}
+        renderItem={renderMessage}
+        keyExtractor={item => item.id}
+        style={styles.messagesContainer}
+        contentContainerStyle={styles.messagesList}
+        ListEmptyComponent={renderEmpty}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        onContentSizeChange={() => {
+          if (messages.length > 0) {
+            flatListRef.current?.scrollToEnd({ animated: false });
+          }
+        }}
+      />
+
+      {isChatClosed ? (
+        <View style={styles.closedBanner}>
+          <Text style={styles.closedBannerTitle}>{t('chat.closed.title')}</Text>
+          <Text style={styles.closedBannerSubtitle}>
+            {conversation.applicationStatus === 'withdrawn'
+              ? t('chat.closed.cancelled')
+              : t('chat.closed.rejected')}
           </Text>
-          {user?.accountType === 'barista' && conversation.businessName && (
-            <Text style={styles.subtitle} numberOfLines={1}>
-              {conversation.businessName}
-            </Text>
-          )}
         </View>
-
-        <FlatListComponent
-          ref={flatListRef}
-          data={messages}
-          renderItem={renderMessage}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.messagesList}
-          ListEmptyComponent={renderEmpty}
-          onContentSizeChange={() => {
-            if (messages.length > 0) {
-              flatListRef.current?.scrollToEnd({ animated: false });
-            }
-          }}
-        />
-
-        {isChatClosed ? (
-          <View style={styles.closedBanner}>
-            <Text style={styles.closedBannerTitle}>{t('chat.closed.title')}</Text>
-            <Text style={styles.closedBannerSubtitle}>
-              {conversation.applicationStatus === 'withdrawn'
-                ? t('chat.closed.cancelled')
-                : t('chat.closed.rejected')}
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              value={messageText}
-              onChangeText={setMessageText}
-              placeholder={t('chat.inputPlaceholder', { defaultValue: 'Type a message...' })}
-              placeholderTextColor={COLORS.textSecondary}
-              multiline
-              maxLength={2000}
-              editable={!isSending}
-              autoCorrect={false}
-              spellCheck={false}
-              autoComplete="off"
-              keyboardType="default"
-            />
-            <TouchableOpacity
-              style={[
-                styles.sendButton,
-                (!messageText.trim() || isSending) && styles.sendButtonDisabled,
-              ]}
-              onPress={handleSendMessage}
-              disabled={!messageText.trim() || isSending}>
-              {isSending ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.sendButtonText}>
-                  {t('chat.send', { defaultValue: 'Send' })}
-                </Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        )}
-      </KeyboardAvoidingView>
-    </View>
+      ) : (
+        <View style={styles.inputContainer}>
+          <TextInput
+            ref={textInputRef}
+            style={styles.textInput}
+            value={messageText}
+            onChangeText={setMessageText}
+            placeholder={t('chat.inputPlaceholder', { defaultValue: 'Type a message...' })}
+            placeholderTextColor={COLORS.textSecondary}
+            multiline
+            maxLength={2000}
+            blurOnSubmit={false}
+            autoCorrect={false}
+            spellCheck={false}
+            autoComplete="off"
+            keyboardType="default"
+          />
+          <TouchableOpacity
+            style={[
+              styles.sendButton,
+              (!messageText.trim() || isSending) && styles.sendButtonDisabled,
+            ]}
+            onPress={handleSendMessage}
+            disabled={!messageText.trim() || isSending}>
+            {isSending ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.sendButtonText}>{t('chat.send', { defaultValue: 'Send' })}</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
+    </KeyboardAvoidingView>
   );
 }
 
@@ -399,6 +437,9 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: COLORS.textSecondary,
+  },
+  messagesContainer: {
+    flex: 1,
   },
   messagesList: {
     padding: 16,

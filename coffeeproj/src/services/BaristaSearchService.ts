@@ -31,7 +31,10 @@ export class BaristaSearchService {
         query = query.gte('years_of_experience', filters.minYearsExperience);
       }
       if (filters.hourlyRateMax !== undefined) {
-        query = query.lte('hourly_rate_max', filters.hourlyRateMax);
+        // Some profiles only set hourly_rate_min (single desired rate);
+        // a cap should match when EITHER bound is within the cap.
+        const cap = filters.hourlyRateMax;
+        query = query.or(`hourly_rate_max.lte.${cap},hourly_rate_min.lte.${cap}`);
       }
 
       query = query.gte(

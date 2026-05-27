@@ -84,10 +84,20 @@ describe('computeProfileCompleteness', () => {
     expect(computeProfileCompleteness({ ...baseProfile, portfolioPhotos: [] }).percent).toEqual(90);
   });
 
-  it('drops 10% when hourlyRateMin is not set', () => {
+  it('drops 10% when both hourlyRate bounds are unset', () => {
     expect(
-      computeProfileCompleteness({ ...baseProfile, hourlyRateMin: undefined }).percent
+      computeProfileCompleteness({
+        ...baseProfile,
+        hourlyRateMin: undefined,
+        hourlyRateMax: undefined,
+      }).percent
     ).toEqual(90);
+  });
+
+  it('still counts hourlyRate when only one bound is set', () => {
+    expect(
+      computeProfileCompleteness({ ...baseProfile, hourlyRateMax: undefined }).percent
+    ).toEqual(100);
   });
 
   it('drops 15% when work history is empty', () => {

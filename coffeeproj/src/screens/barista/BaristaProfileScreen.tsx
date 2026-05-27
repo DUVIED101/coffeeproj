@@ -39,6 +39,14 @@ import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { formatLocalDate } from '../../utils/dateUtils';
 import { computeProfileCompleteness } from '../../utils/profileCompleteness';
 import { requestLocationPermission, getCurrentLocation } from '../../utils/geolocation';
+import {
+  sanitizeNameInput,
+  sanitizeYearsInput,
+  sanitizeDigitsInput,
+  NAME_MAX_LENGTH,
+  YEARS_MAX_LENGTH,
+  COMPENSATION_MAX_DIGITS,
+} from '../../utils/validation';
 import type { GeoPoint } from '../../types/business';
 import type { BaristaProfile, ShiftTime } from '../../types/baristaProfile';
 import type { CityCode } from '../../types/city';
@@ -508,7 +516,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
         city,
         dateOfBirth: dateOfBirth.trim() || undefined,
         bio: bio.trim() || undefined,
-        yearsOfExperience: yearsOfExperience ? parseInt(yearsOfExperience, 10) : undefined,
+        yearsOfExperience: yearsOfExperience ? parseFloat(yearsOfExperience) : undefined,
         equipmentExperience: selectedEquipment,
         certifications,
         preferredMetroStations,
@@ -734,7 +742,8 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 <TextInput
                   style={styles.input}
                   value={firstName}
-                  onChangeText={setFirstName}
+                  onChangeText={text => setFirstName(sanitizeNameInput(text))}
+                  maxLength={NAME_MAX_LENGTH}
                   editable={isEditing}
                 />
 
@@ -744,7 +753,8 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 <TextInput
                   style={styles.input}
                   value={lastName}
-                  onChangeText={setLastName}
+                  onChangeText={text => setLastName(sanitizeNameInput(text))}
+                  maxLength={NAME_MAX_LENGTH}
                   editable={isEditing}
                 />
 
@@ -875,8 +885,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 <TextInput
                   style={styles.input}
                   value={yearsOfExperience}
-                  onChangeText={setYearsOfExperience}
-                  keyboardType="numeric"
+                  onChangeText={text => setYearsOfExperience(sanitizeYearsInput(text))}
+                  maxLength={YEARS_MAX_LENGTH}
+                  keyboardType="decimal-pad"
                   editable={isEditing}
                   returnKeyType="done"
                 />
@@ -917,47 +928,60 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 />
               </>
             ) : (
-              <>
-                {profile.bio && <Text style={styles.bioText}>{profile.bio}</Text>}
-                {profile.yearsOfExperience !== undefined && (
-                  <Text style={styles.infoText}>
-                    {t('baristaProfileScreen.experience', {
-                      years: t('barista.experienceYears', {
-                        count: profile.yearsOfExperience,
-                      }),
-                      defaultValue: 'Стаж: {{years}}',
-                    })}
-                  </Text>
-                )}
-                {profile.equipmentExperience.length > 0 && (
+              (() => {
+                const hasBio = !!profile.bio;
+                const hasYears = profile.yearsOfExperience != null && profile.yearsOfExperience > 0;
+                const hasEquipment = profile.equipmentExperience.length > 0;
+                const hasCerts = profile.certifications.length > 0;
+                if (!hasBio && !hasYears && !hasEquipment && !hasCerts) {
+                  return <Text style={styles.emptySection}>{t('common.notSpecified')}</Text>;
+                }
+                return (
                   <>
-                    <Text style={styles.label}>
-                      {t('baristaProfileScreen.equipment', { defaultValue: 'Оборудование' })}
-                    </Text>
-                    <View style={styles.chipsContainer}>
-                      {profile.equipmentExperience.map(equipment => (
-                        <View key={equipment} style={[styles.chip, styles.chipSelected]}>
-                          <Text style={[styles.chipText, styles.chipTextSelected]}>
-                            {equipment}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-                  </>
-                )}
-                {profile.certifications.length > 0 && (
-                  <>
-                    <Text style={styles.label}>
-                      {t('baristaProfileScreen.certifications', { defaultValue: 'Сертификаты' })}
-                    </Text>
-                    {profile.certifications.map((cert, index) => (
-                      <Text key={`${index}-${cert}`} style={styles.certificationItem}>
-                        {index + 1}. {cert}
+                    {hasBio && <Text style={styles.bioText}>{profile.bio}</Text>}
+                    {hasYears && (
+                      <Text style={styles.infoText}>
+                        {t('baristaProfileScreen.experience', {
+                          years: t('barista.experienceYears', {
+                            count: profile.yearsOfExperience,
+                          }),
+                          defaultValue: 'Стаж: {{years}}',
+                        })}
                       </Text>
-                    ))}
+                    )}
+                    {hasEquipment && (
+                      <>
+                        <Text style={styles.label}>
+                          {t('baristaProfileScreen.equipment', { defaultValue: 'Оборудование' })}
+                        </Text>
+                        <View style={styles.chipsContainer}>
+                          {profile.equipmentExperience.map(equipment => (
+                            <View key={equipment} style={[styles.chip, styles.chipSelected]}>
+                              <Text style={[styles.chipText, styles.chipTextSelected]}>
+                                {equipment}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      </>
+                    )}
+                    {hasCerts && (
+                      <>
+                        <Text style={styles.label}>
+                          {t('baristaProfileScreen.certifications', {
+                            defaultValue: 'Сертификаты',
+                          })}
+                        </Text>
+                        {profile.certifications.map((cert, index) => (
+                          <Text key={`${index}-${cert}`} style={styles.certificationItem}>
+                            {index + 1}. {cert}
+                          </Text>
+                        ))}
+                      </>
+                    )}
                   </>
-                )}
-              </>
+                );
+              })()
             )}
           </View>
 
@@ -1048,7 +1072,10 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 <TextInput
                   style={styles.input}
                   value={hourlyRateMin}
-                  onChangeText={setHourlyRateMin}
+                  onChangeText={text =>
+                    setHourlyRateMin(sanitizeDigitsInput(text, COMPENSATION_MAX_DIGITS))
+                  }
+                  maxLength={COMPENSATION_MAX_DIGITS}
                   keyboardType="numeric"
                   placeholder={t('baristaSetup.minPlaceholder', { defaultValue: 'Мин' })}
                   editable={isEditing}
@@ -1056,48 +1083,62 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 />
               </>
             ) : (
-              <>
-                {profile.preferredMetroStations.length > 0 && (
+              (() => {
+                const hasMetro = profile.preferredMetroStations.length > 0;
+                const hasShifts = profile.preferredShiftTimes.length > 0;
+                const hasRate = profile.hourlyRateMin != null;
+                if (!hasMetro && !hasShifts && !hasRate) {
+                  return <Text style={styles.emptySection}>{t('common.notSpecified')}</Text>;
+                }
+                return (
                   <>
-                    <Text style={styles.label}>
-                      {t('baristaProfileScreen.metroStations', { defaultValue: 'Станции метро' })}
-                    </Text>
-                    <Text style={styles.infoText}>{profile.preferredMetroStations.join(', ')}</Text>
+                    {hasMetro && (
+                      <>
+                        <Text style={styles.label}>
+                          {t('baristaProfileScreen.metroStations', {
+                            defaultValue: 'Станции метро',
+                          })}
+                        </Text>
+                        <Text style={styles.infoText}>
+                          {profile.preferredMetroStations.join(', ')}
+                        </Text>
+                      </>
+                    )}
+                    {hasShifts && (
+                      <>
+                        <Text style={styles.label}>
+                          {t('baristaProfileScreen.shiftTimes', { defaultValue: 'Смены' })}
+                        </Text>
+                        <View style={styles.chipsContainer}>
+                          {profile.preferredShiftTimes.map(shift => {
+                            const entry = SHIFT_TIME_KEYS.find(s => s.value === shift);
+                            return (
+                              <View key={shift} style={[styles.chip, styles.chipSelected]}>
+                                <Text style={[styles.chipText, styles.chipTextSelected]}>
+                                  {entry ? t(entry.labelKey) : shift}
+                                </Text>
+                              </View>
+                            );
+                          })}
+                        </View>
+                      </>
+                    )}
+                    {hasRate && (
+                      <>
+                        <Text style={styles.label}>
+                          {t('baristaProfileScreen.hourlyRate', { defaultValue: 'Ставка в час' })}
+                        </Text>
+                        <Text style={styles.infoText}>
+                          {t('baristaProfileScreen.hourlyRateFromValue', {
+                            defaultValue: 'от {{min}} RUB',
+                            min: profile.hourlyRateMin,
+                          })}
+                        </Text>
+                      </>
+                    )}
                   </>
-                )}
-                {profile.preferredShiftTimes.length > 0 && (
-                  <>
-                    <Text style={styles.label}>
-                      {t('baristaProfileScreen.shiftTimes', { defaultValue: 'Смены' })}
-                    </Text>
-                    <View style={styles.chipsContainer}>
-                      {profile.preferredShiftTimes.map(shift => {
-                        const entry = SHIFT_TIME_KEYS.find(s => s.value === shift);
-                        return (
-                          <View key={shift} style={[styles.chip, styles.chipSelected]}>
-                            <Text style={[styles.chipText, styles.chipTextSelected]}>
-                              {entry ? t(entry.labelKey) : shift}
-                            </Text>
-                          </View>
-                        );
-                      })}
-                    </View>
-                  </>
-                )}
-                {profile.hourlyRateMin != null && (
-                  <>
-                    <Text style={styles.label}>
-                      {t('baristaProfileScreen.hourlyRate', { defaultValue: 'Ставка в час' })}
-                    </Text>
-                    <Text style={styles.infoText}>
-                      {t('baristaProfileScreen.hourlyRateFromValue', {
-                        defaultValue: 'от {{min}} RUB',
-                        min: profile.hourlyRateMin,
-                      })}
-                    </Text>
-                  </>
-                )}
-              </>
+                );
+              })()
             )}
           </View>
 
@@ -1395,6 +1436,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.textSecondary,
     marginTop: 8,
+  },
+  emptySection: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+    fontStyle: 'italic',
   },
   certificationItem: {
     fontSize: 15,

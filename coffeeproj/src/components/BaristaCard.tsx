@@ -6,6 +6,7 @@ import type { BaristaProfile } from '../types/baristaProfile';
 import type { UserReviewAggregate } from '../types/review';
 import { COLORS } from '../config/constants';
 import { getInitials } from '../utils/getInitials';
+import { isCityCode } from '../types/city';
 import { StarRow } from './StarRow';
 
 type BaristaCardProps = {
@@ -22,14 +23,18 @@ const getHourlyRateText = (
   t: TFunction,
   locale: string
 ): string | undefined => {
-  if (min != null && max != null) {
+  if (min != null && max != null && min !== max) {
     return t('barista.hourlyRange', {
       min: formatRate(min, locale),
       max: formatRate(max, locale),
     });
   }
-  if (max != null) {
-    return t('barista.hourlyMax', { max: formatRate(max, locale) });
+  const single = min ?? max;
+  if (single != null) {
+    return t('barista.hourlySingle', {
+      amount: formatRate(single, locale),
+      defaultValue: '{{amount}}/час',
+    });
   }
   return undefined;
 };
@@ -77,7 +82,7 @@ export const BaristaCard = React.memo<BaristaCardProps>(({ profile, onPress, rev
           <Text style={styles.title}>
             {firstName} {lastName}
           </Text>
-          <Text style={styles.subtitle}>{city}</Text>
+          <Text style={styles.subtitle}>{isCityCode(city) ? t(`city.codes.${city}`) : city}</Text>
           <View style={styles.ratingRow}>
             {reviewAggregate && reviewAggregate.reviewCount > 0 ? (
               <StarRow

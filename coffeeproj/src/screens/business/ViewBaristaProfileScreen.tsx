@@ -30,6 +30,7 @@ import type { UserReviewAggregate } from '../../types/review';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import type { WorkExperience } from '../../types/workExperience';
 import { computeDuration, computeTotalDuration } from '../../types/workExperience';
+import { isCityCode } from '../../types/city';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'ViewBaristaProfile'>;
@@ -186,8 +187,10 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
             <Text style={styles.name}>
               {profile.firstName} {profile.lastName}
             </Text>
-            <Text style={styles.city}>{profile.city}</Text>
-            {profile.yearsOfExperience !== undefined && (
+            <Text style={styles.city}>
+              {isCityCode(profile.city) ? t(`city.codes.${profile.city}`) : profile.city}
+            </Text>
+            {profile.yearsOfExperience !== undefined && profile.yearsOfExperience > 0 && (
               <Text style={styles.experience}>
                 {t('viewBarista.yearsExperience', { count: profile.yearsOfExperience })}
               </Text>
@@ -296,13 +299,6 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
           </View>
         )}
 
-        {profile.languages.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('viewBarista.languages')}</Text>
-            <Text style={styles.infoText}>{profile.languages.join(', ')}</Text>
-          </View>
-        )}
-
         {profile.preferredMetroStations.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('viewBarista.preferredMetro')}</Text>
@@ -331,21 +327,23 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
           </View>
         )}
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('viewBarista.hourlyRate')}</Text>
-          <Text style={styles.infoText}>
-            {(() => {
-              const min =
-                typeof profile.hourlyRateMin === 'number' ? `${profile.hourlyRateMin} RUB` : null;
-              const max =
-                typeof profile.hourlyRateMax === 'number' ? `${profile.hourlyRateMax} RUB` : null;
-              if (min && max) return `${min} – ${max}`;
-              if (min) return min;
-              if (max) return max;
-              return t('common.notSpecified');
-            })()}
-          </Text>
-        </View>
+        {(typeof profile.hourlyRateMin === 'number' ||
+          typeof profile.hourlyRateMax === 'number') && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('viewBarista.hourlyRate')}</Text>
+            <Text style={styles.infoText}>
+              {(() => {
+                const min =
+                  typeof profile.hourlyRateMin === 'number' ? `${profile.hourlyRateMin} RUB` : null;
+                const max =
+                  typeof profile.hourlyRateMax === 'number' ? `${profile.hourlyRateMax} RUB` : null;
+                if (min && max && profile.hourlyRateMin !== profile.hourlyRateMax)
+                  return `${min} – ${max}`;
+                return min ?? max;
+              })()}
+            </Text>
+          </View>
+        )}
 
         {profile.portfolioPhotos.length > 0 && (
           <View style={styles.section}>

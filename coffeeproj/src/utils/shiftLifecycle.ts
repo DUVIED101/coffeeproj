@@ -26,6 +26,18 @@ const shiftBoundary = (shift: ShiftDetails): { start: Date; end: Date } => {
 
 export const getShiftEnd = (shift: ShiftDetails): Date => shiftBoundary(shift).end;
 
+export const getShiftStart = (shift: ShiftDetails): Date => shiftBoundary(shift).start;
+
+const ONE_HOUR_MS = 60 * 60 * 1000;
+
+// Cancel button is allowed before the shift and within the first hour after it
+// begins. After that, the shift is considered "in progress" beyond rescue and
+// the parties should use the no-show / completion flow instead.
+export const canCancelShiftNow = (shift: ShiftDetails, now: Date = new Date()): boolean => {
+  const start = getShiftStart(shift);
+  return now.getTime() < start.getTime() + ONE_HOUR_MS;
+};
+
 const PENDING_STATUSES: ApplicationStatus[] = ['pending', 'under_review'];
 
 export const classifyShiftLifecycle = (

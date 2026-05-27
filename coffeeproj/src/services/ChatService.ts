@@ -373,6 +373,62 @@ export class ChatService {
   }
 
   /**
+   * Sum unread messages across all conversations for a given user role.
+   * Used to drive the Chats tab badge in the bottom nav.
+   */
+  static async getTotalUnreadMessageCount(
+    userId: string,
+    accountType: 'barista' | 'business'
+  ): Promise<number> {
+    const idField = accountType === 'barista' ? 'barista_id' : 'business_id';
+    const countField = accountType === 'barista' ? 'unread_count_barista' : 'unread_count_business';
+    const { data, error } = await supabase
+      .from('conversations')
+      .select(countField)
+      .eq(idField, userId);
+    if (error) {
+      console.error('Error in getTotalUnreadMessageCount:', error);
+      return 0;
+    }
+    return (data ?? []).reduce(
+      (sum: number, row: Record<string, number | null>) => sum + (row[countField] ?? 0),
+      0
+    );
+  }
+
+  /**
+   * For each conversation id, fetch the most recent message text + sender.
+   * Uses a single query with client-side bucketing — fine for typical inbox sizes.
+   */
+  private static async fetchLastMessagePerConversation(
+    conversationIds: string[]
+  ): Promise<Record<string, { message_text: string; sender_id: string }>> {
+    if (conversationIds.length === 0) return {};
+
+    const { data, error } = await supabase
+      .from('messages')
+      .select('conversation_id, message_text, sender_id, created_at')
+      .in('conversation_id', conversationIds)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error in fetchLastMessagePerConversation:', error);
+      return {};
+    }
+
+    const map: Record<string, { message_text: string; sender_id: string }> = {};
+    for (const row of data ?? []) {
+      if (!(row.conversation_id in map)) {
+        map[row.conversation_id] = {
+          message_text: row.message_text,
+          sender_id: row.sender_id,
+        };
+      }
+    }
+    return map;
+  }
+
+  /**
    * Fetch "First Last" display name for a barista user from barista_profiles.
    * Returns undefined if no profile exists.
    */
@@ -444,6 +500,18 @@ export class ChatService {
         for (const conv of mapped) {
           if (!conv.businessName) {
             conv.businessName = nameMap[conv.businessId];
+          }
+        }
+      }
+
+      const idsWithMessages = mapped.filter(c => c.lastMessageAt).map(c => c.id);
+      if (idsWithMessages.length > 0) {
+        const lastByConvId = await this.fetchLastMessagePerConversation(idsWithMessages);
+        for (const conv of mapped) {
+          const last = lastByConvId[conv.id];
+          if (last) {
+            conv.lastMessageText = last.message_text;
+            conv.lastMessageSenderId = last.sender_id;
           }
         }
       }

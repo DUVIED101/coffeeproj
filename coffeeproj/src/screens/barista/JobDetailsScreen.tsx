@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,13 @@ import {
   Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
 import { ApplicationService } from '../../services/ApplicationService';
+import { BaristaProfileService } from '../../services/BaristaProfileService';
 import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { StarRow } from '../../components/StarRow';
@@ -51,46 +53,60 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [ownerAggregate, setOwnerAggregate] = useState<UserReviewAggregate | null>(null);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
+  const [profileCompleteness, setProfileCompleteness] = useState<number | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const jobData = await JobService.getJobById(jobId);
-        if (cancelled) return;
-        setJob(jobData);
+  const MIN_COMPLETENESS_TO_APPLY = 20;
 
-        if (jobData?.businessOwnerId) {
-          try {
-            const agg = await ReviewService.getAggregateForUser(jobData.businessOwnerId as UserId);
-            if (!cancelled) setOwnerAggregate(agg);
-          } catch (err) {
-            console.error('Error loading owner aggregate:', err);
-          }
-        }
-
-        if (user?.id) {
-          const application = await ApplicationService.checkApplicationExists(jobId, user.id);
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      const load = async () => {
+        try {
+          setIsLoading(true);
+          setError(null);
+          const jobData = await JobService.getJobById(jobId);
           if (cancelled) return;
-          setExistingApplication(application);
+          setJob(jobData);
+
+          if (jobData?.businessOwnerId) {
+            try {
+              const agg = await ReviewService.getAggregateForUser(
+                jobData.businessOwnerId as UserId
+              );
+              if (!cancelled) setOwnerAggregate(agg);
+            } catch (err) {
+              console.error('Error loading owner aggregate:', err);
+            }
+          }
+
+          if (user?.id) {
+            const application = await ApplicationService.checkApplicationExists(jobId, user.id);
+            if (cancelled) return;
+            setExistingApplication(application);
+
+            try {
+              const profile = await BaristaProfileService.getProfileByUserId(user.id);
+              if (!cancelled) setProfileCompleteness(profile?.profileCompleteness ?? 0);
+            } catch (err) {
+              console.error('Error loading barista profile:', err);
+            }
+          }
+        } catch (err) {
+          if (cancelled) return;
+          console.error('Error loading job details:', err);
+          setError(t('jobDetails.loadFailed', { defaultValue: 'Не удалось загрузить вакансию' }));
+        } finally {
+          if (cancelled) return;
+          setHasCheckedApplication(true);
+          setIsLoading(false);
         }
-      } catch (err) {
-        if (cancelled) return;
-        console.error('Error loading job details:', err);
-        setError(t('jobDetails.loadFailed', { defaultValue: 'Не удалось загрузить вакансию' }));
-      } finally {
-        if (cancelled) return;
-        setHasCheckedApplication(true);
-        setIsLoading(false);
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [jobId, user?.id]);
+      };
+      load();
+      return () => {
+        cancelled = true;
+      };
+    }, [jobId, user?.id, t])
+  );
 
   const loadJob = async () => {
     try {
@@ -108,6 +124,18 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleApply = () => {
     if (!job || isNavigating) return;
+    if (profileCompleteness !== null && profileCompleteness < MIN_COMPLETENESS_TO_APPLY) {
+      Alert.alert(
+        t('jobDetails.applyBlockedTitle', { defaultValue: 'Заполните профиль' }),
+        t('jobDetails.applyBlockedBody', {
+          min: MIN_COMPLETENESS_TO_APPLY,
+          current: profileCompleteness,
+          defaultValue:
+            'Профиль заполнен на {{current}}%. Чтобы откликаться на вакансии, его нужно заполнить минимум на {{min}}%.',
+        })
+      );
+      return;
+    }
     setIsNavigating(true);
     navigation.navigate('Apply', { job });
     setTimeout(() => setIsNavigating(false), 500);
@@ -146,7 +174,7 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const formatDistance = (meters: number | undefined): string => {
+  const formatDistance = (meters: number | null | undefined): string => {
     if (!meters) return '';
     if (meters < 1000) {
       return t('jobDetails.metersAway', {
@@ -220,7 +248,7 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   }
 
-  const displayDistance = distance !== undefined ? distance : job.distance;
+  const displayDistance = distance != null ? distance : job.distance;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -266,7 +294,7 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
               <Text style={styles.metroStation}>{job.metroStation}</Text>
             </View>
           )}
-          {displayDistance !== undefined && (
+          {displayDistance != null && (
             <Text style={styles.distance}>
               {t('jobDetails.distanceFromYou', {
                 distance: formatDistance(displayDistance),
@@ -416,6 +444,16 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
       ) : (
         <View style={styles.footer}>
+          {profileCompleteness !== null && profileCompleteness < MIN_COMPLETENESS_TO_APPLY && (
+            <Text style={styles.applyBlockedHint}>
+              {t('jobDetails.applyBlockedHint', {
+                min: MIN_COMPLETENESS_TO_APPLY,
+                current: profileCompleteness,
+                defaultValue:
+                  'Заполните профиль до {{min}}%, чтобы откликаться. Сейчас {{current}}%.',
+              })}
+            </Text>
+          )}
           <TouchableOpacity
             style={[
               styles.applyButton,
@@ -586,6 +624,20 @@ const styles = StyleSheet.create({
     padding: 20,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
+  },
+  applyBlockedHint: {
+    fontSize: 13,
+    color: '#92400E',
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    textAlign: 'center',
+    overflow: 'hidden',
+    lineHeight: 18,
   },
   applyButton: {
     backgroundColor: COLORS.primary,
