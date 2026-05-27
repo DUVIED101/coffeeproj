@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Picker } from '@react-native-picker/picker';
 import { useTranslation } from 'react-i18next';
 import { COLORS, RADII } from '../config/constants';
 
@@ -20,6 +21,14 @@ const formatMonthYear = (year: number, month: number): string => {
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 };
 
+const buildMonthLabels = (locale: string): string[] => {
+  return Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(2000, i, 1);
+    const name = d.toLocaleDateString(locale, { month: 'long' });
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  });
+};
+
 export const MonthYearPicker: React.FC<Props> = ({
   value,
   onChange,
@@ -29,43 +38,50 @@ export const MonthYearPicker: React.FC<Props> = ({
   minYear = 1960,
   maxYear,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
   const resolvedPlaceholder =
     placeholder ?? t('monthYearPicker.placeholder', { defaultValue: 'Выбрать' });
-  const [isOpen, setIsOpen] = useState(false);
-  const [draftDate, setDraftDate] = useState<Date | null>(null);
+  const resolvedMaxYear = maxYear ?? new Date().getFullYear();
 
-  const seedDate = value ? new Date(value.year, value.month - 1, 1) : new Date();
-  const maxDate = new Date(maxYear ?? new Date().getFullYear(), 11, 31);
-  const minDate = new Date(minYear, 0, 1);
+  const [isOpen, setIsOpen] = useState(false);
+  const initialMonth = value?.month ?? new Date().getMonth() + 1;
+  const initialYear = value?.year ?? resolvedMaxYear;
+  const [draftMonth, setDraftMonth] = useState<number>(initialMonth);
+  const [draftYear, setDraftYear] = useState<number>(initialYear);
+
+  const monthLabels = useMemo(() => buildMonthLabels(locale), [locale]);
+  const years = useMemo(() => {
+    const out: number[] = [];
+    for (let y = resolvedMaxYear; y >= minYear; y--) out.push(y);
+    return out;
+  }, [minYear, resolvedMaxYear]);
 
   const openPicker = (): void => {
     if (disabled) return;
-    setDraftDate(seedDate);
+    setDraftMonth(value?.month ?? new Date().getMonth() + 1);
+    setDraftYear(value?.year ?? resolvedMaxYear);
     setIsOpen(true);
   };
 
   const closePicker = (): void => {
     setIsOpen(false);
-    setDraftDate(null);
-  };
-
-  const commit = (date: Date): void => {
-    onChange({ year: date.getFullYear(), month: date.getMonth() + 1 });
-  };
-
-  const handleIosChange = (_event: unknown, date?: Date): void => {
-    if (date) setDraftDate(date);
-  };
-
-  const handleAndroidChange = (_event: unknown, date?: Date): void => {
-    setIsOpen(false);
-    if (date) commit(date);
   };
 
   const handleDone = (): void => {
-    if (draftDate) commit(draftDate);
+    onChange({ year: draftYear, month: draftMonth });
     closePicker();
+  };
+
+  // Android: keep the native calendar dialog — it already opens as its own
+  // modal with no day-only/month-only split issues, and is the platform norm.
+  const seedDate = value ? new Date(value.year, value.month - 1, 1) : new Date();
+  const maxDate = new Date(resolvedMaxYear, 11, 31);
+  const minDate = new Date(minYear, 0, 1);
+
+  const handleAndroidChange = (_event: unknown, date?: Date): void => {
+    setIsOpen(false);
+    if (date) onChange({ year: date.getFullYear(), month: date.getMonth() + 1 });
   };
 
   return (
@@ -87,7 +103,7 @@ export const MonthYearPicker: React.FC<Props> = ({
           value={seedDate}
           mode="date"
           display="default"
-          onChange={handleAndroidChange}
+          onValueChange={handleAndroidChange}
           maximumDate={maxDate}
           minimumDate={minDate}
         />
@@ -97,21 +113,31 @@ export const MonthYearPicker: React.FC<Props> = ({
         <Modal
           visible={isOpen}
           transparent
-          animationType="fade"
+          animationType="slide"
           onRequestClose={closePicker}
           statusBarTranslucent>
           <Pressable style={styles.backdrop} onPress={closePicker}>
             <Pressable style={styles.sheet} onPress={() => {}}>
-              <DateTimePicker
-                value={draftDate ?? seedDate}
-                mode="date"
-                display="inline"
-                themeVariant="light"
-                textColor="#000000"
-                onChange={handleIosChange}
-                maximumDate={maxDate}
-                minimumDate={minDate}
-              />
+              <View style={styles.wheels}>
+                <Picker
+                  selectedValue={draftMonth}
+                  onValueChange={v => setDraftMonth(Number(v))}
+                  style={styles.wheel}
+                  itemStyle={styles.wheelItem}>
+                  {monthLabels.map((name, i) => (
+                    <Picker.Item key={i + 1} label={name} value={i + 1} />
+                  ))}
+                </Picker>
+                <Picker
+                  selectedValue={draftYear}
+                  onValueChange={v => setDraftYear(Number(v))}
+                  style={styles.wheel}
+                  itemStyle={styles.wheelItem}>
+                  {years.map(y => (
+                    <Picker.Item key={y} label={String(y)} value={y} />
+                  ))}
+                </Picker>
+              </View>
               <View style={styles.sheetActions}>
                 <TouchableOpacity onPress={closePicker} style={styles.cancelButton}>
                   <Text style={styles.cancelText}>
@@ -169,6 +195,16 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+  },
+  wheels: {
+    flexDirection: 'row',
+  },
+  wheel: {
+    flex: 1,
+  },
+  wheelItem: {
+    fontSize: 20,
+    color: '#000',
   },
   sheetActions: {
     flexDirection: 'row',

@@ -143,7 +143,6 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [preferredMetroStations, setPreferredMetroStations] = useState<string[]>([]);
   const [selectedShiftTimes, setSelectedShiftTimes] = useState<ShiftTime[]>([]);
   const [hourlyRateMin, setHourlyRateMin] = useState('');
-  const [hourlyRateMax, setHourlyRateMax] = useState('');
   const [isActivelyLooking, setIsActivelyLooking] = useState(true);
   const [workExperienceDrafts, setWorkExperienceDrafts] = useState<WorkExperienceDraft[]>([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -252,7 +251,6 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     setPreferredMetroStations(profileData.preferredMetroStations);
     setSelectedShiftTimes(profileData.preferredShiftTimes);
     setHourlyRateMin(profileData.hourlyRateMin != null ? String(profileData.hourlyRateMin) : '');
-    setHourlyRateMax(profileData.hourlyRateMax != null ? String(profileData.hourlyRateMax) : '');
     setIsActivelyLooking(profileData.isActivelyLooking);
     setWorkExperienceDrafts(
       (profileData.workExperiences ?? []).map(e => ({
@@ -516,7 +514,6 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
         preferredMetroStations,
         preferredShiftTimes: selectedShiftTimes,
         hourlyRateMin: hourlyRateMin ? parseInt(hourlyRateMin, 10) : undefined,
-        hourlyRateMax: hourlyRateMax ? parseInt(hourlyRateMax, 10) : undefined,
         isActivelyLooking,
       });
 
@@ -1044,31 +1041,19 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 </View>
 
                 <Text style={styles.label}>
-                  {t('baristaProfileScreen.hourlyRange', {
-                    defaultValue: 'Желаемая ставка в час (RUB)',
+                  {t('baristaProfileScreen.hourlyRateMin', {
+                    defaultValue: 'Минимальная ставка в час (RUB)',
                   })}
                 </Text>
-                <View style={styles.row}>
-                  <TextInput
-                    style={[styles.input, styles.halfInput]}
-                    value={hourlyRateMin}
-                    onChangeText={setHourlyRateMin}
-                    keyboardType="numeric"
-                    placeholder={t('baristaSetup.minPlaceholder', { defaultValue: 'Мин' })}
-                    editable={isEditing}
-                    returnKeyType="done"
-                  />
-                  <Text style={styles.separator}>-</Text>
-                  <TextInput
-                    style={[styles.input, styles.halfInput]}
-                    value={hourlyRateMax}
-                    onChangeText={setHourlyRateMax}
-                    keyboardType="numeric"
-                    placeholder={t('baristaSetup.maxPlaceholder', { defaultValue: 'Макс' })}
-                    editable={isEditing}
-                    returnKeyType="done"
-                  />
-                </View>
+                <TextInput
+                  style={styles.input}
+                  value={hourlyRateMin}
+                  onChangeText={setHourlyRateMin}
+                  keyboardType="numeric"
+                  placeholder={t('baristaSetup.minPlaceholder', { defaultValue: 'Мин' })}
+                  editable={isEditing}
+                  returnKeyType="done"
+                />
               </>
             ) : (
               <>
@@ -1099,15 +1084,16 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                     </View>
                   </>
                 )}
-                {(profile.hourlyRateMin || profile.hourlyRateMax) && (
+                {profile.hourlyRateMin != null && (
                   <>
                     <Text style={styles.label}>
                       {t('baristaProfileScreen.hourlyRate', { defaultValue: 'Ставка в час' })}
                     </Text>
                     <Text style={styles.infoText}>
-                      {profile.hourlyRateMin && `${profile.hourlyRateMin} RUB`}
-                      {profile.hourlyRateMin && profile.hourlyRateMax && ' - '}
-                      {profile.hourlyRateMax && `${profile.hourlyRateMax} RUB`}
+                      {t('baristaProfileScreen.hourlyRateFromValue', {
+                        defaultValue: 'от {{min}} RUB',
+                        min: profile.hourlyRateMin,
+                      })}
                     </Text>
                   </>
                 )}

@@ -316,9 +316,8 @@
     "fieldEquipment": "Опыт работы с оборудованием (опционально)",
     "fieldMetro": "Предпочитаемые станции метро (опционально)",
     "fieldShiftTimes": "Предпочитаемые смены (опционально)",
-    "fieldHourlyRange": "Желаемая ставка в час (RUB, опционально)",
-    "minPlaceholder": "Мин",
-    "maxPlaceholder": "Макс"
+    "fieldHourlyRateMin": "Минимальная ставка в час (RUB, опционально)",
+    "minPlaceholder": "Мин"
   },
   "baristaProfileScreen": {
     "title": "Профиль",
@@ -350,8 +349,9 @@
     "metroStations": "Станции метро",
     "preferredShiftTimes": "Предпочитаемые смены",
     "shiftTimes": "Смены",
-    "hourlyRange": "Желаемая ставка в час (RUB)",
+    "hourlyRateMin": "Минимальная ставка в час (RUB)",
     "hourlyRate": "Ставка в час",
+    "hourlyRateFromValue": "от {{min}} RUB",
     "portfolio": "Портфолио",
     "noPortfolioPhotos": "Фото портфолио пока нет",
     "addPortfolioPhoto": "+ Добавить фото в портфолио",

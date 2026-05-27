@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, LogBox } from 'react-native';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
+
+// RN 0.73 + iOS 18+ leaks pending callbacks from AccessibilityInfo when the
+// app backgrounds (e.g. during OAuth SFSafariViewController). Dev-only noise
+// that covers the screen with a yellow LogBox; harmless in production.
+LogBox.ignoreLogs([/Excessive number of pending callbacks/]);
 import { AppNavigator } from './navigation/AppNavigator';
 import { useNotificationSetup } from './hooks/useNotificationSetup';
 import { routePushPayload } from './navigation/navigationRef';

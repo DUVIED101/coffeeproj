@@ -312,9 +312,8 @@
     "fieldEquipment": "Equipment Experience (optional)",
     "fieldMetro": "Preferred Metro Stations (optional)",
     "fieldShiftTimes": "Preferred Shift Times (optional)",
-    "fieldHourlyRange": "Hourly Rate Range (RUB, optional)",
-    "minPlaceholder": "Min",
-    "maxPlaceholder": "Max"
+    "fieldHourlyRateMin": "Minimum Hourly Rate (RUB, optional)",
+    "minPlaceholder": "Min"
   },
   "baristaProfileScreen": {
     "title": "Profile",
@@ -346,8 +345,9 @@
     "metroStations": "Metro Stations",
     "preferredShiftTimes": "Preferred Shift Times",
     "shiftTimes": "Shift Times",
-    "hourlyRange": "Hourly Rate Range (RUB)",
+    "hourlyRateMin": "Minimum Hourly Rate (RUB)",
     "hourlyRate": "Hourly Rate",
+    "hourlyRateFromValue": "from {{min}} RUB",
     "portfolio": "Portfolio",
     "noPortfolioPhotos": "No portfolio photos yet",
     "addPortfolioPhoto": "+ Add Portfolio Photo",

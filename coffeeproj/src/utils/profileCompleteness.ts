@@ -69,8 +69,7 @@ export function computeProfileCompleteness(profile: BaristaProfile): ProfileComp
     {
       key: 'hourlyRate',
       weight: 10,
-      satisfied:
-        typeof profile.hourlyRateMin === 'number' && typeof profile.hourlyRateMax === 'number',
+      satisfied: typeof profile.hourlyRateMin === 'number',
     },
     {
       key: 'portfolio',

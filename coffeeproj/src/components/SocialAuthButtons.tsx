@@ -82,6 +82,7 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
 
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: false });
       const result = (await GoogleSignin.signIn()) as Record<string, unknown>;
+      if (result.type === 'cancelled') return;
       const direct = typeof result.idToken === 'string' ? result.idToken : undefined;
       const wrapped =
         result.data && typeof (result.data as { idToken?: unknown }).idToken === 'string'
@@ -118,7 +119,18 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
       await AuthService.signInWithYandex(result.accessToken);
     } catch (err: unknown) {
       const message = getErrorMessage(err);
-      if (message.toLowerCase().includes('user cancelled')) return;
+      const lower = message.toLowerCase();
+      // OIDErrorCodeUserCanceledAuthorizationFlow on iOS surfaces as
+      // "org.openid.appauth.general, code -3" with a locale-translated prefix
+      // (en: "user cancelled"; ru: "не удалось завершить операцию"). Match
+      // both the localized text and the stable OS code so RU/EN both work.
+      if (
+        lower.includes('cancel') ||
+        lower.includes('отмен') ||
+        (lower.includes('appauth.general') && lower.includes('-3'))
+      ) {
+        return;
+      }
       Alert.alert(t('auth.social.yandexErrorTitle'), message);
     } finally {
       setBusy(null);

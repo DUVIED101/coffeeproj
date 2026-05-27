@@ -13,6 +13,7 @@ import {
   Platform,
   Keyboard,
   TouchableWithoutFeedback,
+  Modal,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -85,7 +86,6 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const [preferredMetroStations, setPreferredMetroStations] = useState<string[]>([]);
   const [selectedShiftTimes, setSelectedShiftTimes] = useState<ShiftTime[]>([]);
   const [hourlyRateMin, setHourlyRateMin] = useState('');
-  const [hourlyRateMax, setHourlyRateMax] = useState('');
 
   const [workExperiences, setWorkExperiences] = useState<WorkExperienceDraft[]>([]);
 
@@ -133,7 +133,6 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         setPreferredMetroStations(profile.preferredMetroStations);
         setSelectedShiftTimes(profile.preferredShiftTimes);
         setHourlyRateMin(profile.hourlyRateMin?.toString() || '');
-        setHourlyRateMax(profile.hourlyRateMax?.toString() || '');
 
         const existingExperiences = await WorkExperienceService.listForProfile(
           profile.id as BaristaProfileId
@@ -251,7 +250,6 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         preferredMetroStations,
         preferredShiftTimes: selectedShiftTimes,
         hourlyRateMin: hourlyRateMin ? parseInt(hourlyRateMin, 10) : undefined,
-        hourlyRateMax: hourlyRateMax ? parseInt(hourlyRateMax, 10) : undefined,
       };
 
       let profileId: BaristaProfileId;
@@ -359,27 +357,52 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                   : t('baristaSetup.selectDate', { defaultValue: 'Выберите дату' })}
               </Text>
             </TouchableOpacity>
-            {showDatePicker && (
-              <>
+            {showDatePicker &&
+              (Platform.OS === 'ios' ? (
+                <Modal
+                  transparent
+                  animationType="slide"
+                  visible
+                  onRequestClose={() => setShowDatePicker(false)}>
+                  <TouchableWithoutFeedback onPress={() => setShowDatePicker(false)}>
+                    <View style={styles.datePickerBackdrop}>
+                      <TouchableWithoutFeedback>
+                        <View style={styles.datePickerSheet}>
+                          <DateTimePicker
+                            value={selectedDate}
+                            mode="date"
+                            display="spinner"
+                            themeVariant="light"
+                            textColor="#000000"
+                            onValueChange={handleDateChange}
+                            maximumDate={new Date()}
+                            minimumDate={new Date(1940, 0, 1)}
+                          />
+                          <TouchableOpacity
+                            style={styles.datePickerDoneButton}
+                            onPress={() => setShowDatePicker(false)}>
+                            <Text style={styles.datePickerDoneText}>
+                              {t('baristaSetup.done', { defaultValue: 'Готово' })}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      </TouchableWithoutFeedback>
+                    </View>
+                  </TouchableWithoutFeedback>
+                </Modal>
+              ) : (
                 <DateTimePicker
                   value={selectedDate}
                   mode="date"
-                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                  themeVariant="light"
-                  textColor="#000000"
-                  onChange={handleDateChange}
+                  display="default"
+                  onValueChange={(event, date) => {
+                    setShowDatePicker(false);
+                    handleDateChange(event, date);
+                  }}
                   maximumDate={new Date()}
                   minimumDate={new Date(1940, 0, 1)}
                 />
-                <TouchableOpacity
-                  style={styles.datePickerDoneButton}
-                  onPress={() => setShowDatePicker(false)}>
-                  <Text style={styles.datePickerDoneText}>
-                    {t('baristaSetup.done', { defaultValue: 'Готово' })}
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
+              ))}
           </View>
         );
 
@@ -511,31 +534,19 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <Text style={styles.label}>
-              {t('baristaSetup.fieldHourlyRange', {
-                defaultValue: 'Желаемая ставка в час (RUB, опционально)',
+              {t('baristaSetup.fieldHourlyRateMin', {
+                defaultValue: 'Минимальная ставка в час (RUB, опционально)',
               })}
             </Text>
-            <View style={styles.row}>
-              <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder={t('baristaSetup.minPlaceholder', { defaultValue: 'Мин' })}
-                placeholderTextColor={COLORS.textSecondary}
-                value={hourlyRateMin}
-                onChangeText={setHourlyRateMin}
-                keyboardType="numeric"
-                returnKeyType="done"
-              />
-              <Text style={styles.separator}>-</Text>
-              <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder={t('baristaSetup.maxPlaceholder', { defaultValue: 'Макс' })}
-                placeholderTextColor={COLORS.textSecondary}
-                value={hourlyRateMax}
-                onChangeText={setHourlyRateMax}
-                keyboardType="numeric"
-                returnKeyType="done"
-              />
-            </View>
+            <TextInput
+              style={styles.input}
+              placeholder={t('baristaSetup.minPlaceholder', { defaultValue: 'Мин' })}
+              placeholderTextColor={COLORS.textSecondary}
+              value={hourlyRateMin}
+              onChangeText={setHourlyRateMin}
+              keyboardType="numeric"
+              returnKeyType="done"
+            />
           </View>
         );
 
@@ -746,7 +757,7 @@ const styles = StyleSheet.create({
   stepSubtitle: {
     fontSize: 14,
     color: COLORS.textSecondary,
-    marginBottom: 24,
+    marginBottom: 8,
   },
   label: {
     fontSize: 16,
@@ -780,6 +791,19 @@ const styles = StyleSheet.create({
   },
   datePickerPlaceholder: {
     color: COLORS.textSecondary,
+  },
+  datePickerBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  datePickerSheet: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 32,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
   },
   datePickerDoneButton: {
     backgroundColor: COLORS.primary,

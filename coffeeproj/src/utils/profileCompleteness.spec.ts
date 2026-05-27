@@ -84,9 +84,9 @@ describe('computeProfileCompleteness', () => {
     expect(computeProfileCompleteness({ ...baseProfile, portfolioPhotos: [] }).percent).toEqual(90);
   });
 
-  it('drops 10% when only one of hourlyRateMin/Max is set', () => {
+  it('drops 10% when hourlyRateMin is not set', () => {
     expect(
-      computeProfileCompleteness({ ...baseProfile, hourlyRateMax: undefined }).percent
+      computeProfileCompleteness({ ...baseProfile, hourlyRateMin: undefined }).percent
     ).toEqual(90);
   });
 
