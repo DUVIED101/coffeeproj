@@ -18,7 +18,23 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate, RNAppAuthAu
     // foreground presentation and tap events to JS via the 'notification' event.
     UNUserNotificationCenter.current().delegate = self
 
+    // Clear delivered notifications + badge whenever the app becomes active.
+    // Routed through NotificationCenter (not an UIApplicationDelegate override)
+    // because RCTAppDelegate doesn't declare applicationDidBecomeActive, so a
+    // Swift `override` would never be invoked by UIKit's delegate dispatch.
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(clearDeliveredNotifications),
+      name: UIApplication.didBecomeActiveNotification,
+      object: nil
+    )
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  @objc private func clearDeliveredNotifications() {
+    UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+    UIApplication.shared.applicationIconBadgeNumber = 0
   }
 
   override func application(
@@ -65,16 +81,6 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate, RNAppAuthAu
     completionHandler()
   }
 
-  // Clear Notification Center entries + reset the badge on every foreground.
-  // Done in native iOS (not JS) because the equivalent JS-side AppState
-  // listener was empirically interrupting APNs banner delivery on TestFlight
-  // (see b3fa467). UIKit dispatches this after the OS has finished delivering
-  // any in-flight banner, so it can't race with a notification being shown.
-  override func applicationDidBecomeActive(_ application: UIApplication) {
-    super.applicationDidBecomeActive(application)
-    UNUserNotificationCenter.current().removeAllDeliveredNotifications()
-    application.applicationIconBadgeNumber = 0
-  }
 
   // Handle OAuth redirects: react-native-app-auth (Yandex) + Google Sign-In.
   override func application(
