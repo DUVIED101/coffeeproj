@@ -65,6 +65,17 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate, RNAppAuthAu
     completionHandler()
   }
 
+  // Clear Notification Center entries + reset the badge on every foreground.
+  // Done in native iOS (not JS) because the equivalent JS-side AppState
+  // listener was empirically interrupting APNs banner delivery on TestFlight
+  // (see b3fa467). UIKit dispatches this after the OS has finished delivering
+  // any in-flight banner, so it can't race with a notification being shown.
+  override func applicationDidBecomeActive(_ application: UIApplication) {
+    super.applicationDidBecomeActive(application)
+    UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+    application.applicationIconBadgeNumber = 0
+  }
+
   // Handle OAuth redirects: react-native-app-auth (Yandex) + Google Sign-In.
   override func application(
     _ application: UIApplication,
