@@ -312,7 +312,9 @@ export class AuthService {
 
   /**
    * Change password by re-authenticating with current password first.
-   * Does NOT sign the user out on success.
+   * Rejects new passwords the user has previously set (tracked via the
+   * password_history table in migration 061). Does NOT sign the user out
+   * on success.
    */
   static async changePassword(currentPassword: string, newPassword: string): Promise<void> {
     try {
@@ -335,11 +337,35 @@ export class AuthService {
         throw new Error('invalid_current_password');
       }
 
+      // The current password is implicitly rejected as a reuse — it's the
+      // most recent record_password_change() insert. The UI also rejects
+      // newPassword === currentPassword up-front, so the rpc covers older
+      // entries.
+      const { data: wasUsed, error: historyError } = await supabase.rpc('password_was_used', {
+        plaintext: newPassword,
+      });
+
+      if (historyError) throw historyError;
+      if (wasUsed) {
+        throw new Error('password_reused');
+      }
+
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword,
       });
 
       if (updateError) throw updateError;
+
+      const { error: recordError } = await supabase.rpc('record_password_change', {
+        plaintext: newPassword,
+      });
+
+      // Failing to record history must not break the user-visible password
+      // change — log and continue. The next attempted reuse just won't be
+      // caught for this single password.
+      if (recordError) {
+        console.error('Failed to record password change in history:', recordError);
+      }
     } catch (error) {
       console.error('Error in changePassword:', error);
       throw error;

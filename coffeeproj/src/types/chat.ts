@@ -19,7 +19,9 @@ export interface Conversation {
   // Joined fields (from database queries)
   jobTitle?: string;
   businessName?: string;
+  businessLogoUrl?: string;
   baristaName?: string;
+  baristaAvatarUrl?: string;
   applicationStatus?: ApplicationStatus;
   lastMessageText?: string;
   lastMessageSenderId?: string;

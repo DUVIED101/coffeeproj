@@ -42,7 +42,15 @@ export const SettingsScreen: React.FC = () => {
   const navigation = useNavigation<Navigation>();
   const { t } = useTranslation();
   const user = useAuthStore(s => s.user);
+  const session = useAuthStore(s => s.session);
   const signOut = useAuthStore(s => s.signOut);
+
+  // OAuth users (Yandex, Google, Apple) don't have a password to change —
+  // hide the row. Identities array is the canonical list of linked providers;
+  // we only show Change Password if an email identity is present.
+  const hasEmailLogin =
+    session?.user?.identities?.some(identity => identity.provider === 'email') ??
+    session?.user?.app_metadata?.provider === 'email';
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: t('settings.title') });
@@ -78,12 +86,16 @@ export const SettingsScreen: React.FC = () => {
           <View style={styles.separator} />
           <SettingsRow label={t('settings.items.phone')} value={user?.phoneNumber ?? '—'} />
           <View style={styles.separator} />
-          <SettingsRow
-            label={t('settings.items.changePassword')}
-            onPress={() => navigation.navigate('ChangePassword')}
-            showChevron
-          />
-          <View style={styles.separator} />
+          {hasEmailLogin && (
+            <>
+              <SettingsRow
+                label={t('settings.items.changePassword')}
+                onPress={() => navigation.navigate('ChangePassword')}
+                showChevron
+              />
+              <View style={styles.separator} />
+            </>
+          )}
           <SettingsRow
             label={t('settings.items.verificationStatus')}
             value={user?.isVerified ? '🟢' : '—'}

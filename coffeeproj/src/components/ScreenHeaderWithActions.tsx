@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS, RADII } from '../config/constants';
+import { Avatar } from './Avatar';
 
 export type HeaderAction = {
   /** Text label — renders a pill button. Required when `icon` is not set. */
@@ -20,13 +21,26 @@ type ScreenHeaderWithActionsProps = {
   title: string;
   actions?: HeaderAction[];
   onBack?: () => void;
+  /** Optional avatar rendered between the back arrow and title. */
+  avatarUri?: string | null;
+  /** Fallback name used when avatarUri is missing. */
+  avatarName?: string | null;
+  /** When set, the avatar becomes tappable — used in chat to open the counterparty's profile. */
+  onAvatarPress?: () => void;
 };
+
+const HEADER_AVATAR_SIZE = 32;
 
 const formatBadge = (count: number): string => (count > 99 ? '99+' : String(count));
 
 export const ScreenHeaderWithActions = React.memo<ScreenHeaderWithActionsProps>(
-  ({ title, actions, onBack }) => {
+  ({ title, actions, onBack, avatarUri, avatarName, onAvatarPress }) => {
     const insets = useSafeAreaInsets();
+    const hasAvatar = avatarUri !== undefined || avatarName !== undefined;
+
+    const avatarNode = hasAvatar ? (
+      <Avatar size={HEADER_AVATAR_SIZE} uri={avatarUri} name={avatarName} />
+    ) : null;
 
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -40,6 +54,18 @@ export const ScreenHeaderWithActions = React.memo<ScreenHeaderWithActionsProps>(
               <Text style={styles.backArrow}>‹</Text>
             </TouchableOpacity>
           )}
+          {avatarNode &&
+            (onAvatarPress ? (
+              <TouchableOpacity
+                style={styles.avatarSlot}
+                onPress={onAvatarPress}
+                activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}>
+                {avatarNode}
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.avatarSlot}>{avatarNode}</View>
+            ))}
           <Text style={styles.title} numberOfLines={1}>
             {title}
           </Text>
@@ -105,6 +131,9 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     color: COLORS.primary,
     fontWeight: '400',
+  },
+  avatarSlot: {
+    marginRight: 10,
   },
   title: {
     fontSize: 20,

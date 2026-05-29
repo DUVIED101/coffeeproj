@@ -52,11 +52,11 @@ export class ChatService {
             status,
             jobs!inner(
               title,
-              businesses!inner(name)
+              businesses!inner(name, logo_url)
             )
           ),
           users!barista_id(
-            barista_profiles(first_name, last_name)
+            barista_profiles(first_name, last_name, avatar_url)
           )
         `
         )
@@ -73,17 +73,24 @@ export class ChatService {
       if (!data) return null;
 
       const baristaProfile = data.users?.barista_profiles;
-      const joinedBusinessName = data.applications?.jobs?.businesses?.name;
+      const joinedBusiness = data.applications?.jobs?.businesses;
       const businessName =
-        joinedBusinessName ?? (await this.fetchBusinessNameByOwnerId(data.business_id));
+        joinedBusiness?.name ?? (await this.fetchBusinessByOwnerId(data.business_id))?.name;
+      const businessLogoUrl =
+        joinedBusiness?.logo_url ??
+        (joinedBusiness
+          ? undefined
+          : (await this.fetchBusinessByOwnerId(data.business_id))?.logoUrl);
 
       return {
         ...this.mapConversation(data),
         jobTitle: data.applications?.jobs?.title,
         businessName,
+        businessLogoUrl: businessLogoUrl ?? undefined,
         baristaName: baristaProfile
           ? `${baristaProfile.first_name} ${baristaProfile.last_name}`
           : undefined,
+        baristaAvatarUrl: baristaProfile?.avatar_url ?? undefined,
         applicationStatus: data.applications?.status,
       };
     } catch (error) {
@@ -107,11 +114,11 @@ export class ChatService {
             status,
             jobs!inner(
               title,
-              businesses!inner(name)
+              businesses!inner(name, logo_url)
             )
           ),
           users!barista_id(
-            barista_profiles(first_name, last_name)
+            barista_profiles(first_name, last_name, avatar_url)
           )
         `
         )
@@ -128,17 +135,22 @@ export class ChatService {
       if (!data) return null;
 
       const baristaProfile = data.users?.barista_profiles;
-      const joinedBusinessName = data.applications?.jobs?.businesses?.name;
-      const businessName =
-        joinedBusinessName ?? (await this.fetchBusinessNameByOwnerId(data.business_id));
+      const joinedBusiness = data.applications?.jobs?.businesses;
+      const fallbackBusiness = joinedBusiness
+        ? null
+        : await this.fetchBusinessByOwnerId(data.business_id);
+      const businessName = joinedBusiness?.name ?? fallbackBusiness?.name;
+      const businessLogoUrl = joinedBusiness?.logo_url ?? fallbackBusiness?.logoUrl;
 
       return {
         ...this.mapConversation(data),
         jobTitle: data.applications?.jobs?.title,
         businessName,
+        businessLogoUrl: businessLogoUrl ?? undefined,
         baristaName: baristaProfile
           ? `${baristaProfile.first_name} ${baristaProfile.last_name}`
           : undefined,
+        baristaAvatarUrl: baristaProfile?.avatar_url ?? undefined,
         applicationStatus: data.applications?.status,
       };
     } catch (error) {
@@ -245,11 +257,15 @@ export class ChatService {
         if (convError) throw convError;
         if (!conversation) throw new Error('Failed to create manual conversation');
 
-        const baristaName = await this.fetchBaristaDisplayName(baristaUserId);
+        const baristaSummary = await this.fetchBaristaProfileSummary(baristaUserId);
+        const businessSummary = await this.fetchBusinessByOwnerId(businessUserId);
 
         return {
           ...this.mapConversation(conversation),
-          baristaName,
+          baristaName: baristaSummary?.name,
+          baristaAvatarUrl: baristaSummary?.avatarUrl,
+          businessName: businessSummary?.name,
+          businessLogoUrl: businessSummary?.logoUrl,
         };
       } catch (err: any) {
         if (err?.code === '23505') {
@@ -278,7 +294,7 @@ export class ChatService {
         `
           *,
           users!barista_id(
-            barista_profiles(first_name, last_name)
+            barista_profiles(first_name, last_name, avatar_url)
           )
 `
       )
@@ -291,13 +307,15 @@ export class ChatService {
     if (!data) return null;
 
     const baristaProfile = data.users?.barista_profiles;
-    const businessName = await this.fetchBusinessNameByOwnerId(businessUserId);
+    const business = await this.fetchBusinessByOwnerId(businessUserId);
     return {
       ...this.mapConversation(data),
       baristaName: baristaProfile
         ? `${baristaProfile.first_name} ${baristaProfile.last_name}`
         : undefined,
-      businessName,
+      baristaAvatarUrl: baristaProfile?.avatar_url ?? undefined,
+      businessName: business?.name,
+      businessLogoUrl: business?.logoUrl,
     };
   }
 
@@ -325,48 +343,52 @@ export class ChatService {
   }
 
   /**
-   * Fetch business name for a single owner user id. Returns undefined if none.
+   * Fetch business name + logo for a single owner user id. Returns null if none.
    */
-  private static async fetchBusinessNameByOwnerId(
+  private static async fetchBusinessByOwnerId(
     ownerUserId: string
-  ): Promise<string | undefined> {
+  ): Promise<{ name?: string; logoUrl?: string } | null> {
     const { data, error } = await supabase
       .from('businesses')
-      .select('name')
+      .select('name, logo_url')
       .eq('owner_id', ownerUserId)
       .limit(1)
       .maybeSingle();
 
     if (error) {
-      console.error('Error in fetchBusinessNameByOwnerId:', error);
-      return undefined;
+      console.error('Error in fetchBusinessByOwnerId:', error);
+      return null;
     }
-    return data?.name ?? undefined;
+    if (!data) return null;
+    return { name: data.name ?? undefined, logoUrl: data.logo_url ?? undefined };
   }
 
   /**
-   * Batch-fetch business names for multiple owner user ids.
-   * Returns a map of ownerUserId → business name.
+   * Batch-fetch business names + logos for multiple owner user ids.
+   * Returns a map of ownerUserId → { name, logoUrl }.
    */
-  private static async fetchBusinessNamesByOwnerIds(
+  private static async fetchBusinessesByOwnerIds(
     ownerUserIds: string[]
-  ): Promise<Record<string, string>> {
+  ): Promise<Record<string, { name?: string; logoUrl?: string }>> {
     if (ownerUserIds.length === 0) return {};
 
     const { data, error } = await supabase
       .from('businesses')
-      .select('owner_id, name')
+      .select('owner_id, name, logo_url')
       .in('owner_id', ownerUserIds);
 
     if (error) {
-      console.error('Error in fetchBusinessNamesByOwnerIds:', error);
+      console.error('Error in fetchBusinessesByOwnerIds:', error);
       return {};
     }
 
-    const map: Record<string, string> = {};
+    const map: Record<string, { name?: string; logoUrl?: string }> = {};
     for (const row of data ?? []) {
-      if (row.owner_id && row.name && !(row.owner_id in map)) {
-        map[row.owner_id] = row.name;
+      if (row.owner_id && !(row.owner_id in map)) {
+        map[row.owner_id] = {
+          name: row.name ?? undefined,
+          logoUrl: row.logo_url ?? undefined,
+        };
       }
     }
     return map;
@@ -429,22 +451,27 @@ export class ChatService {
   }
 
   /**
-   * Fetch "First Last" display name for a barista user from barista_profiles.
-   * Returns undefined if no profile exists.
+   * Fetch display name + avatar for a barista user from barista_profiles.
+   * Returns null if no profile exists.
    */
-  private static async fetchBaristaDisplayName(baristaUserId: string): Promise<string | undefined> {
+  private static async fetchBaristaProfileSummary(
+    baristaUserId: string
+  ): Promise<{ name: string; avatarUrl?: string } | null> {
     const { data, error } = await supabase
       .from('barista_profiles')
-      .select('first_name, last_name')
+      .select('first_name, last_name, avatar_url')
       .eq('user_id', baristaUserId)
       .maybeSingle();
 
     if (error) {
-      console.error('Error in fetchBaristaDisplayName:', error);
-      return undefined;
+      console.error('Error in fetchBaristaProfileSummary:', error);
+      return null;
     }
-    if (!data) return undefined;
-    return `${data.first_name} ${data.last_name}`;
+    if (!data) return null;
+    return {
+      name: `${data.first_name} ${data.last_name}`,
+      avatarUrl: data.avatar_url ?? undefined,
+    };
   }
 
   /**
@@ -466,11 +493,11 @@ export class ChatService {
             status,
             jobs!inner(
               title,
-              businesses!inner(name)
+              businesses!inner(name, logo_url)
             )
           ),
           users!barista_id(
-            barista_profiles(first_name, last_name)
+            barista_profiles(first_name, last_name, avatar_url)
           )
         `
         )
@@ -481,13 +508,16 @@ export class ChatService {
 
       const mapped = (data || []).map(conv => {
         const baristaProfile = conv.users?.barista_profiles;
+        const joinedBusiness = conv.applications?.jobs?.businesses;
         return {
           ...this.mapConversation(conv),
           jobTitle: conv.applications?.jobs?.title,
-          businessName: conv.applications?.jobs?.businesses?.name,
+          businessName: joinedBusiness?.name,
+          businessLogoUrl: joinedBusiness?.logo_url ?? undefined,
           baristaName: baristaProfile
             ? `${baristaProfile.first_name} ${baristaProfile.last_name}`
             : undefined,
+          baristaAvatarUrl: baristaProfile?.avatar_url ?? undefined,
           applicationStatus: conv.applications?.status,
         };
       });
@@ -496,10 +526,14 @@ export class ChatService {
         new Set(mapped.filter(c => !c.businessName).map(c => c.businessId))
       );
       if (ownerIdsNeedingName.length > 0) {
-        const nameMap = await this.fetchBusinessNamesByOwnerIds(ownerIdsNeedingName);
+        const businessMap = await this.fetchBusinessesByOwnerIds(ownerIdsNeedingName);
         for (const conv of mapped) {
           if (!conv.businessName) {
-            conv.businessName = nameMap[conv.businessId];
+            const fallback = businessMap[conv.businessId];
+            conv.businessName = fallback?.name;
+            if (!conv.businessLogoUrl) {
+              conv.businessLogoUrl = fallback?.logoUrl;
+            }
           }
         }
       }

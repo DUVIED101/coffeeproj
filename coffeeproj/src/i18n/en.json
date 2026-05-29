@@ -1140,6 +1140,7 @@
       "mismatch": "Passwords do not match",
       "sameAsCurrent": "New password matches current password",
       "invalidCurrent": "Incorrect current password",
+      "passwordReused": "You've used this password before. Please choose a new one.",
       "success": "Password changed"
     },
     "notifications": {

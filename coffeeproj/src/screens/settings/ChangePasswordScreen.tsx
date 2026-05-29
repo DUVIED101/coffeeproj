@@ -33,6 +33,7 @@ export const ChangePasswordScreen: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const [currentError, setCurrentError] = useState<string | null>(null);
+  const [newError, setNewError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useLayoutEffect(() => {
@@ -65,6 +66,7 @@ export const ChangePasswordScreen: React.FC = () => {
     if (!canSubmit) return;
     setIsSubmitting(true);
     setCurrentError(null);
+    setNewError(null);
     try {
       await AuthService.changePassword(currentPassword, newPassword);
       Alert.alert(t('common.success'), t('settings.password.success'), [
@@ -74,6 +76,8 @@ export const ChangePasswordScreen: React.FC = () => {
       const message = (err as Error).message ?? '';
       if (message === 'invalid_current_password') {
         setCurrentError(t('settings.password.invalidCurrent'));
+      } else if (message === 'password_reused') {
+        setNewError(t('settings.password.passwordReused'));
       } else {
         Alert.alert(t('common.error'), message || t('common.error'));
       }
@@ -108,11 +112,17 @@ export const ChangePasswordScreen: React.FC = () => {
             <Text style={styles.label}>{t('settings.password.new')}</Text>
             <PasswordInput
               value={newPassword}
-              onChangeText={setNewPassword}
-              hasError={!!newPasswordError}
+              onChangeText={text => {
+                setNewPassword(text);
+                if (newError) setNewError(null);
+              }}
+              hasError={!!newPasswordError || !!newError}
               textContentType="newPassword"
             />
             {newPasswordError ? <Text style={styles.errorText}>{newPasswordError}</Text> : null}
+            {!newPasswordError && newError ? (
+              <Text style={styles.errorText}>{newError}</Text>
+            ) : null}
           </View>
 
           <View style={styles.field}>

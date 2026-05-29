@@ -17,7 +17,10 @@ import { ChatService } from '../../services/ChatService';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
+import { Avatar } from '../../components/Avatar';
 import type { Conversation } from '../../types/chat';
+
+const AVATAR_SIZE = 48;
 
 const getStatusColor = (status?: string): string => {
   switch (status) {
@@ -48,6 +51,9 @@ const ConversationItem = React.memo<{
     : conversation.unreadCountBusiness;
 
   const otherPartyName = isBarista ? conversation.businessName : conversation.baristaName;
+  const otherPartyAvatarUrl = isBarista
+    ? conversation.businessLogoUrl
+    : conversation.baristaAvatarUrl;
   const title = conversation.jobTitle || otherPartyName || fallbackTitle;
   const showSubtitle = !!otherPartyName && title !== otherPartyName;
 
@@ -63,6 +69,7 @@ const ConversationItem = React.memo<{
   return (
     <TouchableOpacity style={styles.conversationCard} onPress={handlePress}>
       <View style={styles.conversationHeader}>
+        <Avatar size={AVATAR_SIZE} uri={otherPartyAvatarUrl} name={otherPartyName} />
         <View style={styles.conversationInfo}>
           <Text style={styles.jobTitle} numberOfLines={1}>
             {title}
@@ -266,8 +273,9 @@ const styles = StyleSheet.create({
   conversationHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 8,
+    gap: 12,
   },
   conversationInfo: {
     flex: 1,

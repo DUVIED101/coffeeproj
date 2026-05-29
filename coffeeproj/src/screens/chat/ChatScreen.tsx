@@ -144,42 +144,24 @@ export function ChatScreen({ navigation, route }: any) {
     const businessName = conversation?.businessName;
     const baristaId = conversation?.baristaId;
     let actions: HeaderAction[] | undefined;
+    let onAvatarPress: (() => void) | undefined;
     if (user?.accountType === 'barista' && businessOwnerId) {
+      onAvatarPress = () => navigation.navigate('BusinessPublicProfile', { businessOwnerId });
       actions = [
         {
-          label: t('chat.headerProfileAction', { defaultValue: 'Профиль' }),
-          onPress: () =>
-            navigation.getParent()?.navigate('Jobs', {
-              screen: 'BusinessPublicProfile',
-              initial: false,
-              params: { businessOwnerId },
-            }),
-        },
-        {
           label: t('chat.headerJobsAction', { defaultValue: 'Вакансии' }),
-          onPress: () =>
-            navigation.getParent()?.navigate('Jobs', {
-              screen: 'BusinessJobs',
-              initial: false,
-              params: { businessOwnerId, businessName },
-            }),
+          onPress: () => navigation.navigate('BusinessJobs', { businessOwnerId, businessName }),
         },
       ];
     } else if (user?.accountType === 'business' && baristaId) {
-      actions = [
-        {
-          label: t('chat.headerProfileAction', { defaultValue: 'Профиль' }),
-          onPress: () =>
-            navigation.getParent()?.navigate('Baristas', {
-              screen: 'ViewBaristaProfile',
-              initial: false,
-              params: { baristaId },
-            }),
-        },
-      ];
+      onAvatarPress = () => navigation.navigate('ViewBaristaProfile', { baristaId });
     }
     const otherPartyName =
       user?.accountType === 'barista' ? businessName : conversation?.baristaName;
+    const otherPartyAvatarUrl =
+      user?.accountType === 'barista'
+        ? conversation?.businessLogoUrl
+        : conversation?.baristaAvatarUrl;
     const title =
       otherPartyName || conversation?.jobTitle || t('chat.fallbackTitle', { defaultValue: 'Chat' });
     navigation.setOptions({
@@ -188,6 +170,9 @@ export function ChatScreen({ navigation, route }: any) {
           title={title}
           onBack={() => navigation.goBack()}
           actions={actions}
+          avatarUri={otherPartyAvatarUrl}
+          avatarName={otherPartyName}
+          onAvatarPress={onAvatarPress}
         />
       ),
     });
@@ -196,8 +181,10 @@ export function ChatScreen({ navigation, route }: any) {
     user?.accountType,
     conversation?.businessId,
     conversation?.businessName,
+    conversation?.businessLogoUrl,
     conversation?.baristaId,
     conversation?.baristaName,
+    conversation?.baristaAvatarUrl,
     conversation?.jobTitle,
     t,
   ]);
@@ -345,7 +332,7 @@ export function ChatScreen({ navigation, route }: any) {
         contentContainerStyle={styles.messagesList}
         ListEmptyComponent={renderEmpty}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
+        keyboardDismissMode="none"
         onContentSizeChange={() => {
           if (messages.length > 0) {
             flatListRef.current?.scrollToEnd({ animated: false });

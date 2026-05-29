@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { AppState } from 'react-native';
 import { useAuthStore } from '../stores/authStore';
 import { useNotificationFeedStore } from '../stores/notificationFeedStore';
 import { NotificationService } from '../services/NotificationService';
@@ -12,6 +13,19 @@ type Options = {
 export const useNotificationSetup = (opts?: Options): void => {
   const user = useAuthStore(s => s.user);
   const onNotification = opts?.onNotification;
+
+  // Clear delivered iOS notifications and reset the badge on cold start and
+  // every foreground. Without this, alerts the user already saw stay parked
+  // in Notification Center and the badge stays stuck after they open the app.
+  useEffect(() => {
+    NotificationService.clearAllDelivered();
+    const subscription = AppState.addEventListener('change', state => {
+      if (state === 'active') {
+        NotificationService.clearAllDelivered();
+      }
+    });
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     if (!user?.id) {

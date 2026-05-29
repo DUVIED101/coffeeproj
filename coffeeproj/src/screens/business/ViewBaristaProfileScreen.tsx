@@ -16,6 +16,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
+import { BusinessService } from '../../services/BusinessService';
 import { WorkExperienceService } from '../../services/WorkExperienceService';
 import { ChatService } from '../../services/ChatService';
 import { ReviewService } from '../../services/ReviewService';
@@ -91,6 +92,18 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
 
     setIsStartingConversation(true);
     try {
+      const business = await BusinessService.getBusinessByOwnerId(currentUser.id);
+      if (!business) {
+        Alert.alert(t('businessGate.title'), t('businessGate.subtitle'), [
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('businessGate.cta'),
+            onPress: () => navigation.getParent()?.navigate('Profile' as never),
+          },
+        ]);
+        return;
+      }
+
       const conversation = await ChatService.getOrCreateConversation(
         currentUser.id,
         profile.userId,

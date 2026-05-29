@@ -857,11 +857,13 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {t('baristaProfileScreen.professionalInfo', {
-                defaultValue: 'Профессиональная информация',
-              })}
-            </Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                {t('baristaProfileScreen.professionalInfo', {
+                  defaultValue: 'Профессиональная информация',
+                })}
+              </Text>
+            </View>
 
             {isEditing ? (
               <>
@@ -1014,11 +1016,13 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {t('baristaProfileScreen.workPreferences', {
-                defaultValue: 'Предпочтения по работе',
-              })}
-            </Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                {t('baristaProfileScreen.workPreferences', {
+                  defaultValue: 'Предпочтения по работе',
+                })}
+              </Text>
+            </View>
 
             {isEditing ? (
               <>
@@ -1438,9 +1442,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   emptySection: {
-    fontSize: 15,
+    fontSize: 14,
     color: COLORS.textSecondary,
     fontStyle: 'italic',
+    marginTop: 8,
   },
   certificationItem: {
     fontSize: 15,

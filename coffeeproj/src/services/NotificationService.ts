@@ -156,6 +156,20 @@ export class NotificationService {
   }
 
   /**
+   * Drop every delivered notification from the iOS Notification Center and
+   * zero out the app icon badge. Called on app foreground so older alerts
+   * don't linger after the user has opened the app.
+   */
+  static clearAllDelivered(): void {
+    try {
+      PushNotificationIOS.removeAllDeliveredNotifications();
+      PushNotificationIOS.setApplicationIconBadgeNumber(0);
+    } catch (error) {
+      console.error('NotificationService.clearAllDelivered:', error);
+    }
+  }
+
+  /**
    * Cold-start tap: returns the notification that launched the app from a
    * terminated state, or null. Safe to call repeatedly — only the first call
    * returns a payload.
