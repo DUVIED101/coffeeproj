@@ -19,10 +19,14 @@ type Props = {
   separatorLabel?: string;
 };
 
+// Yandex auto-derives the iOS callback as `yx<client_id>://` for apps
+// registered as "iOS-приложение" — there's no field in the OAuth console
+// to set a custom redirect URI for iOS. The matching URL scheme is
+// registered in ios/coffeeproj/Info.plist.
 const YANDEX_CONFIG: AuthConfiguration = {
   issuer: '',
   clientId: YANDEX_CLIENT_ID ?? '',
-  redirectUrl: 'com.quickbarista.app.yandex://oauth',
+  redirectUrl: YANDEX_CLIENT_ID ? `yx${YANDEX_CLIENT_ID}://` : '',
   scopes: ['login:email', 'login:info'],
   serviceConfiguration: {
     authorizationEndpoint: 'https://oauth.yandex.ru/authorize',

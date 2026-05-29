@@ -373,10 +373,40 @@ export class AuthService {
   }
 
   /**
-   * Delete the current user's account via the `delete-user` Edge Function.
-   * On success, clears the local session.
+   * Trigger a 6-digit deletion confirmation code emailed to the current user.
+   * Used for accounts created via OAuth (Yandex/Google/Apple) that have no
+   * password — the user pastes the code into DeleteAccountScreen and we then
+   * call deleteAccount({ otpCode }) below.
    */
-  static async deleteAccount(params: { password: string; force?: boolean }): Promise<void> {
+  static async requestDeletionOtp(): Promise<void> {
+    try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      const email = session?.user?.email;
+      if (!email) throw new Error('no_email');
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: false },
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error in requestDeletionOtp:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete the current user's account via the `delete-user` Edge Function.
+   * On success, clears the local session. Accepts either a password (email
+   * accounts) or an OTP code emailed via requestDeletionOtp (OAuth accounts).
+   */
+  static async deleteAccount(
+    params: { password: string; force?: boolean } | { otpCode: string; force?: boolean }
+  ): Promise<void> {
     try {
       const {
         data: { session },
@@ -388,11 +418,13 @@ export class AuthService {
         throw new Error('No active session');
       }
 
+      const body =
+        'password' in params
+          ? { password: params.password, force: params.force ?? false }
+          : { otpCode: params.otpCode, force: params.force ?? false };
+
       const { data, error } = await supabase.functions.invoke('delete-user', {
-        body: {
-          password: params.password,
-          force: params.force ?? false,
-        },
+        body,
       });
 
       if (error) {
@@ -419,6 +451,12 @@ export class AuthService {
           errorMessage: error.message,
         });
         if (status === 403) {
+          // The Edge Function uses 403 for both invalid password and invalid
+          // OTP; surface the specific reason so the screen can highlight the
+          // right field.
+          if (payload.error === 'invalid_otp') {
+            throw new Error('invalid_otp');
+          }
           throw new Error('invalid_password');
         }
         if (status === 409) {

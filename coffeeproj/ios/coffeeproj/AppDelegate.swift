@@ -18,22 +18,43 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate, RNAppAuthAu
     // foreground presentation and tap events to JS via the 'notification' event.
     UNUserNotificationCenter.current().delegate = self
 
+    let result = super.application(application, didFinishLaunchingWithOptions: launchOptions)
+
     // Clear delivered notifications + badge whenever the app becomes active.
     // Routed through NotificationCenter (not an UIApplicationDelegate override)
     // because RCTAppDelegate doesn't declare applicationDidBecomeActive, so a
     // Swift `override` would never be invoked by UIKit's delegate dispatch.
-    NotificationCenter.default.addObserver(
+    // We observe BOTH willEnterForeground and didBecomeActive so the clear
+    // fires whether the user resumes via tap-icon or via app switcher.
+    let nc = NotificationCenter.default
+    nc.addObserver(
+      self,
+      selector: #selector(clearDeliveredNotifications),
+      name: UIApplication.willEnterForegroundNotification,
+      object: nil
+    )
+    nc.addObserver(
       self,
       selector: #selector(clearDeliveredNotifications),
       name: UIApplication.didBecomeActiveNotification,
       object: nil
     )
 
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    // Cover the cold-start case too — the observers above only fire on
+    // resume, not on the first activation following didFinishLaunching.
+    clearDeliveredNotifications()
+
+    return result
   }
 
   @objc private func clearDeliveredNotifications() {
-    UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+    let center = UNUserNotificationCenter.current()
+    center.getDeliveredNotifications { delivered in
+      let ids = delivered.map { $0.request.identifier }
+      if !ids.isEmpty {
+        center.removeDeliveredNotifications(withIdentifiers: ids)
+      }
+    }
     UIApplication.shared.applicationIconBadgeNumber = 0
   }
 

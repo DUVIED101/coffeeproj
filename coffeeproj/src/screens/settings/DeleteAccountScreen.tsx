@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../config/constants';
 import { useAuthStore } from '../../stores/authStore';
+import { AuthService } from '../../services/AuthService';
 import { BusinessService } from '../../services/BusinessService';
 import { JobService } from '../../services/JobService';
 
@@ -22,16 +23,46 @@ export const DeleteAccountScreen: React.FC = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
   const user = useAuthStore(s => s.user);
+  const session = useAuthStore(s => s.session);
   const deleteAccount = useAuthStore(s => s.deleteAccount);
+
+  // Mirror SettingsScreen: a user with an `email` identity proves they have a
+  // password we can re-auth against. OAuth-only accounts (Yandex/Google/Apple)
+  // need the email-OTP flow instead.
+  const hasEmailLogin = useMemo(() => {
+    return (
+      session?.user?.identities?.some(identity => identity.provider === 'email') ??
+      session?.user?.app_metadata?.provider === 'email'
+    );
+  }, [session]);
 
   const expectedKeyword = t('settings.delete.confirmKeyword');
 
   const [confirmText, setConfirmText] = useState('');
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
   const [activeJobsCount, setActiveJobsCount] = useState<number>(0);
   const [forceConfirmed, setForceConfirmed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSendOtp = async () => {
+    if (isSendingOtp) return;
+    setIsSendingOtp(true);
+    setOtpError(null);
+    try {
+      await AuthService.requestDeletionOtp();
+      setOtpSent(true);
+    } catch (err) {
+      setOtpError(t('settings.delete.otpSendFailed'));
+      console.error('requestDeletionOtp failed:', err);
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: t('settings.delete.title') });
@@ -61,19 +92,32 @@ export const DeleteAccountScreen: React.FC = () => {
 
   const keywordMatches = confirmText === expectedKeyword;
   const needsForce = activeJobsCount > 0;
+  const credentialPresent = hasEmailLogin ? password.length > 0 : otpCode.length > 0;
   const canSubmit =
-    keywordMatches && password.length > 0 && (!needsForce || forceConfirmed) && !isSubmitting;
+    keywordMatches && credentialPresent && (!needsForce || forceConfirmed) && !isSubmitting;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setIsSubmitting(true);
     setPasswordError(null);
+    setOtpError(null);
     try {
-      await deleteAccount({ password, force: needsForce ? true : undefined });
+      const force = needsForce ? true : undefined;
+      if (hasEmailLogin) {
+        await deleteAccount({ password, force });
+      } else {
+        await deleteAccount({ otpCode: otpCode.trim(), force });
+      }
     } catch (err) {
       const message = (err as Error).message ?? '';
+      const setCredentialError = (text: string) => {
+        if (hasEmailLogin) setPasswordError(text);
+        else setOtpError(text);
+      };
       if (message === 'invalid_password') {
         setPasswordError(t('settings.delete.invalidPassword'));
+      } else if (message === 'invalid_otp') {
+        setOtpError(t('settings.delete.invalidOtp'));
       } else if (message.startsWith('active_jobs:')) {
         const parsed = Number(message.split(':')[1] ?? '0');
         if (Number.isFinite(parsed) && parsed > 0) {
@@ -82,11 +126,11 @@ export const DeleteAccountScreen: React.FC = () => {
           console.warn('active_jobs 409 with zero count — keeping pre-flight count');
         }
         setForceConfirmed(false);
-        setPasswordError(t('settings.delete.activeJobsWarning', { count: activeJobsCount }));
+        setCredentialError(t('settings.delete.activeJobsWarning', { count: activeJobsCount }));
       } else if (message === 'cascade_incomplete' || message === 'auth_delete_failed') {
-        setPasswordError(t('settings.delete.partialDeletion'));
+        setCredentialError(t('settings.delete.partialDeletion'));
       } else {
-        setPasswordError(message || t('common.error'));
+        setCredentialError(message || t('common.error'));
       }
     } finally {
       setIsSubmitting(false);
@@ -131,22 +175,63 @@ export const DeleteAccountScreen: React.FC = () => {
             />
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>{t('settings.delete.passwordLabel')}</Text>
-            <TextInput
-              style={[styles.input, passwordError ? styles.inputError : null]}
-              value={password}
-              onChangeText={text => {
-                setPassword(text);
-                if (passwordError) setPasswordError(null);
-              }}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              textContentType="password"
-            />
-            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
-          </View>
+          {hasEmailLogin ? (
+            <View style={styles.field}>
+              <Text style={styles.label}>{t('settings.delete.passwordLabel')}</Text>
+              <TextInput
+                style={[styles.input, passwordError ? styles.inputError : null]}
+                value={password}
+                onChangeText={text => {
+                  setPassword(text);
+                  if (passwordError) setPasswordError(null);
+                }}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="password"
+              />
+              {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+            </View>
+          ) : (
+            <View style={styles.field}>
+              <Text style={styles.label}>{t('settings.delete.otpHelper')}</Text>
+              <TouchableOpacity
+                style={[styles.secondaryButton, isSendingOtp && styles.secondaryButtonDisabled]}
+                onPress={handleSendOtp}
+                disabled={isSendingOtp}
+                activeOpacity={0.7}>
+                {isSendingOtp ? (
+                  <ActivityIndicator color={COLORS.primary} />
+                ) : (
+                  <Text style={styles.secondaryButtonText}>
+                    {otpSent ? t('settings.delete.resendOtp') : t('settings.delete.sendOtp')}
+                  </Text>
+                )}
+              </TouchableOpacity>
+              {otpSent ? (
+                <Text style={styles.otpSentText}>
+                  {t('settings.delete.otpSent', { email: user?.email ?? '' })}
+                </Text>
+              ) : null}
+              <Text style={[styles.label, styles.otpInputLabel]}>
+                {t('settings.delete.otpLabel')}
+              </Text>
+              <TextInput
+                style={[styles.input, otpError ? styles.inputError : null]}
+                value={otpCode}
+                onChangeText={text => {
+                  setOtpCode(text.replace(/\s/g, ''));
+                  if (otpError) setOtpError(null);
+                }}
+                keyboardType="number-pad"
+                autoCapitalize="none"
+                autoCorrect={false}
+                maxLength={10}
+                textContentType="oneTimeCode"
+              />
+              {otpError ? <Text style={styles.errorText}>{otpError}</Text> : null}
+            </View>
+          )}
 
           <TouchableOpacity
             style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}
@@ -262,5 +347,29 @@ const styles = StyleSheet.create({
     color: COLORS.background,
     fontSize: 16,
     fontWeight: '600',
+  },
+  secondaryButton: {
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    borderRadius: 999,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  secondaryButtonDisabled: {
+    opacity: 0.5,
+  },
+  secondaryButtonText: {
+    color: COLORS.primary,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  otpSentText: {
+    marginTop: 8,
+    fontSize: 13,
+    color: COLORS.textSecondary,
+  },
+  otpInputLabel: {
+    marginTop: 16,
   },
 });

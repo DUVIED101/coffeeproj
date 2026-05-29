@@ -6,10 +6,9 @@ type UserId = Brand<string, "UserId">;
 
 type AccountType = "barista" | "business";
 
-type DeleteAccountRequest = {
-  password: string;
-  force?: boolean;
-};
+type DeleteAccountRequest =
+  | { password: string; force?: boolean }
+  | { otpCode: string; force?: boolean };
 
 const ACTIVE_JOB_STATUSES = ["open", "in_review"] as const;
 
@@ -34,7 +33,11 @@ function jsonResponse(status: number, body: Record<string, unknown>): Response {
 function isDeleteAccountRequest(value: unknown): value is DeleteAccountRequest {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
-  if (typeof v.password !== "string" || v.password.length === 0) return false;
+  const hasPassword =
+    typeof v.password === "string" && (v.password as string).length > 0;
+  const hasOtpCode =
+    typeof v.otpCode === "string" && (v.otpCode as string).length > 0;
+  if (!hasPassword && !hasOtpCode) return false;
   if (v.force !== undefined && typeof v.force !== "boolean") return false;
   return true;
 }
@@ -124,12 +127,28 @@ async function handleRequest(req: Request): Promise<Response> {
     return jsonResponse(400, { error: "missing_email" });
   }
 
-  const { error: reauthError } = await authClient.auth.signInWithPassword({
-    email,
-    password: request.password,
-  });
-  if (reauthError !== null) {
-    return jsonResponse(403, { error: "invalid_password" });
+  if ("password" in request) {
+    const { error: reauthError } = await authClient.auth.signInWithPassword({
+      email,
+      password: request.password,
+    });
+    if (reauthError !== null) {
+      return jsonResponse(403, { error: "invalid_password" });
+    }
+  } else {
+    // OTP path — used by accounts created via OAuth (Yandex/Google/Apple) that
+    // have no password. The client called supabase.auth.signInWithOtp({email})
+    // up-front, the user pasted the emailed 6-digit token, and we verify it
+    // server-side here. verifyOtp confirms email ownership before destructive
+    // delete proceeds.
+    const { error: verifyError } = await authClient.auth.verifyOtp({
+      email,
+      token: request.otpCode,
+      type: "email",
+    });
+    if (verifyError !== null) {
+      return jsonResponse(403, { error: "invalid_otp" });
+    }
   }
 
   let accountType: AccountType | null;

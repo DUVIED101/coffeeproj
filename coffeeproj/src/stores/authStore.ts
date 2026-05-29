@@ -20,7 +20,9 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
   initialize: () => Promise<void>;
   signOut: () => Promise<void>;
-  deleteAccount: (params: { password: string; force?: boolean }) => Promise<void>;
+  deleteAccount: (
+    params: { password: string; force?: boolean } | { otpCode: string; force?: boolean }
+  ) => Promise<void>;
   clearAuth: () => void;
 }
 
@@ -122,7 +124,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // unmounts the whole tree while isLoading is true, which would tear down
   // the DeleteAccountScreen and swallow validation errors (e.g. wrong
   // password). The screen owns its own submit-loading state.
-  deleteAccount: async (params: { password: string; force?: boolean }) => {
+  deleteAccount: async (
+    params: { password: string; force?: boolean } | { otpCode: string; force?: boolean }
+  ) => {
     const currentUserId = get().user?.id;
     if (currentUserId) {
       try {

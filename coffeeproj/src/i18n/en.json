@@ -1171,7 +1171,14 @@
       "forceCheckbox": "I understand and want to delete my account",
       "submit": "Delete account permanently",
       "invalidPassword": "Incorrect password",
-      "partialDeletion": "Could not delete all your data. Account not deleted. Please contact support."
+      "partialDeletion": "Could not delete all your data. Account not deleted. Please contact support.",
+      "otpHelper": "Confirm account deletion via email.",
+      "sendOtp": "Send code to email",
+      "resendOtp": "Resend code",
+      "otpSent": "Code sent to {{email}}. Check your inbox.",
+      "otpSendFailed": "Could not send the code. Please try again.",
+      "otpLabel": "Confirmation code",
+      "invalidOtp": "Invalid or expired code"
     },
     "legal": {
       "termsTitle": "Terms of Service",
