@@ -16,12 +16,11 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
-import { BusinessService } from '../../services/BusinessService';
+import { JobService } from '../../services/JobService';
+import { JobOfferService } from '../../services/JobOfferService';
 import { WorkExperienceService } from '../../services/WorkExperienceService';
-import { ChatService } from '../../services/ChatService';
 import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
-import { getErrorMessage } from '../../utils/getErrorMessage';
 import { getInitials } from '../../utils/getInitials';
 import { StarRow } from '../../components/StarRow';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
@@ -54,11 +53,11 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
   const [profile, setProfile] = useState<BaristaProfile | null>(null);
   const [aggregate, setAggregate] = useState<UserReviewAggregate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isStartingConversation, setIsStartingConversation] = useState(false);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerPhotos, setViewerPhotos] = useState<string[]>([]);
   const [viewerIndex, setViewerIndex] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hasOfferableJobs, setHasOfferableJobs] = useState<boolean | null>(null);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -87,45 +86,35 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
       .catch(err => console.error('Error loading review aggregate:', err));
   }, [baristaId]);
 
-  const handleStartConversation = useCallback(async () => {
-    if (!currentUser?.id || !profile || isStartingConversation) return;
-
-    setIsStartingConversation(true);
-    try {
-      const business = await BusinessService.getBusinessByOwnerId(currentUser.id);
-      if (!business) {
-        Alert.alert(t('businessGate.title'), t('businessGate.subtitle'), [
-          { text: t('common.cancel'), style: 'cancel' },
-          {
-            text: t('businessGate.cta'),
-            onPress: () => navigation.getParent()?.navigate('Profile' as never),
-          },
+  useEffect(() => {
+    if (currentUser?.accountType !== 'business' || !currentUser.id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const [openJobs, pendingOffers] = await Promise.all([
+          JobService.getJobsByOwnerId(currentUser.id, true),
+          JobOfferService.getPendingOffersFromOwnerToBarista(
+            currentUser.id as UserId,
+            baristaId as UserId
+          ),
         ]);
-        return;
+        if (cancelled) return;
+        const offered = new Set<string>(pendingOffers.map(o => o.jobId));
+        setHasOfferableJobs(openJobs.some(job => !offered.has(job.id)));
+      } catch (error) {
+        console.error('Error checking offerable jobs:', error);
+        if (!cancelled) setHasOfferableJobs(true);
       }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [baristaId, currentUser?.accountType, currentUser?.id]);
 
-      const conversation = await ChatService.getOrCreateConversation(
-        currentUser.id,
-        profile.userId,
-        null
-      );
-      navigation.getParent()?.navigate('Chats', {
-        screen: 'Chat',
-        initial: false,
-        params: { conversationId: conversation.id },
-      });
-    } catch (error: unknown) {
-      console.error('Error starting conversation:', error);
-      const message = getErrorMessage(error);
-      if (message.includes('Rate limit exceeded')) {
-        Alert.alert(t('viewBarista.rateLimitTitle'), t('viewBarista.rateLimitBody'));
-      } else {
-        Alert.alert(t('viewBarista.openChatFailureTitle'), t('viewBarista.openChatFailureBody'));
-      }
-    } finally {
-      setIsStartingConversation(false);
-    }
-  }, [currentUser?.id, profile, isStartingConversation, navigation, t]);
+  const handleOfferJob = useCallback(() => {
+    if (!profile) return;
+    navigation.navigate('OfferJob', { baristaId: profile.userId });
+  }, [navigation, profile]);
 
   const loadProfile = async () => {
     try {
@@ -379,16 +368,18 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
         {currentUser?.accountType === 'business' && profile.isActivelyLooking && (
           <View style={styles.messageButtonContainer}>
             <TouchableOpacity
-              style={[styles.messageButton, isStartingConversation && styles.messageButtonDisabled]}
-              onPress={handleStartConversation}
-              disabled={isStartingConversation}
+              style={[
+                styles.messageButton,
+                hasOfferableJobs === false && styles.messageButtonDisabled,
+              ]}
+              onPress={handleOfferJob}
+              disabled={hasOfferableJobs === false}
               activeOpacity={0.7}>
-              {isStartingConversation ? (
-                <ActivityIndicator color={COLORS.background} />
-              ) : (
-                <Text style={styles.messageButtonText}>{t('viewBarista.message')}</Text>
-              )}
+              <Text style={styles.messageButtonText}>{t('viewBarista.offerJob')}</Text>
             </TouchableOpacity>
+            {hasOfferableJobs === false && (
+              <Text style={styles.offerJobHint}>{t('viewBarista.offerJobAllOffered')}</Text>
+            )}
           </View>
         )}
       </ScrollView>
@@ -596,5 +587,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  offerJobHint: {
+    marginTop: 8,
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
   },
 });

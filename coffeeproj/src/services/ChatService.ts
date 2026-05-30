@@ -212,133 +212,33 @@ export class ChatService {
   }
 
   /**
-   * Get or create a conversation between a business and a barista.
-   * When jobId is null, reuses or creates a manual (application-less) conversation.
-   * When jobId is provided, delegates to application-linked helpers.
+   * Get or create the application-linked conversation between a business and
+   * a barista for a specific job. Manual (cold-DM) conversations have been
+   * removed (migration 066); contact now flows through the job-offer handshake
+   * which auto-creates an application before any chat exists.
    */
   static async getOrCreateConversation(
-    businessUserId: string,
+    _businessUserId: string,
     baristaUserId: string,
-    jobId: string | null
+    jobId: string
   ): Promise<Conversation> {
     try {
-      if (jobId !== null) {
-        const { data: application, error: appError } = await supabase
-          .from('applications')
-          .select('id')
-          .eq('job_id', jobId)
-          .eq('barista_id', baristaUserId)
-          .maybeSingle();
+      const { data: application, error: appError } = await supabase
+        .from('applications')
+        .select('id')
+        .eq('job_id', jobId)
+        .eq('barista_id', baristaUserId)
+        .maybeSingle();
 
-        if (appError) throw appError;
-        if (!application) throw new Error('Application not found for job and barista');
+      if (appError) throw appError;
+      if (!application) throw new Error('Application not found for job and barista');
 
-        const existing = await this.getConversationByApplication(application.id);
-        if (existing) return existing;
-        return await this.createConversation(application.id);
-      }
-
-      const existing = await this.findManualConversation(businessUserId, baristaUserId);
+      const existing = await this.getConversationByApplication(application.id);
       if (existing) return existing;
-
-      await this.enforceManualConversationRateLimit(businessUserId);
-
-      try {
-        const { data: conversation, error: convError } = await supabase
-          .from('conversations')
-          .insert({
-            application_id: null,
-            business_id: businessUserId,
-            barista_id: baristaUserId,
-          })
-          .select()
-          .single();
-
-        if (convError) throw convError;
-        if (!conversation) throw new Error('Failed to create manual conversation');
-
-        const baristaSummary = await this.fetchBaristaProfileSummary(baristaUserId);
-        const businessSummary = await this.fetchBusinessByOwnerId(businessUserId);
-
-        return {
-          ...this.mapConversation(conversation),
-          baristaName: baristaSummary?.name,
-          baristaAvatarUrl: baristaSummary?.avatarUrl,
-          businessName: businessSummary?.name,
-          businessLogoUrl: businessSummary?.logoUrl,
-        };
-      } catch (err: any) {
-        if (err?.code === '23505') {
-          const raced = await this.findManualConversation(businessUserId, baristaUserId);
-          if (raced) return raced;
-        }
-        throw err;
-      }
+      return await this.createConversation(application.id);
     } catch (error) {
       console.error('Error in getOrCreateConversation:', error);
       throw error;
-    }
-  }
-
-  /**
-   * Look up an existing manual (application-less) conversation between
-   * a business and a barista. Returns null when none exists.
-   */
-  private static async findManualConversation(
-    businessUserId: string,
-    baristaUserId: string
-  ): Promise<Conversation | null> {
-    const { data, error } = await supabase
-      .from('conversations')
-      .select(
-        `
-          *,
-          users!barista_id(
-            barista_profiles(first_name, last_name, avatar_url)
-          )
-`
-      )
-      .eq('business_id', businessUserId)
-      .eq('barista_id', baristaUserId)
-      .is('application_id', null)
-      .maybeSingle();
-
-    if (error) throw error;
-    if (!data) return null;
-
-    const baristaProfile = data.users?.barista_profiles;
-    const business = await this.fetchBusinessByOwnerId(businessUserId);
-    return {
-      ...this.mapConversation(data),
-      baristaName: baristaProfile
-        ? `${baristaProfile.first_name} ${baristaProfile.last_name}`
-        : undefined,
-      baristaAvatarUrl: baristaProfile?.avatar_url ?? undefined,
-      businessName: business?.name,
-      businessLogoUrl: business?.logoUrl,
-    };
-  }
-
-  /**
-   * Throws when a business has started 10+ manual conversations in the last hour.
-   * Only counts manual (application_id IS NULL) conversations.
-   */
-  private static async enforceManualConversationRateLimit(businessUserId: string): Promise<void> {
-    const oneHourAgoIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-
-    const { count, error } = await supabase
-      .from('conversations')
-      .select('id', { count: 'exact', head: true })
-      .eq('business_id', businessUserId)
-      .is('application_id', null)
-      .gte('created_at', oneHourAgoIso);
-
-    if (error) throw error;
-
-    if ((count ?? 0) >= 10) {
-      throw new Error(
-        'Rate limit exceeded: too many manual conversations started in the last hour'
-      );
     }
   }
 
@@ -448,30 +348,6 @@ export class ChatService {
       }
     }
     return map;
-  }
-
-  /**
-   * Fetch display name + avatar for a barista user from barista_profiles.
-   * Returns null if no profile exists.
-   */
-  private static async fetchBaristaProfileSummary(
-    baristaUserId: string
-  ): Promise<{ name: string; avatarUrl?: string } | null> {
-    const { data, error } = await supabase
-      .from('barista_profiles')
-      .select('first_name, last_name, avatar_url')
-      .eq('user_id', baristaUserId)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error in fetchBaristaProfileSummary:', error);
-      return null;
-    }
-    if (!data) return null;
-    return {
-      name: `${data.first_name} ${data.last_name}`,
-      avatarUrl: data.avatar_url ?? undefined,
-    };
   }
 
   /**
@@ -691,5 +567,34 @@ export class ChatService {
    */
   static unsubscribeFromMessages(channel: RealtimeChannel): void {
     channel.unsubscribe();
+  }
+
+  /**
+   * For each application id, returns whether the conversation's business owner
+   * has sent at least one message. Drives the barista-side "wait for business
+   * to message first" UI gate that mirrors the server-side rule in
+   * `can_write_to_conversation()` (migration 065).
+   */
+  static async getBusinessHasSpokenByApplicationIds(
+    applicationIds: string[]
+  ): Promise<Set<string>> {
+    if (applicationIds.length === 0) return new Set();
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('application_id, first_business_message_at')
+      .in('application_id', applicationIds);
+
+    if (error) {
+      console.error('Error in getBusinessHasSpokenByApplicationIds:', error);
+      throw error;
+    }
+
+    const set = new Set<string>();
+    for (const row of data ?? []) {
+      const appId = (row as { application_id: string | null }).application_id;
+      const ts = (row as { first_business_message_at: string | null }).first_business_message_at;
+      if (appId && ts !== null) set.add(appId);
+    }
+    return set;
   }
 }

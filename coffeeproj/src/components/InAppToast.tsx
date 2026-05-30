@@ -30,6 +30,9 @@ const ICON_BY_KIND: Record<NotificationKind, string> = {
   shift_cancelled: 'calendar-remove-outline',
   new_review: 'star-outline',
   conversation_started: 'message-plus-outline',
+  job_offer_received: 'briefcase-plus-outline',
+  job_offer_accepted: 'briefcase-check-outline',
+  job_offer_declined: 'briefcase-remove-outline',
 };
 
 type ToastCardProps = {

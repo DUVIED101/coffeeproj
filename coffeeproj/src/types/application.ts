@@ -28,6 +28,7 @@ export interface Application {
   completedByBarista: boolean;
   completedByBusiness: boolean;
   completedAt?: string;
+  createdViaOffer: boolean;
   createdAt: string;
   updatedAt: string;
 

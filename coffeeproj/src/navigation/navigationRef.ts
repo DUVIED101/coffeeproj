@@ -26,12 +26,31 @@ export const dispatchPayload = (payload: PushNotificationPayload): void => {
   const kind = payload.data?.kind ?? payload.kind;
   const conversationId = payload.data?.conversationId;
   const jobId = payload.data?.jobId;
+  const offerId = payload.data?.offerId;
 
   if (kind === 'new_message' || kind === 'conversation_started') {
     if (conversationId) {
       navigateTab('Chats', { screen: 'Chat', params: { conversationId } });
     } else {
       navigateTab('Chats', { screen: 'ConversationsList' });
+    }
+    return;
+  }
+
+  if (kind === 'job_offer_received') {
+    if (offerId) {
+      navigateTab('Jobs', { screen: 'JobOffer', params: { offerId } });
+    } else {
+      navigateTab('Jobs');
+    }
+    return;
+  }
+
+  if (kind === 'job_offer_accepted' || kind === 'job_offer_declined') {
+    if (jobId) {
+      navigateTab('Business', { screen: 'Applicants', params: { jobId } });
+    } else {
+      navigateTab('Business');
     }
     return;
   }

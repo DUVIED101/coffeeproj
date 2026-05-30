@@ -14,10 +14,12 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect, type RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
+import { JobOfferService } from '../../services/JobOfferService';
 import { useAuthStore } from '../../stores/authStore';
 import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import type { Job, JobStatus } from '../../types/job';
+import type { JobId } from '../../types/ids';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 
 type Props = {
@@ -31,6 +33,7 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const user = useAuthStore(s => s.user);
 
   const [job, setJob] = useState<Job | null>(null);
+  const [pendingOfferCount, setPendingOfferCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -41,8 +44,15 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await JobService.getJobById(jobId);
+      const [data, offers] = await Promise.all([
+        JobService.getJobById(jobId),
+        JobOfferService.getPendingOffersForJob(jobId as JobId).catch(err => {
+          console.error('Error loading pending offers:', err);
+          return [];
+        }),
+      ]);
       setJob(data);
+      setPendingOfferCount(offers.length);
     } catch (err) {
       console.error('Error loading job:', err);
       setError(t('businessJobDetails.errorLoadFailed'));
@@ -154,10 +164,12 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   }
 
   const hasApplicants = job.applicationCount > 0;
+  const hasPendingOffers = pendingOfferCount > 0;
+  const canViewApplicants = hasApplicants || hasPendingOffers;
   const canClose = job.status === 'open' || job.status === 'in_review';
   const canReopen = job.status === 'filled' || job.status === 'cancelled';
   const canEdit = job.status === 'open';
-  const showFooter = hasApplicants || canClose || canReopen || canEdit;
+  const showFooter = canViewApplicants || canClose || canReopen || canEdit;
 
   const handleEdit = () => navigation.navigate('EditJob', { jobId });
 
@@ -321,10 +333,12 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
       {showFooter && (
         <View style={styles.footer}>
-          {hasApplicants && (
+          {canViewApplicants && (
             <TouchableOpacity style={styles.viewApplicantsButton} onPress={handleViewApplicants}>
               <Text style={styles.viewApplicantsButtonText}>
-                {t('businessJobDetails.viewApplicants', { count: job.applicationCount })}
+                {hasApplicants
+                  ? t('businessJobDetails.viewApplicants', { count: job.applicationCount })
+                  : t('businessJobDetails.viewPendingOffers', { count: pendingOfferCount })}
               </Text>
             </TouchableOpacity>
           )}

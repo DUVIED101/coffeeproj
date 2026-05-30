@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { BaristaFeedScreen } from '../screens/business/BaristaFeedScreen';
 import { ViewBaristaProfileScreen } from '../screens/business/ViewBaristaProfileScreen';
+import { OfferJobScreen } from '../screens/business/OfferJobScreen';
 import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
 import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
 import { COLORS } from '../config/constants';
@@ -10,6 +11,7 @@ import { COLORS } from '../config/constants';
 export type BusinessSearchStackParamList = {
   BaristaFeed: undefined;
   ViewBaristaProfile: { baristaId: string };
+  OfferJob: { baristaId: string };
   UserReviews: { userId: string };
   NotificationFeed: undefined;
 };
@@ -38,6 +40,11 @@ export const BusinessSearchStack: React.FC = () => {
         name="ViewBaristaProfile"
         component={ViewBaristaProfileScreen}
         options={{ title: t('nav.viewBaristaProfile') }}
+      />
+      <Stack.Screen
+        name="OfferJob"
+        component={OfferJobScreen}
+        options={{ title: t('nav.offerJob') }}
       />
       <Stack.Screen
         name="UserReviews"

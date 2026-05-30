@@ -18,6 +18,13 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate, RNAppAuthAu
     // foreground presentation and tap events to JS via the 'notification' event.
     UNUserNotificationCenter.current().delegate = self
 
+    // Register the JOB_OFFER category so the Интересно / Неинтересно action
+    // buttons appear on job_offer_received notifications. Action options are
+    // [] (no .foreground) so taps wake the app in the background and dispatch
+    // the response via UNUserNotificationCenterDelegate without forcing a
+    // foreground transition.
+    registerJobOfferCategory()
+
     let result = super.application(application, didFinishLaunchingWithOptions: launchOptions)
 
     // Clear delivered notifications + badge whenever the app becomes active.
@@ -45,6 +52,26 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate, RNAppAuthAu
     clearDeliveredNotifications()
 
     return result
+  }
+
+  private func registerJobOfferCategory() {
+    let accept = UNNotificationAction(
+      identifier: "JOB_OFFER_ACCEPT",
+      title: "Интересно",
+      options: []
+    )
+    let decline = UNNotificationAction(
+      identifier: "JOB_OFFER_DECLINE",
+      title: "Неинтересно",
+      options: [.destructive]
+    )
+    let category = UNNotificationCategory(
+      identifier: "JOB_OFFER",
+      actions: [accept, decline],
+      intentIdentifiers: [],
+      options: []
+    )
+    UNUserNotificationCenter.current().setNotificationCategories([category])
   }
 
   @objc private func clearDeliveredNotifications() {

@@ -71,7 +71,8 @@ const ApplicationItem = React.memo<{
   onPress: (application: Application) => void;
   onChatPress: (applicationId: string) => void;
   unreadCount: number;
-}>(({ application, onPress, onChatPress, unreadCount }) => {
+  canBaristaWrite: boolean;
+}>(({ application, onPress, onChatPress, unreadCount, canBaristaWrite }) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
   const statusColor = getStatusColor(application.status);
@@ -117,8 +118,11 @@ const ApplicationItem = React.memo<{
         })}
       </Text>
 
-      <TouchableOpacity style={styles.chatButton} onPress={handleChatPress}>
-        <Text style={styles.chatButtonText}>
+      <TouchableOpacity
+        style={[styles.chatButton, !canBaristaWrite && styles.chatButtonDisabled]}
+        onPress={handleChatPress}
+        disabled={!canBaristaWrite}>
+        <Text style={[styles.chatButtonText, !canBaristaWrite && styles.chatButtonTextDisabled]}>
           {t('applications.messageBusiness', { defaultValue: 'Написать бизнесу' })}
         </Text>
         {unreadCount > 0 && (
@@ -127,6 +131,13 @@ const ApplicationItem = React.memo<{
           </View>
         )}
       </TouchableOpacity>
+      {!canBaristaWrite && (
+        <Text style={styles.waitForBusinessHint}>
+          {t('applications.waitForBusinessFirst', {
+            defaultValue: 'Дождитесь, пока бизнес напишет первым',
+          })}
+        </Text>
+      )}
     </TouchableOpacity>
   );
 });
@@ -139,6 +150,7 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [businessHasSpoken, setBusinessHasSpoken] = useState<Set<string>>(new Set());
 
   const loadApplications = useCallback(async () => {
     if (!user?.id) {
@@ -151,12 +163,21 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
       setApplications(data);
 
       const ids = data.map(a => a.id);
-      try {
-        const counts = await ChatService.getUnreadCountsByApplicationIds(ids, 'barista');
-        setUnreadCounts(counts);
-      } catch (err) {
-        console.error('Error fetching unread counts:', err);
+      const [countsResult, spokenResult] = await Promise.allSettled([
+        ChatService.getUnreadCountsByApplicationIds(ids, 'barista'),
+        ChatService.getBusinessHasSpokenByApplicationIds(ids),
+      ]);
+      if (countsResult.status === 'fulfilled') {
+        setUnreadCounts(countsResult.value);
+      } else {
+        console.error('Error fetching unread counts:', countsResult.reason);
         setUnreadCounts({});
+      }
+      if (spokenResult.status === 'fulfilled') {
+        setBusinessHasSpoken(spokenResult.value);
+      } else {
+        console.error('Error fetching chat-gate state:', spokenResult.reason);
+        setBusinessHasSpoken(new Set());
       }
     } catch (error) {
       console.error('Error loading applications:', error);
@@ -196,15 +217,19 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   const renderApplication = useCallback(
-    ({ item }: { item: Application }) => (
-      <ApplicationItem
-        application={item}
-        onPress={handleApplicationPress}
-        onChatPress={handleChatPress}
-        unreadCount={unreadCounts[item.id] || 0}
-      />
-    ),
-    [handleApplicationPress, handleChatPress, unreadCounts]
+    ({ item }: { item: Application }) => {
+      const canBaristaWrite = item.createdViaOffer || businessHasSpoken.has(item.id);
+      return (
+        <ApplicationItem
+          application={item}
+          onPress={handleApplicationPress}
+          onChatPress={handleChatPress}
+          unreadCount={unreadCounts[item.id] || 0}
+          canBaristaWrite={canBaristaWrite}
+        />
+      );
+    },
+    [handleApplicationPress, handleChatPress, unreadCounts, businessHasSpoken]
   );
 
   const renderEmpty = () => (
@@ -360,6 +385,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: COLORS.primary,
+  },
+  chatButtonDisabled: {
+    borderColor: '#D1D5DB',
+    backgroundColor: '#F3F4F6',
+  },
+  chatButtonTextDisabled: {
+    color: '#9CA3AF',
+  },
+  waitForBusinessHint: {
+    marginTop: 6,
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
   },
   unreadBadge: {
     position: 'absolute',

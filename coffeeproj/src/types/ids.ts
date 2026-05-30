@@ -7,3 +7,4 @@ export type BaristaProfileId = Brand<string, 'BaristaProfileId'>;
 export type WorkExperienceId = Brand<string, 'WorkExperienceId'>;
 export type NotificationId = Brand<string, 'NotificationId'>;
 export type JobId = Brand<string, 'JobId'>;
+export type JobOfferId = Brand<string, 'JobOfferId'>;

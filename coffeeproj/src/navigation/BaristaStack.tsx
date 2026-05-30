@@ -13,6 +13,7 @@ import { BaristaProfileSetupScreen } from '../screens/barista/BaristaProfileSetu
 import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
 import { BusinessJobsScreen } from '../screens/barista/BusinessJobsScreen';
 import { BusinessPublicProfileScreen } from '../screens/barista/BusinessPublicProfileScreen';
+import { JobOfferScreen } from '../screens/barista/JobOfferScreen';
 import { useNotificationFeedStore } from '../stores/notificationFeedStore';
 import type { Job } from '../types';
 import type { Application } from '../types/application';
@@ -29,6 +30,7 @@ export type BaristaStackParamList = {
   NotificationFeed: undefined;
   BusinessJobs: { businessOwnerId: string; businessName?: string };
   BusinessPublicProfile: { businessOwnerId: string };
+  JobOffer: { offerId: string };
 };
 
 const Stack = createNativeStackNavigator<BaristaStackParamList>();
@@ -99,6 +101,11 @@ export const BaristaStack: React.FC = () => {
         name="BusinessPublicProfile"
         component={BusinessPublicProfileScreen}
         options={{ title: t('nav.businessPublicProfile') }}
+      />
+      <Stack.Screen
+        name="JobOffer"
+        component={JobOfferScreen}
+        options={{ title: t('nav.jobOffer') }}
       />
     </Stack.Navigator>
   );

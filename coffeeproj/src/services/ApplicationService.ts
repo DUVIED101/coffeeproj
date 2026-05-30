@@ -25,6 +25,7 @@ export class ApplicationService {
       completedByBarista: db.completed_by_barista || false,
       completedByBusiness: db.completed_by_business || false,
       completedAt: db.completed_at,
+      createdViaOffer: db.created_via_offer || false,
       createdAt: db.created_at,
       updatedAt: db.updated_at,
     };
@@ -43,6 +44,7 @@ export class ApplicationService {
       completedByBarista: db.completed_by_barista || false,
       completedByBusiness: db.completed_by_business || false,
       completedAt: db.completed_at,
+      createdViaOffer: db.created_via_offer || false,
       createdAt: db.created_at,
       updatedAt: db.updated_at,
       job: db.jobs

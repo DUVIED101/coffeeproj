@@ -17,7 +17,10 @@ type NotificationKind =
   | "application_withdrawn"
   | "shift_cancelled"
   | "new_review"
-  | "conversation_started";
+  | "conversation_started"
+  | "job_offer_received"
+  | "job_offer_accepted"
+  | "job_offer_declined";
 
 type GatedKind =
   | "new_message"
@@ -27,7 +30,10 @@ type GatedKind =
   | "application_withdrawn"
   | "shift_cancelled"
   | "new_review"
-  | "conversation_started";
+  | "conversation_started"
+  | "job_offer_received"
+  | "job_offer_accepted"
+  | "job_offer_declined";
 
 type NotificationPrefsRow = {
   new_message: boolean;
@@ -38,6 +44,9 @@ type NotificationPrefsRow = {
   shift_cancelled: boolean;
   new_review: boolean;
   conversation_started: boolean;
+  job_offer_received: boolean;
+  job_offer_accepted: boolean;
+  job_offer_declined: boolean;
 };
 
 const GATED_KIND_COLUMNS: Readonly<Record<GatedKind, keyof NotificationPrefsRow>> = {
@@ -49,6 +58,9 @@ const GATED_KIND_COLUMNS: Readonly<Record<GatedKind, keyof NotificationPrefsRow>
   shift_cancelled: "shift_cancelled",
   new_review: "new_review",
   conversation_started: "conversation_started",
+  job_offer_received: "job_offer_received",
+  job_offer_accepted: "job_offer_accepted",
+  job_offer_declined: "job_offer_declined",
 };
 
 function isGatedKind(kind: NotificationKind): kind is GatedKind {
@@ -81,6 +93,9 @@ const KNOWN_KINDS: ReadonlySet<NotificationKind> = new Set<NotificationKind>([
   "shift_cancelled",
   "new_review",
   "conversation_started",
+  "job_offer_received",
+  "job_offer_accepted",
+  "job_offer_declined",
 ]);
 
 const JWT_TTL_SECONDS = 3300;
@@ -286,7 +301,7 @@ async function isKindEnabled(
   const { data, error } = await supabase
     .from("notification_preferences")
     .select(
-      "new_message, application_accepted, application_rejected, new_application, application_withdrawn, shift_cancelled, new_review, conversation_started",
+      "new_message, application_accepted, application_rejected, new_application, application_withdrawn, shift_cancelled, new_review, conversation_started, job_offer_received, job_offer_accepted, job_offer_declined",
     )
     .eq("user_id", recipientId)
     .single();
@@ -385,12 +400,24 @@ async function handleRequest(req: Request): Promise<Response> {
     return jsonResponse(500, { error: "jwt_signing_failed" });
   }
 
+  // job_offer_received uses category=JOB_OFFER so iOS shows the
+  // Интересно / Неинтересно action buttons (registered in AppDelegate.swift).
+  // thread-id keeps multiple offers from collapsing into a single notification.
+  const aps: Record<string, unknown> = {
+    alert: { title: request.title, body: request.body },
+    sound: "default",
+    "mutable-content": 1,
+  };
+  if (request.kind === "job_offer_received") {
+    aps.category = "JOB_OFFER";
+    const offerId = request.data?.offerId;
+    if (typeof offerId === "string" && offerId.length > 0) {
+      aps["thread-id"] = offerId;
+    }
+  }
+
   const apnsPayload: Record<string, unknown> = {
-    aps: {
-      alert: { title: request.title, body: request.body },
-      sound: "default",
-      "mutable-content": 1,
-    },
+    aps,
     kind: request.kind,
     ...(request.data ?? {}),
   };

@@ -6,6 +6,7 @@ import { CreateJobScreen } from '../screens/business/CreateJobScreen';
 import { JobDetailsScreen } from '../screens/business/JobDetailsScreen';
 import { ApplicantsScreen } from '../screens/business/ApplicantsScreen';
 import { ViewBaristaProfileScreen } from '../screens/business/ViewBaristaProfileScreen';
+import { OfferJobScreen } from '../screens/business/OfferJobScreen';
 import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
 import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
 
@@ -16,6 +17,7 @@ export type BusinessStackParamList = {
   JobDetails: { jobId: string };
   Applicants: { jobId: string };
   ViewBaristaProfile: { baristaId: string };
+  OfferJob: { baristaId: string };
   UserReviews: { userId: string };
   NotificationFeed: undefined;
 };
@@ -60,6 +62,11 @@ export const BusinessStack: React.FC = () => {
         name="ViewBaristaProfile"
         component={ViewBaristaProfileScreen}
         options={{ title: t('nav.viewBaristaProfile') }}
+      />
+      <Stack.Screen
+        name="OfferJob"
+        component={OfferJobScreen}
+        options={{ title: t('nav.offerJob') }}
       />
       <Stack.Screen
         name="UserReviews"

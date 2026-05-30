@@ -10,7 +10,7 @@ import type {
   NotificationKind,
   PushNotificationPayload,
 } from '../types/notification';
-import type { ApplicationId, UserId } from '../types/ids';
+import type { ApplicationId, JobId, JobOfferId, UserId } from '../types/ids';
 import type { ConversationId } from '../types/chat';
 
 const REGISTRATION_TIMEOUT_MS = 30_000;
@@ -26,6 +26,9 @@ export class NotificationService {
       kind?: NotificationKind;
       applicationId?: string;
       conversationId?: string;
+      jobId?: string;
+      offerId?: string;
+      actionIdentifier?: string;
       userInteraction?: number | boolean;
     };
     const kind: NotificationKind = rawData.kind ?? 'new_message';
@@ -37,16 +40,26 @@ export class NotificationService {
         ? alert
         : (alert?.body ?? (message != null ? String(message) : undefined));
     const userInteraction = Boolean(rawData.userInteraction);
+    const rawActionId = notification.getActionIdentifier?.();
+    const actionIdentifier =
+      typeof rawActionId === 'string' && rawActionId.length > 0
+        ? rawActionId
+        : typeof rawData.actionIdentifier === 'string' && rawData.actionIdentifier.length > 0
+          ? rawData.actionIdentifier
+          : undefined;
 
     return {
       kind,
       title: title ?? undefined,
       body: body ?? undefined,
       userInteraction,
+      actionIdentifier,
       data: {
         kind,
         applicationId: rawData.applicationId as ApplicationId | undefined,
         conversationId: rawData.conversationId as ConversationId | undefined,
+        jobId: rawData.jobId as JobId | undefined,
+        offerId: rawData.offerId as JobOfferId | undefined,
       },
     };
   }

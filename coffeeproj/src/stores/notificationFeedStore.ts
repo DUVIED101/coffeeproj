@@ -5,7 +5,7 @@ import { NotificationFeedService } from '../services/NotificationFeedService';
 import { useToastStore } from './toastStore';
 import { navigationRef } from '../navigation/navigationRef';
 import type { Notification } from '../types/notification';
-import type { NotificationId, UserId } from '../types/ids';
+import type { JobOfferId, NotificationId, UserId } from '../types/ids';
 
 /**
  * Skip the in-app toast when the user is already viewing the destination screen
@@ -34,6 +34,7 @@ type NotificationFeedState = {
   markAsRead: (notificationId: NotificationId) => Promise<void>;
   markAllAsRead: (userId: UserId) => Promise<void>;
   clearAll: (userId: UserId) => Promise<void>;
+  deleteByOfferId: (offerId: JobOfferId) => Promise<void>;
   startRealtime: (userId: UserId) => void;
   stopRealtime: () => void;
   reset: () => void;
@@ -107,6 +108,27 @@ export const useNotificationFeedStore = create<NotificationFeedState>((set, get)
 
     try {
       await NotificationFeedService.clearAll(userId);
+    } catch (error) {
+      set({ notifications: previous, unreadCount: previousUnread });
+      throw error;
+    }
+  },
+
+  deleteByOfferId: async (offerId: JobOfferId) => {
+    const previous = get().notifications;
+    const previousUnread = get().unreadCount;
+    const matching = previous.filter(n => (n.data as { offerId?: string }).offerId === offerId);
+    if (matching.length === 0) {
+      await NotificationFeedService.deleteByOfferId(offerId);
+      return;
+    }
+    const unreadRemoved = matching.filter(n => !n.readAt).length;
+    set({
+      notifications: previous.filter(n => (n.data as { offerId?: string }).offerId !== offerId),
+      unreadCount: Math.max(0, previousUnread - unreadRemoved),
+    });
+    try {
+      await NotificationFeedService.deleteByOfferId(offerId);
     } catch (error) {
       set({ notifications: previous, unreadCount: previousUnread });
       throw error;

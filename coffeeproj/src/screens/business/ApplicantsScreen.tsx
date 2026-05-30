@@ -19,13 +19,15 @@ import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ChatService } from '../../services/ChatService';
 import { JobService } from '../../services/JobService';
+import { JobOfferService } from '../../services/JobOfferService';
 import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { ReviewModal } from '../../components/ReviewModal';
 import { getShiftEnd, getShiftStart, canCancelShiftNow } from '../../utils/shiftLifecycle';
 import type { Application, ApplicationStatus } from '../../types/application';
+import type { JobOffer } from '../../types/jobOffer';
 import type { ShiftDetails } from '../../types/job';
-import type { ApplicationId, UserId } from '../../types/ids';
+import type { ApplicationId, JobId, UserId } from '../../types/ids';
 import type { ApplicationReview } from '../../types/review';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import type { TFunction } from 'i18next';
@@ -289,6 +291,8 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const { t } = useTranslation();
   const [applications, setApplications] = useState<Application[]>([]);
+  const [pendingOffers, setPendingOffers] = useState<JobOffer[]>([]);
+  const [cancellingOfferIds, setCancellingOfferIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
@@ -363,8 +367,15 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
   const loadApplicants = useCallback(async () => {
     try {
       setIsLoading(true);
-      const data = await ApplicationService.getApplicationsByJob(jobId);
+      const [data, offers] = await Promise.all([
+        ApplicationService.getApplicationsByJob(jobId),
+        JobOfferService.getPendingOffersForJob(jobId as JobId).catch(err => {
+          console.error('Error loading pending offers:', err);
+          return [] as JobOffer[];
+        }),
+      ]);
       setApplications(data);
+      setPendingOffers(offers);
 
       const ids = data.map(a => a.id);
       try {
@@ -549,6 +560,35 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
     });
   }, []);
 
+  const handleCancelOffer = useCallback(
+    async (offer: JobOffer) => {
+      Alert.alert(t('applicants.cancelOfferConfirmTitle'), t('applicants.cancelOfferConfirmBody'), [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('applicants.cancelOffer'),
+          style: 'destructive',
+          onPress: async () => {
+            setCancellingOfferIds(prev => new Set(prev).add(offer.id));
+            try {
+              await JobOfferService.cancelOffer(offer.id);
+              setPendingOffers(prev => prev.filter(o => o.id !== offer.id));
+            } catch (error) {
+              console.error('Error cancelling offer:', error);
+              Alert.alert(t('common.error'), t('applicants.cancelOfferFailure'));
+            } finally {
+              setCancellingOfferIds(prev => {
+                const next = new Set(prev);
+                next.delete(offer.id);
+                return next;
+              });
+            }
+          },
+        },
+      ]);
+    },
+    [t]
+  );
+
   const handleReviewSubmitted = useCallback((review: ApplicationReview) => {
     setReviewedIds(prev => new Set(prev).add(review.applicationId));
     setReviewTarget(null);
@@ -638,6 +678,46 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         renderItem={renderApplicant}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
+        ListHeaderComponent={
+          pendingOffers.length > 0 ? (
+            <View style={styles.pendingOffersSection}>
+              <Text style={styles.pendingOffersTitle}>
+                {t('applicants.pendingOffersSection', { count: pendingOffers.length })}
+              </Text>
+              {pendingOffers.map(offer => {
+                const name =
+                  offer.baristaFirstName || offer.baristaLastName
+                    ? `${offer.baristaFirstName ?? ''} ${offer.baristaLastName ?? ''}`.trim()
+                    : t('applicants.unknownBarista');
+                const isCancelling = cancellingOfferIds.has(offer.id);
+                return (
+                  <View key={offer.id} style={styles.pendingOfferRow}>
+                    <View style={styles.pendingOfferInfo}>
+                      <Text style={styles.pendingOfferName}>{name}</Text>
+                      <Text style={styles.pendingOfferDate}>
+                        {t('applicants.offerSentOn', {
+                          date: new Date(offer.createdAt).toLocaleDateString('ru-RU'),
+                        })}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.pendingOfferCancelButton}
+                      onPress={() => handleCancelOffer(offer)}
+                      disabled={isCancelling}>
+                      {isCancelling ? (
+                        <ActivityIndicator size="small" color="#EF4444" />
+                      ) : (
+                        <Text style={styles.pendingOfferCancelText}>
+                          {t('applicants.cancelOffer')}
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </View>
+          ) : null
+        }
         ListEmptyComponent={renderEmpty}
         refreshControl={
           <RefreshControl
@@ -908,5 +988,43 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#92400E',
+  },
+  pendingOffersSection: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  pendingOffersTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 12,
+  },
+  pendingOfferRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  pendingOfferInfo: { flex: 1 },
+  pendingOfferName: { fontSize: 15, fontWeight: '600', color: COLORS.text },
+  pendingOfferDate: { fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
+  pendingOfferCancelButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#EF4444',
+    marginLeft: 12,
+  },
+  pendingOfferCancelText: {
+    color: '#EF4444',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

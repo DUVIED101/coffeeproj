@@ -1,5 +1,5 @@
 import type { ConversationId } from './chat';
-import type { ApplicationId, JobId, NotificationId, ReviewId, UserId } from './ids';
+import type { ApplicationId, JobId, JobOfferId, NotificationId, ReviewId, UserId } from './ids';
 
 type Brand<K, T> = K & { __brand: T };
 
@@ -16,7 +16,14 @@ export type NotificationKind =
   | 'application_withdrawn'
   | 'shift_cancelled'
   | 'new_review'
-  | 'conversation_started';
+  | 'conversation_started'
+  | 'job_offer_received'
+  | 'job_offer_accepted'
+  | 'job_offer_declined';
+
+export const JOB_OFFER_ACTION_ACCEPT = 'JOB_OFFER_ACCEPT';
+export const JOB_OFFER_ACTION_DECLINE = 'JOB_OFFER_DECLINE';
+export type JobOfferActionId = typeof JOB_OFFER_ACTION_ACCEPT | typeof JOB_OFFER_ACTION_DECLINE;
 
 export type PushNotificationPayload = {
   kind: NotificationKind;
@@ -24,12 +31,15 @@ export type PushNotificationPayload = {
   body?: string;
   /** True when the user tapped the notification; false for foreground arrivals. */
   userInteraction?: boolean;
+  /** Set when the user taps a UNNotificationAction button (e.g. Интересно/Неинтересно). */
+  actionIdentifier?: string;
   data?: {
     kind: NotificationKind;
     applicationId?: ApplicationId;
     conversationId?: ConversationId;
     jobId?: JobId;
     reviewId?: ReviewId;
+    offerId?: JobOfferId;
   };
 };
 

@@ -1,6 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../config/supabase';
-import type { NotificationId, UserId } from '../types/ids';
+import type { JobOfferId, NotificationId, UserId } from '../types/ids';
 import type { Notification, NotificationData, NotificationKind } from '../types/notification';
 
 type NotificationRow = {
@@ -22,6 +22,7 @@ export interface NotificationFeedServiceProtocol {
   markAsRead(notificationId: NotificationId): Promise<void>;
   markAllAsRead(userId: UserId): Promise<void>;
   clearAll(userId: UserId): Promise<void>;
+  deleteByOfferId(offerId: JobOfferId): Promise<void>;
   subscribe(userId: UserId, onInsert: (n: Notification) => void): RealtimeChannel;
   unsubscribe(channel: RealtimeChannel): void;
 }
@@ -100,6 +101,15 @@ export const NotificationFeedService: NotificationFeedServiceProtocol = {
 
     if (error) {
       console.error('Error in NotificationFeedService.clearAll:', error);
+      throw error;
+    }
+  },
+
+  async deleteByOfferId(offerId) {
+    const { error } = await supabase.from('notifications').delete().contains('data', { offerId });
+
+    if (error) {
+      console.error('Error in NotificationFeedService.deleteByOfferId:', error);
       throw error;
     }
   },

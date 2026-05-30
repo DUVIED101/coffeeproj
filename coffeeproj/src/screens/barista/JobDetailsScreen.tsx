@@ -19,8 +19,7 @@ import { ApplicationService } from '../../services/ApplicationService';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
 import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
-import { StarRow } from '../../components/StarRow';
-import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
+import { JobDetailsContent } from '../../components/JobDetailsContent';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import type { Job } from '../../types/job';
 import type { Application } from '../../types/application';
@@ -174,53 +173,6 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const formatDistance = (meters: number | null | undefined): string => {
-    if (!meters) return '';
-    if (meters < 1000) {
-      return t('jobDetails.metersAway', {
-        m: Math.round(meters),
-        defaultValue: '{{m}} м',
-      });
-    }
-    return t('jobDetails.kilometersAway', {
-      km: (meters / 1000).toFixed(1),
-      defaultValue: '{{km}} км',
-    });
-  };
-
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(locale, {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
-
-  const formatRecurringDays = (days: string[]): string => {
-    const dayMap: Record<string, string> =
-      locale === 'ru-RU'
-        ? {
-            monday: 'Пн',
-            tuesday: 'Вт',
-            wednesday: 'Ср',
-            thursday: 'Чт',
-            friday: 'Пт',
-            saturday: 'Сб',
-            sunday: 'Вс',
-          }
-        : {
-            monday: 'Mon',
-            tuesday: 'Tue',
-            wednesday: 'Wed',
-            thursday: 'Thu',
-            friday: 'Fri',
-            saturday: 'Sat',
-            sunday: 'Sun',
-          };
-    return days.map(day => dayMap[day] || day).join(', ');
-  };
-
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -253,172 +205,15 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{job.title}</Text>
-          <View style={styles.businessInfo}>
-            <Text style={styles.businessName}>{job.businessName}</Text>
-            <Text style={styles.branchName}>{job.branchName}</Text>
-            {ownerAggregate && ownerAggregate.reviewCount > 0 && (
-              <StarRow
-                rating={ownerAggregate.averageRating}
-                count={ownerAggregate.reviewCount}
-                showValue
-                size={13}
-              />
-            )}
-          </View>
-        </View>
-
-        {job.branchPhotos && job.branchPhotos.length > 0 && (
-          <View style={styles.section}>
-            <BranchPhotoGallery
-              photos={job.branchPhotos}
-              onPhotoPress={index => {
-                setViewerIndex(index);
-                setViewerVisible(true);
-              }}
-            />
-          </View>
-        )}
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t('jobDetails.location', { defaultValue: 'Расположение' })}
-          </Text>
-          <Text style={styles.address}>{job.location.address}</Text>
-          {job.metroStation && (
-            <View style={styles.metroContainer}>
-              <Text style={styles.metroLabel}>
-                {t('jobDetails.metroLabel', { defaultValue: 'Метро:' })}
-              </Text>
-              <Text style={styles.metroStation}>{job.metroStation}</Text>
-            </View>
-          )}
-          {displayDistance != null && (
-            <Text style={styles.distance}>
-              {t('jobDetails.distanceFromYou', {
-                distance: formatDistance(displayDistance),
-                defaultValue: '{{distance}} от вас',
-              })}
-            </Text>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t('jobDetails.shiftDetails', { defaultValue: 'Детали смены' })}
-          </Text>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>
-              {t('jobDetails.date', { defaultValue: 'Дата:' })}
-            </Text>
-            <Text style={styles.detailValue}>{formatDate(job.shiftDetails.startDate)}</Text>
-          </View>
-          {job.shiftDetails.endDate && (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>
-                {t('jobDetails.endDate', { defaultValue: 'Дата окончания:' })}
-              </Text>
-              <Text style={styles.detailValue}>{formatDate(job.shiftDetails.endDate)}</Text>
-            </View>
-          )}
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>
-              {t('jobDetails.time', { defaultValue: 'Время:' })}
-            </Text>
-            <Text style={styles.detailValue}>
-              {job.shiftDetails.startTime} - {job.shiftDetails.endTime}
-            </Text>
-          </View>
-          {job.shiftDetails.isRecurring && job.shiftDetails.recurringDays && (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>
-                {t('jobDetails.recurring', { defaultValue: 'Повторяется:' })}
-              </Text>
-              <Text style={styles.detailValue}>
-                {formatRecurringDays(job.shiftDetails.recurringDays)}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t('jobDetails.compensation', { defaultValue: 'Оплата' })}
-          </Text>
-          <Text style={styles.compensationAmount}>
-            {job.compensation.amount.toLocaleString(locale)} ₽
-          </Text>
-          <Text style={styles.compensationType}>
-            {job.compensation.type === 'hourly'
-              ? t('jobDetails.perHour', { defaultValue: 'за час' })
-              : job.compensation.type === 'daily'
-                ? t('jobDetails.perDay', { defaultValue: 'за день' })
-                : t('jobDetails.fixed', { defaultValue: 'фиксированная оплата' })}
-          </Text>
-        </View>
-
-        {job.description && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {t('jobDetails.description', { defaultValue: 'Описание' })}
-            </Text>
-            <Text style={styles.description}>{job.description}</Text>
-          </View>
-        )}
-
-        {job.requirements && job.requirements.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {t('jobDetails.requirements', { defaultValue: 'Требования' })}
-            </Text>
-            {job.requirements.map((req, index) => (
-              <Text key={index} style={styles.bulletItem}>
-                • {req}
-              </Text>
-            ))}
-          </View>
-        )}
-
-        {job.requiredEquipmentExperience && job.requiredEquipmentExperience.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {t('jobDetails.requiredEquipment', {
-                defaultValue: 'Требуемый опыт работы с оборудованием',
-              })}
-            </Text>
-            {job.requiredEquipmentExperience.map((equipment, index) => (
-              <Text key={index} style={styles.bulletItem}>
-                • {equipment}
-              </Text>
-            ))}
-          </View>
-        )}
-
-        <View style={styles.section}>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>
-              {t('jobDetails.jobType', { defaultValue: 'Тип занятости:' })}
-            </Text>
-            <Text style={styles.detailValue}>
-              {job.jobType === 'temporary'
-                ? t('jobDetails.jobTypeTemporary', { defaultValue: 'Временная' })
-                : t('jobDetails.jobTypePermanent', { defaultValue: 'Постоянная' })}
-            </Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>
-              {t('jobDetails.applications', { defaultValue: 'Откликов:' })}
-            </Text>
-            <Text style={styles.detailValue}>{job.applicationCount}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>
-              {t('jobDetails.posted', { defaultValue: 'Опубликовано:' })}
-            </Text>
-            <Text style={styles.detailValue}>{formatDate(job.postedAt)}</Text>
-          </View>
-        </View>
+        <JobDetailsContent
+          job={job}
+          ownerAggregate={ownerAggregate}
+          distance={displayDistance}
+          onPhotoPress={index => {
+            setViewerIndex(index);
+            setViewerVisible(true);
+          }}
+        />
       </ScrollView>
 
       {existingApplication ? (
