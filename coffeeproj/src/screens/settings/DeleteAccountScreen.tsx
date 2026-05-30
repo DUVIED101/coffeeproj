@@ -19,6 +19,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { AuthService } from '../../services/AuthService';
 import { BusinessService } from '../../services/BusinessService';
 import { JobService } from '../../services/JobService';
+import { hasPasswordAuth, isAppleOnlyUser } from '../../utils/authProvider';
 
 export const DeleteAccountScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -27,26 +28,11 @@ export const DeleteAccountScreen: React.FC = () => {
   const session = useAuthStore(s => s.session);
   const deleteAccount = useAuthStore(s => s.deleteAccount);
 
-  // Mirror SettingsScreen: a user with an `email` identity proves they have a
-  // password we can re-auth against. OAuth-only accounts (Yandex/Google/Apple)
-  // need an alternative. Apple gets a dedicated SIWA re-auth path because the
-  // privaterelay alias can't receive our deletion OTP mail.
-  const hasEmailLogin = useMemo(() => {
-    return (
-      session?.user?.identities?.some(identity => identity.provider === 'email') ??
-      session?.user?.app_metadata?.provider === 'email'
-    );
-  }, [session]);
-
-  const isAppleOnly = useMemo(() => {
-    if (hasEmailLogin) return false;
-    const identities = session?.user?.identities ?? [];
-    const providers = new Set(identities.map(i => i.provider));
-    if (providers.size === 0) {
-      return session?.user?.app_metadata?.provider === 'apple';
-    }
-    return providers.size === 1 && providers.has('apple');
-  }, [session, hasEmailLogin]);
+  // Apple SIWA users get a dedicated re-auth path because the privaterelay
+  // alias can't receive our deletion OTP mail. Everyone else without a real
+  // password (Yandex, Google) goes through OTP — see authProvider helpers.
+  const hasEmailLogin = useMemo(() => hasPasswordAuth(session), [session]);
+  const isAppleOnly = useMemo(() => isAppleOnlyUser(session), [session]);
 
   const expectedKeyword = t('settings.delete.confirmKeyword');
 

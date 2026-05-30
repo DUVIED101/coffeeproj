@@ -4,11 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../config/constants';
 import { useAuthStore } from '../../stores/authStore';
 import { getCurrentLanguage } from '../../i18n';
 import type { SettingsStackParamList } from '../../navigation/SettingsStack';
 import { APP_VERSION } from '../../config/version';
+import { hasPasswordAuth } from '../../utils/authProvider';
 
 type Navigation = NativeStackNavigationProp<SettingsStackParamList, 'SettingsHome'>;
 
@@ -45,12 +47,7 @@ export const SettingsScreen: React.FC = () => {
   const session = useAuthStore(s => s.session);
   const signOut = useAuthStore(s => s.signOut);
 
-  // OAuth users (Yandex, Google, Apple) don't have a password to change —
-  // hide the row. Identities array is the canonical list of linked providers;
-  // we only show Change Password if an email identity is present.
-  const hasEmailLogin =
-    session?.user?.identities?.some(identity => identity.provider === 'email') ??
-    session?.user?.app_metadata?.provider === 'email';
+  const hasEmailLogin = hasPasswordAuth(session);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -60,8 +57,9 @@ export const SettingsScreen: React.FC = () => {
           onPress={() => navigation.getParent()?.goBack()}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           accessibilityRole="button"
-          accessibilityLabel={t('common.back')}>
-          <Text style={styles.headerBack}>{'‹'}</Text>
+          accessibilityLabel={t('common.back')}
+          style={styles.headerBackButton}>
+          <MaterialCommunityIcons name="chevron-left" size={28} color={COLORS.primary} />
         </TouchableOpacity>
       ),
     });
@@ -180,11 +178,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.backgroundSecondary,
   },
-  headerBack: {
-    fontSize: 32,
-    lineHeight: 32,
-    color: COLORS.primary,
+  headerBackButton: {
     paddingHorizontal: 4,
+    paddingVertical: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   scrollContent: {
     paddingVertical: 16,
