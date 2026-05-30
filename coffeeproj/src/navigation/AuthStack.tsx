@@ -17,13 +17,11 @@ export type AuthStackParamList = {
   EmployerSubtype: {
     email: string;
     password?: string;
-    phoneNumber?: string;
     hasSession?: boolean;
   };
   EmployerDetails: {
     email: string;
     password?: string;
-    phoneNumber?: string;
     legalForm: LegalForm;
     hasSession?: boolean;
   };

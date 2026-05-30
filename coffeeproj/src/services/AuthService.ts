@@ -25,7 +25,6 @@ export class AuthService {
     email: string,
     password: string,
     accountType: AccountType,
-    phoneNumber?: string,
     businessSignupData?: BusinessSignupData
   ): Promise<{ user: any }> {
     try {
@@ -33,9 +32,6 @@ export class AuthService {
         account_type: accountType,
         language: getCurrentLanguage(),
       };
-      if (phoneNumber !== undefined) {
-        metadata.phone_number = phoneNumber;
-      }
       if (businessSignupData) {
         metadata.legal_form = businessSignupData.legalForm;
         metadata.business_name = businessSignupData.businessName;
@@ -55,6 +51,9 @@ export class AuthService {
       });
 
       if (authError) {
+        if (authError.message.toLowerCase().includes('already registered')) {
+          throw new Error('email_already_registered');
+        }
         if (authError.message.includes('invalid')) {
           throw new Error(
             'This email address cannot be used. Please try a different email address or contact support.'
@@ -68,6 +67,16 @@ export class AuthService {
         throw authError;
       }
       if (!authData.user) throw new Error('No user returned from signup');
+
+      // Supabase by default does NOT error on duplicate email — it returns a
+      // fake user with `identities: []` to prevent email enumeration. Detect
+      // that here and surface a real error so the UI can tell the user to log
+      // in instead of silently sending them to the OTP screen where the code
+      // never arrives.
+      const identities = authData.user.identities;
+      if (Array.isArray(identities) && identities.length === 0) {
+        throw new Error('email_already_registered');
+      }
 
       return { user: authData.user };
     } catch (error) {
@@ -158,7 +167,31 @@ export class AuthService {
       }>('yandex-oauth-exchange', {
         body: { accessToken: yandexAccessToken },
       });
-      if (error) throw error;
+      if (error) {
+        const ctx = (error as { context?: Response }).context;
+        const status = ctx?.status;
+        let rawBody = '';
+        let payload: { error?: string } = {};
+        if (ctx && typeof ctx.text === 'function') {
+          try {
+            rawBody = await ctx.text();
+            try {
+              payload = JSON.parse(rawBody) as typeof payload;
+            } catch {
+              payload = {};
+            }
+          } catch {
+            rawBody = '';
+          }
+        }
+        console.error('[signInWithYandex] edge function error', {
+          status,
+          rawBody,
+          errorName: (error as Error).name,
+          errorMessage: error.message,
+        });
+        throw new Error(payload.error ?? `yandex_exchange_failed_${status ?? 'unknown'}`);
+      }
       if (!data?.token_hash || !data?.email) {
         throw new Error('yandex_exchange_invalid_response');
       }
@@ -401,11 +434,16 @@ export class AuthService {
 
   /**
    * Delete the current user's account via the `delete-user` Edge Function.
-   * On success, clears the local session. Accepts either a password (email
-   * accounts) or an OTP code emailed via requestDeletionOtp (OAuth accounts).
+   * On success, clears the local session. Accepts a password (email accounts),
+   * an OTP code emailed via requestDeletionOtp (Yandex/Google OAuth), or a
+   * fresh Apple identityToken (Apple SIWA — works regardless of whether the
+   * user chose "Hide my email").
    */
   static async deleteAccount(
-    params: { password: string; force?: boolean } | { otpCode: string; force?: boolean }
+    params:
+      | { password: string; force?: boolean }
+      | { otpCode: string; force?: boolean }
+      | { appleIdToken: string; force?: boolean }
   ): Promise<void> {
     try {
       const {
@@ -418,10 +456,15 @@ export class AuthService {
         throw new Error('No active session');
       }
 
-      const body =
-        'password' in params
-          ? { password: params.password, force: params.force ?? false }
-          : { otpCode: params.otpCode, force: params.force ?? false };
+      const body = ((): Record<string, unknown> => {
+        if ('password' in params) {
+          return { password: params.password, force: params.force ?? false };
+        }
+        if ('appleIdToken' in params) {
+          return { appleIdToken: params.appleIdToken, force: params.force ?? false };
+        }
+        return { otpCode: params.otpCode, force: params.force ?? false };
+      })();
 
       const { data, error } = await supabase.functions.invoke('delete-user', {
         body,
@@ -451,11 +494,14 @@ export class AuthService {
           errorMessage: error.message,
         });
         if (status === 403) {
-          // The Edge Function uses 403 for both invalid password and invalid
-          // OTP; surface the specific reason so the screen can highlight the
-          // right field.
+          // The Edge Function uses 403 for invalid password, invalid OTP, or
+          // invalid Apple token; surface the specific reason so the screen can
+          // highlight the right field.
           if (payload.error === 'invalid_otp') {
             throw new Error('invalid_otp');
+          }
+          if (payload.error === 'invalid_apple_token') {
+            throw new Error('invalid_apple_token');
           }
           throw new Error('invalid_password');
         }

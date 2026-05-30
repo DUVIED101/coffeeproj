@@ -19,21 +19,30 @@ type Props = {
   separatorLabel?: string;
 };
 
-// Yandex auto-derives the iOS callback as `yx<client_id>://` for apps
-// registered as "iOS-приложение" — there's no field in the OAuth console
-// to set a custom redirect URI for iOS. The matching URL scheme is
+// Yandex iOS callback format used by their own Login SDK (and the only
+// format Yandex accepts for "iOS-приложение" registrations): triple-slash
+// custom scheme with the documented path + platform query. The simpler
+// `yx<client_id>://` form is rejected with "redirect_uri не совпадает с
+// Callback URL" — Yandex's server compares string-exact. The URL scheme is
 // registered in ios/coffeeproj/Info.plist.
+//
+// PKCE is required: this is a public native client with no stored
+// client_secret, so the /token call would otherwise be rejected with
+// "Wrong client secret / invalid_client". The PKCE code_verifier replaces
+// the missing secret.
+//
+// `additionalParameters` is intentionally absent: react-native-app-auth
+// forwards it to BOTH /authorize and /token, and Yandex's /token rejects
+// unknown params with a 400.
 const YANDEX_CONFIG: AuthConfiguration = {
-  issuer: '',
   clientId: YANDEX_CLIENT_ID ?? '',
-  redirectUrl: YANDEX_CLIENT_ID ? `yx${YANDEX_CLIENT_ID}://` : '',
+  redirectUrl: YANDEX_CLIENT_ID ? `yx${YANDEX_CLIENT_ID}:///auth/finish?platform=ios` : '',
   scopes: ['login:email', 'login:info'],
   serviceConfiguration: {
     authorizationEndpoint: 'https://oauth.yandex.ru/authorize',
     tokenEndpoint: 'https://oauth.yandex.ru/token',
   },
-  usePKCE: false,
-  additionalParameters: { force_confirm: 'yes' },
+  usePKCE: true,
 };
 
 let googleConfigured = false;
@@ -135,7 +144,21 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
       ) {
         return;
       }
-      Alert.alert(t('auth.social.yandexErrorTitle'), message);
+      const errObj = err as { code?: string };
+      // Note: don't pass `err` or its `userInfo` to console.error — native
+      // NSError bridges can contain unstringifiable CoreFoundation refs that
+      // trip LogBox in dev and produce a confusing RedBox over the real error.
+      console.warn(
+        `[yandex auth] failed code=${errObj.code ?? 'none'} redirect=${YANDEX_CONFIG.redirectUrl} message=${message.slice(0, 200)}`
+      );
+      const detail = [
+        message,
+        errObj.code ? `[${errObj.code}]` : null,
+        `redirect_uri: ${YANDEX_CONFIG.redirectUrl}`,
+      ]
+        .filter(Boolean)
+        .join('\n');
+      Alert.alert(t('auth.social.yandexErrorTitle'), detail);
     } finally {
       setBusy(null);
     }

@@ -9,7 +9,6 @@ import type { AccountType, User } from '../../types';
 
 type SignupMetadata = {
   account_type?: string;
-  phone_number?: string;
 };
 
 export const ProfileBootstrapScreen: React.FC = () => {
@@ -38,7 +37,6 @@ export const ProfileBootstrapScreen: React.FC = () => {
           id: session.user.id,
           email: session.user.email ?? '',
           account_type: accountType,
-          phone_number: meta.phone_number ?? null,
         },
         { onConflict: 'id', ignoreDuplicates: true }
       );
@@ -70,7 +68,6 @@ export const ProfileBootstrapScreen: React.FC = () => {
         id: data.id,
         uid: data.id,
         email: data.email,
-        phoneNumber: data.phone_number ?? undefined,
         accountType: data.account_type,
         isActive: data.is_active,
         isVerified: data.is_verified,

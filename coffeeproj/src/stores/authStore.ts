@@ -21,7 +21,10 @@ interface AuthState {
   initialize: () => Promise<void>;
   signOut: () => Promise<void>;
   deleteAccount: (
-    params: { password: string; force?: boolean } | { otpCode: string; force?: boolean }
+    params:
+      | { password: string; force?: boolean }
+      | { otpCode: string; force?: boolean }
+      | { appleIdToken: string; force?: boolean }
   ) => Promise<void>;
   clearAuth: () => void;
 }
@@ -125,7 +128,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // the DeleteAccountScreen and swallow validation errors (e.g. wrong
   // password). The screen owns its own submit-loading state.
   deleteAccount: async (
-    params: { password: string; force?: boolean } | { otpCode: string; force?: boolean }
+    params:
+      | { password: string; force?: boolean }
+      | { otpCode: string; force?: boolean }
+      | { appleIdToken: string; force?: boolean }
   ) => {
     const currentUserId = get().user?.id;
     if (currentUserId) {
@@ -166,7 +172,6 @@ async function fetchUserProfile(userId: string): Promise<User | null> {
     id: data.id,
     uid: data.id,
     email: data.email,
-    phoneNumber: data.phone_number,
     accountType: data.account_type,
     isActive: data.is_active,
     isVerified: data.is_verified,

@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../config/constants';
 import {
   BusinessService,
@@ -484,11 +485,6 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <View style={styles.header}>
         <Text style={styles.title}>{t('branches.title')}</Text>
-        <TouchableOpacity style={styles.addButton} onPress={toggleHeaderForm}>
-          <Text style={styles.addButtonText}>
-            {isAddingBranch ? t('common.cancel') : t('branches.add')}
-          </Text>
-        </TouchableOpacity>
       </View>
 
       <KeyboardAvoidingView
@@ -496,6 +492,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
           style={styles.content}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           refreshControl={
             <RefreshControl
@@ -658,6 +655,17 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={toggleHeaderForm}
+        accessibilityLabel={isAddingBranch ? t('common.cancel') : t('branches.add')}>
+        <MaterialCommunityIcons
+          name={isAddingBranch ? 'close' : 'plus'}
+          size={28}
+          color={COLORS.background}
+        />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -673,9 +681,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
@@ -686,22 +691,30 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.text,
   },
-  addButton: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 999,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
   flex: {
     flex: 1,
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 96,
+  },
+  fab: {
+    position: 'absolute',
+    right: 16,
+    bottom: 16,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
   formContainer: {
     padding: 20,

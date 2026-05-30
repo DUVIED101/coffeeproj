@@ -40,7 +40,7 @@ const SOCIAL_PLATFORMS: { value: SocialPlatform; label: string }[] = [
 
 export const EmployerDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { t } = useTranslation();
-  const { email, password, phoneNumber, legalForm, hasSession } = route.params;
+  const { email, password, legalForm, hasSession } = route.params;
 
   const isOrganization = legalForm === 'organization';
   const nameLabel = isOrganization
@@ -99,12 +99,12 @@ export const EmployerDetailsScreen: React.FC<Props> = ({ navigation, route }) =>
         throw new Error('missing_password');
       }
 
-      await AuthService.signUpWithEmail(email, password, 'business', phoneNumber, signupData);
+      await AuthService.signUpWithEmail(email, password, 'business', signupData);
       navigation.navigate('EmailVerification', { email, accountType: 'business' });
     } catch (err: unknown) {
       const message = getErrorMessage(err);
       let errorMessage = t('auth.employerDetails.errorGeneric');
-      if (message.includes('already registered')) {
+      if (message === 'email_already_registered' || message.includes('already registered')) {
         errorMessage = t('auth.employerDetails.errorEmailTaken');
       } else if (message.includes('rate limit')) {
         errorMessage = t('auth.employerDetails.errorRateLimit');

@@ -459,9 +459,6 @@
       "subtitleBusiness": "Sign up as a Business",
       "emailLabel": "Email",
       "emailPlaceholder": "your.email@example.com",
-      "phoneLabel": "Phone Number",
-      "phoneOptional": "(optional)",
-      "phonePlaceholder": "+7 (XXX) XXX-XX-XX",
       "passwordLabel": "Password",
       "passwordPlaceholder": "••••••••",
       "passwordHint": "At least 8 characters, 1 uppercase, 1 lowercase, 1 number",
@@ -588,8 +585,7 @@
       "passwordTooLong": "Password must be at most {{max}} characters",
       "passwordNoUpper": "Password must contain at least one uppercase letter",
       "passwordNoLower": "Password must contain at least one lowercase letter",
-      "passwordNoNumber": "Password must contain at least one number",
-      "phoneInvalid": "Please enter a valid Russian phone number"
+      "passwordNoNumber": "Password must contain at least one number"
     },
     "social": {
       "or": "or",
@@ -1112,7 +1108,6 @@
     },
     "items": {
       "email": "Email",
-      "phone": "Phone",
       "changePassword": "Change Password",
       "verificationStatus": "Verification Status",
       "language": "Language",
@@ -1178,7 +1173,12 @@
       "otpSent": "Code sent to {{email}}. Check your inbox.",
       "otpSendFailed": "Could not send the code. Please try again.",
       "otpLabel": "Confirmation code",
-      "invalidOtp": "Invalid or expired code"
+      "invalidOtp": "Invalid or expired code",
+      "appleConfirmHint": "Confirm deletion with your Apple ID.",
+      "appleConfirm": "Confirm with Apple",
+      "appleConfirmed": "Confirmation received",
+      "appleReauthFailed": "Apple confirmation failed. Please try again.",
+      "invalidAppleToken": "Apple confirmation is invalid. Please try again."
     },
     "legal": {
       "termsTitle": "Terms of Service",

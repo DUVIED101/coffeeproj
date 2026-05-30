@@ -50,7 +50,7 @@ export const ScreenHeaderWithActions = React.memo<ScreenHeaderWithActionsProps>(
               style={styles.backButton}
               onPress={onBack}
               activeOpacity={0.7}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 0 }}>
               <Text style={styles.backArrow}>‹</Text>
             </TouchableOpacity>
           )}
@@ -60,7 +60,7 @@ export const ScreenHeaderWithActions = React.memo<ScreenHeaderWithActionsProps>(
                 style={styles.avatarSlot}
                 onPress={onAvatarPress}
                 activeOpacity={0.7}
-                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}>
+                hitSlop={{ top: 8, bottom: 8, left: 0, right: 4 }}>
                 {avatarNode}
               </TouchableOpacity>
             ) : (
@@ -133,6 +133,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   avatarSlot: {
+    marginLeft: 14,
     marginRight: 10,
   },
   title: {

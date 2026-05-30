@@ -66,68 +66,6 @@ export const getPasswordError = (password: string): string | null => {
 };
 
 /**
- * Validate Russian phone number
- * Formats: +7XXXXXXXXXX, 8XXXXXXXXXX, 7XXXXXXXXXX
- */
-export const validatePhone = (phone: string): boolean => {
-  const phoneRegex = /^(\+7|7|8)?[0-9]{10}$/;
-  return phoneRegex.test(phone.replace(/[\s-()]/g, ''));
-};
-
-/**
- * Get phone validation error key. Caller maps via t().
- */
-export const getPhoneError = (phone: string): string | null => {
-  if (!phone) {
-    return null; // Phone is optional
-  }
-
-  const cleanPhone = phone.replace(/[\s-()]/g, '');
-
-  if (!validatePhone(cleanPhone)) {
-    return 'auth.errors.phoneInvalid';
-  }
-  return null;
-};
-
-/**
- * Format phone number for display
- * Converts to +7 (XXX) XXX-XX-XX format
- */
-export const formatPhone = (phone: string): string => {
-  const cleaned = phone.replace(/[\s-()]/g, '');
-  let digits = cleaned;
-
-  // Remove leading +7, 7, or 8
-  if (digits.startsWith('+7')) {
-    digits = digits.substring(2);
-  } else if (digits.startsWith('7') || digits.startsWith('8')) {
-    digits = digits.substring(1);
-  }
-
-  if (digits.length !== 10) return phone;
-
-  return `+7 (${digits.substring(0, 3)}) ${digits.substring(3, 6)}-${digits.substring(6, 8)}-${digits.substring(8)}`;
-};
-
-/**
- * Normalize phone number to +7XXXXXXXXXX format for storage
- */
-export const normalizePhone = (phone: string): string => {
-  const cleaned = phone.replace(/[\s-()]/g, '');
-  let digits = cleaned;
-
-  // Remove leading +7, 7, or 8
-  if (digits.startsWith('+7')) {
-    digits = digits.substring(2);
-  } else if (digits.startsWith('7') || digits.startsWith('8')) {
-    digits = digits.substring(1);
-  }
-
-  return `+7${digits}`;
-};
-
-/**
  * Validate required field
  */
 export const validateRequired = (value: string): boolean => {

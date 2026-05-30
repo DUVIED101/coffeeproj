@@ -412,7 +412,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
 
       {/* Create Job FAB */}
       <TouchableOpacity style={styles.fab} onPress={handleCreateJob}>
-        <Text style={styles.fabText}>+</Text>
+        <MaterialCommunityIcons name="plus" size={32} color={COLORS.background} />
       </TouchableOpacity>
     </View>
   );
@@ -702,11 +702,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-  },
-  fabText: {
-    fontSize: 32,
-    color: COLORS.background,
-    fontWeight: '300',
   },
   gateContainer: {
     flex: 1,

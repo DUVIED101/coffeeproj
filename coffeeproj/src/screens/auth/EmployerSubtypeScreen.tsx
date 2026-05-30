@@ -45,13 +45,12 @@ const OPTIONS: SubtypeOption[] = [
 
 export const EmployerSubtypeScreen: React.FC<Props> = ({ navigation, route }) => {
   const { t } = useTranslation();
-  const { email, password, phoneNumber, hasSession } = route.params;
+  const { email, password, hasSession } = route.params;
 
   const handleSelect = (legalForm: LegalForm): void => {
     navigation.navigate('EmployerDetails', {
       email,
       password,
-      phoneNumber,
       legalForm,
       hasSession,
     });

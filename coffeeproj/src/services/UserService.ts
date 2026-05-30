@@ -10,7 +10,6 @@ export class UserService {
       id: dbUser.id,
       uid: dbUser.id,
       email: dbUser.email,
-      phoneNumber: dbUser.phone_number,
       accountType: dbUser.account_type,
       isActive: dbUser.is_active,
       isVerified: dbUser.is_verified,
@@ -65,9 +64,6 @@ export class UserService {
     try {
       const dbUpdates: any = {};
 
-      if (updates.phoneNumber !== undefined) {
-        dbUpdates.phone_number = updates.phoneNumber;
-      }
       if (updates.isActive !== undefined) {
         dbUpdates.is_active = updates.isActive;
       }

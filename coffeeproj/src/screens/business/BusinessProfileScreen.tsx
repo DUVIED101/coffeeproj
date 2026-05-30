@@ -139,7 +139,7 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+      <SafeAreaView style={styles.container} edges={['left', 'right']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
@@ -149,7 +149,7 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   if (!business) {
     return (
-      <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+      <SafeAreaView style={styles.container} edges={['left', 'right']}>
         <ScreenHeaderWithActions
           title={t('businessProfile.title')}
           actions={[
@@ -188,7 +188,7 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
       : t('businessProfile.noReviews');
 
   return (
-    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <ScreenHeaderWithActions
         title={t('businessProfile.title')}
         actions={[

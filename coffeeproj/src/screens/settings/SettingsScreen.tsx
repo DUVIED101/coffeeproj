@@ -53,7 +53,18 @@ export const SettingsScreen: React.FC = () => {
     session?.user?.app_metadata?.provider === 'email';
 
   useLayoutEffect(() => {
-    navigation.setOptions({ title: t('settings.title') });
+    navigation.setOptions({
+      title: t('settings.title'),
+      headerLeft: () => (
+        <TouchableOpacity
+          onPress={() => navigation.getParent()?.goBack()}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.back')}>
+          <Text style={styles.headerBack}>{'‹'}</Text>
+        </TouchableOpacity>
+      ),
+    });
   }, [navigation, t]);
 
   const currentLang = getCurrentLanguage();
@@ -78,13 +89,11 @@ export const SettingsScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.sectionHeader}>{t('settings.sections.account').toUpperCase()}</Text>
         <View style={styles.card}>
           <SettingsRow label={t('settings.items.email')} value={user?.email ?? '—'} />
-          <View style={styles.separator} />
-          <SettingsRow label={t('settings.items.phone')} value={user?.phoneNumber ?? '—'} />
           <View style={styles.separator} />
           {hasEmailLogin && (
             <>
@@ -170,6 +179,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.backgroundSecondary,
+  },
+  headerBack: {
+    fontSize: 32,
+    lineHeight: 32,
+    color: COLORS.primary,
+    paddingHorizontal: 4,
   },
   scrollContent: {
     paddingVertical: 16,

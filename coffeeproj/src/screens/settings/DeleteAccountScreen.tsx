@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { appleAuth } from '@invertase/react-native-apple-authentication';
 import { COLORS } from '../../config/constants';
 import { useAuthStore } from '../../stores/authStore';
 import { AuthService } from '../../services/AuthService';
@@ -28,13 +29,24 @@ export const DeleteAccountScreen: React.FC = () => {
 
   // Mirror SettingsScreen: a user with an `email` identity proves they have a
   // password we can re-auth against. OAuth-only accounts (Yandex/Google/Apple)
-  // need the email-OTP flow instead.
+  // need an alternative. Apple gets a dedicated SIWA re-auth path because the
+  // privaterelay alias can't receive our deletion OTP mail.
   const hasEmailLogin = useMemo(() => {
     return (
       session?.user?.identities?.some(identity => identity.provider === 'email') ??
       session?.user?.app_metadata?.provider === 'email'
     );
   }, [session]);
+
+  const isAppleOnly = useMemo(() => {
+    if (hasEmailLogin) return false;
+    const identities = session?.user?.identities ?? [];
+    const providers = new Set(identities.map(i => i.provider));
+    if (providers.size === 0) {
+      return session?.user?.app_metadata?.provider === 'apple';
+    }
+    return providers.size === 1 && providers.has('apple');
+  }, [session, hasEmailLogin]);
 
   const expectedKeyword = t('settings.delete.confirmKeyword');
 
@@ -45,6 +57,9 @@ export const DeleteAccountScreen: React.FC = () => {
   const [otpError, setOtpError] = useState<string | null>(null);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
+  const [appleIdToken, setAppleIdToken] = useState<string | null>(null);
+  const [appleError, setAppleError] = useState<string | null>(null);
+  const [isReauthingApple, setIsReauthingApple] = useState(false);
   const [activeJobsCount, setActiveJobsCount] = useState<number>(0);
   const [forceConfirmed, setForceConfirmed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,6 +76,32 @@ export const DeleteAccountScreen: React.FC = () => {
       console.error('requestDeletionOtp failed:', err);
     } finally {
       setIsSendingOtp(false);
+    }
+  };
+
+  const handleAppleReauth = async () => {
+    if (isReauthingApple) return;
+    setIsReauthingApple(true);
+    setAppleError(null);
+    try {
+      const response = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.LOGIN,
+        requestedScopes: [appleAuth.Scope.EMAIL],
+      });
+      if (!response.identityToken) {
+        throw new Error('apple_no_identity_token');
+      }
+      setAppleIdToken(response.identityToken);
+    } catch (err) {
+      const code = (err as { code?: string }).code;
+      if (code === appleAuth.Error.CANCELED) {
+        setIsReauthingApple(false);
+        return;
+      }
+      console.error('Apple re-auth failed:', err);
+      setAppleError(t('settings.delete.appleReauthFailed'));
+    } finally {
+      setIsReauthingApple(false);
     }
   };
 
@@ -92,7 +133,11 @@ export const DeleteAccountScreen: React.FC = () => {
 
   const keywordMatches = confirmText === expectedKeyword;
   const needsForce = activeJobsCount > 0;
-  const credentialPresent = hasEmailLogin ? password.length > 0 : otpCode.length > 0;
+  const credentialPresent = hasEmailLogin
+    ? password.length > 0
+    : isAppleOnly
+      ? appleIdToken !== null
+      : otpCode.length > 0;
   const canSubmit =
     keywordMatches && credentialPresent && (!needsForce || forceConfirmed) && !isSubmitting;
 
@@ -101,10 +146,13 @@ export const DeleteAccountScreen: React.FC = () => {
     setIsSubmitting(true);
     setPasswordError(null);
     setOtpError(null);
+    setAppleError(null);
     try {
       const force = needsForce ? true : undefined;
       if (hasEmailLogin) {
         await deleteAccount({ password, force });
+      } else if (isAppleOnly && appleIdToken) {
+        await deleteAccount({ appleIdToken, force });
       } else {
         await deleteAccount({ otpCode: otpCode.trim(), force });
       }
@@ -112,12 +160,16 @@ export const DeleteAccountScreen: React.FC = () => {
       const message = (err as Error).message ?? '';
       const setCredentialError = (text: string) => {
         if (hasEmailLogin) setPasswordError(text);
+        else if (isAppleOnly) setAppleError(text);
         else setOtpError(text);
       };
       if (message === 'invalid_password') {
         setPasswordError(t('settings.delete.invalidPassword'));
       } else if (message === 'invalid_otp') {
         setOtpError(t('settings.delete.invalidOtp'));
+      } else if (message === 'invalid_apple_token') {
+        setAppleIdToken(null);
+        setAppleError(t('settings.delete.invalidAppleToken'));
       } else if (message.startsWith('active_jobs:')) {
         const parsed = Number(message.split(':')[1] ?? '0');
         if (Number.isFinite(parsed) && parsed > 0) {
@@ -138,7 +190,7 @@ export const DeleteAccountScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -191,6 +243,29 @@ export const DeleteAccountScreen: React.FC = () => {
                 textContentType="password"
               />
               {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+            </View>
+          ) : isAppleOnly ? (
+            <View style={styles.field}>
+              <Text style={styles.label}>{t('settings.delete.appleConfirmHint')}</Text>
+              <TouchableOpacity
+                style={[
+                  styles.appleButton,
+                  (isReauthingApple || appleIdToken !== null) && styles.appleButtonDisabled,
+                ]}
+                onPress={handleAppleReauth}
+                disabled={isReauthingApple || appleIdToken !== null}
+                activeOpacity={0.85}>
+                {isReauthingApple ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.appleButtonText}>
+                    {appleIdToken !== null
+                      ? t('settings.delete.appleConfirmed')
+                      : t('settings.delete.appleConfirm')}
+                  </Text>
+                )}
+              </TouchableOpacity>
+              {appleError ? <Text style={styles.errorText}>{appleError}</Text> : null}
             </View>
           ) : (
             <View style={styles.field}>
@@ -371,5 +446,20 @@ const styles = StyleSheet.create({
   },
   otpInputLabel: {
     marginTop: 16,
+  },
+  appleButton: {
+    backgroundColor: '#000000',
+    borderRadius: 999,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  appleButtonDisabled: {
+    opacity: 0.6,
+  },
+  appleButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

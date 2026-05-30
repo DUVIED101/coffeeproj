@@ -21,13 +21,7 @@ import { AuthService } from '../../services/AuthService';
 import { PasswordInput } from '../../components/PasswordInput';
 import { SocialAuthButtons } from '../../components/SocialAuthButtons';
 import { getErrorMessage } from '../../utils/getErrorMessage';
-import {
-  getEmailError,
-  getPasswordError,
-  getPhoneError,
-  normalizePhone,
-  MAX_PASSWORD_LENGTH,
-} from '../../utils/validation';
+import { getEmailError, getPasswordError, MAX_PASSWORD_LENGTH } from '../../utils/validation';
 import type { AuthStackParamList } from '../../navigation/AuthStack';
 
 type Props = {
@@ -48,13 +42,11 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
-  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   const validateForm = (): boolean => {
     let isValid = true;
@@ -74,12 +66,6 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
       setConfirmPasswordError(null);
     }
 
-    if (phoneNumber) {
-      const phoneErr = translateValidationError(getPhoneError(phoneNumber));
-      setPhoneError(phoneErr);
-      if (phoneErr) isValid = false;
-    }
-
     return isValid;
   };
 
@@ -89,20 +75,18 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const normalizedPhone = phoneNumber ? normalizePhone(phoneNumber) : undefined;
 
     if (accountType === 'business') {
       navigation.navigate('EmployerSubtype', {
         email: normalizedEmail,
         password,
-        phoneNumber: normalizedPhone,
       });
       return;
     }
 
     setIsLoading(true);
     try {
-      await AuthService.signUpWithEmail(normalizedEmail, password, 'barista', normalizedPhone);
+      await AuthService.signUpWithEmail(normalizedEmail, password, 'barista');
       navigation.navigate('EmailVerification', {
         email: normalizedEmail,
         accountType: 'barista',
@@ -111,16 +95,16 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
       console.error('Signup error:', error);
 
       const message = getErrorMessage(error);
-      let errorMessage = t('auth.signup.errorGeneric');
 
-      if (message.includes('already registered')) {
-        errorMessage = t('auth.signup.errorEmailTaken');
-      } else if (message.includes('Invalid email')) {
-        errorMessage = t('auth.signup.errorInvalidEmail');
-      } else if (message.includes('Password')) {
-        errorMessage = message;
+      if (message === 'email_already_registered' || message.includes('already registered')) {
+        setEmailError(t('auth.signup.errorEmailTaken'));
+        return;
       }
-
+      if (message.includes('Invalid email')) {
+        setEmailError(t('auth.signup.errorInvalidEmail'));
+        return;
+      }
+      const errorMessage = message.includes('Password') ? message : t('auth.signup.errorGeneric');
       Alert.alert(t('auth.signup.failedTitle'), errorMessage, [{ text: t('common.ok') }]);
     } finally {
       setIsLoading(false);
@@ -174,27 +158,6 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
                 autoCorrect={false}
               />
               {emailError && <Text style={styles.errorText}>{emailError}</Text>}
-            </View>
-
-            {/* Phone Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>
-                {t('auth.signup.phoneLabel')}{' '}
-                <Text style={styles.optional}>{t('auth.signup.phoneOptional')}</Text>
-              </Text>
-              <TextInput
-                style={[styles.input, phoneError ? styles.inputError : null]}
-                value={phoneNumber}
-                onChangeText={text => {
-                  setPhoneNumber(text);
-                  setPhoneError(null);
-                }}
-                placeholder={t('auth.signup.phonePlaceholder')}
-                placeholderTextColor={COLORS.textSecondary}
-                keyboardType="phone-pad"
-                returnKeyType="done"
-              />
-              {phoneError && <Text style={styles.errorText}>{phoneError}</Text>}
             </View>
 
             {/* Password Input */}
@@ -307,10 +270,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: COLORS.text,
-  },
-  optional: {
-    fontWeight: '400',
-    color: COLORS.textSecondary,
   },
   input: {
     backgroundColor: COLORS.background,

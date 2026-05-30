@@ -29,7 +29,7 @@ export const TermsScreen: React.FC = () => {
   const body = getCurrentLanguage() === 'ru' ? BODY_RU : BODY_EN;
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>{t('settings.legal.termsTitle')}</Text>
         <Text style={styles.body}>{body}</Text>

@@ -551,7 +551,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+      <SafeAreaView style={styles.container} edges={['left', 'right']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
@@ -561,7 +561,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   if (!profile) {
     return (
-      <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+      <SafeAreaView style={styles.container} edges={['left', 'right']}>
         <ScreenHeaderWithActions
           title={t('baristaProfileScreen.title', { defaultValue: 'Профиль' })}
           actions={[
@@ -607,7 +607,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const missingItems = completeness.items.filter(item => !item.satisfied);
 
   return (
-    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <ScreenHeaderWithActions
         title={t('baristaProfileScreen.title', { defaultValue: 'Профиль' })}
         actions={[

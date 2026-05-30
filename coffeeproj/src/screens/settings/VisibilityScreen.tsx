@@ -71,7 +71,7 @@ export const VisibilityScreen: React.FC = () => {
 
   if (isLoading || enabled === null) {
     return (
-      <SafeAreaView style={styles.container} edges={['bottom']}>
+      <SafeAreaView style={styles.container} edges={[]}>
         <ActivityIndicator style={styles.loading} color={COLORS.primary} />
       </SafeAreaView>
     );
@@ -86,7 +86,7 @@ export const VisibilityScreen: React.FC = () => {
     : t('settings.visibility.businessHint');
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <View style={styles.row}>

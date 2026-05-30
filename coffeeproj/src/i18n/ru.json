@@ -465,9 +465,6 @@
       "subtitleBusiness": "Регистрация как бизнес",
       "emailLabel": "Email",
       "emailPlaceholder": "your.email@example.com",
-      "phoneLabel": "Телефон",
-      "phoneOptional": "(опционально)",
-      "phonePlaceholder": "+7 (XXX) XXX-XX-XX",
       "passwordLabel": "Пароль",
       "passwordPlaceholder": "••••••••",
       "passwordHint": "Минимум 8 символов, 1 заглавная, 1 строчная, 1 цифра",
@@ -594,8 +591,7 @@
       "passwordTooLong": "Пароль должен быть не более {{max}} символов",
       "passwordNoUpper": "Пароль должен содержать заглавную букву",
       "passwordNoLower": "Пароль должен содержать строчную букву",
-      "passwordNoNumber": "Пароль должен содержать цифру",
-      "phoneInvalid": "Введите корректный российский номер"
+      "passwordNoNumber": "Пароль должен содержать цифру"
     },
     "social": {
       "or": "или",
@@ -1126,7 +1122,6 @@
     },
     "items": {
       "email": "Email",
-      "phone": "Телефон",
       "changePassword": "Изменить пароль",
       "verificationStatus": "Статус верификации",
       "language": "Язык",
@@ -1192,7 +1187,12 @@
       "otpSent": "Код отправлен на {{email}}. Проверьте почту.",
       "otpSendFailed": "Не удалось отправить код. Попробуйте ещё раз.",
       "otpLabel": "Код подтверждения",
-      "invalidOtp": "Неверный или просроченный код"
+      "invalidOtp": "Неверный или просроченный код",
+      "appleConfirmHint": "Подтвердите удаление через Apple ID.",
+      "appleConfirm": "Подтвердить через Apple",
+      "appleConfirmed": "Подтверждение получено",
+      "appleReauthFailed": "Не удалось подтвердить через Apple. Попробуйте ещё раз.",
+      "invalidAppleToken": "Подтверждение Apple недействительно. Попробуйте ещё раз."
     },
     "legal": {
       "termsTitle": "Условия использования",

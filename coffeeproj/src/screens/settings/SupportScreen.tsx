@@ -25,7 +25,7 @@ export const SupportScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.hint}>{t('settings.legal.supportContactHint')}</Text>
         <View style={styles.card}>

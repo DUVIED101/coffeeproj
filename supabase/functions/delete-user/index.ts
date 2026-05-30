@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createRemoteJWKSet, jwtVerify } from "https://esm.sh/jose@5.9.6";
 
 type Brand<T, B> = T & { readonly __brand: B };
 type UserId = Brand<string, "UserId">;
@@ -8,7 +9,8 @@ type AccountType = "barista" | "business";
 
 type DeleteAccountRequest =
   | { password: string; force?: boolean }
-  | { otpCode: string; force?: boolean };
+  | { otpCode: string; force?: boolean }
+  | { appleIdToken: string; force?: boolean };
 
 const ACTIVE_JOB_STATUSES = ["open", "in_review"] as const;
 
@@ -16,6 +18,12 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY =
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const APPLE_BUNDLE_ID =
+  Deno.env.get("APPLE_BUNDLE_ID") ?? "com.quickbarista.app";
+
+const APPLE_JWKS = createRemoteJWKSet(
+  new URL("https://appleid.apple.com/auth/keys"),
+);
 
 const CORS_HEADERS: Record<string, string> = {
   "access-control-allow-origin": "*",
@@ -37,9 +45,44 @@ function isDeleteAccountRequest(value: unknown): value is DeleteAccountRequest {
     typeof v.password === "string" && (v.password as string).length > 0;
   const hasOtpCode =
     typeof v.otpCode === "string" && (v.otpCode as string).length > 0;
-  if (!hasPassword && !hasOtpCode) return false;
+  const hasAppleIdToken =
+    typeof v.appleIdToken === "string" && (v.appleIdToken as string).length > 0;
+  if (!hasPassword && !hasOtpCode && !hasAppleIdToken) return false;
   if (v.force !== undefined && typeof v.force !== "boolean") return false;
   return true;
+}
+
+async function appleSubFromIdToken(idToken: string): Promise<string | null> {
+  try {
+    const { payload } = await jwtVerify(idToken, APPLE_JWKS, {
+      issuer: "https://appleid.apple.com",
+      audience: APPLE_BUNDLE_ID,
+    });
+    return typeof payload.sub === "string" ? payload.sub : null;
+  } catch (err) {
+    console.warn("apple id_token verify failed", { err: String(err) });
+    return null;
+  }
+}
+
+async function userAppleSub(
+  adminClient: SupabaseClient,
+  userId: UserId,
+): Promise<string | null> {
+  const { data, error } = await adminClient.auth.admin.getUserById(userId);
+  if (error || !data.user) return null;
+  const identities = data.user.identities ?? [];
+  const apple = identities.find((i) => i.provider === "apple");
+  if (!apple) return null;
+  const fromProviderId =
+    typeof apple.provider_id === "string" && apple.provider_id.length > 0
+      ? apple.provider_id
+      : null;
+  if (fromProviderId) return fromProviderId;
+  const idData = apple.identity_data as Record<string, unknown> | undefined;
+  const fromIdentityData =
+    idData && typeof idData.sub === "string" ? (idData.sub as string) : null;
+  return fromIdentityData;
 }
 
 function extractBearerToken(authHeader: string): string | null {
@@ -123,11 +166,15 @@ async function handleRequest(req: Request): Promise<Response> {
   }
   const userId = user.id as UserId;
   const email = user.email ?? null;
-  if (email === null) {
-    return jsonResponse(400, { error: "missing_email" });
-  }
+
+  const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 
   if ("password" in request) {
+    if (email === null) {
+      return jsonResponse(400, { error: "missing_email" });
+    }
     const { error: reauthError } = await authClient.auth.signInWithPassword({
       email,
       password: request.password,
@@ -135,12 +182,16 @@ async function handleRequest(req: Request): Promise<Response> {
     if (reauthError !== null) {
       return jsonResponse(403, { error: "invalid_password" });
     }
-  } else {
-    // OTP path — used by accounts created via OAuth (Yandex/Google/Apple) that
-    // have no password. The client called supabase.auth.signInWithOtp({email})
+  } else if ("otpCode" in request) {
+    // OTP path — used by accounts created via OAuth (Yandex/Google) that have
+    // no password. The client called supabase.auth.signInWithOtp({email})
     // up-front, the user pasted the emailed 6-digit token, and we verify it
     // server-side here. verifyOtp confirms email ownership before destructive
-    // delete proceeds.
+    // delete proceeds. Not used for Apple — privaterelay aliases can't
+    // receive our OTP mail; Apple users go through the appleIdToken branch.
+    if (email === null) {
+      return jsonResponse(400, { error: "missing_email" });
+    }
     const { error: verifyError } = await authClient.auth.verifyOtp({
       email,
       token: request.otpCode,
@@ -148,6 +199,20 @@ async function handleRequest(req: Request): Promise<Response> {
     });
     if (verifyError !== null) {
       return jsonResponse(403, { error: "invalid_otp" });
+    }
+  } else {
+    // Apple SIWA re-auth path. The client just obtained a fresh identityToken
+    // via appleAuth.performRequest. Apple's JWT signature + sub equality with
+    // the stored Apple identity proves ownership; we skip nonce comparison
+    // because the signature is already authoritative for this single-use
+    // delete confirmation.
+    const tokenSub = await appleSubFromIdToken(request.appleIdToken);
+    if (tokenSub === null) {
+      return jsonResponse(403, { error: "invalid_apple_token" });
+    }
+    const storedSub = await userAppleSub(adminClient, userId);
+    if (storedSub === null || storedSub !== tokenSub) {
+      return jsonResponse(403, { error: "invalid_apple_token" });
     }
   }
 
@@ -175,10 +240,6 @@ async function handleRequest(req: Request): Promise<Response> {
     }
   }
 
-  const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
   const { error: dbDeleteError } = await adminClient
     .from("users")
     .delete()
@@ -191,7 +252,10 @@ async function handleRequest(req: Request): Promise<Response> {
   const cascadeReport = await verifyCascade(adminClient, userId);
   const orphanTotal = Object.values(cascadeReport).reduce((s, n) => s + n, 0);
   if (orphanTotal > 0) {
-    console.warn("cascade verification found orphans", { userId, cascadeReport });
+    console.warn("cascade verification found orphans", {
+      userId,
+      cascadeReport,
+    });
     return jsonResponse(500, {
       error: "cascade_incomplete",
       orphans: cascadeReport,

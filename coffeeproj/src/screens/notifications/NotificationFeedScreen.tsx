@@ -184,7 +184,7 @@ export const NotificationFeedScreen: React.FC<{ navigation: any }> = ({ navigati
   ];
 
   return (
-    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <ScreenHeaderWithActions
         title={t('notifications.feed.title')}
         onBack={() => navigation.goBack()}
