@@ -65,6 +65,62 @@ describe('parseFirstValidHit', () => {
     expect(parseFirstValidHit([localityHit], spbBounds)).toBeNull();
   });
 
+  it('returns null for class=amenity (POI by name — cafe/restaurant/etc.)', () => {
+    const cafeHit = {
+      lat: '59.9343',
+      lon: '30.3351',
+      class: 'amenity',
+      type: 'cafe',
+      display_name: 'Coffee Place, Невский проспект, Санкт-Петербург',
+      address: { road: 'Невский проспект', house_number: '12' },
+    };
+    expect(parseFirstValidHit([cafeHit], spbBounds)).toBeNull();
+  });
+
+  it('returns null for class=shop (POI by brand/store name)', () => {
+    const shopHit = {
+      lat: '59.9343',
+      lon: '30.3351',
+      class: 'shop',
+      type: 'coffee',
+      address: { road: 'Невский проспект', house_number: '5' },
+    };
+    expect(parseFirstValidHit([shopHit], spbBounds)).toBeNull();
+  });
+
+  it('returns null for class=tourism (hotels, attractions)', () => {
+    const tourismHit = {
+      lat: '59.9343',
+      lon: '30.3351',
+      class: 'tourism',
+      type: 'hotel',
+      address: { road: 'Невский проспект', house_number: '10' },
+    };
+    expect(parseFirstValidHit([tourismHit], spbBounds)).toBeNull();
+  });
+
+  it('returns null for class=leisure (parks, gyms, etc.)', () => {
+    const leisureHit = {
+      lat: '59.9343',
+      lon: '30.3351',
+      class: 'leisure',
+      type: 'park',
+      address: { road: 'Невский проспект' },
+    };
+    expect(parseFirstValidHit([leisureHit], spbBounds)).toBeNull();
+  });
+
+  it('returns null for class=building without a road (unaddressed)', () => {
+    const buildingHit = {
+      lat: '59.9343',
+      lon: '30.3351',
+      class: 'building',
+      type: 'yes',
+      address: {},
+    };
+    expect(parseFirstValidHit([buildingHit], spbBounds)).toBeNull();
+  });
+
   it('returns null when coordinates fall outside the selected city bbox', () => {
     const moscowPointForSpbRequest = {
       lat: '55.7558',
@@ -119,6 +175,21 @@ describe('parseFirstValidHit', () => {
       formattedAddress: '',
     });
   });
+
+  it('skips a leading POI hit and returns the next address-shaped hit', () => {
+    const cafeHit = {
+      lat: '59.9343',
+      lon: '30.3351',
+      class: 'amenity',
+      type: 'cafe',
+      address: { road: 'Невский проспект', house_number: '12' },
+    };
+    expect(parseFirstValidHit([cafeHit, nevskyHit], spbBounds)).toEqual({
+      latitude: 59.9343,
+      longitude: 30.3351,
+      formattedAddress: 'Невский проспект',
+    });
+  });
 });
 
 describe('geocodeAddress', () => {
@@ -160,6 +231,35 @@ describe('geocodeAddress', () => {
       latitude: 59.95,
       longitude: 30.32,
       formattedAddress: 'Малая Морская улица, 5',
+    });
+  });
+
+  it('rejects a POI-named hit (amenity=cafe) and falls back to structured query', async () => {
+    setFetchResponses([
+      [
+        {
+          lat: '59.94',
+          lon: '30.31',
+          class: 'amenity',
+          type: 'cafe',
+          address: { road: 'Невский проспект', house_number: '12' },
+        },
+      ],
+      [
+        {
+          lat: '59.9343',
+          lon: '30.3351',
+          class: 'highway',
+          type: 'primary',
+          address: { road: 'Невский проспект' },
+        },
+      ],
+    ]);
+    const result = await geocodeAddress('Кофейня имени Невского', 'spb');
+    expect(result).toEqual({
+      latitude: 59.9343,
+      longitude: 30.3351,
+      formattedAddress: 'Невский проспект',
     });
   });
 

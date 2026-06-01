@@ -26,8 +26,6 @@ const composeFormattedAddress = (hit: NominatimHit): string => {
   const house = hit.address?.house_number ?? '';
   if (street && house) return `${street}, ${house}`;
   if (street) return street;
-  // Fallback: trim the long display_name to the first two segments, which is
-  // usually "house, street" or "street, area" — still better than nothing.
   if (hit.display_name) {
     const segments = hit.display_name.split(',').map(s => s.trim());
     if (segments.length >= 2) return `${segments[1]}, ${segments[0]}`;
@@ -36,37 +34,25 @@ const composeFormattedAddress = (hit: NominatimHit): string => {
   return '';
 };
 
-const REJECTED_PLACE_TYPES: ReadonlySet<string> = new Set([
-  'country',
-  'state',
-  'region',
-  'county',
-  'city',
-  'town',
-  'village',
-  'locality',
-  'suburb',
-  'neighbourhood',
-  'hamlet',
-  'island',
-]);
+// Only classes that correspond to a postal address. Everything else
+// (amenity/shop/tourism/leisure/office/craft/historic/man_made/...) is a
+// named POI — we want addresses, not "place names".
+const ADDRESS_CLASSES: ReadonlySet<string> = new Set(['highway', 'building', 'place']);
 
 const hasValidAddressShape = (hit: NominatimHit): boolean => {
-  if (typeof hit.address?.road === 'string' && hit.address.road.length > 0) {
-    return true;
+  if (!hit.class || !ADDRESS_CLASSES.has(hit.class)) return false;
+  if (hit.class === 'highway') {
+    return typeof hit.address?.road === 'string' && hit.address.road.length > 0;
   }
-  if (hit.class === 'building') return true;
-  if (hit.class === 'highway') return true;
-  if (hit.class === 'place' && hit.type === 'house') return true;
-  if (hit.class === 'place' && hit.type && REJECTED_PLACE_TYPES.has(hit.type)) {
-    return false;
+  if (hit.class === 'building') {
+    return typeof hit.address?.road === 'string' && hit.address.road.length > 0;
   }
-  return false;
+  // class === 'place' — only the precise sub-type 'house' is a real address;
+  // country/state/city/town/village/suburb/locality/etc. are not.
+  return hit.type === 'house';
 };
 
-export const parseFirstValidHit = (data: unknown, bounds: CityBounds): GeocodeResult | null => {
-  if (!Array.isArray(data) || data.length === 0) return null;
-  const hit = data[0] as NominatimHit;
+const toResult = (hit: NominatimHit, bounds: CityBounds): GeocodeResult | null => {
   const lat = parseFloat(hit.lat ?? '');
   const lon = parseFloat(hit.lon ?? '');
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
@@ -77,6 +63,15 @@ export const parseFirstValidHit = (data: unknown, bounds: CityBounds): GeocodeRe
     longitude: lon,
     formattedAddress: composeFormattedAddress(hit),
   };
+};
+
+export const parseFirstValidHit = (data: unknown, bounds: CityBounds): GeocodeResult | null => {
+  if (!Array.isArray(data) || data.length === 0) return null;
+  for (const raw of data) {
+    const result = toResult(raw as NominatimHit, bounds);
+    if (result) return result;
+  }
+  return null;
 };
 
 const buildViewbox = (bounds: CityBounds): string =>
@@ -99,7 +94,7 @@ export const geocodeAddress = async (
   const headers = { 'User-Agent': 'CoffeeProj/1.0' };
   const fetchOpts = { headers, signal: controller.signal };
 
-  const commonParams = `format=json&limit=1&countrycodes=ru&addressdetails=1&viewbox=${encodeURIComponent(
+  const commonParams = `format=json&limit=5&countrycodes=ru&addressdetails=1&viewbox=${encodeURIComponent(
     viewbox
   )}&bounded=1`;
 
