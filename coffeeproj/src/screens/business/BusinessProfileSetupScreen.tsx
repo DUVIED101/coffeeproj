@@ -150,11 +150,15 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(async () => {
       setAddressLookupStatus('searching');
-      const coords = await geocodeAddress(trimmedAddress, branchCity, controller.signal);
+      const result = await geocodeAddress(trimmedAddress, branchCity, controller.signal);
       if (controller.signal.aborted) return;
       geocodedKeyRef.current = key;
-      setAddressCoords(coords);
-      setAddressLookupStatus(coords ? 'found' : 'notFound');
+      setAddressCoords(result);
+      setAddressLookupStatus(result ? 'found' : 'notFound');
+      if (result?.formattedAddress && result.formattedAddress !== trimmedAddress) {
+        geocodedKeyRef.current = `${result.formattedAddress}|${branchCity}`;
+        setBranchAddress(result.formattedAddress);
+      }
     }, 500);
 
     return () => {

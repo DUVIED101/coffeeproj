@@ -38,12 +38,20 @@ describe('parseFirstValidHit', () => {
 
   it('returns coords when hit has address.road and is inside city bounds', () => {
     const result = parseFirstValidHit([nevskyHit], spbBounds);
-    expect(result).toEqual({ latitude: 59.9343, longitude: 30.3351 });
+    expect(result).toEqual({
+      latitude: 59.9343,
+      longitude: 30.3351,
+      formattedAddress: 'Невский проспект',
+    });
   });
 
-  it('returns coords for class=building inside city bounds', () => {
+  it('returns coords with composed "street, house" for buildings inside city bounds', () => {
     const result = parseFirstValidHit([moscowBuildingHit], CITY_BOUNDS.moscow);
-    expect(result).toEqual({ latitude: 55.7558, longitude: 37.6173 });
+    expect(result).toEqual({
+      latitude: 55.7558,
+      longitude: 37.6173,
+      formattedAddress: 'Тверская улица, 7',
+    });
   });
 
   it('returns null when hit is a "place/locality" without a road', () => {
@@ -108,6 +116,7 @@ describe('parseFirstValidHit', () => {
     expect(parseFirstValidHit([houseHit], spbBounds)).toEqual({
       latitude: 59.95,
       longitude: 30.35,
+      formattedAddress: '',
     });
   });
 });
@@ -126,7 +135,11 @@ describe('geocodeAddress', () => {
       ],
     ]);
     const result = await geocodeAddress('Невский проспект, 10', 'spb');
-    expect(result).toEqual({ latitude: 59.9343, longitude: 30.3351 });
+    expect(result).toEqual({
+      latitude: 59.9343,
+      longitude: 30.3351,
+      formattedAddress: 'Невский проспект',
+    });
   });
 
   it('falls back to the structured query when free-form returns an invalid hit', async () => {
@@ -143,7 +156,11 @@ describe('geocodeAddress', () => {
       ],
     ]);
     const result = await geocodeAddress('Малая Морская, 5', 'spb');
-    expect(result).toEqual({ latitude: 59.95, longitude: 30.32 });
+    expect(result).toEqual({
+      latitude: 59.95,
+      longitude: 30.32,
+      formattedAddress: 'Малая Морская улица, 5',
+    });
   });
 
   it('returns null when Nominatim returns "Сука"-style locality hit and structured query also fails', async () => {

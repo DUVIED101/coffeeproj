@@ -619,7 +619,8 @@
       "working": "Setting up your profile…",
       "failedTitle": "Profile setup failed",
       "retry": "Retry",
-      "signOut": "Sign out"
+      "signOut": "Sign out",
+      "differentRole": "This email is already registered with a different role. Sign in with the role you originally chose, or use a different email."
     },
     "errors": {
       "noOrgName": "Enter the legal entity name",
@@ -1241,6 +1242,7 @@
       "partialDeletion": "Could not delete all your data. Account not deleted. Please contact support.",
       "otpHelper": "Confirm account deletion via email.",
       "sendOtp": "Send code to email",
+      "otpKeywordHint": "Type «{{keyword}}» in the field above first",
       "resendOtp": "Resend code",
       "otpSent": "Code sent to {{email}}. Check your inbox.",
       "otpSendFailed": "Could not send the code. Please try again.",

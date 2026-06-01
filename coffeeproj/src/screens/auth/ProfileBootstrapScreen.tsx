@@ -27,30 +27,53 @@ export const ProfileBootstrapScreen: React.FC = () => {
 
       const meta = (session.user.user_metadata ?? {}) as SignupMetadata;
       const pendingAccountType = await readPendingAccountType();
-      const accountType: AccountType =
+      const desiredAccountType: AccountType =
         meta.account_type === 'business' || meta.account_type === 'barista'
           ? (meta.account_type as AccountType)
           : (pendingAccountType ?? 'barista');
 
-      const { error: upsertError } = await supabase.from('users').upsert(
-        {
+      // Strict one-email-one-role enforcement. The trigger handle_new_user
+      // pre-inserts a public.users row with `account_type='barista'` for OAuth
+      // users (their raw_user_meta_data has no account_type). So on the very
+      // first sign-in we still need to honour the role the user picked via the
+      // stashed pendingAccountType. We use auth.users.created_at proximity as
+      // the "first-time" signal — older than the freshness window means the
+      // role is already settled and cannot be changed.
+      const FRESH_USER_WINDOW_MS = 5 * 60 * 1000;
+      const createdAtMs = session.user.created_at
+        ? new Date(session.user.created_at).getTime()
+        : null;
+      const isFreshUser = createdAtMs !== null && createdAtMs > Date.now() - FRESH_USER_WINDOW_MS;
+
+      const { data: existing, error: existingErr } = await supabase
+        .from('users')
+        .select('account_type')
+        .eq('id', session.user.id)
+        .maybeSingle();
+      if (existingErr) throw new Error(existingErr.message);
+
+      if (existing) {
+        const stored = existing.account_type as AccountType | null;
+        if (stored && pendingAccountType && stored !== pendingAccountType) {
+          if (isFreshUser) {
+            const { error: updateError } = await supabase
+              .from('users')
+              .update({ account_type: pendingAccountType })
+              .eq('id', session.user.id);
+            if (updateError) throw new Error(updateError.message);
+          } else {
+            await clearPendingAccountType();
+            await supabase.auth.signOut();
+            throw new Error('email_already_registered_different_role');
+          }
+        }
+      } else {
+        const { error: insertError } = await supabase.from('users').insert({
           id: session.user.id,
           email: session.user.email ?? '',
-          account_type: accountType,
-        },
-        { onConflict: 'id', ignoreDuplicates: true }
-      );
-
-      if (upsertError) {
-        throw new Error(upsertError.message);
-      }
-
-      if (pendingAccountType && !meta.account_type) {
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({ account_type: pendingAccountType })
-          .eq('id', session.user.id);
-        if (updateError) throw new Error(updateError.message);
+          account_type: desiredAccountType,
+        });
+        if (insertError) throw new Error(insertError.message);
       }
       await clearPendingAccountType();
 
@@ -106,13 +129,18 @@ export const ProfileBootstrapScreen: React.FC = () => {
     );
   }
 
+  const isRoleConflict = error === 'email_already_registered_different_role';
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{t('auth.profileBootstrap.failedTitle')}</Text>
-      <Text style={styles.errorText}>{error}</Text>
-      <TouchableOpacity style={styles.primaryButton} onPress={attempt} activeOpacity={0.8}>
-        <Text style={styles.primaryButtonText}>{t('auth.profileBootstrap.retry')}</Text>
-      </TouchableOpacity>
+      <Text style={styles.errorText}>
+        {isRoleConflict ? t('auth.profileBootstrap.differentRole') : error}
+      </Text>
+      {!isRoleConflict && (
+        <TouchableOpacity style={styles.primaryButton} onPress={attempt} activeOpacity={0.8}>
+          <Text style={styles.primaryButtonText}>{t('auth.profileBootstrap.retry')}</Text>
+        </TouchableOpacity>
+      )}
       <TouchableOpacity style={styles.secondaryButton} onPress={handleSignOut} activeOpacity={0.8}>
         <Text style={styles.secondaryButtonText}>{t('auth.profileBootstrap.signOut')}</Text>
       </TouchableOpacity>

@@ -251,11 +251,18 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(async () => {
       setAddressLookupStatus('searching');
-      const coords = await geocodeAddress(trimmedAddress, city, controller.signal);
+      const result = await geocodeAddress(trimmedAddress, city, controller.signal);
       if (controller.signal.aborted) return;
       geocodedKeyRef.current = key;
-      setAddressCoords(coords);
-      setAddressLookupStatus(coords ? 'found' : 'notFound');
+      setAddressCoords(result);
+      setAddressLookupStatus(result ? 'found' : 'notFound');
+      // Replace the typed address with the canonical form Nominatim returned so
+      // the user can see exactly what was matched. Update the ref to the new
+      // key before the state change to keep the effect from re-firing.
+      if (result?.formattedAddress && result.formattedAddress !== trimmedAddress) {
+        geocodedKeyRef.current = `${result.formattedAddress}|${city}`;
+        setAddress(result.formattedAddress);
+      }
     }, 500);
 
     return () => {

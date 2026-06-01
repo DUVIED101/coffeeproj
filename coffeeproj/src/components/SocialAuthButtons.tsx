@@ -8,7 +8,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { GOOGLE_IOS_CLIENT_ID, YANDEX_CLIENT_ID } from '@env';
 import { COLORS } from '../config/constants';
 import { AuthService } from '../services/AuthService';
-import { stashPendingAccountType } from '../utils/socialAuthStash';
+import { stashPendingAccountType, clearPendingAccountType } from '../utils/socialAuthStash';
 import { getErrorMessage } from '../utils/getErrorMessage';
 import type { AccountType } from '../types';
 
@@ -62,7 +62,14 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
     if (busy) return;
     setBusy('apple');
     try {
-      if (accountType) await stashPendingAccountType(accountType);
+      if (accountType) {
+        await stashPendingAccountType(accountType);
+      } else {
+        // No role intent in this flow (e.g. login screen) — clear any stash
+        // left over by a prior cancelled signup so it can't leak into
+        // ProfileBootstrap's role-resolution logic.
+        await clearPendingAccountType();
+      }
 
       const response = await appleAuth.performRequest({
         requestedOperation: appleAuth.Operation.LOGIN,
@@ -95,7 +102,14 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
     }
     setBusy('google');
     try {
-      if (accountType) await stashPendingAccountType(accountType);
+      if (accountType) {
+        await stashPendingAccountType(accountType);
+      } else {
+        // No role intent in this flow (e.g. login screen) — clear any stash
+        // left over by a prior cancelled signup so it can't leak into
+        // ProfileBootstrap's role-resolution logic.
+        await clearPendingAccountType();
+      }
 
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: false });
       const result = (await GoogleSignin.signIn()) as Record<string, unknown>;
@@ -131,7 +145,14 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
     }
     setBusy('yandex');
     try {
-      if (accountType) await stashPendingAccountType(accountType);
+      if (accountType) {
+        await stashPendingAccountType(accountType);
+      } else {
+        // No role intent in this flow (e.g. login screen) — clear any stash
+        // left over by a prior cancelled signup so it can't leak into
+        // ProfileBootstrap's role-resolution logic.
+        await clearPendingAccountType();
+      }
 
       const result = await authorize(YANDEX_CONFIG);
       if (!result.accessToken) {

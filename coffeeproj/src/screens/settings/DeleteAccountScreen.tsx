@@ -256,10 +256,18 @@ export const DeleteAccountScreen: React.FC = () => {
           ) : (
             <View style={styles.field}>
               <Text style={styles.label}>{t('settings.delete.otpHelper')}</Text>
+              {!keywordMatches && (
+                <Text style={styles.otpKeywordHint}>
+                  {t('settings.delete.otpKeywordHint', { keyword: expectedKeyword })}
+                </Text>
+              )}
               <TouchableOpacity
-                style={[styles.secondaryButton, isSendingOtp && styles.secondaryButtonDisabled]}
+                style={[
+                  styles.secondaryButton,
+                  (isSendingOtp || !keywordMatches) && styles.secondaryButtonDisabled,
+                ]}
                 onPress={handleSendOtp}
-                disabled={isSendingOtp}
+                disabled={isSendingOtp || !keywordMatches}
                 activeOpacity={0.7}>
                 {isSendingOtp ? (
                   <ActivityIndicator color={COLORS.primary} />
@@ -429,6 +437,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 13,
     color: COLORS.textSecondary,
+  },
+  otpKeywordHint: {
+    marginBottom: 6,
+    fontSize: 13,
+    color: COLORS.warning,
   },
   otpInputLabel: {
     marginTop: 16,

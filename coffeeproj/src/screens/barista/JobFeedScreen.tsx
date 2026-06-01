@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
+import { useIsFocused } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -73,15 +73,35 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
     new Map()
   );
 
+  const isFocused = useIsFocused();
+
+  const loadBaristaProfile = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const profile = await BaristaProfileService.getProfileByUserId(user.id);
+      setBaristaProfile(profile);
+
+      // Banner threshold matches the apply gate in JobDetailsScreen (20%).
+      // Once a barista's profile is complete enough to apply, we stop nagging.
+      setShowProfileBanner(!profile || profile.profileCompleteness < 20);
+    } catch (error) {
+      console.error('Error loading barista profile:', error);
+    }
+  }, [user?.id]);
+
   useEffect(() => {
     initializeLocation();
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadBaristaProfile();
-    }, [user?.id])
-  );
+  // Reload profile whenever the tab regains focus (e.g. after the user
+  // finishes BaristaProfileSetup in the Profile tab and switches back). The
+  // previous useFocusEffect setup occasionally missed this trigger in the
+  // tab → stack nesting; useIsFocused is observably reliable.
+  useEffect(() => {
+    if (!isFocused) return;
+    loadBaristaProfile();
+  }, [isFocused, loadBaristaProfile]);
 
   useEffect(() => {
     loadJobs();
@@ -105,21 +125,6 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
     } catch (error) {
       console.error('Error initializing location:', error);
       setLocationPermissionDenied(true);
-    }
-  };
-
-  const loadBaristaProfile = async () => {
-    if (!user?.id) return;
-
-    try {
-      const profile = await BaristaProfileService.getProfileByUserId(user.id);
-      setBaristaProfile(profile);
-
-      // Banner threshold matches the apply gate in JobDetailsScreen (20%).
-      // Once a barista's profile is complete enough to apply, we stop nagging.
-      setShowProfileBanner(!profile || profile.profileCompleteness < 20);
-    } catch (error) {
-      console.error('Error loading barista profile:', error);
     }
   };
 

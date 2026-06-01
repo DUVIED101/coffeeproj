@@ -9,7 +9,7 @@ type Props = {
   iconName?: 'plus' | 'close';
 };
 
-const ICON_SIZE = 28;
+const ICON_SIZE = 32;
 
 export const AddFab: React.FC<Props> = ({ onPress, accessibilityLabel, iconName = 'plus' }) => (
   <TouchableOpacity

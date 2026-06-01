@@ -21,6 +21,7 @@ import { JobCard } from '../../components/JobCard';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { ShiftCard } from '../../components/ShiftCard';
 import { ShiftFilterSheet } from '../../components/ShiftFilterSheet';
+import { AddFab } from '../../components/AddFab';
 import type { ShiftFilters } from '../../components/ShiftFilterSheet';
 import { JobService } from '../../services/JobService';
 import { ApplicationService } from '../../services/ApplicationService';
@@ -410,10 +411,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
         />
       )}
 
-      {/* Create Job FAB */}
-      <TouchableOpacity style={styles.fab} onPress={handleCreateJob}>
-        <MaterialCommunityIcons name="plus" size={32} color={COLORS.background} />
-      </TouchableOpacity>
+      <AddFab onPress={handleCreateJob} accessibilityLabel={t('manageJobs.create')} />
     </View>
   );
 
@@ -686,22 +684,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.textSecondary,
     marginBottom: 16,
-  },
-  fab: {
-    position: 'absolute',
-    right: 16,
-    bottom: 16,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
   },
   gateContainer: {
     flex: 1,

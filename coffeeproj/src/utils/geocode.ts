@@ -10,10 +10,30 @@ type NominatimHit = {
   lon?: string;
   class?: string;
   type?: string;
+  display_name?: string;
   address?: {
     road?: string;
     house_number?: string;
+    pedestrian?: string;
+    suburb?: string;
   };
+};
+
+export type GeocodeResult = GeoPoint & { formattedAddress: string };
+
+const composeFormattedAddress = (hit: NominatimHit): string => {
+  const street = hit.address?.road ?? hit.address?.pedestrian ?? '';
+  const house = hit.address?.house_number ?? '';
+  if (street && house) return `${street}, ${house}`;
+  if (street) return street;
+  // Fallback: trim the long display_name to the first two segments, which is
+  // usually "house, street" or "street, area" — still better than nothing.
+  if (hit.display_name) {
+    const segments = hit.display_name.split(',').map(s => s.trim());
+    if (segments.length >= 2) return `${segments[1]}, ${segments[0]}`;
+    return segments[0] ?? '';
+  }
+  return '';
 };
 
 const REJECTED_PLACE_TYPES: ReadonlySet<string> = new Set([
@@ -44,7 +64,7 @@ const hasValidAddressShape = (hit: NominatimHit): boolean => {
   return false;
 };
 
-export const parseFirstValidHit = (data: unknown, bounds: CityBounds): GeoPoint | null => {
+export const parseFirstValidHit = (data: unknown, bounds: CityBounds): GeocodeResult | null => {
   if (!Array.isArray(data) || data.length === 0) return null;
   const hit = data[0] as NominatimHit;
   const lat = parseFloat(hit.lat ?? '');
@@ -52,7 +72,11 @@ export const parseFirstValidHit = (data: unknown, bounds: CityBounds): GeoPoint 
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
   if (!isInsideBounds(lat, lon, bounds)) return null;
   if (!hasValidAddressShape(hit)) return null;
-  return { latitude: lat, longitude: lon };
+  return {
+    latitude: lat,
+    longitude: lon,
+    formattedAddress: composeFormattedAddress(hit),
+  };
 };
 
 const buildViewbox = (bounds: CityBounds): string =>
@@ -62,7 +86,7 @@ export const geocodeAddress = async (
   addressLine: string,
   city: CityCode,
   signal?: AbortSignal
-): Promise<GeoPoint | null> => {
+): Promise<GeocodeResult | null> => {
   const bounds = CITY_BOUNDS[city];
   const cityLine = CITY_LABELS_RU[city];
   const viewbox = buildViewbox(bounds);
