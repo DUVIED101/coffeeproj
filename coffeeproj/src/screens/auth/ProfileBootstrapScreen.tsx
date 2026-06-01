@@ -32,46 +32,48 @@ export const ProfileBootstrapScreen: React.FC = () => {
           ? (meta.account_type as AccountType)
           : (pendingAccountType ?? 'barista');
 
-      // Strict one-email-one-role enforcement. The trigger handle_new_user
-      // pre-inserts a public.users row with `account_type='barista'` for OAuth
-      // users (their raw_user_meta_data has no account_type). So on the very
-      // first sign-in we still need to honour the role the user picked via the
-      // stashed pendingAccountType. We use auth.users.created_at proximity as
-      // the "first-time" signal — older than the freshness window means the
-      // role is already settled and cannot be changed.
-      const FRESH_USER_WINDOW_MS = 5 * 60 * 1000;
-      const createdAtMs = session.user.created_at
-        ? new Date(session.user.created_at).getTime()
-        : null;
-      const isFreshUser = createdAtMs !== null && createdAtMs > Date.now() - FRESH_USER_WINDOW_MS;
-
+      // Strict one-email-one-role enforcement. handle_new_user pre-inserts a
+      // public.users row with account_type='barista' for OAuth users (their
+      // raw_user_meta_data has no account_type) and leaves
+      // account_type_set_explicitly=false. The very first ProfileBootstrap run
+      // writes the user's intended role and flips the flag to true; from then
+      // on a DB trigger (migration 070) refuses any further account_type
+      // change, so a returning user cannot bounce between barista and business
+      // by signing out and back in with a different stashed pendingAccountType.
       const { data: existing, error: existingErr } = await supabase
         .from('users')
-        .select('account_type')
+        .select('account_type, account_type_set_explicitly')
         .eq('id', session.user.id)
         .maybeSingle();
       if (existingErr) throw new Error(existingErr.message);
 
       if (existing) {
         const stored = existing.account_type as AccountType | null;
-        if (stored && pendingAccountType && stored !== pendingAccountType) {
-          if (isFreshUser) {
-            const { error: updateError } = await supabase
-              .from('users')
-              .update({ account_type: pendingAccountType })
-              .eq('id', session.user.id);
-            if (updateError) throw new Error(updateError.message);
-          } else {
+        const lockedExplicitly = existing.account_type_set_explicitly === true;
+
+        if (lockedExplicitly) {
+          if (stored && pendingAccountType && stored !== pendingAccountType) {
             await clearPendingAccountType();
             await supabase.auth.signOut();
             throw new Error('email_already_registered_different_role');
           }
+        } else {
+          const finalRole: AccountType = pendingAccountType ?? stored ?? desiredAccountType;
+          const { error: updateError } = await supabase
+            .from('users')
+            .update({
+              account_type: finalRole,
+              account_type_set_explicitly: true,
+            })
+            .eq('id', session.user.id);
+          if (updateError) throw new Error(updateError.message);
         }
       } else {
         const { error: insertError } = await supabase.from('users').insert({
           id: session.user.id,
           email: session.user.email ?? '',
           account_type: desiredAccountType,
+          account_type_set_explicitly: true,
         });
         if (insertError) throw new Error(insertError.message);
       }
