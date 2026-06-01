@@ -77,6 +77,10 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
     } catch (err: unknown) {
       const code = (err as { code?: string }).code;
       if (code === appleAuth.Error.CANCELED) return;
+      if (getErrorMessage(err) === 'email_already_registered') {
+        Alert.alert(t('auth.social.appleErrorTitle'), t('auth.social.emailAlreadyRegistered'));
+        return;
+      }
       Alert.alert(t('auth.social.appleErrorTitle'), getErrorMessage(err));
     } finally {
       setBusy(null);
@@ -109,6 +113,10 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
     } catch (err: unknown) {
       const code = (err as { code?: string }).code;
       if (code === statusCodes.SIGN_IN_CANCELLED) return;
+      if (getErrorMessage(err) === 'email_already_registered') {
+        Alert.alert(t('auth.social.googleErrorTitle'), t('auth.social.emailAlreadyRegistered'));
+        return;
+      }
       Alert.alert(t('auth.social.googleErrorTitle'), getErrorMessage(err));
     } finally {
       setBusy(null);
@@ -132,6 +140,10 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
       await AuthService.signInWithYandex(result.accessToken);
     } catch (err: unknown) {
       const message = getErrorMessage(err);
+      if (message === 'email_already_registered') {
+        Alert.alert(t('auth.social.yandexErrorTitle'), t('auth.social.emailAlreadyRegistered'));
+        return;
+      }
       const lower = message.toLowerCase();
       // OIDErrorCodeUserCanceledAuthorizationFlow on iOS surfaces as
       // "org.openid.appauth.general, code -3" with a locale-translated prefix

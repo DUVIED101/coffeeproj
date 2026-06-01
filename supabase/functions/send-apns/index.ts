@@ -33,7 +33,9 @@ type GatedKind =
   | "conversation_started"
   | "job_offer_received"
   | "job_offer_accepted"
-  | "job_offer_declined";
+  | "job_offer_declined"
+  | "work_completion_requested"
+  | "work_completion_confirmed";
 
 type NotificationPrefsRow = {
   new_message: boolean;
@@ -47,6 +49,8 @@ type NotificationPrefsRow = {
   job_offer_received: boolean;
   job_offer_accepted: boolean;
   job_offer_declined: boolean;
+  work_completion_requested: boolean;
+  work_completion_confirmed: boolean;
 };
 
 const GATED_KIND_COLUMNS: Readonly<Record<GatedKind, keyof NotificationPrefsRow>> = {
@@ -61,6 +65,8 @@ const GATED_KIND_COLUMNS: Readonly<Record<GatedKind, keyof NotificationPrefsRow>
   job_offer_received: "job_offer_received",
   job_offer_accepted: "job_offer_accepted",
   job_offer_declined: "job_offer_declined",
+  work_completion_requested: "work_completion_requested",
+  work_completion_confirmed: "work_completion_confirmed",
 };
 
 function isGatedKind(kind: NotificationKind): kind is GatedKind {
@@ -246,20 +252,28 @@ async function sendOneApns(
   jwt: string,
   token: ApnsTokenRow,
   payload: Record<string, unknown>,
+  collapseId: string | null,
 ): Promise<ApnsSendOutcome> {
   const url = `https://${apnsHostFor(token.environment)}/3/device/${token.device_token}`;
   let response: Response;
   try {
+    const headers: Record<string, string> = {
+      authorization: `bearer ${jwt}`,
+      "apns-topic": APNS_BUNDLE_ID,
+      "apns-push-type": "alert",
+      "apns-priority": "10",
+      "apns-expiration": "0",
+      "content-type": "application/json",
+    };
+    if (collapseId !== null && collapseId.length > 0) {
+      // apns-collapse-id collapses successive pushes (same id) into a single
+      // notification on the device — later messages replace earlier ones so
+      // a chat flood shows up as one tile, not N. Max 64 bytes per Apple docs.
+      headers["apns-collapse-id"] = collapseId.slice(0, 64);
+    }
     response = await fetch(url, {
       method: "POST",
-      headers: {
-        authorization: `bearer ${jwt}`,
-        "apns-topic": APNS_BUNDLE_ID,
-        "apns-push-type": "alert",
-        "apns-priority": "10",
-        "apns-expiration": "0",
-        "content-type": "application/json",
-      },
+      headers,
       body: JSON.stringify(payload),
     });
   } catch (err) {
@@ -301,7 +315,7 @@ async function isKindEnabled(
   const { data, error } = await supabase
     .from("notification_preferences")
     .select(
-      "new_message, application_accepted, application_rejected, new_application, application_withdrawn, shift_cancelled, new_review, conversation_started, job_offer_received, job_offer_accepted, job_offer_declined",
+      "new_message, application_accepted, application_rejected, new_application, application_withdrawn, shift_cancelled, new_review, conversation_started, job_offer_received, job_offer_accepted, job_offer_declined, work_completion_requested, work_completion_confirmed",
     )
     .eq("user_id", recipientId)
     .single();
@@ -402,7 +416,8 @@ async function handleRequest(req: Request): Promise<Response> {
 
   // job_offer_received uses category=JOB_OFFER so iOS shows the
   // Интересно / Неинтересно action buttons (registered in AppDelegate.swift).
-  // thread-id keeps multiple offers from collapsing into a single notification.
+  // thread-id keeps related notifications grouped together in the system UI
+  // (one per offer; one per conversation for chat-related kinds).
   const aps: Record<string, unknown> = {
     alert: { title: request.title, body: request.body },
     sound: "default",
@@ -413,6 +428,28 @@ async function handleRequest(req: Request): Promise<Response> {
     const offerId = request.data?.offerId;
     if (typeof offerId === "string" && offerId.length > 0) {
       aps["thread-id"] = offerId;
+    }
+  } else if (
+    request.kind === "new_message" ||
+    request.kind === "conversation_started"
+  ) {
+    const conversationId = request.data?.conversationId;
+    if (typeof conversationId === "string" && conversationId.length > 0) {
+      aps["thread-id"] = `conversation:${conversationId}`;
+    }
+  }
+
+  // apns-collapse-id collapses successive chat pushes from the same conversation
+  // into a single notification — the latest message replaces older ones, so a
+  // burst of messages shows up as one tile instead of N.
+  let collapseId: string | null = null;
+  if (
+    request.kind === "new_message" ||
+    request.kind === "conversation_started"
+  ) {
+    const conversationId = request.data?.conversationId;
+    if (typeof conversationId === "string" && conversationId.length > 0) {
+      collapseId = `conversation:${conversationId}`;
     }
   }
 
@@ -425,7 +462,7 @@ async function handleRequest(req: Request): Promise<Response> {
   const outcomes = await Promise.all(
     tokens.map(async (token) => {
       try {
-        const outcome = await sendOneApns(jwt, token, apnsPayload);
+        const outcome = await sendOneApns(jwt, token, apnsPayload, collapseId);
         if (outcome === "retired") {
           await deleteRetiredToken(
             supabase,

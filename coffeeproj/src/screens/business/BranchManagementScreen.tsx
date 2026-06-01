@@ -19,8 +19,7 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { COLORS } from '../../config/constants';
+import { COLORS, EQUIPMENT_TYPES } from '../../config/constants';
 import {
   BusinessService,
   BranchHasActiveJobsError,
@@ -29,9 +28,10 @@ import {
 import { MetroSelector } from '../../components/MetroSelector';
 import { CityToggle } from '../../components/CityToggle';
 import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
+import { AddFab } from '../../components/AddFab';
 import { useAuthStore } from '../../stores/authStore';
 import type { Branch, Equipment, GeoPoint, CityCode } from '../../types';
-import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU } from '../../types/city';
+import { DEFAULT_CITY, toCityCode } from '../../types/city';
 import { PHOTO_LIMIT, MAX_PHOTO_BYTES, isFileTooLarge } from '../../utils/storage';
 import { geocodeAddress } from '../../utils/geocode';
 import { SHORT_TEXT_MAX_LENGTH, ADDRESS_MAX_LENGTH } from '../../utils/validation';
@@ -46,16 +46,7 @@ type Props = {
   route: RouteProp<BusinessStackParamList, 'BranchManagement'>;
 };
 
-const EQUIPMENT_OPTIONS: Equipment[] = [
-  'La Marzocco',
-  'Victoria Arduino',
-  'Nuova Simonelli',
-  'Synesso',
-  'Slayer',
-  'Dalla Corte',
-  'Sanremo',
-  'Rocket Espresso',
-];
+const EQUIPMENT_OPTIONS: readonly Equipment[] = EQUIPMENT_TYPES;
 
 type BranchRowProps = {
   branch: Branch;
@@ -260,7 +251,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(async () => {
       setAddressLookupStatus('searching');
-      const coords = await geocodeAddress(trimmedAddress, CITY_LABELS_RU[city], controller.signal);
+      const coords = await geocodeAddress(trimmedAddress, city, controller.signal);
       if (controller.signal.aborted) return;
       geocodedKeyRef.current = key;
       setAddressCoords(coords);
@@ -282,7 +273,6 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
 
     try {
       const trimmedAddress = address.trim();
-      const cityLabel = CITY_LABELS_RU[city];
       const key = `${trimmedAddress}|${city}`;
 
       let coordinates: GeoPoint | null;
@@ -295,7 +285,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
       ) {
         coordinates = editingBranch.coordinates;
       } else {
-        coordinates = await geocodeAddress(trimmedAddress, cityLabel);
+        coordinates = await geocodeAddress(trimmedAddress, city);
       }
 
       if (!coordinates) {
@@ -656,16 +646,11 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <TouchableOpacity
-        style={styles.fab}
+      <AddFab
         onPress={toggleHeaderForm}
-        accessibilityLabel={isAddingBranch ? t('common.cancel') : t('branches.add')}>
-        <MaterialCommunityIcons
-          name={isAddingBranch ? 'close' : 'plus'}
-          size={28}
-          color={COLORS.background}
-        />
-      </TouchableOpacity>
+        accessibilityLabel={isAddingBranch ? t('common.cancel') : t('branches.add')}
+        iconName={isAddingBranch ? 'close' : 'plus'}
+      />
     </SafeAreaView>
   );
 };
@@ -699,22 +684,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 96,
-  },
-  fab: {
-    position: 'absolute',
-    right: 16,
-    bottom: 16,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
   },
   formContainer: {
     padding: 20,

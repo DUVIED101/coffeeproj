@@ -32,6 +32,8 @@ import {
   SHORT_TEXT_MAX_LENGTH,
   COMPENSATION_MAX_DIGITS,
 } from '../../utils/validation';
+import { clampToEffectiveLength } from '../../utils/textLength';
+import { jobMinDate, jobMaxDate, clampDate } from '../../utils/dateRanges';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'CreateJob' | 'EditJob'>;
@@ -128,8 +130,19 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
         setDescription(job.description ?? '');
         setRequirements(job.requirements.length > 0 ? job.requirements : ['']);
         setSelectedEquipment(job.requiredEquipmentExperience);
-        setStartDate(new Date(job.shiftDetails.startDate));
-        setEndDate(job.shiftDetails.endDate ? new Date(job.shiftDetails.endDate) : undefined);
+        // Defensive clamp: legacy rows may carry dates outside [today, 2050]
+        // which break the native picker. Stay within the supported window.
+        const loadedStart = clampDate(
+          new Date(job.shiftDetails.startDate),
+          jobMinDate(),
+          jobMaxDate()
+        );
+        setStartDate(loadedStart);
+        setEndDate(
+          job.shiftDetails.endDate
+            ? clampDate(new Date(job.shiftDetails.endDate), loadedStart, jobMaxDate())
+            : undefined
+        );
         setStartTime(parseTimeString(job.shiftDetails.startTime));
         setEndTime(parseTimeString(job.shiftDetails.endTime));
         setIsRecurring(job.shiftDetails.isRecurring);
@@ -278,6 +291,16 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     }
     if (isRecurring && selectedDays.length === 0) {
       newErrors.recurringDays = t('createJob.errors.recurringDaysRequired');
+    }
+    const minStart = jobMinDate();
+    const maxEnd = jobMaxDate();
+    if (startDate.getTime() < minStart.getTime()) {
+      newErrors.startDate = t('createJob.errors.startDateInPast');
+    } else if (startDate.getTime() > maxEnd.getTime()) {
+      newErrors.startDate = t('createJob.errors.startDateTooFar');
+    }
+    if (endDate && endDate.getTime() > maxEnd.getTime()) {
+      newErrors.endDate = t('createJob.errors.endDateTooFar');
     }
     const startMinutes = startTime.getHours() * 60 + startTime.getMinutes();
     const endMinutes = endTime.getHours() * 60 + endTime.getMinutes();
@@ -506,8 +529,9 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
             style={[styles.input, styles.textArea]}
             placeholder={t('createJob.fields.descriptionPlaceholder')}
             value={description}
-            onChangeText={setDescription}
-            maxLength={DESCRIPTION_MAX_LENGTH}
+            onChangeText={text =>
+              setDescription(clampToEffectiveLength(text, DESCRIPTION_MAX_LENGTH))
+            }
             multiline
             numberOfLines={4}
           />
@@ -576,15 +600,18 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           {showStartDatePicker && (
             <>
               <DateTimePicker
-                value={startDate}
+                value={clampDate(startDate, jobMinDate(), jobMaxDate())}
                 mode="date"
                 display={Platform.OS === 'ios' ? 'inline' : 'default'}
                 themeVariant="light"
                 textColor="#000000"
+                minimumDate={jobMinDate()}
+                maximumDate={jobMaxDate()}
                 onChange={(_event, selectedDate) => {
                   if (selectedDate) {
-                    setStartDate(selectedDate);
-                    if (endDate && endDate.getTime() < selectedDate.getTime()) {
+                    const clamped = clampDate(selectedDate, jobMinDate(), jobMaxDate());
+                    setStartDate(clamped);
+                    if (endDate && endDate.getTime() < clamped.getTime()) {
                       setEndDate(undefined);
                     }
                     const { startDate: _, ...rest } = errors;
@@ -610,15 +637,16 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           {showEndDatePicker && (
             <>
               <DateTimePicker
-                value={endDate || startDate}
+                value={clampDate(endDate ?? startDate, startDate, jobMaxDate())}
                 mode="date"
                 display={Platform.OS === 'ios' ? 'inline' : 'default'}
                 themeVariant="light"
                 textColor="#000000"
                 minimumDate={startDate}
+                maximumDate={jobMaxDate()}
                 onChange={(_event, selectedDate) => {
                   if (selectedDate) {
-                    setEndDate(selectedDate);
+                    setEndDate(clampDate(selectedDate, startDate, jobMaxDate()));
                   }
                 }}
               />
@@ -949,6 +977,7 @@ const styles = StyleSheet.create({
   },
   textArea: {
     minHeight: 100,
+    maxHeight: 240,
     textAlignVertical: 'top',
   },
   errorText: {

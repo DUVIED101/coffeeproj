@@ -47,7 +47,11 @@ async function fetchYandexUser(accessToken: string): Promise<YandexUserInfo | nu
 async function findUserByEmail(
   admin: ReturnType<typeof createClient>,
   email: string
-): Promise<{ id: string; email_confirmed_at: string | null } | null> {
+): Promise<{
+  id: string;
+  email_confirmed_at: string | null;
+  user_metadata_provider: string | null;
+} | null> {
   // listUsers is paginated. With small user counts this is fine; switch to a
   // proper REST query against auth.users when the directory grows.
   const perPage = 200;
@@ -56,7 +60,12 @@ async function findUserByEmail(
     if (error) throw error;
     const match = data.users.find((u) => (u.email ?? '').toLowerCase() === email.toLowerCase());
     if (match) {
-      return { id: match.id, email_confirmed_at: match.email_confirmed_at ?? null };
+      const meta = (match.user_metadata ?? {}) as { provider?: string };
+      return {
+        id: match.id,
+        email_confirmed_at: match.email_confirmed_at ?? null,
+        user_metadata_provider: typeof meta.provider === 'string' ? meta.provider : null,
+      };
     }
     if (data.users.length < perPage) return null;
   }
@@ -114,8 +123,18 @@ Deno.serve(async (req: Request) => {
       if (createErr) {
         return jsonResponse(500, { error: createErr.message });
       }
-    } else if (!existing.email_confirmed_at) {
-      await admin.auth.admin.updateUserById(existing.id, { email_confirm: true });
+    } else {
+      // Email-uniqueness across auth methods: only allow this email to flow
+      // through Yandex if the account was originally created via Yandex.
+      // Yandex-created users carry user_metadata.provider='yandex'; anything
+      // else (email/password, Apple, Google) means the email is owned by a
+      // different method and we refuse to silently link.
+      if (existing.user_metadata_provider !== 'yandex') {
+        return jsonResponse(409, { error: 'email_already_registered' });
+      }
+      if (!existing.email_confirmed_at) {
+        await admin.auth.admin.updateUserById(existing.id, { email_confirm: true });
+      }
     }
 
     const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({

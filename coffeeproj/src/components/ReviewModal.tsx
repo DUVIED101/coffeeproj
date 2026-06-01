@@ -16,6 +16,7 @@ import { COLORS } from '../config/constants';
 import { ReviewService } from '../services/ReviewService';
 import type { ApplicationId, UserId } from '../types/ids';
 import type { ApplicationReview, RaterRole, StarRating } from '../types/review';
+import { clampToEffectiveLength, effectiveTextLength } from '../utils/textLength';
 
 const MAX_COMMENT_LENGTH = 500;
 
@@ -109,21 +110,16 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
 
           <TextInput
             value={comment}
-            onChangeText={text =>
-              setComment(
-                text.length <= MAX_COMMENT_LENGTH ? text : text.slice(0, MAX_COMMENT_LENGTH)
-              )
-            }
+            onChangeText={text => setComment(clampToEffectiveLength(text, MAX_COMMENT_LENGTH))}
             placeholder={t('reviews.modal.commentPlaceholder')}
             placeholderTextColor={COLORS.textSecondary}
             style={styles.input}
             multiline
-            maxLength={MAX_COMMENT_LENGTH}
             textAlignVertical="top"
             maxFontSizeMultiplier={1.6}
           />
           <Text style={styles.counter}>
-            {t('reviews.modal.charCounter', { count: comment.length })}
+            {t('reviews.modal.charCounter', { count: effectiveTextLength(comment) })}
           </Text>
 
           <TouchableOpacity
@@ -194,6 +190,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.text,
     minHeight: 80,
+    maxHeight: 180,
     backgroundColor: COLORS.background,
   },
   counter: {

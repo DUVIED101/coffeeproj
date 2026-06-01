@@ -15,6 +15,11 @@ type PrefsRow = {
   shift_cancelled: boolean;
   new_review: boolean;
   conversation_started: boolean;
+  job_offer_received: boolean;
+  job_offer_accepted: boolean;
+  job_offer_declined: boolean;
+  work_completion_requested: boolean;
+  work_completion_confirmed: boolean;
   updated_at: string;
 };
 
@@ -27,6 +32,11 @@ const CAMEL_TO_SNAKE: Readonly<Record<keyof UpdateNotificationPreferences, keyof
   shiftCancelled: 'shift_cancelled',
   newReview: 'new_review',
   conversationStarted: 'conversation_started',
+  jobOfferReceived: 'job_offer_received',
+  jobOfferAccepted: 'job_offer_accepted',
+  jobOfferDeclined: 'job_offer_declined',
+  workCompletionRequested: 'work_completion_requested',
+  workCompletionConfirmed: 'work_completion_confirmed',
 };
 
 export class NotificationPreferencesService {
@@ -41,6 +51,11 @@ export class NotificationPreferencesService {
       shiftCancelled: db.shift_cancelled,
       newReview: db.new_review,
       conversationStarted: db.conversation_started,
+      jobOfferReceived: db.job_offer_received,
+      jobOfferAccepted: db.job_offer_accepted,
+      jobOfferDeclined: db.job_offer_declined,
+      workCompletionRequested: db.work_completion_requested,
+      workCompletionConfirmed: db.work_completion_confirmed,
       updatedAt: db.updated_at,
     };
   }

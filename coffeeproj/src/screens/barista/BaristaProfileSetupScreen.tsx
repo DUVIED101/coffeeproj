@@ -37,6 +37,8 @@ import {
   COMPENSATION_MAX_DIGITS,
 } from '../../utils/validation';
 import { requestLocationPermission, getCurrentLocation } from '../../utils/geolocation';
+import { clampToEffectiveLength, effectiveTextLength } from '../../utils/textLength';
+import { dobMinDate, dobMaxDate } from '../../utils/dateRanges';
 import type { GeoPoint } from '../../types/business';
 import type { ShiftTime, BaristaProfile } from '../../types/baristaProfile';
 import type { CityCode } from '../../types/city';
@@ -385,8 +387,8 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                             themeVariant="light"
                             textColor="#000000"
                             onValueChange={handleDateChange}
-                            maximumDate={new Date()}
-                            minimumDate={new Date(1940, 0, 1)}
+                            maximumDate={dobMaxDate()}
+                            minimumDate={dobMinDate()}
                           />
                           <TouchableOpacity
                             style={styles.datePickerDoneButton}
@@ -409,8 +411,8 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                     setShowDatePicker(false);
                     handleDateChange(event, date);
                   }}
-                  maximumDate={new Date()}
-                  minimumDate={new Date(1940, 0, 1)}
+                  maximumDate={dobMaxDate()}
+                  minimumDate={dobMinDate()}
                 />
               ))}
           </View>
@@ -438,15 +440,14 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               })}
               placeholderTextColor={COLORS.textSecondary}
               value={bio}
-              onChangeText={setBio}
+              onChangeText={text => setBio(clampToEffectiveLength(text, 500))}
               multiline
               numberOfLines={4}
               textAlignVertical="top"
-              maxLength={500}
             />
             <Text style={styles.characterCount}>
               {t('baristaSetup.fieldBioCounter', {
-                count: bio.length,
+                count: effectiveTextLength(bio),
                 defaultValue: '{{count}}/500',
               })}
             </Text>
@@ -834,6 +835,7 @@ const styles = StyleSheet.create({
   },
   textArea: {
     minHeight: 100,
+    maxHeight: 180,
   },
   characterCount: {
     fontSize: 12,

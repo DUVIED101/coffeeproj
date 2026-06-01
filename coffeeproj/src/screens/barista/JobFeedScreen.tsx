@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -74,8 +75,13 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
 
   useEffect(() => {
     initializeLocation();
-    loadBaristaProfile();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadBaristaProfile();
+    }, [user?.id])
+  );
 
   useEffect(() => {
     loadJobs();
@@ -111,9 +117,7 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
 
       // Banner threshold matches the apply gate in JobDetailsScreen (20%).
       // Once a barista's profile is complete enough to apply, we stop nagging.
-      if (!profile || profile.profileCompleteness < 20) {
-        setShowProfileBanner(true);
-      }
+      setShowProfileBanner(!profile || profile.profileCompleteness < 20);
     } catch (error) {
       console.error('Error loading barista profile:', error);
     }

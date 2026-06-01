@@ -1,18 +1,13 @@
 // Business and Branch Types
 
 import type { CityCode } from './city';
+import { EQUIPMENT_TYPES } from '../config/constants';
 
 export type BusinessType = 'singleLocation' | 'multiLocation';
 
-export type Equipment =
-  | 'La Marzocco'
-  | 'Victoria Arduino'
-  | 'Nuova Simonelli'
-  | 'Synesso'
-  | 'Slayer'
-  | 'Dalla Corte'
-  | 'Sanremo'
-  | 'Rocket Espresso';
+// Single source of truth: equipment brands live in config/constants. Deriving
+// the union from the array prevents the two from drifting when we add brands.
+export type Equipment = (typeof EQUIPMENT_TYPES)[number];
 
 export interface GeoPoint {
   latitude: number;

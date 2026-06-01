@@ -449,7 +449,8 @@
     "cancelOfferConfirmTitle": "Отозвать предложение?",
     "cancelOfferConfirmBody": "Бариста больше не сможет принять это предложение.",
     "cancelOfferFailure": "Не удалось отозвать предложение",
-    "unknownBarista": "Бариста"
+    "unknownBarista": "Бариста",
+    "viewBaristaProfileA11y": "Открыть профиль {{name}}"
   },
   "offerJob": {
     "title": "Предложить вакансию",
@@ -650,7 +651,8 @@
       "appleErrorTitle": "Вход через Apple",
       "yandexErrorTitle": "Yandex ID",
       "googleConfigMissing": "GOOGLE_IOS_CLIENT_ID не настроен в .env",
-      "yandexConfigMissing": "YANDEX_CLIENT_ID не настроен в .env"
+      "yandexConfigMissing": "YANDEX_CLIENT_ID не настроен в .env",
+      "emailAlreadyRegistered": "Этот email уже зарегистрирован другим способом входа. Войдите тем же способом, что использовали при регистрации."
     }
   },
   "chat": {
@@ -666,6 +668,10 @@
       "title": "Чат закрыт",
       "rejected": "Бизнес выбрал другого кандидата.",
       "cancelled": "Смена была отменена."
+    },
+    "waitingForBusiness": {
+      "title": "Дождитесь, пока бизнес напишет первым",
+      "subtitle": "Вы сможете ответить, как только бизнес начнёт диалог."
     }
   },
   "chats": {
@@ -689,7 +695,16 @@
       "markAllRead": "Прочитать всё",
       "clearAll": "Очистить",
       "clearConfirmTitle": "Очистить уведомления?",
-      "clearConfirmBody": "Все уведомления будут удалены безвозвратно."
+      "clearConfirmBody": "Все уведомления будут удалены безвозвратно.",
+      "chatGroupBody_one": "{{count}} новое сообщение в чате",
+      "chatGroupBody_few": "{{count}} новых сообщения в чате",
+      "chatGroupBody_many": "{{count}} новых сообщений в чате",
+      "chatGroupBody_other": "{{count}} новых сообщений в чате",
+      "expandGroupA11y": "Раскрыть сообщения",
+      "collapseGroupA11y": "Свернуть сообщения",
+      "filterAll": "Все",
+      "filterUnread": "Только непрочитанные ({{count}})",
+      "emptyUnread": "Непрочитанных уведомлений нет"
     }
   },
   "portfolioPhotos": {
@@ -867,6 +882,9 @@
       "compensationRequired": "Укажите корректную сумму оплаты",
       "recurringDaysRequired": "Выберите хотя бы один день для повторяющейся смены",
       "endTimeDiffersFromStart": "Время окончания должно отличаться от времени начала",
+      "startDateInPast": "Дата начала не может быть в прошлом",
+      "startDateTooFar": "Дата начала не может быть позже 2050 года",
+      "endDateTooFar": "Дата окончания не может быть позже 2050 года",
       "userNotAuthenticated": "Пользователь не авторизован",
       "businessNotFound": "Бизнес не найден",
       "branchNotFound": "Точка не найдена",
@@ -932,7 +950,7 @@
     "allReviews": "Все отзывы",
     "message": "Написать",
     "offerJob": "Предложить вакансию",
-    "offerJobAllOffered": "Все ваши открытые вакансии уже предложены этому бариста",
+    "offerJobAllOffered": "Нет вакансий для предложения бариста",
     "viewAvatarA11y": "Открыть аватар на весь экран",
     "viewPortfolioPhotoA11y": "Открыть фото портфолио {{index}}",
     "rateLimitTitle": "Ограничение",
@@ -1212,7 +1230,12 @@
       "applicationWithdrawn": "Отклик отозван",
       "shiftCancelled": "Отмена смены",
       "newReview": "Новый отзыв",
-      "conversationStarted": "Новый чат"
+      "conversationStarted": "Новый чат",
+      "jobOfferReceived": "Предложение вакансии",
+      "jobOfferAccepted": "Предложение принято",
+      "jobOfferDeclined": "Предложение отклонено",
+      "workCompletionRequested": "Смена отмечена выполненной",
+      "workCompletionConfirmed": "Смена подтверждена"
     },
     "visibility": {
       "title": "Видимость",

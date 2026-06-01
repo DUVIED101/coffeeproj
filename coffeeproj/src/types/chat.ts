@@ -25,6 +25,7 @@ export interface Conversation {
   applicationStatus?: ApplicationStatus;
   lastMessageText?: string;
   lastMessageSenderId?: string;
+  firstBusinessMessageAt?: string | null;
 }
 
 export interface Message {

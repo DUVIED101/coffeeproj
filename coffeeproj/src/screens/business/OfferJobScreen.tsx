@@ -27,6 +27,7 @@ import { useAuthStore } from '../../stores/authStore';
 import type { Job } from '../../types/job';
 import type { JobId, UserId } from '../../types/ids';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
+import { clampToEffectiveLength, effectiveTextLength } from '../../utils/textLength';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'OfferJob'>;
@@ -215,15 +216,17 @@ export const OfferJobScreen: React.FC<Props> = ({ navigation, route }) => {
             <TextInput
               style={styles.modalInput}
               value={message}
-              onChangeText={setMessage}
+              onChangeText={text => setMessage(clampToEffectiveLength(text, MESSAGE_MAX))}
               placeholder={t('offerJob.notePlaceholder')}
               placeholderTextColor={COLORS.textSecondary}
               multiline
-              maxLength={MESSAGE_MAX}
               editable={!isSending}
             />
             <Text style={styles.modalCounter}>
-              {t('offerJob.charCounter', { current: message.length, max: MESSAGE_MAX })}
+              {t('offerJob.charCounter', {
+                current: effectiveTextLength(message),
+                max: MESSAGE_MAX,
+              })}
             </Text>
             <View style={styles.modalActions}>
               <TouchableOpacity
@@ -313,6 +316,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     minHeight: 96,
+    maxHeight: 160,
     color: COLORS.text,
     textAlignVertical: 'top',
   },

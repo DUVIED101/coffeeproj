@@ -39,6 +39,8 @@ import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { formatLocalDate } from '../../utils/dateUtils';
 import { computeProfileCompleteness } from '../../utils/profileCompleteness';
 import { requestLocationPermission, getCurrentLocation } from '../../utils/geolocation';
+import { clampToEffectiveLength } from '../../utils/textLength';
+import { dobMinDate, dobMaxDate } from '../../utils/dateRanges';
 import {
   sanitizeNameInput,
   sanitizeYearsInput,
@@ -791,8 +793,8 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                       themeVariant="light"
                       textColor="#000000"
                       onChange={handleDateChange}
-                      maximumDate={new Date()}
-                      minimumDate={new Date(1940, 0, 1)}
+                      maximumDate={dobMaxDate()}
+                      minimumDate={dobMinDate()}
                     />
                     <TouchableOpacity
                       style={styles.datePickerDoneButton}
@@ -873,11 +875,10 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 <TextInput
                   style={[styles.input, styles.textArea]}
                   value={bio}
-                  onChangeText={setBio}
+                  onChangeText={text => setBio(clampToEffectiveLength(text, 500))}
                   multiline
                   numberOfLines={4}
                   textAlignVertical="top"
-                  maxLength={500}
                   editable={isEditing}
                 />
 
@@ -1430,6 +1431,7 @@ const styles = StyleSheet.create({
   },
   textArea: {
     minHeight: 100,
+    maxHeight: 180,
   },
   bioText: {
     fontSize: 16,

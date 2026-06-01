@@ -120,17 +120,35 @@ export class AuthService {
   }
 
   /**
+   * Reject a sign-in when the email is already tied to a different auth
+   * provider. Identities are returned in creation order — the earliest one
+   * defines the email's "owner" provider. If a returning OAuth flow attaches
+   * a new identity to a previously-registered email, we tear the session down
+   * and surface `email_already_registered` so the UI can route the user back
+   * to their original login method.
+   */
+  private static async rejectIfCrossProvider(user: any, expectedProvider: string): Promise<void> {
+    const identities = (user?.identities ?? []) as Array<{ provider?: string }>;
+    if (identities.length === 0) return;
+    const original = identities[0]?.provider;
+    if (!original || original === expectedProvider) return;
+    await supabase.auth.signOut();
+    throw new Error('email_already_registered');
+  }
+
+  /**
    * Sign in with Apple. `nonce` must match the one passed to
    * appleAuth.performRequest so Supabase can verify the id_token.
    */
   static async signInWithApple(idToken: string, nonce: string): Promise<void> {
     try {
-      const { error } = await supabase.auth.signInWithIdToken({
+      const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'apple',
         token: idToken,
         nonce,
       });
       if (error) throw error;
+      await this.rejectIfCrossProvider(data.user, 'apple');
     } catch (error) {
       console.error('Error in signInWithApple:', error);
       throw error;
@@ -142,11 +160,12 @@ export class AuthService {
    */
   static async signInWithGoogle(idToken: string): Promise<void> {
     try {
-      const { error } = await supabase.auth.signInWithIdToken({
+      const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: idToken,
       });
       if (error) throw error;
+      await this.rejectIfCrossProvider(data.user, 'google');
     } catch (error) {
       console.error('Error in signInWithGoogle:', error);
       throw error;

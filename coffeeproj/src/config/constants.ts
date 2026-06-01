@@ -10,16 +10,41 @@ export const DEFAULT_PAGE_LIMIT = 20;
 // Currency
 export const DEFAULT_CURRENCY = 'RUB';
 
-// Equipment types
+// Standard coffee-shop equipment. Order: espresso machines (by global market
+// share, well-known commercial brands first), then grinders. Stays in sync
+// with the Equipment union in types/business.ts.
 export const EQUIPMENT_TYPES = [
+  // Espresso machines
   'La Marzocco',
   'Victoria Arduino',
   'Nuova Simonelli',
+  'La Cimbali',
+  'Faema',
   'Synesso',
   'Slayer',
   'Dalla Corte',
   'Sanremo',
   'Rocket Espresso',
+  'Astoria',
+  'Wega',
+  'Carimali',
+  'Bezzera',
+  'ECM',
+  'Profitec',
+  'Lelit',
+  'Kees van der Westen',
+  'Eversys',
+  'WMF',
+  'Schaerer',
+  // Grinders
+  'Mahlkönig',
+  'Mazzer',
+  'Anfim',
+  'Eureka',
+  'Compak',
+  'Ditting',
+  'Fiorenzato',
+  'Macap',
 ] as const;
 
 // Colors

@@ -1,5 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../config/supabase';
+import type { ConversationId } from '../types/chat';
 import type { JobOfferId, NotificationId, UserId } from '../types/ids';
 import type { Notification, NotificationData, NotificationKind } from '../types/notification';
 
@@ -21,6 +22,7 @@ export interface NotificationFeedServiceProtocol {
   unreadCount(userId: UserId): Promise<number>;
   markAsRead(notificationId: NotificationId): Promise<void>;
   markAllAsRead(userId: UserId): Promise<void>;
+  markConversationAsRead(userId: UserId, conversationId: ConversationId): Promise<void>;
   clearAll(userId: UserId): Promise<void>;
   deleteByOfferId(offerId: JobOfferId): Promise<void>;
   subscribe(userId: UserId, onInsert: (n: Notification) => void): RealtimeChannel;
@@ -92,6 +94,21 @@ export const NotificationFeedService: NotificationFeedServiceProtocol = {
 
     if (error) {
       console.error('Error in NotificationFeedService.markAllAsRead:', error);
+      throw error;
+    }
+  },
+
+  async markConversationAsRead(userId, conversationId) {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .is('read_at', null)
+      .in('kind', ['new_message', 'conversation_started'])
+      .contains('data', { conversationId });
+
+    if (error) {
+      console.error('Error in NotificationFeedService.markConversationAsRead:', error);
       throw error;
     }
   },

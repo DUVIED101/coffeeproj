@@ -20,6 +20,11 @@ type PrefsState = {
   shiftCancelled: boolean;
   newReview: boolean;
   conversationStarted: boolean;
+  jobOfferReceived: boolean;
+  jobOfferAccepted: boolean;
+  jobOfferDeclined: boolean;
+  workCompletionRequested: boolean;
+  workCompletionConfirmed: boolean;
 };
 
 const DEFAULT_PREFS: PrefsState = {
@@ -31,6 +36,11 @@ const DEFAULT_PREFS: PrefsState = {
   shiftCancelled: true,
   newReview: true,
   conversationStarted: true,
+  jobOfferReceived: true,
+  jobOfferAccepted: true,
+  jobOfferDeclined: true,
+  workCompletionRequested: true,
+  workCompletionConfirmed: true,
 };
 
 type PrefRow = { key: PrefKey; labelKey: string };
@@ -38,8 +48,10 @@ type PrefRow = { key: PrefKey; labelKey: string };
 const BARISTA_PREF_ROWS: ReadonlyArray<PrefRow> = [
   { key: 'newMessage', labelKey: 'settings.notifications.newMessage' },
   { key: 'conversationStarted', labelKey: 'settings.notifications.conversationStarted' },
+  { key: 'jobOfferReceived', labelKey: 'settings.notifications.jobOfferReceived' },
   { key: 'applicationAccepted', labelKey: 'settings.notifications.applicationAccepted' },
   { key: 'applicationRejected', labelKey: 'settings.notifications.applicationRejected' },
+  { key: 'workCompletionConfirmed', labelKey: 'settings.notifications.workCompletionConfirmed' },
   { key: 'shiftCancelled', labelKey: 'settings.notifications.shiftCancelled' },
   { key: 'newReview', labelKey: 'settings.notifications.newReview' },
 ];
@@ -49,6 +61,9 @@ const BUSINESS_PREF_ROWS: ReadonlyArray<PrefRow> = [
   { key: 'conversationStarted', labelKey: 'settings.notifications.conversationStarted' },
   { key: 'newApplication', labelKey: 'settings.notifications.newApplication' },
   { key: 'applicationWithdrawn', labelKey: 'settings.notifications.applicationWithdrawn' },
+  { key: 'jobOfferAccepted', labelKey: 'settings.notifications.jobOfferAccepted' },
+  { key: 'jobOfferDeclined', labelKey: 'settings.notifications.jobOfferDeclined' },
+  { key: 'workCompletionRequested', labelKey: 'settings.notifications.workCompletionRequested' },
   { key: 'shiftCancelled', labelKey: 'settings.notifications.shiftCancelled' },
   { key: 'newReview', labelKey: 'settings.notifications.newReview' },
 ];
@@ -87,6 +102,11 @@ export const NotificationsScreen: React.FC = () => {
             shiftCancelled: loaded.shiftCancelled,
             newReview: loaded.newReview,
             conversationStarted: loaded.conversationStarted,
+            jobOfferReceived: loaded.jobOfferReceived,
+            jobOfferAccepted: loaded.jobOfferAccepted,
+            jobOfferDeclined: loaded.jobOfferDeclined,
+            workCompletionRequested: loaded.workCompletionRequested,
+            workCompletionConfirmed: loaded.workCompletionConfirmed,
           });
         }
       } catch (err) {

@@ -5,6 +5,7 @@ import { COLORS, RADII } from '../config/constants';
 import { MonthYearPicker } from './MonthYearPicker';
 import { MAX_WORK_EXPERIENCES, computeDuration, makeEmptyDraft } from '../types/workExperience';
 import type { WorkExperienceDraft } from '../types/workExperience';
+import { clampToEffectiveLength } from '../utils/textLength';
 
 type Props = {
   experiences: WorkExperienceDraft[];
@@ -179,13 +180,15 @@ export const WorkExperienceEditor: React.FC<Props> = ({
             <TextInput
               style={[styles.input, styles.textArea]}
               value={exp.description ?? ''}
-              onChangeText={text => update(index, { description: text.length > 0 ? text : null })}
+              onChangeText={text => {
+                const clamped = clampToEffectiveLength(text, DESCRIPTION_MAX);
+                update(index, { description: clamped.length > 0 ? clamped : null });
+              }}
               placeholder=""
               placeholderTextColor={COLORS.textSecondary}
               multiline
               numberOfLines={3}
               textAlignVertical="top"
-              maxLength={DESCRIPTION_MAX}
               editable={!disabled}
             />
           </View>
@@ -284,6 +287,7 @@ const styles = StyleSheet.create({
   },
   textArea: {
     minHeight: 70,
+    maxHeight: 180,
   },
   addButton: {
     marginTop: 4,

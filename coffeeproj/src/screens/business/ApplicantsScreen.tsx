@@ -690,16 +690,37 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
                     ? `${offer.baristaFirstName ?? ''} ${offer.baristaLastName ?? ''}`.trim()
                     : t('applicants.unknownBarista');
                 const isCancelling = cancellingOfferIds.has(offer.id);
+                const initial = name.charAt(0).toUpperCase();
                 return (
                   <View key={offer.id} style={styles.pendingOfferRow}>
-                    <View style={styles.pendingOfferInfo}>
-                      <Text style={styles.pendingOfferName}>{name}</Text>
-                      <Text style={styles.pendingOfferDate}>
-                        {t('applicants.offerSentOn', {
-                          date: new Date(offer.createdAt).toLocaleDateString('ru-RU'),
-                        })}
-                      </Text>
-                    </View>
+                    <TouchableOpacity
+                      style={styles.pendingOfferTappable}
+                      onPress={() => handleViewProfile(offer.baristaId)}
+                      activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('applicants.viewBaristaProfileA11y', {
+                        name,
+                        defaultValue: `Открыть профиль ${name}`,
+                      })}>
+                      {offer.baristaAvatarUrl ? (
+                        <Image
+                          source={{ uri: offer.baristaAvatarUrl }}
+                          style={styles.pendingOfferAvatar}
+                        />
+                      ) : (
+                        <View style={styles.pendingOfferAvatarPlaceholder}>
+                          <Text style={styles.pendingOfferAvatarText}>{initial}</Text>
+                        </View>
+                      )}
+                      <View style={styles.pendingOfferInfo}>
+                        <Text style={styles.pendingOfferName}>{name}</Text>
+                        <Text style={styles.pendingOfferDate}>
+                          {t('applicants.offerSentOn', {
+                            date: new Date(offer.createdAt).toLocaleDateString('ru-RU'),
+                          })}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.pendingOfferCancelButton}
                       onPress={() => handleCancelOffer(offer)}
@@ -1010,6 +1031,31 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
+  },
+  pendingOfferTappable: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pendingOfferAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 10,
+  },
+  pendingOfferAvatarPlaceholder: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  pendingOfferAvatarText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   pendingOfferInfo: { flex: 1 },
   pendingOfferName: { fontSize: 15, fontWeight: '600', color: COLORS.text },

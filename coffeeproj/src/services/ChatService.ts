@@ -20,6 +20,7 @@ export class ChatService {
       businessName: db.business_name,
       baristaName: db.barista_name,
       applicationStatus: db.application_status,
+      firstBusinessMessageAt: db.first_business_message_at ?? null,
     };
   }
 

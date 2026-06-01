@@ -20,6 +20,7 @@ import { JobService } from '../../services/JobService';
 import { BusinessService } from '../../services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
 import { JobCard } from '../../components/JobCard';
+import { AddFab } from '../../components/AddFab';
 import type { Job, JobStatus } from '../../types/job';
 
 type BusinessStackParamList = {
@@ -247,11 +248,6 @@ export const ManageJobsScreen: React.FC<Props> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{t('manageJobs.title')}</Text>
-        <TouchableOpacity
-          style={styles.createButton}
-          onPress={() => navigation.navigate('CreateJob')}>
-          <Text style={styles.createButtonText}>{t('manageJobs.create')}</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={styles.tabsContainer}>
@@ -291,6 +287,11 @@ export const ManageJobsScreen: React.FC<Props> = ({ navigation }) => {
           />
         }
       />
+
+      <AddFab
+        onPress={() => navigation.navigate('CreateJob')}
+        accessibilityLabel={t('manageJobs.create')}
+      />
     </SafeAreaView>
   );
 };
@@ -306,9 +307,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
@@ -318,17 +316,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: COLORS.text,
-  },
-  createButton: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 999,
-  },
-  createButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -379,6 +366,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+    paddingBottom: 96,
   },
   emptyContainer: {
     alignItems: 'center',

@@ -5,6 +5,7 @@ import { NotificationFeedService } from '../services/NotificationFeedService';
 import { useToastStore } from './toastStore';
 import { navigationRef } from '../navigation/navigationRef';
 import type { Notification } from '../types/notification';
+import type { ConversationId } from '../types/chat';
 import type { JobOfferId, NotificationId, UserId } from '../types/ids';
 
 /**
@@ -33,6 +34,7 @@ type NotificationFeedState = {
   refreshUnreadCount: (userId: UserId) => Promise<void>;
   markAsRead: (notificationId: NotificationId) => Promise<void>;
   markAllAsRead: (userId: UserId) => Promise<void>;
+  markConversationAsRead: (userId: UserId, conversationId: ConversationId) => Promise<void>;
   clearAll: (userId: UserId) => Promise<void>;
   deleteByOfferId: (offerId: JobOfferId) => Promise<void>;
   startRealtime: (userId: UserId) => void;
@@ -95,6 +97,29 @@ export const useNotificationFeedStore = create<NotificationFeedState>((set, get)
 
     try {
       await NotificationFeedService.markAllAsRead(userId);
+    } catch (error) {
+      set({ notifications: previous, unreadCount: previousUnread });
+      throw error;
+    }
+  },
+
+  markConversationAsRead: async (userId: UserId, conversationId: ConversationId) => {
+    const previous = get().notifications;
+    const previousUnread = get().unreadCount;
+    const isChatRelated = (n: Notification): boolean =>
+      (n.kind === 'new_message' || n.kind === 'conversation_started') &&
+      n.data.conversationId === conversationId;
+    const matching = previous.filter(n => isChatRelated(n) && !n.readAt);
+    if (matching.length === 0) return;
+
+    const now = new Date();
+    set({
+      notifications: previous.map(n => (isChatRelated(n) && !n.readAt ? { ...n, readAt: now } : n)),
+      unreadCount: Math.max(0, previousUnread - matching.length),
+    });
+
+    try {
+      await NotificationFeedService.markConversationAsRead(userId, conversationId);
     } catch (error) {
       set({ notifications: previous, unreadCount: previousUnread });
       throw error;

@@ -20,6 +20,7 @@ import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import { useAuthStore } from '../../stores/authStore';
 import { getErrorMessage } from '../../utils/getErrorMessage';
+import { clampToEffectiveLength, effectiveTextLength } from '../../utils/textLength';
 import type { Job } from '../../types/job';
 
 type BaristaStackParamList = {
@@ -136,15 +137,14 @@ export const ApplyScreen: React.FC<Props> = ({ navigation, route }) => {
               })}
               placeholderTextColor={COLORS.textSecondary}
               value={coverLetter}
-              onChangeText={setCoverLetter}
+              onChangeText={text => setCoverLetter(clampToEffectiveLength(text, 1000))}
               multiline
               numberOfLines={6}
               textAlignVertical="top"
-              maxLength={1000}
             />
             <Text style={styles.characterCount}>
               {t('apply.charCounter', {
-                count: coverLetter.length,
+                count: effectiveTextLength(coverLetter),
                 defaultValue: '{{count}}/1000',
               })}
             </Text>
@@ -241,6 +241,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.text,
     minHeight: 120,
+    maxHeight: 240,
+    textAlignVertical: 'top',
   },
   characterCount: {
     fontSize: 12,

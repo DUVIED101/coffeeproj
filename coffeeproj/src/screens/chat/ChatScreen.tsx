@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Keyboard,
+  Linking,
   Platform,
 } from 'react-native';
 import { FlatList as FlatListComponent } from 'react-native';
@@ -23,8 +24,55 @@ import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithAction
 import type { HeaderAction } from '../../components/ScreenHeaderWithActions';
 import { useAuthStore } from '../../stores/authStore';
 import { useChatUnreadStore } from '../../stores/chatUnreadStore';
+import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
+import type { UserId } from '../../types/ids';
 import type { Message, ConversationId, Conversation } from '../../types/chat';
 import { formatDateHeader, isSameDay } from '../../utils/dateUtils';
+import { clampToEffectiveLength } from '../../utils/textLength';
+
+const MESSAGE_MAX_LENGTH = 500;
+
+// Matches http(s)://… and bare www.… so users typing either get tappable links.
+// Trailing punctuation that's typically sentence-final (.,!?;:) is intentionally
+// excluded from the URL so "see https://foo.com." doesn't include the period.
+const URL_REGEX = /(https?:\/\/[^\s]+[^\s.,!?;:]|www\.[^\s]+[^\s.,!?;:])/gi;
+
+const openUrl = async (raw: string): Promise<void> => {
+  const url = raw.startsWith('www.') ? `https://${raw}` : raw;
+  try {
+    await Linking.openURL(url);
+  } catch (error) {
+    console.error('Error opening URL:', error);
+  }
+};
+
+const renderMessageWithLinks = (text: string, linkTextStyle: object): React.ReactNode[] => {
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  URL_REGEX.lastIndex = 0;
+  while ((match = URL_REGEX.exec(text)) !== null) {
+    const url = match[0];
+    const start = match.index;
+    if (start > lastIndex) {
+      parts.push(text.slice(lastIndex, start));
+    }
+    parts.push(
+      <Text
+        key={`url-${start}`}
+        style={linkTextStyle}
+        onPress={() => openUrl(url)}
+        suppressHighlighting>
+        {url}
+      </Text>
+    );
+    lastIndex = start + url.length;
+  }
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+  return parts.length === 0 ? [text] : parts;
+};
 
 const DateHeader = React.memo<{ date: string }>(({ date }) => {
   return (
@@ -40,6 +88,7 @@ const MessageBubble = React.memo<{
   message: Message;
   isOwnMessage: boolean;
 }>(({ message, isOwnMessage }) => {
+  const linkTextStyle = isOwnMessage ? styles.ownMessageLink : styles.otherMessageLink;
   return (
     <View
       style={[
@@ -47,11 +96,12 @@ const MessageBubble = React.memo<{
         isOwnMessage ? styles.ownMessageBubble : styles.otherMessageBubble,
       ]}>
       <Text
+        selectable
         style={[
           styles.messageText,
           isOwnMessage ? styles.ownMessageText : styles.otherMessageText,
         ]}>
-        {message.messageText}
+        {renderMessageWithLinks(message.messageText, linkTextStyle)}
       </Text>
       <Text
         style={[
@@ -71,6 +121,7 @@ export function ChatScreen({ navigation, route }: any) {
   const { applicationId, conversationId: initialConversationId } = route.params;
   const user = useAuthStore(state => state.user);
   const refreshChatUnread = useChatUnreadStore(s => s.refresh);
+  const markConversationNotificationsRead = useNotificationFeedStore(s => s.markConversationAsRead);
   const headerHeight = useHeaderHeight();
   const { t } = useTranslation();
 
@@ -114,6 +165,9 @@ export function ChatScreen({ navigation, route }: any) {
       setMessages(msgs.reverse());
 
       await ChatService.markAsRead(conv.id, user.id);
+      markConversationNotificationsRead(user.id as UserId, conv.id).catch(error => {
+        console.error('Error marking conversation notifications as read:', error);
+      });
       if (user.accountType) {
         refreshChatUnread(user.id, user.accountType).catch(error => {
           console.error('Error refreshing chat unread count:', error);
@@ -124,7 +178,14 @@ export function ChatScreen({ navigation, route }: any) {
     } finally {
       setIsLoading(false);
     }
-  }, [applicationId, initialConversationId, user?.id, user?.accountType, refreshChatUnread]);
+  }, [
+    applicationId,
+    initialConversationId,
+    user?.id,
+    user?.accountType,
+    refreshChatUnread,
+    markConversationNotificationsRead,
+  ]);
 
   useEffect(() => {
     loadConversationAndMessages();
@@ -216,6 +277,9 @@ export function ChatScreen({ navigation, route }: any) {
           .catch(error => {
             console.error('Error marking message as read:', error);
           });
+        markConversationNotificationsRead(userId as UserId, conversationId).catch(error => {
+          console.error('Error marking conversation notifications as read:', error);
+        });
       }
     });
 
@@ -227,7 +291,13 @@ export function ChatScreen({ navigation, route }: any) {
         realtimeChannelRef.current = null;
       }
     };
-  }, [conversationId, userId, user?.accountType, refreshChatUnread]);
+  }, [
+    conversationId,
+    userId,
+    user?.accountType,
+    refreshChatUnread,
+    markConversationNotificationsRead,
+  ]);
 
   const handleSendMessage = useCallback(async () => {
     if (!messageText.trim() || !conversation || !user?.id || isSending) {
@@ -318,6 +388,15 @@ export function ChatScreen({ navigation, route }: any) {
   const isChatClosed =
     conversation.applicationStatus === 'rejected' || conversation.applicationStatus === 'withdrawn';
 
+  // Server-side gate (migration 065): barista cannot send messages until the
+  // business has spoken. Surface this in the UI instead of letting the send
+  // fail silently. Also check the locally-loaded messages so the banner lifts
+  // immediately when the business writes via realtime.
+  const businessHasMessaged =
+    Boolean(conversation.firstBusinessMessageAt) ||
+    messages.some(m => m.senderId === conversation.businessId);
+  const mustWaitForBusiness = user?.accountType === 'barista' && !businessHasMessaged;
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -349,17 +428,21 @@ export function ChatScreen({ navigation, route }: any) {
               : t('chat.closed.rejected')}
           </Text>
         </View>
+      ) : mustWaitForBusiness ? (
+        <View style={styles.closedBanner}>
+          <Text style={styles.closedBannerTitle}>{t('chat.waitingForBusiness.title')}</Text>
+          <Text style={styles.closedBannerSubtitle}>{t('chat.waitingForBusiness.subtitle')}</Text>
+        </View>
       ) : (
         <View style={styles.inputContainer}>
           <TextInput
             ref={textInputRef}
             style={styles.textInput}
             value={messageText}
-            onChangeText={setMessageText}
+            onChangeText={text => setMessageText(clampToEffectiveLength(text, MESSAGE_MAX_LENGTH))}
             placeholder={t('chat.inputPlaceholder', { defaultValue: 'Type a message...' })}
             placeholderTextColor={COLORS.textSecondary}
             multiline
-            maxLength={2000}
             blurOnSubmit={false}
             autoCorrect={false}
             spellCheck={false}
@@ -478,6 +561,14 @@ const styles = StyleSheet.create({
   },
   otherMessageText: {
     color: COLORS.text,
+  },
+  ownMessageLink: {
+    color: '#fff',
+    textDecorationLine: 'underline',
+  },
+  otherMessageLink: {
+    color: COLORS.primary,
+    textDecorationLine: 'underline',
   },
   messageTime: {
     fontSize: 11,

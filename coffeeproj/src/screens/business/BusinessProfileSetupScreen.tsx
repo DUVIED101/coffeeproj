@@ -16,7 +16,7 @@ import {
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '../../config/constants';
+import { COLORS, EQUIPMENT_TYPES } from '../../config/constants';
 import { BusinessService } from '../../services/BusinessService';
 import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { CityToggle } from '../../components/CityToggle';
@@ -27,9 +27,10 @@ import { useAuthStore } from '../../stores/authStore';
 import type { Business, Branch, BusinessType, Equipment, GeoPoint } from '../../types';
 import type { SocialLink } from '../../types/business';
 import type { CityCode } from '../../types/city';
-import { DEFAULT_CITY, CITY_LABELS_RU, toCityCode } from '../../types/city';
+import { DEFAULT_CITY, toCityCode } from '../../types/city';
 import { PHOTO_LIMIT, MAX_PHOTO_BYTES, isFileTooLarge } from '../../utils/storage';
 import { geocodeAddress } from '../../utils/geocode';
+import { clampToEffectiveLength } from '../../utils/textLength';
 import {
   sanitizeDigitsInput,
   SHORT_TEXT_MAX_LENGTH,
@@ -53,16 +54,7 @@ type Props = {
 
 const STEP_KEYS = ['basics', 'brand', 'branch', 'photos'] as const;
 
-const EQUIPMENT_OPTIONS: Equipment[] = [
-  'La Marzocco',
-  'Victoria Arduino',
-  'Nuova Simonelli',
-  'Synesso',
-  'Slayer',
-  'Dalla Corte',
-  'Sanremo',
-  'Rocket Espresso',
-];
+const EQUIPMENT_OPTIONS: readonly Equipment[] = EQUIPMENT_TYPES;
 
 export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const { t } = useTranslation();
@@ -158,11 +150,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(async () => {
       setAddressLookupStatus('searching');
-      const coords = await geocodeAddress(
-        trimmedAddress,
-        CITY_LABELS_RU[branchCity],
-        controller.signal
-      );
+      const coords = await geocodeAddress(trimmedAddress, branchCity, controller.signal);
       if (controller.signal.aborted) return;
       geocodedKeyRef.current = key;
       setAddressCoords(coords);
@@ -337,7 +325,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               trimmedAddress === currentFirstBranch.address &&
               branchCity === currentFirstBranch.city
             ? currentFirstBranch.coordinates
-            : await geocodeAddress(trimmedAddress, CITY_LABELS_RU[branchCity]);
+            : await geocodeAddress(trimmedAddress, branchCity);
 
       if (!coordinates) {
         Alert.alert(
@@ -480,8 +468,9 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 placeholder={t('businessSetup.basics.descriptionPlaceholder')}
                 placeholderTextColor={COLORS.textSecondary}
                 value={description}
-                onChangeText={setDescription}
-                maxLength={DESCRIPTION_MAX_LENGTH}
+                onChangeText={text =>
+                  setDescription(clampToEffectiveLength(text, DESCRIPTION_MAX_LENGTH))
+                }
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"

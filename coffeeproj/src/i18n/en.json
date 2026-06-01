@@ -443,7 +443,8 @@
     "cancelOfferConfirmTitle": "Withdraw offer?",
     "cancelOfferConfirmBody": "The barista will no longer be able to accept this offer.",
     "cancelOfferFailure": "Failed to withdraw the offer",
-    "unknownBarista": "Barista"
+    "unknownBarista": "Barista",
+    "viewBaristaProfileA11y": "Open profile of {{name}}"
   },
   "offerJob": {
     "title": "Offer a vacancy",
@@ -644,7 +645,8 @@
       "appleErrorTitle": "Apple Sign In",
       "yandexErrorTitle": "Yandex ID",
       "googleConfigMissing": "GOOGLE_IOS_CLIENT_ID is not configured in .env",
-      "yandexConfigMissing": "YANDEX_CLIENT_ID is not configured in .env"
+      "yandexConfigMissing": "YANDEX_CLIENT_ID is not configured in .env",
+      "emailAlreadyRegistered": "This email is already registered with a different sign-in method. Use the same method you originally signed up with."
     }
   },
   "chat": {
@@ -660,6 +662,10 @@
       "title": "Chat closed",
       "rejected": "The business selected another candidate.",
       "cancelled": "The shift was cancelled."
+    },
+    "waitingForBusiness": {
+      "title": "Wait for the business to message first",
+      "subtitle": "You'll be able to reply once the business starts the conversation."
     }
   },
   "chats": {
@@ -683,7 +689,14 @@
       "markAllRead": "Mark all as read",
       "clearAll": "Clear",
       "clearConfirmTitle": "Clear notifications?",
-      "clearConfirmBody": "All notifications will be permanently deleted."
+      "clearConfirmBody": "All notifications will be permanently deleted.",
+      "chatGroupBody_one": "{{count}} new message in chat",
+      "chatGroupBody_other": "{{count}} new messages in chat",
+      "expandGroupA11y": "Expand messages",
+      "collapseGroupA11y": "Collapse messages",
+      "filterAll": "All",
+      "filterUnread": "Unread only ({{count}})",
+      "emptyUnread": "No unread notifications"
     }
   },
   "portfolioPhotos": {
@@ -861,6 +874,9 @@
       "compensationRequired": "Valid compensation amount is required",
       "recurringDaysRequired": "Select at least one day for recurring shifts",
       "endTimeDiffersFromStart": "End time must differ from start time",
+      "startDateInPast": "Start date cannot be in the past",
+      "startDateTooFar": "Start date cannot be later than 2050",
+      "endDateTooFar": "End date cannot be later than 2050",
       "userNotAuthenticated": "User not authenticated",
       "businessNotFound": "Business not found",
       "branchNotFound": "Branch not found",
@@ -922,7 +938,7 @@
     "allReviews": "All Reviews",
     "message": "Message",
     "offerJob": "Offer a vacancy",
-    "offerJobAllOffered": "All of your open vacancies have already been offered to this barista",
+    "offerJobAllOffered": "No vacancies available to offer this barista",
     "viewAvatarA11y": "View avatar fullscreen",
     "viewPortfolioPhotoA11y": "View portfolio photo {{index}}",
     "rateLimitTitle": "Rate limited",
@@ -1198,7 +1214,12 @@
       "applicationWithdrawn": "Application withdrawn",
       "shiftCancelled": "Shift cancelled",
       "newReview": "New review",
-      "conversationStarted": "New chat"
+      "conversationStarted": "New chat",
+      "jobOfferReceived": "Job offer received",
+      "jobOfferAccepted": "Job offer accepted",
+      "jobOfferDeclined": "Job offer declined",
+      "workCompletionRequested": "Shift marked as completed",
+      "workCompletionConfirmed": "Shift completion confirmed"
     },
     "visibility": {
       "title": "Visibility",
