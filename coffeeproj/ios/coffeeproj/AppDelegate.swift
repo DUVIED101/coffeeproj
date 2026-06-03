@@ -71,38 +71,7 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate, RNAppAuthAu
       options: []
     )
 
-    // SHIFT_CONFIRMATION — Да / Нет (barista confirms or declines shift)
-    let shiftConfirm = UNNotificationAction(
-      identifier: "SHIFT_CONFIRMATION_CONFIRM",
-      title: NSLocalizedString("notification.shiftConfirmation.confirm", comment: ""),
-      options: []
-    )
-    let shiftDecline = UNNotificationAction(
-      identifier: "SHIFT_CONFIRMATION_DECLINE",
-      title: NSLocalizedString("notification.shiftConfirmation.decline", comment: ""),
-      options: [.destructive]
-    )
-    let shiftConfirmation = UNNotificationCategory(
-      identifier: "SHIFT_CONFIRMATION",
-      actions: [shiftConfirm, shiftDecline],
-      intentIdentifiers: [],
-      options: []
-    )
-
-    // SHIFT_ALERT — Отменить смену (business sees T-1h no-response alert)
-    let shiftAlertCancel = UNNotificationAction(
-      identifier: "SHIFT_ALERT_CANCEL",
-      title: NSLocalizedString("notification.shiftAlert.cancel", comment: ""),
-      options: [.foreground, .destructive]
-    )
-    let shiftAlert = UNNotificationCategory(
-      identifier: "SHIFT_ALERT",
-      actions: [shiftAlertCancel],
-      intentIdentifiers: [],
-      options: []
-    )
-
-    UNUserNotificationCenter.current().setNotificationCategories([jobOffer, shiftConfirmation, shiftAlert])
+    UNUserNotificationCenter.current().setNotificationCategories([jobOffer])
   }
 
   @objc private func clearDeliveredNotifications() {

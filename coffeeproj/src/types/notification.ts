@@ -32,14 +32,6 @@ export const JOB_OFFER_ACTION_ACCEPT = 'JOB_OFFER_ACCEPT';
 export const JOB_OFFER_ACTION_DECLINE = 'JOB_OFFER_DECLINE';
 export type JobOfferActionId = typeof JOB_OFFER_ACTION_ACCEPT | typeof JOB_OFFER_ACTION_DECLINE;
 
-export const SHIFT_CONFIRMATION_ACTION_CONFIRM = 'SHIFT_CONFIRMATION_CONFIRM';
-export const SHIFT_CONFIRMATION_ACTION_DECLINE = 'SHIFT_CONFIRMATION_DECLINE';
-export const SHIFT_ALERT_ACTION_CANCEL = 'SHIFT_ALERT_CANCEL';
-export type ShiftConfirmationActionId =
-  | typeof SHIFT_CONFIRMATION_ACTION_CONFIRM
-  | typeof SHIFT_CONFIRMATION_ACTION_DECLINE;
-export type ShiftAlertActionId = typeof SHIFT_ALERT_ACTION_CANCEL;
-
 export type PushNotificationPayload = {
   kind: NotificationKind;
   title?: string;

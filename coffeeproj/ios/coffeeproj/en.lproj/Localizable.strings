@@ -1,10 +1,3 @@
 /* Job offer action buttons */
 "notification.jobOffer.accept" = "Interested";
 "notification.jobOffer.decline" = "Not interested";
-
-/* Shift confirmation action buttons */
-"notification.shiftConfirmation.confirm" = "Yes";
-"notification.shiftConfirmation.decline" = "No";
-
-/* Shift alert (T-1h no-response) action button */
-"notification.shiftAlert.cancel" = "Cancel shift";

@@ -463,19 +463,9 @@ async function handleRequest(req: Request): Promise<Response> {
     if (typeof conversationId === "string" && conversationId.length > 0) {
       aps["thread-id"] = `conversation:${conversationId}`;
     }
-  } else if (request.kind === "shift_confirmation_required") {
-    aps.category = "SHIFT_CONFIRMATION";
-    const applicationId = request.data?.applicationId;
-    if (typeof applicationId === "string" && applicationId.length > 0) {
-      aps["thread-id"] = `shift:${applicationId}`;
-    }
-  } else if (request.kind === "shift_no_response_alert") {
-    aps.category = "SHIFT_ALERT";
-    const applicationId = request.data?.applicationId;
-    if (typeof applicationId === "string" && applicationId.length > 0) {
-      aps["thread-id"] = `shift:${applicationId}`;
-    }
   } else if (
+    request.kind === "shift_confirmation_required" ||
+    request.kind === "shift_no_response_alert" ||
     request.kind === "shift_reminder_24h" ||
     request.kind === "shift_reminder_3h" ||
     request.kind === "shift_confirmed" ||

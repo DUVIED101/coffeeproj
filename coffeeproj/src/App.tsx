@@ -14,17 +14,9 @@ import { CommonActions } from '@react-navigation/native';
 import { initI18n } from './i18n';
 import { InAppToast } from './components/InAppToast';
 import { JobOfferService } from './services/JobOfferService';
-import { ApplicationService } from './services/ApplicationService';
 import { pendingOfferActionsQueue } from './services/pendingOfferActionsQueue';
-import { pendingShiftConfirmationsQueue } from './services/pendingShiftConfirmationsQueue';
 import { useNotificationFeedStore } from './stores/notificationFeedStore';
-import {
-  JOB_OFFER_ACTION_ACCEPT,
-  JOB_OFFER_ACTION_DECLINE,
-  SHIFT_CONFIRMATION_ACTION_CONFIRM,
-  SHIFT_CONFIRMATION_ACTION_DECLINE,
-  SHIFT_ALERT_ACTION_CANCEL,
-} from './types/notification';
+import { JOB_OFFER_ACTION_ACCEPT, JOB_OFFER_ACTION_DECLINE } from './types/notification';
 import type { PushNotificationPayload } from './types/notification';
 import type { ApplicationId, JobOfferId } from './types/ids';
 import 'react-native-gesture-handler';
@@ -87,40 +79,12 @@ const handleJobOfferAction = async (
   }
 };
 
-const handleShiftConfirmationAction = async (
-  applicationId: ApplicationId,
-  actionId: string
-): Promise<void> => {
-  const response = actionId === SHIFT_CONFIRMATION_ACTION_CONFIRM ? 'confirmed' : 'declined';
-  try {
-    await ApplicationService.respondToShiftConfirmation(applicationId, response);
-  } catch (error) {
-    console.warn('handleShiftConfirmationAction failed, enqueueing for retry', error);
-    await pendingShiftConfirmationsQueue.enqueue({ applicationId, response });
-  }
-};
-
 const handlePushNotification = (payload: PushNotificationPayload): void => {
   const offerId = payload.data?.offerId;
-  const applicationId = payload.data?.applicationId;
   const actionId = payload.actionIdentifier;
 
   if (offerId && (actionId === JOB_OFFER_ACTION_ACCEPT || actionId === JOB_OFFER_ACTION_DECLINE)) {
     void handleJobOfferAction(offerId, actionId);
-    return;
-  }
-
-  if (
-    applicationId &&
-    (actionId === SHIFT_CONFIRMATION_ACTION_CONFIRM ||
-      actionId === SHIFT_CONFIRMATION_ACTION_DECLINE)
-  ) {
-    void handleShiftConfirmationAction(applicationId, actionId);
-    return;
-  }
-
-  if (applicationId && actionId === SHIFT_ALERT_ACTION_CANCEL) {
-    routePushPayload({ ...payload, actionIdentifier: undefined });
     return;
   }
 
@@ -141,17 +105,10 @@ const drainPendingOfferActions = (): void => {
   });
 };
 
-const drainPendingShiftConfirmations = (): void => {
-  void pendingShiftConfirmationsQueue.drain(async action => {
-    await ApplicationService.respondToShiftConfirmation(action.applicationId, action.response);
-  });
-};
-
 function AppContent(): React.JSX.Element {
   useNotificationSetup({ onNotification: handlePushNotification });
   useEffect(() => {
     drainPendingOfferActions();
-    drainPendingShiftConfirmations();
   }, []);
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>

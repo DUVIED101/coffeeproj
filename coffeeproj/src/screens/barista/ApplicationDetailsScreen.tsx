@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  AppState,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -64,21 +65,48 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
   const [disputeSummary, setDisputeSummary] = useState<DisputeSummary | null>(null);
   const hasPromptedThisSession = useRef(false);
 
-  useEffect(() => {
-    if (initialApp !== undefined || !idParam) return;
-    ApplicationService.getApplicationById(idParam)
-      .then(app => {
+  // Stable id captured once from route params — used by refresh on focus and
+  // foreground so the latest shift_confirmation_status is pulled even when the
+  // screen instance is reused (notification re-tap, app resumed from background).
+  const persistentApplicationId = useMemo<ApplicationId | undefined>(
+    () => (initialApp?.id ?? idParam) as ApplicationId | undefined,
+    [initialApp, idParam]
+  );
+
+  const refreshApplication = useCallback(
+    async (showSpinner: boolean): Promise<void> => {
+      if (!persistentApplicationId) return;
+      if (showSpinner) setIsLoadingApp(true);
+      try {
+        const app = await ApplicationService.getApplicationById(persistentApplicationId);
         if (!app) return;
         setApplication(app);
         setCurrentStatus(app.status);
         setCompletedByBarista(app.completedByBarista);
         setCompletedByBusiness(app.completedByBusiness);
         setShiftConfirmationStatus(app.shiftConfirmationStatus);
-      })
-      .catch(err => console.error('Error fetching application:', err))
-      .finally(() => setIsLoadingApp(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      } catch (err) {
+        console.error('Error refreshing application:', err);
+      } finally {
+        if (showSpinner) setIsLoadingApp(false);
+      }
+    },
+    [persistentApplicationId]
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshApplication(application === undefined);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [refreshApplication])
+  );
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', state => {
+      if (state === 'active') void refreshApplication(false);
+    });
+    return () => sub.remove();
+  }, [refreshApplication]);
 
   const job = application?.job;
   const businessOwnerId = job?.businessOwnerId as UserId | undefined;
@@ -221,31 +249,27 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
       shiftConfirmationStatus === 'pending'
         ? 'applications.cancelShift.confirmBodyAfterRequest'
         : 'applications.cancelShift.confirmBody';
-    Alert.alert(
-      t('applications.cancelShift.confirmTitle'),
-      t(bodyKey),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('applications.cancelShift.action'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setIsCancellingShift(true);
-              await ApplicationService.withdrawApplication(application!.id);
-              setCurrentStatus('withdrawn');
-              Alert.alert(t('common.success'), t('applications.cancelShift.success'));
-              navigation.goBack();
-            } catch (error) {
-              console.error('Error cancelling shift:', error);
-              Alert.alert(t('common.error'), t('applications.cancelShift.failure'));
-            } finally {
-              setIsCancellingShift(false);
-            }
-          },
+    Alert.alert(t('applications.cancelShift.confirmTitle'), t(bodyKey), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('applications.cancelShift.action'),
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            setIsCancellingShift(true);
+            await ApplicationService.withdrawApplication(application!.id);
+            setCurrentStatus('withdrawn');
+            Alert.alert(t('common.success'), t('applications.cancelShift.success'));
+            navigation.goBack();
+          } catch (error) {
+            console.error('Error cancelling shift:', error);
+            Alert.alert(t('common.error'), t('applications.cancelShift.failure'));
+          } finally {
+            setIsCancellingShift(false);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleMarkComplete = async () => {
