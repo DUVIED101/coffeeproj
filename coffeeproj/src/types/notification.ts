@@ -19,11 +19,26 @@ export type NotificationKind =
   | 'conversation_started'
   | 'job_offer_received'
   | 'job_offer_accepted'
-  | 'job_offer_declined';
+  | 'job_offer_declined'
+  | 'shift_reminder_24h'
+  | 'shift_reminder_3h'
+  | 'shift_confirmation_required'
+  | 'shift_confirmed'
+  | 'shift_declined'
+  | 'shift_no_response_alert'
+  | 'dispute_filed';
 
 export const JOB_OFFER_ACTION_ACCEPT = 'JOB_OFFER_ACCEPT';
 export const JOB_OFFER_ACTION_DECLINE = 'JOB_OFFER_DECLINE';
 export type JobOfferActionId = typeof JOB_OFFER_ACTION_ACCEPT | typeof JOB_OFFER_ACTION_DECLINE;
+
+export const SHIFT_CONFIRMATION_ACTION_CONFIRM = 'SHIFT_CONFIRMATION_CONFIRM';
+export const SHIFT_CONFIRMATION_ACTION_DECLINE = 'SHIFT_CONFIRMATION_DECLINE';
+export const SHIFT_ALERT_ACTION_CANCEL = 'SHIFT_ALERT_CANCEL';
+export type ShiftConfirmationActionId =
+  | typeof SHIFT_CONFIRMATION_ACTION_CONFIRM
+  | typeof SHIFT_CONFIRMATION_ACTION_DECLINE;
+export type ShiftAlertActionId = typeof SHIFT_ALERT_ACTION_CANCEL;
 
 export type PushNotificationPayload = {
   kind: NotificationKind;
@@ -40,6 +55,8 @@ export type PushNotificationPayload = {
     jobId?: JobId;
     reviewId?: ReviewId;
     offerId?: JobOfferId;
+    jobTitle?: string;
+    shiftStartIso?: string;
   };
 };
 

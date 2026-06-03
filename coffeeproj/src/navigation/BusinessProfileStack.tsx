@@ -7,6 +7,7 @@ import { BranchManagementScreen } from '../screens/business/BranchManagementScre
 import { BusinessReviewsScreen } from '../screens/business/BusinessReviewsScreen';
 import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
 import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
+import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
 import { SettingsStack } from './SettingsStack';
 import type { SettingsStackParamList } from './SettingsStack';
 import { COLORS } from '../config/constants';
@@ -19,6 +20,7 @@ export type BusinessProfileStackParamList = {
   BusinessReviews: undefined;
   UserReviews: { userId: string };
   NotificationFeed: undefined;
+  DisputeDetails: { applicationId: string };
   Settings: NavigatorScreenParams<SettingsStackParamList> | undefined;
 };
 
@@ -63,6 +65,11 @@ export const BusinessProfileStack: React.FC = () => {
         name="NotificationFeed"
         component={NotificationFeedScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DisputeDetails"
+        component={DisputeDetailsScreen}
+        options={{ title: t('disputes.detailsTitle', { defaultValue: 'Жалоба' }) }}
       />
       <Stack.Screen name="Settings" component={SettingsStack} options={{ headerShown: false }} />
     </Stack.Navigator>

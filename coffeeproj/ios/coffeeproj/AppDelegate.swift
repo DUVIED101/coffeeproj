@@ -18,12 +18,10 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate, RNAppAuthAu
     // foreground presentation and tap events to JS via the 'notification' event.
     UNUserNotificationCenter.current().delegate = self
 
-    // Register the JOB_OFFER category so the Интересно / Неинтересно action
-    // buttons appear on job_offer_received notifications. Action options are
-    // [] (no .foreground) so taps wake the app in the background and dispatch
-    // the response via UNUserNotificationCenterDelegate without forcing a
-    // foreground transition.
-    registerJobOfferCategory()
+    // Register all interactive notification categories in a single call.
+    // Calling setNotificationCategories twice would overwrite the first set,
+    // so all categories must be registered together.
+    registerNotificationCategories()
 
     let result = super.application(application, didFinishLaunchingWithOptions: launchOptions)
 
@@ -54,24 +52,57 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate, RNAppAuthAu
     return result
   }
 
-  private func registerJobOfferCategory() {
-    let accept = UNNotificationAction(
+  private func registerNotificationCategories() {
+    // JOB_OFFER — Интересно / Неинтересно
+    let jobOfferAccept = UNNotificationAction(
       identifier: "JOB_OFFER_ACCEPT",
-      title: "Интересно",
+      title: NSLocalizedString("notification.jobOffer.accept", comment: ""),
       options: []
     )
-    let decline = UNNotificationAction(
+    let jobOfferDecline = UNNotificationAction(
       identifier: "JOB_OFFER_DECLINE",
-      title: "Неинтересно",
+      title: NSLocalizedString("notification.jobOffer.decline", comment: ""),
       options: [.destructive]
     )
-    let category = UNNotificationCategory(
+    let jobOffer = UNNotificationCategory(
       identifier: "JOB_OFFER",
-      actions: [accept, decline],
+      actions: [jobOfferAccept, jobOfferDecline],
       intentIdentifiers: [],
       options: []
     )
-    UNUserNotificationCenter.current().setNotificationCategories([category])
+
+    // SHIFT_CONFIRMATION — Да / Нет (barista confirms or declines shift)
+    let shiftConfirm = UNNotificationAction(
+      identifier: "SHIFT_CONFIRMATION_CONFIRM",
+      title: NSLocalizedString("notification.shiftConfirmation.confirm", comment: ""),
+      options: []
+    )
+    let shiftDecline = UNNotificationAction(
+      identifier: "SHIFT_CONFIRMATION_DECLINE",
+      title: NSLocalizedString("notification.shiftConfirmation.decline", comment: ""),
+      options: [.destructive]
+    )
+    let shiftConfirmation = UNNotificationCategory(
+      identifier: "SHIFT_CONFIRMATION",
+      actions: [shiftConfirm, shiftDecline],
+      intentIdentifiers: [],
+      options: []
+    )
+
+    // SHIFT_ALERT — Отменить смену (business sees T-1h no-response alert)
+    let shiftAlertCancel = UNNotificationAction(
+      identifier: "SHIFT_ALERT_CANCEL",
+      title: NSLocalizedString("notification.shiftAlert.cancel", comment: ""),
+      options: [.foreground, .destructive]
+    )
+    let shiftAlert = UNNotificationCategory(
+      identifier: "SHIFT_ALERT",
+      actions: [shiftAlertCancel],
+      intentIdentifiers: [],
+      options: []
+    )
+
+    UNUserNotificationCenter.current().setNotificationCategories([jobOffer, shiftConfirmation, shiftAlert])
   }
 
   @objc private func clearDeliveredNotifications() {
@@ -107,16 +138,22 @@ class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate, RNAppAuthAu
     RNCPushNotificationIOS.didReceiveRemoteNotification(userInfo, fetchCompletionHandler: completionHandler)
   }
 
-  // Foreground presentation: suppress the iOS native banner so our custom
-  // InAppToast (driven by Supabase Realtime on the notifications table) owns
-  // the foreground UX. The badge is still updated so the app icon count stays
-  // accurate, and the notification is added to Notification Center via .list.
+  // Foreground presentation: by default we suppress the iOS native banner so
+  // our custom InAppToast (driven by Supabase Realtime on the notifications
+  // table) owns the foreground UX. Shift-related reminders (T-24h, T-3h, T-1h,
+  // confirmation requests, cancellations) are time-critical and override this
+  // — they show as banner + sound even when the user is inside the app.
   func userNotificationCenter(
     _ center: UNUserNotificationCenter,
     willPresent notification: UNNotification,
     withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
   ) {
-    completionHandler([.badge, .list])
+    let kind = notification.request.content.userInfo["kind"] as? String ?? ""
+    if kind.hasPrefix("shift_") {
+      completionHandler([.banner, .sound, .badge, .list])
+    } else {
+      completionHandler([.badge, .list])
+    }
   }
 
   // Notification tap: forwards the payload to JS so navigationRef can route.

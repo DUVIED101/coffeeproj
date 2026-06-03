@@ -77,8 +77,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       const user = await fetchUserProfile(session.user.id);
       if (!user || !user.isActive) {
-        await supabase.auth.signOut();
+        // Clear local state immediately — do NOT await signOut() here.
+        // The /logout endpoint can timeout (504) and would hold isLoading:true
+        // for 30+ seconds, making the app appear frozen on startup.
         get().clearAuth();
+        supabase.auth.signOut().catch(() => {});
         return;
       }
 
@@ -106,14 +109,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       }
 
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Error signing out:', error);
-        throw error;
-      }
-
+      // Clear local state first so the UI responds immediately even if the
+      // server-side /logout request times out (504 context deadline exceeded).
       get().clearAuth();
       await AsyncStorage.removeItem('supabase.auth.token');
+
+      supabase.auth.signOut().catch(err => {
+        console.warn('Server-side signOut failed (non-blocking):', err);
+      });
     } catch (error) {
       console.error('Error during sign out:', error);
       throw error;
@@ -204,12 +207,9 @@ supabase.auth.onAuthStateChange((event, session) => {
             return;
           }
           if (!user.isActive) {
-            useAuthStore
-              .getState()
-              .signOut()
-              .catch(err => {
-                console.error('Error signing out inactive user:', err);
-              });
+            // Same fire-and-forget pattern as initialize() — don't await /logout.
+            useAuthStore.getState().clearAuth();
+            supabase.auth.signOut().catch(() => {});
             return;
           }
           useAuthStore.getState().setUser(user);

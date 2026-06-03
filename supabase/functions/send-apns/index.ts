@@ -20,7 +20,13 @@ type NotificationKind =
   | "conversation_started"
   | "job_offer_received"
   | "job_offer_accepted"
-  | "job_offer_declined";
+  | "job_offer_declined"
+  | "shift_reminder_24h"
+  | "shift_reminder_3h"
+  | "shift_confirmation_required"
+  | "shift_confirmed"
+  | "shift_declined"
+  | "shift_no_response_alert";
 
 type GatedKind =
   | "new_message"
@@ -35,7 +41,13 @@ type GatedKind =
   | "job_offer_accepted"
   | "job_offer_declined"
   | "work_completion_requested"
-  | "work_completion_confirmed";
+  | "work_completion_confirmed"
+  | "shift_reminder_24h"
+  | "shift_reminder_3h"
+  | "shift_confirmed"
+  | "shift_declined";
+// shift_confirmation_required and shift_no_response_alert are deliberately
+// excluded — they are critical safety notifications and cannot be turned off.
 
 type NotificationPrefsRow = {
   new_message: boolean;
@@ -51,6 +63,10 @@ type NotificationPrefsRow = {
   job_offer_declined: boolean;
   work_completion_requested: boolean;
   work_completion_confirmed: boolean;
+  shift_reminder_24h: boolean;
+  shift_reminder_3h: boolean;
+  shift_confirmed: boolean;
+  shift_declined: boolean;
 };
 
 const GATED_KIND_COLUMNS: Readonly<Record<GatedKind, keyof NotificationPrefsRow>> = {
@@ -67,6 +83,10 @@ const GATED_KIND_COLUMNS: Readonly<Record<GatedKind, keyof NotificationPrefsRow>
   job_offer_declined: "job_offer_declined",
   work_completion_requested: "work_completion_requested",
   work_completion_confirmed: "work_completion_confirmed",
+  shift_reminder_24h: "shift_reminder_24h",
+  shift_reminder_3h: "shift_reminder_3h",
+  shift_confirmed: "shift_confirmed",
+  shift_declined: "shift_declined",
 };
 
 function isGatedKind(kind: NotificationKind): kind is GatedKind {
@@ -102,6 +122,12 @@ const KNOWN_KINDS: ReadonlySet<NotificationKind> = new Set<NotificationKind>([
   "job_offer_received",
   "job_offer_accepted",
   "job_offer_declined",
+  "shift_reminder_24h",
+  "shift_reminder_3h",
+  "shift_confirmation_required",
+  "shift_confirmed",
+  "shift_declined",
+  "shift_no_response_alert",
 ]);
 
 const JWT_TTL_SECONDS = 3300;
@@ -315,7 +341,7 @@ async function isKindEnabled(
   const { data, error } = await supabase
     .from("notification_preferences")
     .select(
-      "new_message, application_accepted, application_rejected, new_application, application_withdrawn, shift_cancelled, new_review, conversation_started, job_offer_received, job_offer_accepted, job_offer_declined, work_completion_requested, work_completion_confirmed",
+      "new_message, application_accepted, application_rejected, new_application, application_withdrawn, shift_cancelled, new_review, conversation_started, job_offer_received, job_offer_accepted, job_offer_declined, work_completion_requested, work_completion_confirmed, shift_reminder_24h, shift_reminder_3h, shift_confirmed, shift_declined",
     )
     .eq("user_id", recipientId)
     .single();
@@ -436,6 +462,28 @@ async function handleRequest(req: Request): Promise<Response> {
     const conversationId = request.data?.conversationId;
     if (typeof conversationId === "string" && conversationId.length > 0) {
       aps["thread-id"] = `conversation:${conversationId}`;
+    }
+  } else if (request.kind === "shift_confirmation_required") {
+    aps.category = "SHIFT_CONFIRMATION";
+    const applicationId = request.data?.applicationId;
+    if (typeof applicationId === "string" && applicationId.length > 0) {
+      aps["thread-id"] = `shift:${applicationId}`;
+    }
+  } else if (request.kind === "shift_no_response_alert") {
+    aps.category = "SHIFT_ALERT";
+    const applicationId = request.data?.applicationId;
+    if (typeof applicationId === "string" && applicationId.length > 0) {
+      aps["thread-id"] = `shift:${applicationId}`;
+    }
+  } else if (
+    request.kind === "shift_reminder_24h" ||
+    request.kind === "shift_reminder_3h" ||
+    request.kind === "shift_confirmed" ||
+    request.kind === "shift_declined"
+  ) {
+    const applicationId = request.data?.applicationId;
+    if (typeof applicationId === "string" && applicationId.length > 0) {
+      aps["thread-id"] = `shift:${applicationId}`;
     }
   }
 

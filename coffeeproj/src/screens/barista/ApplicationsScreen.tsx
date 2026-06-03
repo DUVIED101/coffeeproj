@@ -218,7 +218,8 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderApplication = useCallback(
     ({ item }: { item: Application }) => {
-      const canBaristaWrite = item.createdViaOffer || businessHasSpoken.has(item.id);
+      const canBaristaWrite =
+        item.createdViaOffer || item.status === 'accepted' || businessHasSpoken.has(item.id);
       return (
         <ApplicationItem
           application={item}

@@ -21,6 +21,7 @@ import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
+import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import type { Business } from '../../types';
 import type { SocialLink, SocialPlatform } from '../../types/business';
 import type { UserId } from '../../types/ids';
@@ -78,6 +79,7 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [reviewAggregate, setReviewAggregate] = useState<UserReviewAggregate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [avatarViewerVisible, setAvatarViewerVisible] = useState(false);
 
   const load = useCallback(async () => {
     if (!userId) {
@@ -216,7 +218,12 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
         }>
         <View style={styles.header}>
           {business.logoUrl ? (
-            <Image source={{ uri: business.logoUrl }} style={styles.avatarImage} />
+            <TouchableOpacity
+              onPress={() => setAvatarViewerVisible(true)}
+              activeOpacity={0.85}
+              accessibilityRole="button">
+              <Image source={{ uri: business.logoUrl }} style={styles.avatarImage} />
+            </TouchableOpacity>
           ) : (
             <View style={styles.avatarPlaceholder}>
               <MaterialCommunityIcons name="storefront" size={36} color={COLORS.primary} />
@@ -341,6 +348,13 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      {business.logoUrl && (
+        <FullscreenImageViewer
+          visible={avatarViewerVisible}
+          photos={[business.logoUrl]}
+          onClose={() => setAvatarViewerVisible(false)}
+        />
+      )}
     </SafeAreaView>
   );
 };

@@ -9,6 +9,8 @@ export type ApplicationStatus =
   | 'withdrawn'
   | 'completed';
 
+export type ShiftConfirmationStatus = 'pending' | 'confirmed' | 'declined' | 'no_response';
+
 // Lifecycle status used by the Business "Смены" dashboard.
 // Combines job + application + clock-time into a single state focused
 // on what the business needs to do next for the shift.
@@ -31,6 +33,9 @@ export interface Application {
   createdViaOffer: boolean;
   createdAt: string;
   updatedAt: string;
+  shiftConfirmationStatus?: ShiftConfirmationStatus;
+  shiftConfirmationRequestedAt?: string;
+  shiftConfirmationRespondedAt?: string;
 
   // Joined fields (from database queries)
   job?: Job;
@@ -61,3 +66,27 @@ export interface ApplicationFilters {
   jobId?: string;
   baristaId?: string;
 }
+
+export type DisputeStatus = 'submitted' | 'under_review' | 'resolved' | 'dismissed';
+
+export type DisputeSummary = {
+  id: string;
+  categories: string[];
+  severity: string;
+  status: DisputeStatus;
+  resolutionNote?: string;
+  createdAt: string;
+};
+
+export type MyDisputeItem = {
+  id: string;
+  applicationId: string;
+  categories: string[];
+  severity: string;
+  status: DisputeStatus;
+  resolutionNote?: string;
+  createdAt: string;
+  jobTitle?: string;
+  businessName?: string;
+  myRole: 'reporter' | 'reportee';
+};

@@ -550,7 +550,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                             onChange={(_, date) => {
                               if (date) setMedicalBookExpiresOn(formatLocalDate(date));
                             }}
-                            minimumDate={new Date(2020, 0, 1)}
+                            minimumDate={new Date()}
                           />
                           <TouchableOpacity
                             style={styles.datePickerDoneButton}
@@ -573,7 +573,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                     setShowMedicalBookPicker(false);
                     if (date) setMedicalBookExpiresOn(formatLocalDate(date));
                   }}
-                  minimumDate={new Date(2020, 0, 1)}
+                  minimumDate={new Date()}
                 />
               ))}
           </View>

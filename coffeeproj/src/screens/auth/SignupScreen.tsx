@@ -76,20 +76,12 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    if (accountType === 'business') {
-      navigation.navigate('EmployerSubtype', {
-        email: normalizedEmail,
-        password,
-      });
-      return;
-    }
-
     setIsLoading(true);
     try {
-      await AuthService.signUpWithEmail(normalizedEmail, password, 'barista');
+      await AuthService.signUpWithEmail(normalizedEmail, password, accountType);
       navigation.navigate('EmailVerification', {
         email: normalizedEmail,
-        accountType: 'barista',
+        accountType,
       });
     } catch (error: unknown) {
       console.error('Signup error:', error);

@@ -138,12 +138,14 @@ export const sanitizeYearsInput = (raw: string): string => {
   return result;
 };
 
-// Integer-only sanitizer: strips everything that isn't a decimal digit and
-// truncates to maxLength. Used for compensation amounts, founded year, etc.
+// Integer-only sanitizer: strips non-digits, leading zeros, and truncates to
+// maxLength. Used for compensation amounts, founded year, etc.
 export const sanitizeDigitsInput = (raw: string, maxLength: number): string => {
-  const filtered = raw.replace(/\D+/g, '');
+  const filtered = raw.replace(/\D+/g, '').replace(/^0+/, '');
   return filtered.slice(0, maxLength);
 };
+
+export const FOUNDED_YEAR_MIN = 1950;
 
 // Limits for common free-text fields. These are length caps only — we don't
 // restrict character set because users legitimately mix Cyrillic + Latin +

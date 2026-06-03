@@ -1,0 +1,10 @@
+/* Job offer action buttons */
+"notification.jobOffer.accept" = "Интересно";
+"notification.jobOffer.decline" = "Неинтересно";
+
+/* Shift confirmation action buttons */
+"notification.shiftConfirmation.confirm" = "Да";
+"notification.shiftConfirmation.decline" = "Нет";
+
+/* Shift alert (T-1h no-response) action button */
+"notification.shiftAlert.cancel" = "Отменить смену";

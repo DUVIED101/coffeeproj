@@ -24,7 +24,7 @@ import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { ReviewModal } from '../../components/ReviewModal';
 import { getShiftEnd, getShiftStart, canCancelShiftNow } from '../../utils/shiftLifecycle';
-import type { Application, ApplicationStatus } from '../../types/application';
+import type { Application, ApplicationStatus, DisputeSummary } from '../../types/application';
 import type { JobOffer } from '../../types/jobOffer';
 import type { ShiftDetails } from '../../types/job';
 import type { ApplicationId, JobId, UserId } from '../../types/ids';
@@ -81,11 +81,14 @@ interface ApplicantItemProps {
   onChatPress: (applicationId: string) => void;
   onConfirmCompletion: (applicationId: string) => void;
   onOpenReview: (application: Application) => void;
+  onFileDispute: (applicationId: string) => void;
   isProcessing: boolean;
   unreadCount: number;
   needsReview: boolean;
   reviewBannerLabel: string;
   cancelLabel: string;
+  fileDisputeLabel: string;
+  disputeSummary: DisputeSummary | null;
   shiftEndReached: boolean;
   shiftWaitingLabel: string;
   cancelWindowOpen: boolean;
@@ -104,11 +107,14 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     onChatPress,
     onConfirmCompletion,
     onOpenReview,
+    onFileDispute,
     isProcessing,
     unreadCount,
     needsReview,
     reviewBannerLabel,
     cancelLabel,
+    fileDisputeLabel,
+    disputeSummary,
     shiftEndReached,
     shiftWaitingLabel,
     cancelWindowOpen,
@@ -135,6 +141,10 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     const handleOpenReview = useCallback(
       () => onOpenReview(application),
       [onOpenReview, application]
+    );
+    const handleFileDispute = useCallback(
+      () => onFileDispute(applicationId),
+      [onFileDispute, applicationId]
     );
     const baristaProfile = application.baristaProfile;
     const baristaEmail = application.baristaEmail || t('applicants.noEmail');
@@ -256,6 +266,23 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
           </TouchableOpacity>
         )}
 
+        {(application.status === 'completed' || application.status === 'accepted') &&
+          (disputeSummary ? (
+            <View style={styles.disputeStatusBox}>
+              <Text style={styles.disputeStatusLabel}>{t('disputes.filedLabel')}</Text>
+              <Text style={styles.disputeStatusValue}>
+                {t(`disputes.status.${disputeSummary.status}`)}
+              </Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.disputeButton}
+              onPress={handleFileDispute}
+              accessibilityLabel={fileDisputeLabel}>
+              <Text style={styles.disputeButtonText}>{fileDisputeLabel}</Text>
+            </TouchableOpacity>
+          ))}
+
         {isActionable && (
           <View style={styles.actionButtons}>
             <TouchableOpacity
@@ -304,6 +331,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
   } | null>(null);
   const [shiftDetails, setShiftDetails] = useState<ShiftDetails | null>(null);
   const [now, setNow] = useState<Date>(() => new Date());
+  const [ownDisputeMap, setOwnDisputeMap] = useState<Record<string, DisputeSummary>>({});
   const promptedAppIds = useRef<Set<string>>(new Set());
 
   const shiftEnd = useMemo(() => (shiftDetails ? getShiftEnd(shiftDetails) : null), [shiftDetails]);
@@ -328,6 +356,14 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
       cancelled = true;
     };
   }, [jobId]);
+
+  useEffect(() => {
+    if (applications.length === 0) return;
+    const ids = applications.map(a => a.id as ApplicationId);
+    ApplicationService.getOwnDisputeMap(ids)
+      .then(setOwnDisputeMap)
+      .catch(() => {});
+  }, [applications]);
 
   useEffect(() => {
     if (!shiftEnd) return;
@@ -560,6 +596,13 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
     });
   }, []);
 
+  const handleFileDispute = useCallback(
+    (applicationId: string) => {
+      navigation.navigate('DisputeForm', { applicationId, role: 'business' });
+    },
+    [navigation]
+  );
+
   const handleCancelOffer = useCallback(
     async (offer: JobOffer) => {
       Alert.alert(t('applicants.cancelOfferConfirmTitle'), t('applicants.cancelOfferConfirmBody'), [
@@ -596,6 +639,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const reviewBannerLabel = t('reviews.banner.prompt');
   const cancelLabel = t('applications.cancelShift.action');
+  const fileDisputeLabel = t('disputes.openAction');
   const shiftWaitingLabel = shiftEndLabel
     ? t('applications.details.availableAfter', {
         time: shiftEndLabel,
@@ -616,11 +660,14 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         onChatPress={handleChatPress}
         onConfirmCompletion={handleConfirmCompletion}
         onOpenReview={handleOpenReview}
+        onFileDispute={handleFileDispute}
         isProcessing={processingIds.has(item.id)}
         unreadCount={unreadCounts[item.id] || 0}
         needsReview={item.status === 'completed' && !reviewedIds.has(item.id)}
         reviewBannerLabel={reviewBannerLabel}
         cancelLabel={cancelLabel}
+        fileDisputeLabel={fileDisputeLabel}
+        disputeSummary={ownDisputeMap[item.id] ?? null}
         shiftEndReached={shiftEndReached}
         shiftWaitingLabel={shiftWaitingLabel}
         cancelWindowOpen={cancelWindowOpen}
@@ -635,11 +682,14 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
       handleChatPress,
       handleConfirmCompletion,
       handleOpenReview,
+      handleFileDispute,
       processingIds,
       unreadCounts,
       reviewedIds,
       reviewBannerLabel,
       cancelLabel,
+      fileDisputeLabel,
+      ownDisputeMap,
       shiftEndReached,
       shiftWaitingLabel,
       cancelWindowOpen,
@@ -1072,5 +1122,34 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     fontSize: 13,
     fontWeight: '600',
+  },
+  disputeButton: {
+    marginTop: 8,
+    paddingVertical: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: COLORS.textSecondary,
+    alignItems: 'center',
+  },
+  disputeButtonText: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  disputeStatusBox: {
+    marginTop: 8,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: '#F3F4F6',
+  },
+  disputeStatusLabel: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginBottom: 2,
+  },
+  disputeStatusValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
   },
 });

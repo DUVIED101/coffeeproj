@@ -429,6 +429,22 @@ export class BusinessService {
     const nextPhotos = branch.photos.filter(url => url !== photoUrl);
     return this.updateBranch(branchId, { photos: nextPhotos });
   }
+
+  static async getBusinessReliabilityScore(
+    userId: string
+  ): Promise<{ disputes30d: number; reliabilityScore: number } | null> {
+    const { data, error } = await supabase
+      .from('business_reliability')
+      .select('disputes_30d, reliability_score')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    return {
+      disputes30d: data.disputes_30d ?? 0,
+      reliabilityScore: Number(data.reliability_score ?? 5),
+    };
+  }
 }
 
 export class BranchPhotoLimitError extends Error {

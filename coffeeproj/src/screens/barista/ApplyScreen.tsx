@@ -77,7 +77,23 @@ export const ApplyScreen: React.FC<Props> = ({ navigation, route }) => {
     } catch (error: unknown) {
       console.error('Error submitting application:', error);
 
-      if (getErrorMessage(error) === 'You have already applied to this job') {
+      const msg = getErrorMessage(error);
+      if (msg.startsWith('COOLDOWN:')) {
+        const until = new Date(msg.slice('COOLDOWN:'.length));
+        const formatted = until.toLocaleString('ru-RU', {
+          day: 'numeric',
+          month: 'long',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        Alert.alert(
+          t('apply.cooldownTitle', { defaultValue: 'Временная блокировка' }),
+          t('apply.cooldown', {
+            date: formatted,
+            defaultValue: 'Из-за недавних отказов от смен вы не можете откликаться до {{date}}.',
+          })
+        );
+      } else if (msg === 'You have already applied to this job') {
         Alert.alert(
           t('apply.duplicateTitle', { defaultValue: 'Отклик уже отправлен' }),
           t('apply.duplicate', { defaultValue: 'Вы уже откликнулись на эту вакансию' })

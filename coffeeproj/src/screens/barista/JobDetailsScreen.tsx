@@ -17,6 +17,7 @@ import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
 import { ApplicationService } from '../../services/ApplicationService';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
+import { BusinessService } from '../../services/BusinessService';
 import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { JobDetailsContent } from '../../components/JobDetailsContent';
@@ -50,6 +51,10 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const [isNavigating, setIsNavigating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ownerAggregate, setOwnerAggregate] = useState<UserReviewAggregate | null>(null);
+  const [businessReliability, setBusinessReliability] = useState<{
+    disputes30d: number;
+    reliabilityScore: number;
+  } | null>(null);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
   const [profileCompleteness, setProfileCompleteness] = useState<number | null>(null);
@@ -69,10 +74,14 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
 
           if (jobData?.businessOwnerId) {
             try {
-              const agg = await ReviewService.getAggregateForUser(
-                jobData.businessOwnerId as UserId
-              );
-              if (!cancelled) setOwnerAggregate(agg);
+              const [agg, rel] = await Promise.all([
+                ReviewService.getAggregateForUser(jobData.businessOwnerId as UserId),
+                BusinessService.getBusinessReliabilityScore(jobData.businessOwnerId),
+              ]);
+              if (!cancelled) {
+                setOwnerAggregate(agg);
+                setBusinessReliability(rel);
+              }
             } catch (err) {
               console.error('Error loading owner aggregate:', err);
             }
@@ -208,6 +217,7 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         <JobDetailsContent
           job={job}
           ownerAggregate={ownerAggregate}
+          businessReliability={businessReliability}
           distance={displayDistance}
           onPhotoPress={index => {
             setViewerIndex(index);

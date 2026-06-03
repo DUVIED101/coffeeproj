@@ -56,7 +56,7 @@ import {
   COMPENSATION_MAX_DIGITS,
 } from '../../utils/validation';
 import type { GeoPoint } from '../../types/business';
-import type { BaristaProfile, ShiftTime } from '../../types/baristaProfile';
+import type { BaristaProfile, ReliabilityScore, ShiftTime } from '../../types/baristaProfile';
 import type { CityCode } from '../../types/city';
 import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU } from '../../types/city';
 import type { BaristaProfileId, UserId } from '../../types/ids';
@@ -192,6 +192,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { t, i18n } = useTranslation();
 
   const [profile, setProfile] = useState<BaristaProfile | null>(null);
+  const [reliability, setReliability] = useState<ReliabilityScore | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -307,6 +308,12 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
 
       setProfile(enriched);
       populateFields(enriched);
+
+      if (user?.id) {
+        BaristaProfileService.getReliabilityScore(user.id as UserId)
+          .then(setReliability)
+          .catch(() => {});
+      }
     } catch (error: unknown) {
       console.error('Error loading profile:', error);
       Alert.alert(
@@ -946,6 +953,20 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.historyRowChevron}>›</Text>
               </TouchableOpacity>
             )}
+
+            <View style={[styles.historyRow, styles.historyRowSecondary]}>
+              <View style={styles.historyRowLeft}>
+                <Text style={styles.historyRowTitle}>{t('reliability.sectionTitle')}</Text>
+                {reliability ? (
+                  <Text style={styles.historyRowSubtitle}>
+                    {t('reliability.scoreOf', { score: reliability.reliabilityScore.toFixed(1) })}
+                    {reliability.incidents30d > 0
+                      ? ` · ${t('reliability.incidents', { count: reliability.incidents30d })}`
+                      : ` · ${t('reliability.noIncidents')}`}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
           </View>
 
           <View style={styles.section} onLayout={handleSectionLayout('professional')}>
@@ -1041,7 +1062,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                         if (date) setMedicalBookExpiresOn(formatLocalDate(date));
                         if (Platform.OS !== 'ios') setShowMedicalBookPicker(false);
                       }}
-                      minimumDate={new Date(2020, 0, 1)}
+                      minimumDate={new Date()}
                     />
                     {Platform.OS === 'ios' && (
                       <TouchableOpacity

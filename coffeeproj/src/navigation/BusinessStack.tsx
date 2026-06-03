@@ -9,6 +9,8 @@ import { ViewBaristaProfileScreen } from '../screens/business/ViewBaristaProfile
 import { OfferJobScreen } from '../screens/business/OfferJobScreen';
 import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
 import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
+import { ShiftAlertScreen } from '../screens/business/ShiftAlertScreen';
+import { DisputeFormScreen } from '../screens/shared/DisputeFormScreen';
 
 export type BusinessStackParamList = {
   BusinessHome: { businessId?: string };
@@ -20,6 +22,8 @@ export type BusinessStackParamList = {
   OfferJob: { baristaId: string };
   UserReviews: { userId: string };
   NotificationFeed: undefined;
+  ShiftAlert: { applicationId: string; jobTitle: string; shiftStartIso: string };
+  DisputeForm: { applicationId: string; role: 'barista' | 'business' };
 };
 
 const Stack = createNativeStackNavigator<BusinessStackParamList>();
@@ -77,6 +81,16 @@ export const BusinessStack: React.FC = () => {
         name="NotificationFeed"
         component={NotificationFeedScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ShiftAlert"
+        component={ShiftAlertScreen}
+        options={{ title: t('shifts.noResponseAlert.screenTitle') }}
+      />
+      <Stack.Screen
+        name="DisputeForm"
+        component={DisputeFormScreen}
+        options={{ title: t('disputes.formTitle') }}
       />
     </Stack.Navigator>
   );

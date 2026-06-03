@@ -10,6 +10,7 @@ import type { UserReviewAggregate } from '../types/review';
 type Props = {
   job: Job;
   ownerAggregate?: UserReviewAggregate | null;
+  businessReliability?: { disputes30d: number; reliabilityScore: number } | null;
   distance?: number | null;
   onPhotoPress?: (index: number) => void;
 };
@@ -41,6 +42,7 @@ const formatRecurringDays = (days: string[], locale: 'ru-RU' | 'en-US'): string 
 export const JobDetailsContent: React.FC<Props> = ({
   job,
   ownerAggregate,
+  businessReliability,
   distance,
   onPhotoPress,
 }) => {
@@ -84,6 +86,14 @@ export const JobDetailsContent: React.FC<Props> = ({
               showValue
               size={13}
             />
+          )}
+          {businessReliability && (
+            <Text style={styles.reliabilityText}>
+              {t('reliability.sectionTitle')}: {businessReliability.reliabilityScore.toFixed(1)}/5
+              {businessReliability.disputes30d > 0
+                ? ` · ${t('reliability.incidents', { count: businessReliability.disputes30d })}`
+                : ''}
+            </Text>
           )}
         </View>
       </View>
@@ -256,6 +266,11 @@ const styles = StyleSheet.create({
   branchName: {
     fontSize: 16,
     color: COLORS.textSecondary,
+  },
+  reliabilityText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 2,
   },
   section: {
     backgroundColor: '#fff',

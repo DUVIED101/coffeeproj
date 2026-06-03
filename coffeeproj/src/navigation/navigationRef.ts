@@ -27,6 +27,9 @@ export const dispatchPayload = (payload: PushNotificationPayload): void => {
   const conversationId = payload.data?.conversationId;
   const jobId = payload.data?.jobId;
   const offerId = payload.data?.offerId;
+  const applicationId = payload.data?.applicationId;
+  const jobTitle = payload.data?.jobTitle;
+  const shiftStartIso = payload.data?.shiftStartIso;
 
   if (kind === 'new_message' || kind === 'conversation_started') {
     if (conversationId) {
@@ -82,6 +85,58 @@ export const dispatchPayload = (payload: PushNotificationPayload): void => {
   ) {
     if (accountType === 'barista') {
       navigateTab('Jobs', { screen: 'Applications' });
+    } else if (jobId) {
+      navigateTab('Business', { screen: 'Applicants', params: { jobId } });
+    } else {
+      navigateTab('Business');
+    }
+    return;
+  }
+
+  if (kind === 'shift_reminder_24h' || kind === 'shift_reminder_3h') {
+    if (accountType === 'barista') {
+      navigateTab('Jobs', { screen: 'Applications' });
+    } else if (jobId) {
+      navigateTab('Business', { screen: 'Applicants', params: { jobId } });
+    } else {
+      navigateTab('Business');
+    }
+    return;
+  }
+
+  if (kind === 'shift_confirmation_required') {
+    if (applicationId) {
+      navigateTab('Jobs', { screen: 'ApplicationDetails', params: { applicationId } });
+    } else {
+      navigateTab('Jobs', { screen: 'Applications' });
+    }
+    return;
+  }
+
+  if (kind === 'shift_confirmed' || kind === 'shift_declined') {
+    if (jobId) {
+      navigateTab('Business', { screen: 'Applicants', params: { jobId } });
+    } else {
+      navigateTab('Business');
+    }
+    return;
+  }
+
+  if (kind === 'dispute_filed') {
+    if (applicationId) {
+      navigateTab('Profile', { screen: 'DisputeDetails', params: { applicationId } });
+    } else {
+      navigateTab('Profile');
+    }
+    return;
+  }
+
+  if (kind === 'shift_no_response_alert') {
+    if (applicationId && jobTitle && shiftStartIso) {
+      navigateTab('Business', {
+        screen: 'ShiftAlert',
+        params: { applicationId, jobTitle, shiftStartIso },
+      });
     } else if (jobId) {
       navigateTab('Business', { screen: 'Applicants', params: { jobId } });
     } else {

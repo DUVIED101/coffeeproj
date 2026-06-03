@@ -1,6 +1,14 @@
 import { supabase } from '../config/supabase';
-import type { Application, ApplicationStatus, CreateApplicationData } from '../types/application';
-import type { ApplicationId, UserId } from '../types/ids';
+import type {
+  Application,
+  ApplicationStatus,
+  CreateApplicationData,
+  DisputeStatus,
+  DisputeSummary,
+  MyDisputeItem,
+  ShiftConfirmationStatus,
+} from '../types/application';
+import type { ApplicationId, DisputeId, UserId } from '../types/ids';
 import type { ApplicationReview, RaterRole, StarRating } from '../types/review';
 import { computeShiftHours } from '../utils/shiftHours';
 
@@ -28,6 +36,10 @@ export class ApplicationService {
       createdViaOffer: db.created_via_offer || false,
       createdAt: db.created_at,
       updatedAt: db.updated_at,
+      shiftConfirmationStatus:
+        (db.shift_confirmation_status as ShiftConfirmationStatus) ?? undefined,
+      shiftConfirmationRequestedAt: db.shift_confirmation_requested_at ?? undefined,
+      shiftConfirmationRespondedAt: db.shift_confirmation_responded_at ?? undefined,
     };
   }
 
@@ -47,6 +59,10 @@ export class ApplicationService {
       createdViaOffer: db.created_via_offer || false,
       createdAt: db.created_at,
       updatedAt: db.updated_at,
+      shiftConfirmationStatus:
+        (db.shift_confirmation_status as ShiftConfirmationStatus) ?? undefined,
+      shiftConfirmationRequestedAt: db.shift_confirmation_requested_at ?? undefined,
+      shiftConfirmationRespondedAt: db.shift_confirmation_responded_at ?? undefined,
       job: db.jobs
         ? {
             id: db.jobs.id,
@@ -96,6 +112,15 @@ export class ApplicationService {
       if (!job) throw new Error('Job not found');
       if (job.status !== 'open') {
         throw new Error('Job is not open for applications');
+      }
+
+      const { data: cooldownUntil, error: cooldownError } = await supabase.rpc(
+        'barista_apply_cooldown_until',
+        { p_barista_id: data.baristaId }
+      );
+      if (cooldownError) throw cooldownError;
+      if (cooldownUntil) {
+        throw new Error(`COOLDOWN:${cooldownUntil as string}`);
       }
 
       const { data: application, error } = await supabase
@@ -503,6 +528,34 @@ export class ApplicationService {
     }
   }
 
+  static async getApplicationById(applicationId: ApplicationId): Promise<Application | null> {
+    try {
+      const { data, error } = await supabase
+        .from('applications')
+        .select(
+          `
+          *,
+          jobs (
+            *,
+            businesses (name),
+            branches (name, metro_station)
+          )
+        `
+        )
+        .eq('id', applicationId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw error;
+      }
+      return data ? this.mapApplicationWithJob(data) : null;
+    } catch (error) {
+      console.error('Error in getApplicationById:', error);
+      throw error;
+    }
+  }
+
   /**
    * Mark work as completed by barista
    * When both parties mark completed, status auto-updates to 'completed' via trigger
@@ -539,5 +592,142 @@ export class ApplicationService {
       console.error('Error in markCompletedByBusiness:', error);
       throw error;
     }
+  }
+
+  /**
+   * Barista responds to the shift confirmation request.
+   * 'confirmed' locks the cancel button; 'declined' withdraws the application.
+   * Idempotent: RPC returns the current status on repeated calls.
+   */
+  static async respondToShiftConfirmation(
+    applicationId: ApplicationId,
+    response: 'confirmed' | 'declined'
+  ): Promise<ShiftConfirmationStatus> {
+    const { data, error } = await supabase.rpc('respond_to_shift_confirmation', {
+      p_application_id: applicationId,
+      p_response: response,
+    });
+    if (error) throw error;
+    return data as ShiftConfirmationStatus;
+  }
+
+  /**
+   * Business cancels an accepted shift at their discretion (e.g. after T-1h no-response alert).
+   * Requires ownerUserId for defence-in-depth check.
+   */
+  static async cancelAcceptedShiftAsBusiness(
+    applicationId: ApplicationId,
+    ownerUserId: string,
+    reason?: string
+  ): Promise<void> {
+    await this.assertOwnsApplicationJob(applicationId, ownerUserId);
+    const { error } = await supabase
+      .from('applications')
+      .update({ status: 'rejected', cancellation_reason: reason ?? null })
+      .eq('id', applicationId);
+    if (error) throw error;
+  }
+
+  static async getOwnDispute(applicationId: ApplicationId): Promise<DisputeSummary | null> {
+    const { data, error } = await supabase
+      .from('application_disputes')
+      .select('id, categories, severity, status, resolution_note, created_at')
+      .eq('application_id', applicationId)
+      .eq('reporter_id', (await supabase.auth.getUser()).data.user?.id ?? '')
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    return {
+      id: data.id,
+      categories: data.categories ?? [],
+      severity: data.severity,
+      status: data.status as DisputeStatus,
+      resolutionNote: data.resolution_note ?? undefined,
+      createdAt: data.created_at,
+    };
+  }
+
+  static async getOwnDisputeMap(
+    applicationIds: ApplicationId[]
+  ): Promise<Record<string, DisputeSummary>> {
+    if (applicationIds.length === 0) return {};
+    const { data, error } = await supabase
+      .from('application_disputes')
+      .select('id, application_id, categories, severity, status, resolution_note, created_at')
+      .in('application_id', applicationIds);
+    if (error) throw error;
+    const map: Record<string, DisputeSummary> = {};
+    for (const row of data ?? []) {
+      map[row.application_id] = {
+        id: row.id,
+        categories: row.categories ?? [],
+        severity: row.severity,
+        status: row.status as DisputeStatus,
+        resolutionNote: row.resolution_note ?? undefined,
+        createdAt: row.created_at,
+      };
+    }
+    return map;
+  }
+
+  private static mapDisputeRow(row: any, myRole: 'reporter' | 'reportee'): MyDisputeItem {
+    return {
+      id: row.id as string,
+      applicationId: row.application_id as string,
+      categories: (row.categories ?? []) as string[],
+      severity: row.severity as string,
+      status: row.status as DisputeStatus,
+      resolutionNote: row.resolution_note ?? undefined,
+      createdAt: row.created_at as string,
+      jobTitle: row.applications?.jobs?.title as string | undefined,
+      businessName: row.applications?.jobs?.businesses?.name as string | undefined,
+      myRole,
+    };
+  }
+
+  static async getMyFiledDisputes(): Promise<MyDisputeItem[]> {
+    const userId = (await supabase.auth.getUser()).data.user?.id ?? '';
+    const { data, error } = await supabase
+      .from('application_disputes')
+      .select(
+        `id, application_id, categories, severity, status, resolution_note, created_at,
+         applications!inner(jobs!inner(title, businesses!inner(name)))`
+      )
+      .eq('reporter_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map((row: any) => this.mapDisputeRow(row, 'reporter'));
+  }
+
+  static async getDisputesAgainstMe(): Promise<MyDisputeItem[]> {
+    const userId = (await supabase.auth.getUser()).data.user?.id ?? '';
+    const { data, error } = await supabase
+      .from('application_disputes')
+      .select(
+        `id, application_id, categories, severity, status, resolution_note, created_at,
+         applications!inner(jobs!inner(title, businesses!inner(name)))`
+      )
+      .eq('reportee_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map((row: any) => this.mapDisputeRow(row, 'reportee'));
+  }
+
+  static async submitApplicationDispute(data: {
+    applicationId: ApplicationId;
+    categories: string[];
+    severity: string;
+    description: string;
+    evidenceUrls?: string[];
+  }): Promise<DisputeId> {
+    const { data: result, error } = await supabase.rpc('submit_application_dispute', {
+      p_application_id: data.applicationId,
+      p_categories: data.categories,
+      p_severity: data.severity,
+      p_description: data.description,
+      p_evidence_urls: data.evidenceUrls ?? [],
+    });
+    if (error) throw error;
+    return result as DisputeId;
   }
 }

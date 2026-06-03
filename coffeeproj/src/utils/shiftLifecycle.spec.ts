@@ -1,6 +1,10 @@
-import type { ApplicationStatus, ShiftLifecycleStatus } from '../types/application';
+import type {
+  ApplicationStatus,
+  ShiftConfirmationStatus,
+  ShiftLifecycleStatus,
+} from '../types/application';
 import type { JobStatus, ShiftDetails } from '../types/job';
-import { classifyShiftLifecycle } from './shiftLifecycle';
+import { canBaristaCancelShift, classifyShiftLifecycle } from './shiftLifecycle';
 
 const baseShift = (overrides: Partial<ShiftDetails> = {}): ShiftDetails => ({
   startDate: '2026-05-20',
@@ -90,5 +94,78 @@ describe('classifyShiftLifecycle', () => {
     expect(
       classifyShiftLifecycle(job('filled'), apps(['accepted', 'completed']), duringShift)
     ).toBe('completed');
+  });
+});
+
+const confirmationApp = (
+  confirmationStatus: ShiftConfirmationStatus | undefined,
+  status: ApplicationStatus = 'accepted'
+) => ({ status, shiftConfirmationStatus: confirmationStatus });
+
+describe('canBaristaCancelShift', () => {
+  const shift = baseShift();
+  const beforeShift = new Date('2026-05-19T12:00:00Z');
+  const longAfterShift = new Date('2026-05-20T20:00:00Z');
+
+  it('returns false when application status is not accepted', () => {
+    expect(
+      canBaristaCancelShift(
+        { status: 'pending', shiftConfirmationStatus: undefined },
+        shift,
+        beforeShift
+      )
+    ).toBe(false);
+    expect(
+      canBaristaCancelShift(
+        { status: 'withdrawn', shiftConfirmationStatus: undefined },
+        shift,
+        beforeShift
+      )
+    ).toBe(false);
+    expect(
+      canBaristaCancelShift(
+        { status: 'completed', shiftConfirmationStatus: undefined },
+        shift,
+        longAfterShift
+      )
+    ).toBe(false);
+  });
+
+  it('returns false when barista has confirmed the shift (cancel locked)', () => {
+    expect(canBaristaCancelShift(confirmationApp('confirmed'), shift, beforeShift)).toBe(false);
+  });
+
+  it('returns true before the shift when confirmation is pending', () => {
+    expect(canBaristaCancelShift(confirmationApp('pending'), shift, beforeShift)).toBe(true);
+  });
+
+  it('returns true before the shift when confirmation has not been requested yet', () => {
+    expect(canBaristaCancelShift(confirmationApp(undefined), shift, beforeShift)).toBe(true);
+  });
+
+  it('returns true when confirmation was declined but cancel window is still open', () => {
+    // Declined means barista already triggered a withdraw, but the helper still
+    // reflects the window while the status is 'accepted'.
+    expect(canBaristaCancelShift(confirmationApp('declined'), shift, beforeShift)).toBe(true);
+  });
+
+  it('returns false after shift ends regardless of confirmation status', () => {
+    expect(canBaristaCancelShift(confirmationApp(undefined), shift, longAfterShift)).toBe(false);
+    expect(canBaristaCancelShift(confirmationApp('pending'), shift, longAfterShift)).toBe(false);
+  });
+
+  it('handles cross-midnight shift: returns true before start, false after cancel window', () => {
+    const nightShift = baseShift({
+      startDate: '2026-05-20',
+      startTime: '22:00',
+      endTime: '06:00',
+      endDate: undefined,
+    });
+    const beforeNightShift = new Date('2026-05-20T20:00:00Z');
+    const afterWindow = new Date('2026-05-20T23:30:00Z');
+    expect(canBaristaCancelShift(confirmationApp(undefined), nightShift, beforeNightShift)).toBe(
+      true
+    );
+    expect(canBaristaCancelShift(confirmationApp(undefined), nightShift, afterWindow)).toBe(false);
   });
 });

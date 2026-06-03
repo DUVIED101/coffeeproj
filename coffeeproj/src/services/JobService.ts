@@ -222,7 +222,7 @@ export class JobService {
         user_lat: userLocation?.latitude ?? null,
         user_lon: userLocation?.longitude ?? null,
         max_distance_meters: filters.maxDistance ?? null,
-        metro_stations_filter: filters.metroStations ?? null, // Changed from metro_station_filter to metro_stations_filter (array)
+        metro_stations_filter: filters.metroStations ?? null,
         job_type_filter: filters.jobType ?? null,
         equipment_filter: filters.equipment ?? null,
         city_filter: filters.city ?? null,
@@ -230,22 +230,7 @@ export class JobService {
         offset_count: offset,
       };
 
-      console.log('🔧 JobService.searchJobs params:', JSON.stringify(params, null, 2));
-
       const { data, error } = await supabase.rpc('search_jobs', params);
-
-      console.log('📡 RPC error:', error);
-      console.log('📡 RPC data count:', data?.length);
-      if (data && Array.isArray(data)) {
-        console.log(
-          '📡 RPC distance_meters per job:',
-          data.map((j: any) => ({
-            id: j.id,
-            metro: j.metro_station,
-            distance_meters: j.distance_meters,
-          }))
-        );
-      }
 
       if (error) throw error;
 

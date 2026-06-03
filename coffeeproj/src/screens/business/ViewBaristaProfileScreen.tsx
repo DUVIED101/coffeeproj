@@ -27,7 +27,7 @@ import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import { EquipmentChipsDisplay } from '../../components/EquipmentChips';
 import { isMetroAnySelection } from '../../components/MetroSelector';
 import { computeMedicalBookStatus, type MedicalBookStatus } from '../../utils/medicalBook';
-import type { BaristaProfile, ShiftTime } from '../../types/baristaProfile';
+import type { BaristaProfile, ReliabilityScore, ShiftTime } from '../../types/baristaProfile';
 import type { BaristaProfileId, UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
@@ -81,6 +81,7 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
 
   const [profile, setProfile] = useState<BaristaProfile | null>(null);
   const [aggregate, setAggregate] = useState<UserReviewAggregate | null>(null);
+  const [reliability, setReliability] = useState<ReliabilityScore | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerPhotos, setViewerPhotos] = useState<string[]>([]);
@@ -113,6 +114,9 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
     ReviewService.getAggregateForUser(baristaId as UserId)
       .then(setAggregate)
       .catch(err => console.error('Error loading review aggregate:', err));
+    BaristaProfileService.getReliabilityScore(baristaId as UserId)
+      .then(setReliability)
+      .catch(() => {});
   }, [baristaId]);
 
   useEffect(() => {
@@ -234,6 +238,16 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
                   showValue
                   size={14}
                 />
+              </View>
+            )}
+            {reliability && (
+              <View style={styles.reliabilityRow}>
+                <Text style={styles.reliabilityText}>
+                  {t('reliability.sectionTitle')}: {reliability.reliabilityScore.toFixed(1)}/5
+                  {reliability.incidents30d > 0
+                    ? ` · ${t('reliability.incidents', { count: reliability.incidents30d })}`
+                    : ''}
+                </Text>
               </View>
             )}
           </View>
@@ -658,5 +672,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: COLORS.textSecondary,
     textAlign: 'center',
+  },
+  reliabilityRow: {
+    marginTop: 6,
+  },
+  reliabilityText: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
   },
 });

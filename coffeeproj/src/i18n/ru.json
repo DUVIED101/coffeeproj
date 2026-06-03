@@ -221,6 +221,7 @@
     "cancelShift": {
       "confirmTitle": "Отменить смену?",
       "confirmBody": "Вакансия снова станет активной и появится в ленте кандидатов.",
+      "confirmBodyAfterRequest": "Подтверждение уже запрошено — отмена сейчас засчитается как отказ и снизит ваш рейтинг надёжности на 0,5.",
       "action": "Отменить смену",
       "success": "Смена отменена",
       "failure": "Не удалось отменить смену. Попробуйте ещё раз."
@@ -238,6 +239,8 @@
     "errorTitle": "Ошибка",
     "errorNotAuthenticated": "Пользователь не авторизован",
     "errorFailed": "Не удалось отправить отклик. Попробуйте ещё раз.",
+    "cooldownTitle": "Временная блокировка",
+    "cooldown": "Из-за недавних отказов от смен вы не можете откликаться до {{date}}.",
     "jobSummary": "О вакансии",
     "coverLetterPlaceholder": "Расскажите работодателю, почему вы подходите для этой вакансии…",
     "charCounter": "{{count}}/1000",
@@ -1046,7 +1049,8 @@
     "errors": {
       "notAuthenticated": "Вы не авторизованы",
       "saveFailed": "Не удалось сохранить профиль бизнеса",
-      "partialSuccess": "Профиль сохранён, но не удалось загрузить: {{items}}. Попробуйте ещё раз из профиля."
+      "partialSuccess": "Профиль сохранён, но не удалось загрузить: {{items}}. Попробуйте ещё раз из профиля.",
+      "foundedYearInvalid": "Год основания не может быть раньше {{min}}"
     }
   },
   "branchPhotos": {
@@ -1093,6 +1097,28 @@
       "equipment": "Оборудование",
       "includeArchive": "Включая завершённые",
       "archiveSubLabel": "Показывать смены, которые уже завершились"
+    },
+    "confirmation": {
+      "pushTitle": "Подтвердите выход на смену",
+      "pushBody": "{{jobTitle}} начинается через 3 часа. Вы выйдете?",
+      "modalTitle": "Подтвердите выход на смену?",
+      "modalBody": "После подтверждения отмена смены будет недоступна.",
+      "actionConfirm": "Да, выйду",
+      "actionDecline": "Не смогу выйти",
+      "businessConfirmedTitle": "Бариста подтвердил выход",
+      "businessConfirmedBody": "{{name}} подтвердил выход на смену «{{jobTitle}}»",
+      "businessDeclinedTitle": "Бариста отказался от смены",
+      "businessDeclinedBody": "{{name}} отказался от смены «{{jobTitle}}»",
+      "cancelLockedHint": "Вы подтвердили выход — отмена недоступна"
+    },
+    "noResponseAlert": {
+      "pushTitle": "Бариста не подтвердил выход",
+      "pushBody": "До смены «{{jobTitle}}» 1 час. Отменить?",
+      "screenTitle": "Бариста не отвечает",
+      "screenBody": "До начала смены осталось {{remaining}}. Вы можете отменить смену.",
+      "reasonLabel": "Причина (необязательно)",
+      "cancelAction": "Отменить смену",
+      "waitAction": "Подождать"
     }
   },
   "manageJobs": {
@@ -1228,6 +1254,7 @@
       "account": "Аккаунт",
       "preferences": "Параметры",
       "privacy": "Приватность",
+      "activity": "Активность",
       "about": "О приложении",
       "dangerZone": "Опасная зона"
     },
@@ -1238,6 +1265,7 @@
       "language": "Язык",
       "notifications": "Уведомления",
       "visibility": "Видимость профиля",
+      "myDisputes": "Мои жалобы",
       "terms": "Условия использования",
       "privacyPolicy": "Политика конфиденциальности",
       "support": "Поддержка",
@@ -1277,7 +1305,11 @@
       "jobOfferAccepted": "Предложение принято",
       "jobOfferDeclined": "Предложение отклонено",
       "workCompletionRequested": "Смена отмечена выполненной",
-      "workCompletionConfirmed": "Смена подтверждена"
+      "workCompletionConfirmed": "Смена подтверждена",
+      "shiftReminder24h": "Напоминание за 24 часа",
+      "shiftReminder3h": "Напоминание за 3 часа",
+      "shiftConfirmed": "Бариста подтвердил выход",
+      "shiftDeclined": "Бариста отказался от смены"
     },
     "visibility": {
       "title": "Видимость",
@@ -1319,5 +1351,60 @@
       "supportContactHint": "Свяжитесь с нами:",
       "appVersion": "Версия приложения"
     }
+  },
+  "disputes": {
+    "openAction": "Подать жалобу",
+    "formTitle": "Серьёзная жалоба",
+    "formIntro": "Жалоба рассматривается отдельно от отзыва и будет проверена модератором.",
+    "categoryLabel": "Что произошло? (можно выбрать несколько)",
+    "category": {
+      "no_show": "Не вышел на смену",
+      "intoxication": "Алкоголь / запрещённые вещества",
+      "harassment": "Домогательства / агрессия",
+      "safety": "Угроза безопасности",
+      "fraud": "Обман / кража",
+      "unpaid": "Работа не оплачена",
+      "misrepresentation": "Обман условий / нет рабочего места",
+      "other": "Другое"
+    },
+    "severityLabel": "Серьёзность",
+    "severity": {
+      "warning": "Низкая",
+      "serious": "Серьёзно",
+      "critical": "Критично"
+    },
+    "descriptionLabel": "Опишите ситуацию (минимум 30 символов)",
+    "descriptionPlaceholder": "Подробно опишите, что произошло",
+    "evidenceLabel": "Доказательства (фото, необязательно)",
+    "submit": "Отправить жалобу",
+    "successTitle": "Жалоба отправлена",
+    "successBody": "Мы рассмотрим её в течение 48 часов.",
+    "filedLabel": "Жалоба подана",
+    "resolutionNote": "Решение:",
+    "status": {
+      "submitted": "Принята — на рассмотрении",
+      "under_review": "Изучается модератором",
+      "resolved": "Рассмотрена",
+      "dismissed": "Отклонена"
+    },
+    "errors": {
+      "tooShort": "Описание должно быть не менее 30 символов",
+      "alreadyFiled": "Вы уже подали жалобу по этой смене",
+      "notEligible": "Жалобу можно подать только по активной или завершённой смене"
+    },
+    "detailsTitle": "Жалоба",
+    "myDisputesTitle": "Мои жалобы",
+    "myDisputesEmpty": "Вы ещё не подавали жалоб",
+    "unknownJob": "Вакансия",
+    "notFound": "Жалоба не найдена",
+    "pendingNote": "Жалоба передана модераторам и будет рассмотрена в ближайшее время.",
+    "sectionFiledByMe": "Поданные мной",
+    "sectionAgainstMe": "Поданные на меня"
+  },
+  "reliability": {
+    "sectionTitle": "Надёжность",
+    "scoreOf": "{{score}}/5",
+    "incidents": "{{count}} инц. за 30 дн.",
+    "noIncidents": "Нет нарушений за 30 дн."
   }
 }

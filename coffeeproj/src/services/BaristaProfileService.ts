@@ -2,8 +2,10 @@ import { supabase } from '../config/supabase';
 import type {
   BaristaProfile,
   CreateBaristaProfileData,
+  ReliabilityScore,
   UpdateBaristaProfileData,
 } from '../types/baristaProfile';
+import type { UserId } from '../types/ids';
 import { canAddPhoto, PHOTO_LIMIT } from '../utils/storage';
 
 // Detect "column not found in schema cache" so we can degrade gracefully when
@@ -410,6 +412,20 @@ export class BaristaProfileService {
       .eq('user_id', userId);
 
     if (error) throw error;
+  }
+
+  static async getReliabilityScore(userId: UserId): Promise<ReliabilityScore | null> {
+    const { data, error } = await supabase
+      .from('barista_reliability')
+      .select('incidents_30d, reliability_score')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    return {
+      incidents30d: data.incidents_30d ?? 0,
+      reliabilityScore: Number(data.reliability_score ?? 5),
+    };
   }
 
   /**

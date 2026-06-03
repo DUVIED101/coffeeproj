@@ -7,6 +7,7 @@ import { ShiftHistoryScreen } from '../screens/barista/ShiftHistoryScreen';
 import { ApplicationDetailsScreen } from '../screens/barista/ApplicationDetailsScreen';
 import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
 import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
+import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
 import { SettingsStack } from './SettingsStack';
 import type { SettingsStackParamList } from './SettingsStack';
 import { COLORS } from '../config/constants';
@@ -17,9 +18,10 @@ export type ProfileStackParamList = {
   BaristaProfile: undefined;
   BaristaProfileSetup: undefined;
   ShiftHistory: undefined;
-  ApplicationDetails: { application: Application };
+  ApplicationDetails: { application: Application } | { applicationId: string };
   UserReviews: { userId: string };
   NotificationFeed: undefined;
+  DisputeDetails: { applicationId: string };
   Settings: NavigatorScreenParams<SettingsStackParamList> | undefined;
 };
 
@@ -65,6 +67,11 @@ export const ProfileStack: React.FC = () => {
         name="NotificationFeed"
         component={NotificationFeedScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DisputeDetails"
+        component={DisputeDetailsScreen}
+        options={{ title: t('disputes.detailsTitle', { defaultValue: 'Жалоба' }) }}
       />
       <Stack.Screen name="Settings" component={SettingsStack} options={{ headerShown: false }} />
     </Stack.Navigator>

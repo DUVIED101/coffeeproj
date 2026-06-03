@@ -12,12 +12,14 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ReviewService } from '../../services/ReviewService';
 import { ReviewModal } from '../../components/ReviewModal';
-import { getShiftEnd, canCancelShiftNow, getShiftStart } from '../../utils/shiftLifecycle';
-import type { Application } from '../../types/application';
+import { ShiftConfirmationModal } from '../../components/ShiftConfirmationModal';
+import { getShiftEnd, canBaristaCancelShift, getShiftStart } from '../../utils/shiftLifecycle';
+import type { Application, DisputeSummary } from '../../types/application';
 import type { ApplicationId, UserId } from '../../types/ids';
 import type { ApplicationReview } from '../../types/review';
 
@@ -25,7 +27,8 @@ type BaristaStackParamList = {
   JobFeed: undefined;
   JobDetails: { jobId: string; distance?: number };
   Applications: undefined;
-  ApplicationDetails: { application: Application };
+  ApplicationDetails: { application: Application } | { applicationId: string };
+  DisputeForm: { applicationId: string; role: 'barista' | 'business' };
 };
 
 type Props = {
@@ -36,20 +39,50 @@ type Props = {
 export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
-  const { application } = route.params;
+
+  const params = route.params;
+  const initialApp = 'application' in params ? params.application : undefined;
+  const idParam = 'applicationId' in params ? (params.applicationId as ApplicationId) : undefined;
+
+  const [application, setApplication] = useState<Application | undefined>(initialApp);
+  const [isLoadingApp, setIsLoadingApp] = useState(initialApp === undefined);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [isCancellingShift, setIsCancellingShift] = useState(false);
   const [isMarkingComplete, setIsMarkingComplete] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState(application.status);
-  const [completedByBarista, setCompletedByBarista] = useState(application.completedByBarista);
-  const [completedByBusiness, setCompletedByBusiness] = useState(application.completedByBusiness);
+  const [currentStatus, setCurrentStatus] = useState(initialApp?.status ?? 'pending');
+  const [completedByBarista, setCompletedByBarista] = useState(
+    initialApp?.completedByBarista ?? false
+  );
+  const [completedByBusiness, setCompletedByBusiness] = useState(
+    initialApp?.completedByBusiness ?? false
+  );
   const [existingReview, setExistingReview] = useState<ApplicationReview | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [shiftConfirmationStatus, setShiftConfirmationStatus] = useState(
+    initialApp?.shiftConfirmationStatus
+  );
+  const [disputeSummary, setDisputeSummary] = useState<DisputeSummary | null>(null);
   const hasPromptedThisSession = useRef(false);
 
-  const job = application.job;
+  useEffect(() => {
+    if (initialApp !== undefined || !idParam) return;
+    ApplicationService.getApplicationById(idParam)
+      .then(app => {
+        if (!app) return;
+        setApplication(app);
+        setCurrentStatus(app.status);
+        setCompletedByBarista(app.completedByBarista);
+        setCompletedByBusiness(app.completedByBusiness);
+        setShiftConfirmationStatus(app.shiftConfirmationStatus);
+      })
+      .catch(err => console.error('Error fetching application:', err))
+      .finally(() => setIsLoadingApp(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const job = application?.job;
   const businessOwnerId = job?.businessOwnerId as UserId | undefined;
-  const applicationId = application.id as ApplicationId;
+  const applicationId = (application?.id ?? idParam) as ApplicationId;
 
   const shiftEnd = useMemo(
     () => (job?.shiftDetails ? getShiftEnd(job.shiftDetails) : null),
@@ -97,6 +130,25 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
       cancelled = true;
     };
   }, [currentStatus, applicationId]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      let cancelled = false;
+      const fetchDispute = async () => {
+        if (currentStatus !== 'accepted' && currentStatus !== 'completed') return;
+        try {
+          const d = await ApplicationService.getOwnDispute(applicationId);
+          if (!cancelled) setDisputeSummary(d);
+        } catch {
+          // non-critical
+        }
+      };
+      fetchDispute();
+      return () => {
+        cancelled = true;
+      };
+    }, [applicationId, currentStatus])
+  );
 
   const getStatusColor = (status: string): string => {
     switch (status) {
@@ -148,7 +200,7 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
           onPress: async () => {
             try {
               setIsWithdrawing(true);
-              await ApplicationService.withdrawApplication(application.id);
+              await ApplicationService.withdrawApplication(application!.id);
               setCurrentStatus('withdrawn');
               Alert.alert(t('common.success'), t('applications.details.withdrawSuccess'));
               navigation.goBack();
@@ -165,9 +217,13 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
   };
 
   const handleCancelShift = () => {
+    const bodyKey =
+      shiftConfirmationStatus === 'pending'
+        ? 'applications.cancelShift.confirmBodyAfterRequest'
+        : 'applications.cancelShift.confirmBody';
     Alert.alert(
       t('applications.cancelShift.confirmTitle'),
-      t('applications.cancelShift.confirmBody'),
+      t(bodyKey),
       [
         { text: t('common.cancel'), style: 'cancel' },
         {
@@ -176,7 +232,7 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
           onPress: async () => {
             try {
               setIsCancellingShift(true);
-              await ApplicationService.withdrawApplication(application.id);
+              await ApplicationService.withdrawApplication(application!.id);
               setCurrentStatus('withdrawn');
               Alert.alert(t('common.success'), t('applications.cancelShift.success'));
               navigation.goBack();
@@ -195,12 +251,12 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
   const handleMarkComplete = async () => {
     try {
       setIsMarkingComplete(true);
-      await ApplicationService.markCompletedByBarista(application.id);
+      await ApplicationService.markCompletedByBarista(application!.id);
       setCompletedByBarista(true);
 
       const refreshed = await ApplicationService.checkApplicationExists(
-        application.jobId,
-        application.baristaId
+        application!.jobId,
+        application!.baristaId
       );
       if (refreshed) {
         setCurrentStatus(refreshed.status);
@@ -274,10 +330,23 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
         minute: '2-digit',
       })
     : '';
-  const canCancelShift =
-    currentStatus === 'accepted' &&
-    (!job?.shiftDetails || canCancelShiftNow(job.shiftDetails, now));
+  const canCancelShift = job?.shiftDetails
+    ? canBaristaCancelShift(
+        { status: currentStatus, shiftConfirmationStatus },
+        job.shiftDetails,
+        now
+      )
+    : currentStatus === 'accepted';
+  const showConfirmModal = currentStatus === 'accepted' && shiftConfirmationStatus === 'pending';
   const showCompletionStatus = currentStatus === 'accepted' || currentStatus === 'completed';
+
+  if (isLoadingApp || !application) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" style={{ flex: 1 }} color={COLORS.primary} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -451,6 +520,18 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
         )}
       </ScrollView>
 
+      {showConfirmModal && job?.title && (
+        <ShiftConfirmationModal
+          applicationId={applicationId}
+          jobTitle={job.title}
+          onConfirmed={() => setShiftConfirmationStatus('confirmed')}
+          onDeclined={() => {
+            setShiftConfirmationStatus('declined');
+            setCurrentStatus('withdrawn');
+          }}
+        />
+      )}
+
       {businessOwnerId && (
         <ReviewModal
           visible={showReviewModal}
@@ -466,7 +547,10 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
       )}
 
       {/* Action Buttons */}
-      {(canWithdraw || showMarkCompleteSection || canCancelShift) && (
+      {(canWithdraw ||
+        showMarkCompleteSection ||
+        canCancelShift ||
+        currentStatus === 'completed') && (
         <View style={styles.footer}>
           {showMarkCompleteSection && (
             <>
@@ -491,6 +575,9 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
                 </Text>
               )}
             </>
+          )}
+          {shiftConfirmationStatus === 'confirmed' && currentStatus === 'accepted' && (
+            <Text style={styles.cancelLockedHint}>{t('shifts.confirmation.cancelLockedHint')}</Text>
           )}
           {canCancelShift && (
             <TouchableOpacity
@@ -520,6 +607,32 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
               )}
             </TouchableOpacity>
           )}
+          {(currentStatus === 'completed' || currentStatus === 'accepted') &&
+            (disputeSummary ? (
+              <View style={styles.disputeStatusBox}>
+                <Text style={styles.disputeStatusLabel}>{t('disputes.filedLabel')}</Text>
+                <Text style={styles.disputeStatusValue}>
+                  {t(`disputes.status.${disputeSummary.status}`)}
+                </Text>
+                {disputeSummary.resolutionNote ? (
+                  <Text style={styles.disputeResolutionNote}>
+                    {t('disputes.resolutionNote')} {disputeSummary.resolutionNote}
+                  </Text>
+                ) : null}
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.disputeButton}
+                onPress={() =>
+                  navigation.navigate('DisputeForm', {
+                    applicationId: application.id,
+                    role: 'barista',
+                  })
+                }
+                accessibilityLabel={t('disputes.openAction')}>
+                <Text style={styles.disputeButtonText}>{t('disputes.openAction')}</Text>
+              </TouchableOpacity>
+            ))}
         </View>
       )}
     </SafeAreaView>
@@ -680,6 +793,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: COLORS.textSecondary,
   },
+  cancelLockedHint: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: 8,
+    fontStyle: 'italic',
+  },
   cancelShiftButton: {
     paddingVertical: 16,
     borderRadius: 999,
@@ -691,6 +811,41 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     fontSize: 16,
     fontWeight: '600',
+  },
+  disputeButton: {
+    marginTop: 12,
+    paddingVertical: 14,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: COLORS.textSecondary,
+    alignItems: 'center',
+  },
+  disputeButtonText: {
+    color: COLORS.textSecondary,
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  disputeStatusBox: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: '#F3F4F6',
+  },
+  disputeStatusLabel: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginBottom: 2,
+  },
+  disputeStatusValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  disputeResolutionNote: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 4,
+    lineHeight: 16,
   },
   completionBanner: {
     backgroundColor: '#D1FAE5',

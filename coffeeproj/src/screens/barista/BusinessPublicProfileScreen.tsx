@@ -18,6 +18,7 @@ import { COLORS, RADII } from '../../config/constants';
 import { BusinessService } from '../../services/BusinessService';
 import { ReviewService } from '../../services/ReviewService';
 import { StarRow } from '../../components/StarRow';
+import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import type { BaristaStackParamList } from '../../navigation/BaristaStack';
 import type { Business, Branch, SocialLink, SocialPlatform } from '../../types/business';
 import type { UserId } from '../../types/ids';
@@ -70,7 +71,12 @@ export const BusinessPublicProfileScreen: React.FC<Props> = ({ route, navigation
   const [business, setBusiness] = useState<Business | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [aggregate, setAggregate] = useState<UserReviewAggregate | null>(null);
+  const [businessReliability, setBusinessReliability] = useState<{
+    disputes30d: number;
+    reliabilityScore: number;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [avatarViewerVisible, setAvatarViewerVisible] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,13 +86,15 @@ export const BusinessPublicProfileScreen: React.FC<Props> = ({ route, navigation
         if (cancelled) return;
         setBusiness(fetched);
         if (fetched) {
-          const [branchList, agg] = await Promise.all([
+          const [branchList, agg, rel] = await Promise.all([
             BusinessService.getBranches(fetched.id),
             ReviewService.getAggregateForUser(businessOwnerId as UserId),
+            BusinessService.getBusinessReliabilityScore(businessOwnerId),
           ]);
           if (cancelled) return;
           setBranches(branchList);
           setAggregate(agg);
+          setBusinessReliability(rel);
         }
       } catch (error) {
         console.error('Error loading public business profile:', error);
@@ -136,7 +144,12 @@ export const BusinessPublicProfileScreen: React.FC<Props> = ({ route, navigation
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           {business.logoUrl ? (
-            <Image source={{ uri: business.logoUrl }} style={styles.avatarImage} />
+            <TouchableOpacity
+              onPress={() => setAvatarViewerVisible(true)}
+              activeOpacity={0.85}
+              accessibilityRole="button">
+              <Image source={{ uri: business.logoUrl }} style={styles.avatarImage} />
+            </TouchableOpacity>
           ) : (
             <View style={styles.avatarPlaceholder}>
               <MaterialCommunityIcons name="storefront" size={36} color={COLORS.primary} />
@@ -155,6 +168,14 @@ export const BusinessPublicProfileScreen: React.FC<Props> = ({ route, navigation
                 size={14}
               />
             </View>
+          )}
+          {businessReliability && (
+            <Text style={styles.reliabilityText}>
+              {t('reliability.sectionTitle')}: {businessReliability.reliabilityScore.toFixed(1)}/5
+              {businessReliability.disputes30d > 0
+                ? ` · ${t('reliability.incidents', { count: businessReliability.disputes30d })}`
+                : ''}
+            </Text>
           )}
           <TouchableOpacity style={styles.jobsCta} onPress={handleOpenJobs}>
             <Text style={styles.jobsCtaText}>
@@ -257,6 +278,13 @@ export const BusinessPublicProfileScreen: React.FC<Props> = ({ route, navigation
           </View>
         )}
       </ScrollView>
+      {business.logoUrl && (
+        <FullscreenImageViewer
+          visible={avatarViewerVisible}
+          photos={[business.logoUrl]}
+          onClose={() => setAvatarViewerVisible(false)}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -317,7 +345,12 @@ const styles = StyleSheet.create({
   },
   aggregateRow: {
     marginTop: 4,
-    marginBottom: 12,
+    marginBottom: 4,
+  },
+  reliabilityText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginBottom: 10,
   },
   jobsCta: {
     backgroundColor: COLORS.primary,

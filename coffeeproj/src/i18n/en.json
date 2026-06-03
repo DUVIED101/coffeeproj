@@ -217,6 +217,7 @@
     "cancelShift": {
       "confirmTitle": "Cancel shift?",
       "confirmBody": "The job will return to active and reappear in the candidate feed.",
+      "confirmBodyAfterRequest": "Confirmation has already been requested — cancelling now counts as a decline and will lower your reliability rating by 0.5.",
       "action": "Cancel shift",
       "success": "Shift cancelled",
       "failure": "Failed to cancel shift. Please try again."
@@ -234,6 +235,8 @@
     "errorTitle": "Error",
     "errorNotAuthenticated": "User not authenticated",
     "errorFailed": "Failed to submit application. Please try again.",
+    "cooldownTitle": "Temporarily Blocked",
+    "cooldown": "Due to recent shift declines, you cannot apply until {{date}}.",
     "jobSummary": "Job Summary",
     "coverLetterPlaceholder": "Tell the employer why you're a great fit for this job...",
     "charCounter": "{{count}}/1000",
@@ -1032,7 +1035,8 @@
     "errors": {
       "notAuthenticated": "You are not authenticated",
       "saveFailed": "Failed to save business profile",
-      "partialSuccess": "Profile saved but some items failed: {{items}}. Try again from your profile."
+      "partialSuccess": "Profile saved but some items failed: {{items}}. Try again from your profile.",
+      "foundedYearInvalid": "Founded year cannot be earlier than {{min}}"
     }
   },
   "branchPhotos": {
@@ -1077,6 +1081,28 @@
       "equipment": "Equipment",
       "includeArchive": "Include completed",
       "archiveSubLabel": "Show shifts that have already finished"
+    },
+    "confirmation": {
+      "pushTitle": "Confirm your shift",
+      "pushBody": "{{jobTitle}} starts in 3 hours. Will you show up?",
+      "modalTitle": "Confirm your shift?",
+      "modalBody": "After confirmation the cancel button will be locked.",
+      "actionConfirm": "Yes, I'll be there",
+      "actionDecline": "I can't make it",
+      "businessConfirmedTitle": "Barista confirmed shift",
+      "businessConfirmedBody": "{{name}} confirmed the shift «{{jobTitle}}»",
+      "businessDeclinedTitle": "Barista declined shift",
+      "businessDeclinedBody": "{{name}} declined the shift «{{jobTitle}}»",
+      "cancelLockedHint": "You confirmed this shift — cancellation is locked"
+    },
+    "noResponseAlert": {
+      "pushTitle": "Barista has not confirmed",
+      "pushBody": "1 hour until «{{jobTitle}}». Cancel shift?",
+      "screenTitle": "Barista is not responding",
+      "screenBody": "{{remaining}} until shift start. You may cancel the shift.",
+      "reasonLabel": "Reason (optional)",
+      "cancelAction": "Cancel shift",
+      "waitAction": "Wait"
     }
   },
   "manageJobs": {
@@ -1208,6 +1234,7 @@
       "account": "Account",
       "preferences": "Preferences",
       "privacy": "Privacy",
+      "activity": "Activity",
       "about": "About",
       "dangerZone": "Danger Zone"
     },
@@ -1218,6 +1245,7 @@
       "language": "Language",
       "notifications": "Notifications",
       "visibility": "Profile Visibility",
+      "myDisputes": "My Complaints",
       "terms": "Terms of Service",
       "privacyPolicy": "Privacy Policy",
       "support": "Support",
@@ -1257,7 +1285,11 @@
       "jobOfferAccepted": "Job offer accepted",
       "jobOfferDeclined": "Job offer declined",
       "workCompletionRequested": "Shift marked as completed",
-      "workCompletionConfirmed": "Shift completion confirmed"
+      "workCompletionConfirmed": "Shift completion confirmed",
+      "shiftReminder24h": "24-hour shift reminder",
+      "shiftReminder3h": "3-hour shift reminder",
+      "shiftConfirmed": "Shift confirmed by barista",
+      "shiftDeclined": "Shift declined by barista"
     },
     "visibility": {
       "title": "Visibility",
@@ -1299,5 +1331,60 @@
       "supportContactHint": "Contact us:",
       "appVersion": "App Version"
     }
+  },
+  "disputes": {
+    "openAction": "File a complaint",
+    "formTitle": "Formal complaint",
+    "formIntro": "This complaint is reviewed separately from your rating and will be checked by a moderator.",
+    "categoryLabel": "What happened? (select all that apply)",
+    "category": {
+      "no_show": "Did not show up",
+      "intoxication": "Alcohol / controlled substances",
+      "harassment": "Harassment / aggression",
+      "safety": "Safety threat",
+      "fraud": "Fraud / theft",
+      "unpaid": "Work not paid",
+      "misrepresentation": "Misrepresented conditions / no workplace",
+      "other": "Other"
+    },
+    "severityLabel": "Severity",
+    "severity": {
+      "warning": "Low",
+      "serious": "Serious",
+      "critical": "Critical"
+    },
+    "descriptionLabel": "Describe the situation (min 30 characters)",
+    "descriptionPlaceholder": "Describe what happened in detail",
+    "evidenceLabel": "Evidence (photos, optional)",
+    "submit": "Submit complaint",
+    "successTitle": "Complaint submitted",
+    "successBody": "We will review it within 48 hours.",
+    "filedLabel": "Complaint filed",
+    "resolutionNote": "Resolution:",
+    "status": {
+      "submitted": "Submitted — pending review",
+      "under_review": "Under review",
+      "resolved": "Resolved",
+      "dismissed": "Dismissed"
+    },
+    "errors": {
+      "tooShort": "Description must be at least 30 characters",
+      "alreadyFiled": "You already filed a complaint for this shift",
+      "notEligible": "Complaints can only be filed for active or completed shifts"
+    },
+    "detailsTitle": "Complaint",
+    "myDisputesTitle": "My Complaints",
+    "myDisputesEmpty": "You haven't filed any complaints yet",
+    "unknownJob": "Job",
+    "notFound": "Complaint not found",
+    "pendingNote": "Your complaint has been passed to moderators and will be reviewed shortly.",
+    "sectionFiledByMe": "Filed by me",
+    "sectionAgainstMe": "Filed against me"
+  },
+  "reliability": {
+    "sectionTitle": "Reliability",
+    "scoreOf": "{{score}}/5",
+    "incidents": "{{count}} inc. (30d)",
+    "noIncidents": "No incidents (30d)"
   }
 }

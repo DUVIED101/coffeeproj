@@ -81,3 +81,8 @@ export type BaristaFilters = {
   certifications?: string[];
   minCompleteness?: number;
 };
+
+export type ReliabilityScore = {
+  incidents30d: number;
+  reliabilityScore: number;
+};

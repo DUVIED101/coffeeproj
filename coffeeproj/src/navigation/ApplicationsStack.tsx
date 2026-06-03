@@ -8,7 +8,7 @@ import type { Application } from '../types/application';
 
 export type ApplicationsStackParamList = {
   ApplicationsList: undefined;
-  ApplicationDetails: { application: Application };
+  ApplicationDetails: { application: Application } | { applicationId: string };
   JobDetails: { jobId: string; distance?: number };
 };
 

@@ -21,6 +21,10 @@ export class NotificationService {
     return __DEV__ ? 'sandbox' : 'production';
   }
 
+  // Token registered in the current session — used by unregisterDevice so a
+  // sign-out on one device doesn't wipe tokens for the user's other devices.
+  private static lastRegisteredToken: DeviceToken | null = null;
+
   private static mapNotification(notification: PushNotification): PushNotificationPayload {
     const rawData = (notification.getData() ?? {}) as {
       kind?: NotificationKind;
@@ -130,10 +134,11 @@ export class NotificationService {
     });
 
     const environment = this.resolveEnvironment();
+    const deviceToken = token as DeviceToken;
     const { error } = await supabase.from('apns_tokens').upsert(
       {
         user_id: userId,
-        device_token: token as DeviceToken,
+        device_token: deviceToken,
         environment,
         last_seen_at: new Date().toISOString(),
       },
@@ -143,12 +148,20 @@ export class NotificationService {
       console.error('NotificationService.registerDevice:', error);
       throw error;
     }
+    this.lastRegisteredToken = deviceToken;
   }
 
   static async unregisterDevice(userId: UserId): Promise<void> {
     try {
-      const { error } = await supabase.from('apns_tokens').delete().eq('user_id', userId);
+      const query = supabase.from('apns_tokens').delete().eq('user_id', userId);
+      // Scope the delete to THIS device's token when we have one. Falling back
+      // to wiping every row would log the user out of push on all their other
+      // devices too.
+      const { error } = this.lastRegisteredToken
+        ? await query.eq('device_token', this.lastRegisteredToken)
+        : await query;
       if (error) throw error;
+      this.lastRegisteredToken = null;
     } catch (error) {
       console.error('NotificationService.unregisterDevice:', error);
     }

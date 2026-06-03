@@ -24,7 +24,7 @@ import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
 import { SocialLinksEditor } from '../../components/SocialLinksEditor';
 import { EquipmentChips } from '../../components/EquipmentChips';
 import { useAuthStore } from '../../stores/authStore';
-import type { Business, Branch, BusinessType, Equipment, GeoPoint } from '../../types';
+import type { Business, Branch, BusinessType, Equipment, GeoPoint, LegalForm } from '../../types';
 import type { SocialLink } from '../../types/business';
 import type { CityCode } from '../../types/city';
 import { DEFAULT_CITY, toCityCode } from '../../types/city';
@@ -40,6 +40,7 @@ import {
   ADDRESS_MAX_LENGTH,
   URL_MAX_LENGTH,
   YEAR_MAX_DIGITS,
+  FOUNDED_YEAR_MIN,
 } from '../../utils/validation';
 
 type SetupStackParamList = {
@@ -67,6 +68,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const [existingFirstBranch, setExistingFirstBranch] = useState<Branch | null>(null);
 
   // Step 1 — Basics
+  const [legalForm, setLegalForm] = useState<LegalForm>('organization');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [businessType, setBusinessType] = useState<BusinessType>('singleLocation');
@@ -105,6 +107,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         const business = await BusinessService.getBusinessByOwnerId(user.id);
         if (business) {
           setExistingBusiness(business);
+          setLegalForm(business.legalForm ?? 'organization');
           setName(business.name);
           setDescription(business.description ?? '');
           setBusinessType(business.businessType);
@@ -221,6 +224,18 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         return false;
       }
     }
+    if (currentStep === 1) {
+      if (foundedYear) {
+        const year = parseInt(foundedYear, 10);
+        if (year < FOUNDED_YEAR_MIN) {
+          Alert.alert(
+            t('common.error'),
+            t('businessSetup.errors.foundedYearInvalid', { min: FOUNDED_YEAR_MIN })
+          );
+          return false;
+        }
+      }
+    }
     if (currentStep === 2) {
       if (!branchName.trim()) {
         Alert.alert(t('common.error'), t('branches.form.nameRequired'));
@@ -274,6 +289,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
             name: name.trim(),
             description: description.trim() || undefined,
             businessType,
+            legalForm,
             website: website.trim() || undefined,
             socialLinks: sanitizedSocialLinks,
             foundedYear: foundedYear ? parseInt(foundedYear, 10) : undefined,
@@ -283,6 +299,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
             name: name.trim(),
             description: description.trim() || undefined,
             businessType,
+            legalForm,
             website: website.trim() || undefined,
             socialLinks: sanitizedSocialLinks,
             foundedYear: foundedYear ? parseInt(foundedYear, 10) : undefined,
@@ -377,6 +394,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
     user?.id,
     existingBusiness,
     existingFirstBranch,
+    legalForm,
     name,
     description,
     businessType,
@@ -436,11 +454,54 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.stepSubtitle}>{t('businessSetup.basics.subtitle')}</Text>
 
               <Text style={styles.label}>
-                {t('businessSetup.basics.name')} <Text style={styles.required}>*</Text>
+                {t('auth.employerSubtype.title')} <Text style={styles.required}>*</Text>
+              </Text>
+              <View style={styles.radioGroup}>
+                <TouchableOpacity
+                  style={styles.radioOption}
+                  onPress={() => setLegalForm('organization')}>
+                  <View style={styles.radioButton}>
+                    {legalForm === 'organization' && <View style={styles.radioButtonInner} />}
+                  </View>
+                  <View style={styles.radioTextContainer}>
+                    <Text style={styles.radioLabel}>
+                      {t('auth.employerSubtype.organizationTitle')}
+                    </Text>
+                    <Text style={styles.radioDescription}>
+                      {t('auth.employerSubtype.organizationDescription')}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.radioOption}
+                  onPress={() => setLegalForm('individual_entrepreneur')}>
+                  <View style={styles.radioButton}>
+                    {legalForm === 'individual_entrepreneur' && (
+                      <View style={styles.radioButtonInner} />
+                    )}
+                  </View>
+                  <View style={styles.radioTextContainer}>
+                    <Text style={styles.radioLabel}>{t('auth.employerSubtype.ipTitle')}</Text>
+                    <Text style={styles.radioDescription}>
+                      {t('auth.employerSubtype.ipDescription')}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.label}>
+                {legalForm === 'organization'
+                  ? t('auth.employerDetails.nameOrgLabel')
+                  : t('auth.employerDetails.nameIpLabel')}{' '}
+                <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
                 style={styles.input}
-                placeholder={t('businessSetup.basics.namePlaceholder')}
+                placeholder={
+                  legalForm === 'organization'
+                    ? t('auth.employerDetails.nameOrgPlaceholder')
+                    : t('auth.employerDetails.nameIpPlaceholder')
+                }
                 placeholderTextColor={COLORS.textSecondary}
                 value={name}
                 onChangeText={setName}

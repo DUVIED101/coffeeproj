@@ -395,7 +395,10 @@ export function ChatScreen({ navigation, route }: any) {
   const businessHasMessaged =
     Boolean(conversation.firstBusinessMessageAt) ||
     messages.some(m => m.senderId === conversation.businessId);
-  const mustWaitForBusiness = user?.accountType === 'barista' && !businessHasMessaged;
+  const mustWaitForBusiness =
+    user?.accountType === 'barista' &&
+    !businessHasMessaged &&
+    conversation.applicationStatus !== 'accepted';
 
   return (
     <KeyboardAvoidingView

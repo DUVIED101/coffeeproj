@@ -157,6 +157,15 @@ export const SettingsScreen: React.FC = () => {
           <SettingsRow label={t('settings.items.appVersion')} value={APP_VERSION} />
         </View>
 
+        <Text style={styles.sectionHeader}>{t('settings.sections.activity').toUpperCase()}</Text>
+        <View style={styles.card}>
+          <SettingsRow
+            label={t('settings.items.myDisputes')}
+            onPress={() => navigation.navigate('MyDisputes')}
+            showChevron
+          />
+        </View>
+
         <Text style={styles.sectionHeader}>{t('settings.sections.dangerZone').toUpperCase()}</Text>
         <View style={styles.card}>
           <SettingsRow label={t('settings.items.signOut')} destructive onPress={handleSignOut} />

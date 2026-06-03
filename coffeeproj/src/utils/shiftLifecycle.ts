@@ -1,4 +1,9 @@
-import type { Application, ApplicationStatus, ShiftLifecycleStatus } from '../types/application';
+import type {
+  Application,
+  ApplicationStatus,
+  ShiftConfirmationStatus,
+  ShiftLifecycleStatus,
+} from '../types/application';
 import type { Job, ShiftDetails } from '../types/job';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -11,7 +16,7 @@ const parseTime = (time: string): { h: number; m: number } => {
 const dateAtTime = (isoDate: string, time: string): Date => {
   const [y, mo, d] = isoDate.split('-').map(part => parseInt(part, 10));
   const { h, m } = parseTime(time);
-  return new Date(Date.UTC(y, mo - 1, d, h, m));
+  return new Date(y, mo - 1, d, h, m);
 };
 
 const shiftBoundary = (shift: ShiftDetails): { start: Date; end: Date } => {
@@ -36,6 +41,18 @@ const ONE_HOUR_MS = 60 * 60 * 1000;
 export const canCancelShiftNow = (shift: ShiftDetails, now: Date = new Date()): boolean => {
   const start = getShiftStart(shift);
   return now.getTime() < start.getTime() + ONE_HOUR_MS;
+};
+
+// Returns false when the barista has confirmed the shift — cancel is locked
+// from confirmation until shift end. Otherwise delegates to canCancelShiftNow.
+export const canBaristaCancelShift = (
+  application: Pick<Application, 'status' | 'shiftConfirmationStatus'>,
+  shift: ShiftDetails,
+  now: Date = new Date()
+): boolean => {
+  if (application.status !== 'accepted') return false;
+  if (application.shiftConfirmationStatus === 'confirmed') return false;
+  return canCancelShiftNow(shift, now);
 };
 
 const PENDING_STATUSES: ApplicationStatus[] = ['pending', 'under_review'];
