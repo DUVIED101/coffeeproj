@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase';
 import type { BaristaProfile, BaristaFilters } from '../types/baristaProfile';
+import { METRO_ANY } from '../components/MetroSelector';
 
 const PAGE_SIZE = 20;
 const DEFAULT_MIN_COMPLETENESS = 30;
@@ -16,7 +17,11 @@ export class BaristaSearchService {
         query = query.overlaps('equipment_experience', filters.equipment);
       }
       if (filters.metroStations?.length) {
-        query = query.overlaps('preferred_metro_stations', filters.metroStations);
+        // Include METRO_ANY in the overlap so baristas who said "any station"
+        // still match a specific-station filter — saying "any" means "I'm
+        // willing to work near any metro" and shouldn't exclude them from
+        // recruiter searches.
+        query = query.overlaps('preferred_metro_stations', [...filters.metroStations, METRO_ANY]);
       }
       if (filters.shiftTimes?.length) {
         query = query.overlaps('preferred_shift_times', filters.shiftTimes);

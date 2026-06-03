@@ -24,6 +24,9 @@ import { useAuthStore } from '../../stores/authStore';
 import { getInitials } from '../../utils/getInitials';
 import { StarRow } from '../../components/StarRow';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
+import { EquipmentChipsDisplay } from '../../components/EquipmentChips';
+import { isMetroAnySelection } from '../../components/MetroSelector';
+import { computeMedicalBookStatus, type MedicalBookStatus } from '../../utils/medicalBook';
 import type { BaristaProfile, ShiftTime } from '../../types/baristaProfile';
 import type { BaristaProfileId, UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
@@ -45,10 +48,36 @@ const formatMonthYearShort = (year: number, month: number): string => {
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 };
 
+const medBookBadgeStyle = (status: MedicalBookStatus) => {
+  switch (status) {
+    case 'valid':
+      return { backgroundColor: 'rgba(39, 174, 96, 0.12)' };
+    case 'expiringSoon':
+      return { backgroundColor: 'rgba(243, 156, 18, 0.14)' };
+    case 'expired':
+      return { backgroundColor: 'rgba(231, 76, 60, 0.14)' };
+    default:
+      return { backgroundColor: COLORS.backgroundSecondary };
+  }
+};
+
+const medBookBadgeTextStyle = (status: MedicalBookStatus) => {
+  switch (status) {
+    case 'valid':
+      return { color: COLORS.success };
+    case 'expiringSoon':
+      return { color: COLORS.warning };
+    case 'expired':
+      return { color: COLORS.error };
+    default:
+      return { color: COLORS.textSecondary };
+  }
+};
+
 export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route }) => {
   const { baristaId } = route.params;
   const currentUser = useAuthStore(state => state.user);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [profile, setProfile] = useState<BaristaProfile | null>(null);
   const [aggregate, setAggregate] = useState<UserReviewAggregate | null>(null);
@@ -280,13 +309,7 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
         {profile.equipmentExperience.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('viewBarista.equipmentExperience')}</Text>
-            <View style={styles.chipsContainer}>
-              {profile.equipmentExperience.map(equipment => (
-                <View key={equipment} style={styles.chip}>
-                  <Text style={styles.chipText}>{equipment}</Text>
-                </View>
-              ))}
-            </View>
+            <EquipmentChipsDisplay selected={profile.equipmentExperience} />
           </View>
         )}
 
@@ -301,16 +324,47 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
           </View>
         )}
 
+        {(() => {
+          const medStatus = computeMedicalBookStatus(profile.medicalBookExpiresOn);
+          return (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t('medicalBook.label')}</Text>
+              <View style={[styles.medBookBadge, medBookBadgeStyle(medStatus)]}>
+                <Text style={[styles.medBookBadgeText, medBookBadgeTextStyle(medStatus)]}>
+                  {t(`medicalBook.status.${medStatus}`, {
+                    date: profile.medicalBookExpiresOn
+                      ? new Date(profile.medicalBookExpiresOn).toLocaleDateString(
+                          i18n.language === 'ru' ? 'ru-RU' : 'en-US',
+                          { year: 'numeric', month: 'long', day: 'numeric' }
+                        )
+                      : '',
+                  })}
+                </Text>
+              </View>
+            </View>
+          );
+        })()}
+
         {profile.preferredMetroStations.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('viewBarista.preferredMetro')}</Text>
-            <View style={styles.chipsContainer}>
-              {profile.preferredMetroStations.map(station => (
-                <View key={station} style={styles.chip}>
-                  <Text style={styles.chipText}>{station}</Text>
+            {isMetroAnySelection(profile.preferredMetroStations) ? (
+              <View style={styles.chipsContainer}>
+                <View style={styles.chip}>
+                  <Text style={styles.chipText}>
+                    {t('metro.anyOptionTitle', { defaultValue: 'Любая станция' })}
+                  </Text>
                 </View>
-              ))}
-            </View>
+              </View>
+            ) : (
+              <View style={styles.chipsContainer}>
+                {profile.preferredMetroStations.map(station => (
+                  <View key={station} style={styles.chip}>
+                    <Text style={styles.chipText}>{station}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
         )}
 
@@ -525,6 +579,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: COLORS.text,
     paddingVertical: 4,
+  },
+  medBookBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    marginTop: 4,
+  },
+  medBookBadgeText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   workExpHeader: {
     flexDirection: 'row',

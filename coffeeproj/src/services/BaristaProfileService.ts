@@ -6,32 +6,60 @@ import type {
 } from '../types/baristaProfile';
 import { canAddPhoto, PHOTO_LIMIT } from '../utils/storage';
 
+// Detect "column not found in schema cache" so we can degrade gracefully when
+// migration 071 (medical_book_expires_on) hasn't been applied yet. PostgREST
+// returns PGRST204 plus a message naming the missing column.
+const isMissingMedicalBookColumn = (e: unknown): boolean => {
+  const code = (e as { code?: string } | null)?.code;
+  const message = (e as { message?: string } | null)?.message ?? '';
+  return code === 'PGRST204' && message.includes('medical_book_expires_on');
+};
+
 export class BaristaProfileService {
   /**
    * Create a new barista profile
    */
   static async createProfile(data: CreateBaristaProfileData): Promise<BaristaProfile> {
     try {
-      const { data: profile, error } = await supabase
+      const baseRow: Record<string, unknown> = {
+        user_id: data.userId,
+        first_name: data.firstName,
+        last_name: data.lastName,
+        city: data.city,
+        date_of_birth: data.dateOfBirth,
+        bio: data.bio,
+        years_of_experience: data.yearsOfExperience,
+        equipment_experience: data.equipmentExperience || [],
+        certifications: data.certifications || [],
+        languages: data.languages || [],
+        preferred_metro_stations: data.preferredMetroStations || [],
+        preferred_shift_times: data.preferredShiftTimes || [],
+        hourly_rate_min: data.hourlyRateMin,
+        hourly_rate_max: data.hourlyRateMax,
+      };
+      if (data.medicalBookExpiresOn !== undefined) {
+        baseRow.medical_book_expires_on = data.medicalBookExpiresOn;
+      }
+
+      let { data: profile, error } = await supabase
         .from('barista_profiles')
-        .insert({
-          user_id: data.userId,
-          first_name: data.firstName,
-          last_name: data.lastName,
-          city: data.city,
-          date_of_birth: data.dateOfBirth,
-          bio: data.bio,
-          years_of_experience: data.yearsOfExperience,
-          equipment_experience: data.equipmentExperience || [],
-          certifications: data.certifications || [],
-          languages: data.languages || [],
-          preferred_metro_stations: data.preferredMetroStations || [],
-          preferred_shift_times: data.preferredShiftTimes || [],
-          hourly_rate_min: data.hourlyRateMin,
-          hourly_rate_max: data.hourlyRateMax,
-        })
+        .insert(baseRow)
         .select()
         .single();
+
+      // Migration 071 may not have been applied yet on the target Supabase
+      // project — retry without the optional column so the user can still
+      // create / edit their profile.
+      if (error && isMissingMedicalBookColumn(error)) {
+        console.warn(
+          '[BaristaProfileService] medical_book_expires_on column not found; ' +
+            'apply migration 071_barista_medical_book.sql. Saving without it.'
+        );
+        delete baseRow.medical_book_expires_on;
+        const retry = await supabase.from('barista_profiles').insert(baseRow).select().single();
+        profile = retry.data;
+        error = retry.error;
+      }
 
       if (error) throw error;
       if (!profile) throw new Error('Failed to create profile');
@@ -133,13 +161,32 @@ export class BaristaProfileService {
       if (updates.portfolioPhotos !== undefined) {
         dbUpdates.portfolio_photos = updates.portfolioPhotos;
       }
+      if (updates.medicalBookExpiresOn !== undefined) {
+        dbUpdates.medical_book_expires_on = updates.medicalBookExpiresOn ?? null;
+      }
 
-      const { data: profile, error } = await supabase
+      let { data: profile, error } = await supabase
         .from('barista_profiles')
         .update(dbUpdates)
         .eq('user_id', userId)
         .select()
         .single();
+
+      if (error && isMissingMedicalBookColumn(error)) {
+        console.warn(
+          '[BaristaProfileService] medical_book_expires_on column not found; ' +
+            'apply migration 071_barista_medical_book.sql. Saving without it.'
+        );
+        delete dbUpdates.medical_book_expires_on;
+        const retry = await supabase
+          .from('barista_profiles')
+          .update(dbUpdates)
+          .eq('user_id', userId)
+          .select()
+          .single();
+        profile = retry.data;
+        error = retry.error;
+      }
 
       if (error) throw error;
       if (!profile) throw new Error('Failed to update profile');
@@ -388,6 +435,7 @@ export class BaristaProfileService {
       hourlyRateMax: db.hourly_rate_max,
       availableFromDate: db.available_from_date,
       portfolioPhotos: db.portfolio_photos || [],
+      medicalBookExpiresOn: db.medical_book_expires_on ?? undefined,
       isActivelyLooking: db.is_actively_looking,
       profileCompleteness: db.profile_completeness || 0,
       createdAt: db.created_at,

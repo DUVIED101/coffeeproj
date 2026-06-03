@@ -10,9 +10,10 @@ export const DEFAULT_PAGE_LIMIT = 20;
 // Currency
 export const DEFAULT_CURRENCY = 'RUB';
 
-// Standard coffee-shop equipment. Order: espresso machines (by global market
-// share, well-known commercial brands first), then grinders. Stays in sync
-// with the Equipment union in types/business.ts.
+// Coffee-shop equipment. Categories let editor UIs render a shorter, scannable
+// list instead of one 30-item wall of chips. Both the flat union (Equipment in
+// types/business.ts) and the grouped list reference the same brand literals,
+// so they cannot drift.
 export const EQUIPMENT_TYPES = [
   // Espresso machines
   'La Marzocco',
@@ -46,6 +47,44 @@ export const EQUIPMENT_TYPES = [
   'Fiorenzato',
   'Macap',
 ] as const;
+
+export type EquipmentCategoryKey = 'espresso' | 'grinder';
+
+export const EQUIPMENT_CATEGORIES: ReadonlyArray<{
+  key: EquipmentCategoryKey;
+  brands: ReadonlyArray<(typeof EQUIPMENT_TYPES)[number]>;
+}> = [
+  {
+    key: 'espresso',
+    brands: [
+      'La Marzocco',
+      'Victoria Arduino',
+      'Nuova Simonelli',
+      'La Cimbali',
+      'Faema',
+      'Synesso',
+      'Slayer',
+      'Dalla Corte',
+      'Sanremo',
+      'Rocket Espresso',
+      'Astoria',
+      'Wega',
+      'Carimali',
+      'Bezzera',
+      'ECM',
+      'Profitec',
+      'Lelit',
+      'Kees van der Westen',
+      'Eversys',
+      'WMF',
+      'Schaerer',
+    ],
+  },
+  {
+    key: 'grinder',
+    brands: ['Mahlkönig', 'Mazzer', 'Anfim', 'Eureka', 'Compak', 'Ditting', 'Fiorenzato', 'Macap'],
+  },
+];
 
 // Colors
 export const COLORS = {

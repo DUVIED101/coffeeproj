@@ -124,10 +124,6 @@ const JobFeedHeader: React.FC<{ navigation: any }> = ({ navigation }) => {
           onPress: () => navigation.navigate('NotificationFeed'),
           testID: 'bell',
         },
-        {
-          label: t('nav.myApplications'),
-          onPress: () => navigation.navigate('Applications'),
-        },
       ]}
     />
   );

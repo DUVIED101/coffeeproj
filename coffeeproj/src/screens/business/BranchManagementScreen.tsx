@@ -18,8 +18,8 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import { launchImageLibrary } from 'react-native-image-picker';
-import { COLORS, EQUIPMENT_TYPES } from '../../config/constants';
+import { COLORS } from '../../config/constants';
+import { EquipmentChips } from '../../components/EquipmentChips';
 import {
   BusinessService,
   BranchHasActiveJobsError,
@@ -32,7 +32,8 @@ import { AddFab } from '../../components/AddFab';
 import { useAuthStore } from '../../stores/authStore';
 import type { Branch, Equipment, GeoPoint, CityCode } from '../../types';
 import { DEFAULT_CITY, toCityCode } from '../../types/city';
-import { PHOTO_LIMIT, MAX_PHOTO_BYTES, isFileTooLarge } from '../../utils/storage';
+import { PHOTO_LIMIT } from '../../utils/storage';
+import { pickPhotos, reportRejections } from '../../utils/pickPhotos';
 import { geocodeAddress } from '../../utils/geocode';
 import { SHORT_TEXT_MAX_LENGTH, ADDRESS_MAX_LENGTH } from '../../utils/validation';
 
@@ -45,8 +46,6 @@ type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'BranchManagement'>;
   route: RouteProp<BusinessStackParamList, 'BranchManagement'>;
 };
-
-const EQUIPMENT_OPTIONS: readonly Equipment[] = EQUIPMENT_TYPES;
 
 type BranchRowProps = {
   branch: Branch;
@@ -388,28 +387,20 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
         return;
       }
 
-      const result = await launchImageLibrary({
+      const picked = await pickPhotos({
         mediaType: 'photo',
         quality: 0.8,
         selectionLimit: remaining,
       });
-      if (result.didCancel || !result.assets?.length) return;
-
-      const accepted: string[] = [];
-      let oversizedCount = 0;
-      for (const asset of result.assets) {
-        if (!asset.uri) continue;
-        if (isFileTooLarge(asset.fileSize)) {
-          oversizedCount += 1;
-          continue;
-        }
-        accepted.push(asset.uri);
-      }
+      if (!picked) return;
+      const shouldProceed = reportRejections(t, picked);
+      if (!shouldProceed) return;
 
       let uploadedCount = 0;
-      for (const uri of accepted) {
+      for (const asset of picked.accepted) {
+        if (!asset.uri) continue;
         try {
-          await BusinessService.addBranchPhoto(branchId, ownerId, uri);
+          await BusinessService.addBranchPhoto(branchId, ownerId, asset.uri);
           uploadedCount += 1;
         } catch (error) {
           if (error instanceof BranchPhotoLimitError) {
@@ -422,16 +413,8 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
 
       if (uploadedCount > 0) await loadBranches();
 
-      if (oversizedCount > 0) {
-        Alert.alert(
-          t('common.warning'),
-          t('branchPhotos.someTooLarge', {
-            count: oversizedCount,
-            maxMb: MAX_PHOTO_BYTES / (1024 * 1024),
-          })
-        );
-      } else if (uploadedCount < accepted.length) {
-        Alert.alert(t('common.error'), t('branchPhotos.uploadFailed'));
+      if (uploadedCount < picked.accepted.length) {
+        Alert.alert(t('photoErrors.uploadFailedTitle'), t('photoErrors.uploadFailedBody'));
       }
     },
     [ownerId, branches, loadBranches, t]
@@ -588,32 +571,18 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
                     if (value) setMetroError(null);
                   }}
                   userLocation={addressCoords ?? undefined}
+                  hideAnyOption
                 />
                 {metroError && <Text style={styles.errorText}>{metroError}</Text>}
               </View>
 
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>{t('branches.form.equipment')}</Text>
-                <View style={styles.equipmentGrid}>
-                  {EQUIPMENT_OPTIONS.map(equipment => (
-                    <TouchableOpacity
-                      key={equipment}
-                      style={[
-                        styles.equipmentChip,
-                        selectedEquipment.includes(equipment) && styles.equipmentChipSelected,
-                      ]}
-                      onPress={() => toggleEquipment(equipment)}
-                      disabled={isSaving}>
-                      <Text
-                        style={[
-                          styles.equipmentChipText,
-                          selectedEquipment.includes(equipment) && styles.equipmentChipTextSelected,
-                        ]}>
-                        {equipment}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                <EquipmentChips
+                  selected={selectedEquipment}
+                  onToggle={brand => toggleEquipment(brand as Equipment)}
+                  disabled={isSaving}
+                />
               </View>
 
               <TouchableOpacity

@@ -13,22 +13,24 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS, EQUIPMENT_TYPES } from '../../config/constants';
+import { COLORS } from '../../config/constants';
 import { BusinessService } from '../../services/BusinessService';
 import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { CityToggle } from '../../components/CityToggle';
 import { MetroSelector } from '../../components/MetroSelector';
 import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
 import { SocialLinksEditor } from '../../components/SocialLinksEditor';
+import { EquipmentChips } from '../../components/EquipmentChips';
 import { useAuthStore } from '../../stores/authStore';
 import type { Business, Branch, BusinessType, Equipment, GeoPoint } from '../../types';
 import type { SocialLink } from '../../types/business';
 import type { CityCode } from '../../types/city';
 import { DEFAULT_CITY, toCityCode } from '../../types/city';
-import { PHOTO_LIMIT, MAX_PHOTO_BYTES, isFileTooLarge } from '../../utils/storage';
+import { PHOTO_LIMIT } from '../../utils/storage';
+import { pickPhotos, reportRejections } from '../../utils/pickPhotos';
+import { pickAndCropAvatar } from '../../utils/imageCrop';
 import { geocodeAddress } from '../../utils/geocode';
 import { clampToEffectiveLength } from '../../utils/textLength';
 import {
@@ -53,8 +55,6 @@ type Props = {
 };
 
 const STEP_KEYS = ['basics', 'brand', 'branch', 'photos'] as const;
-
-const EQUIPMENT_OPTIONS: readonly Equipment[] = EQUIPMENT_TYPES;
 
 export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const { t } = useTranslation();
@@ -168,21 +168,19 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   }, [branchAddress, branchCity]);
 
   const handlePickLogo = useCallback(async () => {
-    const result = await launchImageLibrary({
-      mediaType: 'photo',
-      quality: 0.8,
-      selectionLimit: 1,
-    });
-    if (result.didCancel || !result.assets || !result.assets[0]?.uri) return;
-    const asset = result.assets[0];
-    if (isFileTooLarge(asset.fileSize)) {
-      Alert.alert(
-        t('common.error'),
-        t('branchPhotos.fileTooLarge', { maxMb: MAX_PHOTO_BYTES / (1024 * 1024) })
-      );
+    const outcome = await pickAndCropAvatar();
+    if (!outcome.ok) {
+      if (outcome.reason === 'cancelled') return;
+      const bodyKey =
+        outcome.reason === 'tooLarge'
+          ? 'photoErrors.tooLarge_one'
+          : outcome.reason === 'invalidFormat'
+            ? 'photoErrors.invalidFormat_one'
+            : 'photoErrors.uploadFailedBody';
+      Alert.alert(t('common.error'), t(bodyKey, { maxMb: 7, count: 1 }) as string);
       return;
     }
-    setPendingLogoUri(asset.uri!);
+    setPendingLogoUri(outcome.uri);
   }, [t]);
 
   const handlePickBranchPhoto = useCallback(async () => {
@@ -191,34 +189,18 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       Alert.alert(t('common.error'), t('branchPhotos.limitReached', { max: PHOTO_LIMIT }));
       return;
     }
-    const result = await launchImageLibrary({
+    const picked = await pickPhotos({
       mediaType: 'photo',
       quality: 0.8,
       selectionLimit: remaining,
     });
-    if (result.didCancel || !result.assets?.length) return;
+    if (!picked) return;
+    const shouldProceed = reportRejections(t, picked);
+    if (!shouldProceed) return;
 
-    const accepted: string[] = [];
-    let oversizedCount = 0;
-    for (const asset of result.assets) {
-      if (!asset.uri) continue;
-      if (isFileTooLarge(asset.fileSize)) {
-        oversizedCount += 1;
-        continue;
-      }
-      accepted.push(asset.uri);
-    }
-    if (accepted.length > 0) {
-      setPendingBranchPhotoUris(prev => [...prev, ...accepted].slice(0, PHOTO_LIMIT));
-    }
-    if (oversizedCount > 0) {
-      Alert.alert(
-        t('common.warning'),
-        t('branchPhotos.someTooLarge', {
-          count: oversizedCount,
-          maxMb: MAX_PHOTO_BYTES / (1024 * 1024),
-        })
-      );
+    const acceptedUris = picked.accepted.map(a => a.uri).filter((u): u is string => !!u);
+    if (acceptedUris.length > 0) {
+      setPendingBranchPhotoUris(prev => [...prev, ...acceptedUris].slice(0, PHOTO_LIMIT));
     }
   }, [pendingBranchPhotoUris.length, t]);
 
@@ -635,28 +617,14 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 value={branchMetro || null}
                 onChange={v => setBranchMetro(v ?? '')}
                 userLocation={addressCoords ?? undefined}
+                hideAnyOption
               />
 
               <Text style={styles.label}>{t('branches.form.equipment')}</Text>
-              <View style={styles.equipmentGrid}>
-                {EQUIPMENT_OPTIONS.map(eq => (
-                  <TouchableOpacity
-                    key={eq}
-                    style={[
-                      styles.equipmentChip,
-                      branchEquipment.includes(eq) && styles.equipmentChipSelected,
-                    ]}
-                    onPress={() => toggleEquipment(eq)}>
-                    <Text
-                      style={[
-                        styles.equipmentChipText,
-                        branchEquipment.includes(eq) && styles.equipmentChipTextSelected,
-                      ]}>
-                      {eq}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <EquipmentChips
+                selected={branchEquipment}
+                onToggle={brand => toggleEquipment(brand as Equipment)}
+              />
             </View>
           )}
 

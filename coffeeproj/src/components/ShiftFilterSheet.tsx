@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS, RADII, EQUIPMENT_TYPES } from '../config/constants';
-import { MetroSelector } from './MetroSelector';
+import { MetroSelector, METRO_ANY } from './MetroSelector';
 import { CityToggle } from './CityToggle';
 import type { JobType } from '../types/job';
 import type { Equipment } from '../types/business';
@@ -61,9 +61,10 @@ export const ShiftFilterSheet: React.FC<ShiftFilterSheetProps> = ({
   }, []);
 
   const handleMetroChange = useCallback((stations: string[]) => {
+    const real = stations.filter(s => s !== METRO_ANY);
     setDraft(prev => ({
       ...prev,
-      metroStations: stations.length > 0 ? stations : undefined,
+      metroStations: real.length > 0 ? real : undefined,
     }));
   }, []);
 

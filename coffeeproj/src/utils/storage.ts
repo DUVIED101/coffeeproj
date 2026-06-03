@@ -3,11 +3,14 @@ import { supabase } from '../config/supabase';
 export {
   PHOTO_LIMIT,
   MAX_PHOTO_BYTES,
+  ALLOWED_PHOTO_MIME_TYPES,
   canAddPhoto,
   isFileTooLarge,
+  validateImageAsset,
   buildBusinessLogoPath,
   buildBranchPhotoPath,
 } from './storagePaths';
+export type { PhotoRejection, AssetForValidation } from './storagePaths';
 
 export type UploadImageInput = {
   bucket: string;

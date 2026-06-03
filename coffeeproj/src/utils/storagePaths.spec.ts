@@ -5,6 +5,7 @@ import {
   isFileTooLarge,
   MAX_PHOTO_BYTES,
   PHOTO_LIMIT,
+  validateImageAsset,
 } from './storagePaths';
 
 describe('storage paths', () => {
@@ -52,5 +53,35 @@ describe('isFileTooLarge', () => {
 
   it('accepts unknown size (undefined) — picker did not report fileSize', () => {
     expect(isFileTooLarge(undefined)).toBe(false);
+  });
+});
+
+describe('validateImageAsset', () => {
+  it('returns tooLarge when the file exceeds MAX_PHOTO_BYTES', () => {
+    expect(validateImageAsset({ uri: 'file:///tmp/big.jpg', fileSize: MAX_PHOTO_BYTES + 1 })).toBe(
+      'tooLarge'
+    );
+  });
+
+  it('returns invalidFormat for unsupported MIME types', () => {
+    expect(validateImageAsset({ uri: 'file:///tmp/anim.gif', type: 'image/gif' })).toBe(
+      'invalidFormat'
+    );
+  });
+
+  it('accepts all whitelisted MIME types', () => {
+    const accepted = ['image/jpeg', 'image/png', 'image/heic', 'image/webp'] as const;
+    for (const mime of accepted) {
+      expect(validateImageAsset({ uri: 'file:///tmp/photo', type: mime })).toBeNull();
+    }
+  });
+
+  it('falls back to file extension when MIME is missing', () => {
+    expect(validateImageAsset({ uri: 'file:///tmp/photo.heic' })).toBeNull();
+    expect(validateImageAsset({ uri: 'file:///tmp/screenshot.bmp' })).toBe('invalidFormat');
+  });
+
+  it('returns null when MIME and extension are both missing', () => {
+    expect(validateImageAsset({ uri: 'file:///tmp/IMG_0001' })).toBeNull();
   });
 });

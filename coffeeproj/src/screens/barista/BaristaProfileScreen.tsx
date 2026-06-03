@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -16,28 +16,34 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { launchImageLibrary } from 'react-native-image-picker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS, EQUIPMENT_TYPES, RADII } from '../../config/constants';
+import { COLORS, RADII } from '../../config/constants';
+import { EquipmentChips, EquipmentChipsDisplay } from '../../components/EquipmentChips';
 import {
   BaristaProfileService,
   PortfolioPhotoLimitError,
 } from '../../services/BaristaProfileService';
 import { WorkExperienceService } from '../../services/WorkExperienceService';
-import { PHOTO_LIMIT, MAX_PHOTO_BYTES, isFileTooLarge } from '../../utils/storage';
+import { PHOTO_LIMIT } from '../../utils/storage';
+import { pickPhotos, reportRejections } from '../../utils/pickPhotos';
 import { ReviewService } from '../../services/ReviewService';
-import { MetroSelector } from '../../components/MetroSelector';
+import { MetroSelector, isMetroAnySelection } from '../../components/MetroSelector';
 import { CityToggle } from '../../components/CityToggle';
 import { StarRow } from '../../components/StarRow';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
+import { pickAndCropAvatar } from '../../utils/imageCrop';
 import { CertificatesEditor } from '../../components/CertificatesEditor';
 import { WorkExperienceEditor } from '../../components/WorkExperienceEditor';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { formatLocalDate } from '../../utils/dateUtils';
-import { computeProfileCompleteness } from '../../utils/profileCompleteness';
+import {
+  computeProfileCompleteness,
+  type CompletenessItemKey,
+} from '../../utils/profileCompleteness';
 import { requestLocationPermission, getCurrentLocation } from '../../utils/geolocation';
 import { clampToEffectiveLength } from '../../utils/textLength';
 import { dobMinDate, dobMaxDate } from '../../utils/dateRanges';
@@ -56,11 +62,33 @@ import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU } from '../../types/city';
 import type { BaristaProfileId, UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
 import type { ProfileStackParamList } from '../../navigation/ProfileStack';
-import type { WorkExperience, WorkExperienceDraft } from '../../types/workExperience';
-import { computeDuration, computeTotalDuration } from '../../types/workExperience';
+import type {
+  WorkExperience,
+  WorkExperienceDraft,
+  WorkExperienceFieldError,
+} from '../../types/workExperience';
+import { computeDuration, computeTotalDuration, findDraftErrors } from '../../types/workExperience';
+import { computeMedicalBookStatus, type MedicalBookStatus } from '../../utils/medicalBook';
 
 type Props = {
   navigation: NativeStackNavigationProp<ProfileStackParamList, 'BaristaProfile'>;
+};
+
+type EditableSectionKey =
+  | 'personal'
+  | 'professional'
+  | 'workExperience'
+  | 'preferences'
+  | 'portfolio';
+
+const COMPLETENESS_TO_SECTION: Record<CompletenessItemKey, EditableSectionKey> = {
+  basicInfo: 'personal',
+  bio: 'professional',
+  experience: 'professional',
+  workHistory: 'workExperience',
+  preferences: 'preferences',
+  hourlyRate: 'preferences',
+  portfolio: 'portfolio',
 };
 
 const SHIFT_TIME_KEYS: { value: ShiftTime; labelKey: string }[] = [
@@ -74,6 +102,32 @@ const getCompletenessColor = (completeness: number): string => {
   if (completeness < 50) return COLORS.error;
   if (completeness < 80) return COLORS.warning;
   return COLORS.success;
+};
+
+const medicalBookBadgeStyle = (status: MedicalBookStatus) => {
+  switch (status) {
+    case 'valid':
+      return { backgroundColor: 'rgba(39, 174, 96, 0.12)' };
+    case 'expiringSoon':
+      return { backgroundColor: 'rgba(243, 156, 18, 0.14)' };
+    case 'expired':
+      return { backgroundColor: 'rgba(231, 76, 60, 0.14)' };
+    default:
+      return { backgroundColor: COLORS.backgroundSecondary };
+  }
+};
+
+const medicalBookBadgeTextStyle = (status: MedicalBookStatus) => {
+  switch (status) {
+    case 'valid':
+      return { color: COLORS.success };
+    case 'expiringSoon':
+      return { color: COLORS.warning };
+    case 'expired':
+      return { color: COLORS.error };
+    default:
+      return { color: COLORS.textSecondary };
+  }
 };
 
 const formatMonthYear = (year: number, month: number, locale: string): string => {
@@ -150,11 +204,16 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [yearsOfExperience, setYearsOfExperience] = useState('');
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
   const [certifications, setCertifications] = useState<string[]>([]);
+  const [medicalBookExpiresOn, setMedicalBookExpiresOn] = useState<string>('');
+  const [showMedicalBookPicker, setShowMedicalBookPicker] = useState(false);
   const [preferredMetroStations, setPreferredMetroStations] = useState<string[]>([]);
   const [selectedShiftTimes, setSelectedShiftTimes] = useState<ShiftTime[]>([]);
   const [hourlyRateMin, setHourlyRateMin] = useState('');
   const [isActivelyLooking, setIsActivelyLooking] = useState(true);
   const [workExperienceDrafts, setWorkExperienceDrafts] = useState<WorkExperienceDraft[]>([]);
+  const [workExperienceErrors, setWorkExperienceErrors] = useState<
+    ReadonlyArray<ReadonlyArray<WorkExperienceFieldError>>
+  >([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(2000, 0, 1));
   const [aggregate, setAggregate] = useState<UserReviewAggregate | null>(null);
@@ -163,6 +222,11 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [viewerIndex, setViewerIndex] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [userLocation, setUserLocation] = useState<GeoPoint | undefined>(undefined);
+
+  const scrollViewRef = useRef<ScrollView | null>(null);
+  // Records the Y offset of each editable section so handleEdit can jump
+  // straight to the first one that's still empty.
+  const sectionOffsetsRef = useRef<Partial<Record<EditableSectionKey, number>>>({});
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -184,6 +248,16 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     loadAggregate();
     initializeLocation();
   }, []);
+
+  // Re-fetch on every focus so a profile that was just created in
+  // BaristaProfileSetup (same session, no app restart) is picked up even if the
+  // screen never unmounted.
+  useFocusEffect(
+    useCallback(() => {
+      loadProfile();
+      loadAggregate();
+    }, [])
+  );
 
   const initializeLocation = async () => {
     try {
@@ -261,6 +335,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     setPreferredMetroStations(profileData.preferredMetroStations);
     setSelectedShiftTimes(profileData.preferredShiftTimes);
     setHourlyRateMin(profileData.hourlyRateMin != null ? String(profileData.hourlyRateMin) : '');
+    setMedicalBookExpiresOn(profileData.medicalBookExpiresOn ?? '');
     setIsActivelyLooking(profileData.isActivelyLooking);
     setWorkExperienceDrafts(
       (profileData.workExperiences ?? []).map(e => ({
@@ -308,26 +383,24 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     });
   };
 
-  const handleAvatarUpload = async () => {
+  const handleAvatarPick = useCallback(async () => {
     if (!user?.id) return;
-
+    const outcome = await pickAndCropAvatar();
+    if (!outcome.ok) {
+      if (outcome.reason === 'cancelled') return;
+      const bodyKey =
+        outcome.reason === 'tooLarge'
+          ? 'photoErrors.tooLarge_one'
+          : outcome.reason === 'invalidFormat'
+            ? 'photoErrors.invalidFormat_one'
+            : 'photoErrors.uploadFailedBody';
+      Alert.alert(t('common.error'), t(bodyKey, { maxMb: 7, count: 1 }) as string);
+      return;
+    }
     try {
-      const result = await launchImageLibrary({
-        mediaType: 'photo',
-        quality: 0.8,
-      });
-
-      if (result.didCancel || !result.assets?.[0]?.uri) return;
-
       setIsSaving(true);
-      await BaristaProfileService.uploadAvatar(user.id, result.assets[0].uri);
+      await BaristaProfileService.uploadAvatar(user.id, outcome.uri);
       await loadProfile();
-      Alert.alert(
-        t('baristaProfileScreen.successTitle', { defaultValue: 'Готово' }),
-        t('baristaProfileScreen.successAvatar', {
-          defaultValue: 'Аватар успешно загружен!',
-        })
-      );
     } catch (error: unknown) {
       console.error('Error uploading avatar:', error);
       Alert.alert(
@@ -339,7 +412,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [user?.id, t]);
 
   const handleAddCertificate = async (name: string): Promise<void> => {
     if (!user?.id || !profile) return;
@@ -392,33 +465,23 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
-    const result = await launchImageLibrary({
+    const picked = await pickPhotos({
       mediaType: 'photo',
       quality: 0.8,
       selectionLimit: remaining,
     });
-    if (result.didCancel || !result.assets?.length) return;
-
-    const accepted: string[] = [];
-    let oversizedCount = 0;
-    for (const asset of result.assets) {
-      if (!asset.uri) continue;
-      if (isFileTooLarge(asset.fileSize)) {
-        oversizedCount += 1;
-        continue;
-      }
-      accepted.push(asset.uri);
-    }
-
-    if (accepted.length === 0 && oversizedCount === 0) return;
+    if (!picked) return;
+    const shouldProceed = reportRejections(t, picked);
+    if (!shouldProceed) return;
 
     setIsSaving(true);
     let uploadedCount = 0;
     let hitLimit = false;
     try {
-      for (const uri of accepted) {
+      for (const asset of picked.accepted) {
+        if (!asset.uri) continue;
         try {
-          await BaristaProfileService.uploadPortfolioPhoto(user.id, uri);
+          await BaristaProfileService.uploadPortfolioPhoto(user.id, asset.uri);
           uploadedCount += 1;
         } catch (error: unknown) {
           if (error instanceof PortfolioPhotoLimitError) {
@@ -435,21 +498,8 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
 
     if (hitLimit) {
       Alert.alert(t('common.warning'), t('portfolioPhotos.limitReached', { max: PHOTO_LIMIT }));
-    } else if (oversizedCount > 0) {
-      Alert.alert(
-        t('common.warning'),
-        t('branchPhotos.someTooLarge', {
-          count: oversizedCount,
-          maxMb: MAX_PHOTO_BYTES / (1024 * 1024),
-        })
-      );
-    } else if (uploadedCount < accepted.length) {
-      Alert.alert(
-        t('baristaProfileScreen.errorTitle', { defaultValue: 'Ошибка' }),
-        t('baristaProfileScreen.errorSomePhotosFailed', {
-          defaultValue: 'Часть фотографий не загрузилась. Попробуйте ещё раз.',
-        })
-      );
+    } else if (uploadedCount < picked.accepted.length) {
+      Alert.alert(t('photoErrors.uploadFailedTitle'), t('photoErrors.uploadFailedBody'));
     }
   };
 
@@ -487,8 +537,29 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     );
   };
 
+  const handleSectionLayout = useCallback(
+    (key: EditableSectionKey) => (event: { nativeEvent: { layout: { y: number } } }) => {
+      sectionOffsetsRef.current[key] = event.nativeEvent.layout.y;
+    },
+    []
+  );
+
+  const scrollToFirstEmpty = useCallback(() => {
+    if (!profile) return;
+    const completeness = computeProfileCompleteness(profile);
+    const firstMissing = completeness.items.find(item => !item.satisfied);
+    if (!firstMissing) return;
+    const targetKey = COMPLETENESS_TO_SECTION[firstMissing.key];
+    const offset = sectionOffsetsRef.current[targetKey];
+    if (offset === undefined) return;
+    scrollViewRef.current?.scrollTo({ y: Math.max(offset - 16, 0), animated: true });
+  }, [profile]);
+
   const handleEdit = () => {
     setIsEditing(true);
+    // Section layouts shift when inputs expand inline; wait one frame so the
+    // measured offsets reflect the edit-mode layout before scrolling.
+    requestAnimationFrame(() => scrollToFirstEmpty());
   };
 
   const handleCancel = () => {
@@ -509,6 +580,23 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
+    const draftErrors = workExperienceDrafts.map(findDraftErrors);
+    if (draftErrors.some(e => e.length > 0)) {
+      setWorkExperienceErrors(draftErrors);
+      const offset = sectionOffsetsRef.current.workExperience;
+      if (offset !== undefined) {
+        scrollViewRef.current?.scrollTo({ y: Math.max(offset - 16, 0), animated: true });
+      }
+      Alert.alert(
+        t('baristaProfileScreen.errorTitle', { defaultValue: 'Ошибка' }),
+        t('barista.workExperience.errors.fillRequired', {
+          defaultValue: 'Заполните обязательные поля или удалите запись опыта.',
+        })
+      );
+      return;
+    }
+    setWorkExperienceErrors([]);
+
     try {
       setIsSaving(true);
 
@@ -524,6 +612,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
         preferredMetroStations,
         preferredShiftTimes: selectedShiftTimes,
         hourlyRateMin: hourlyRateMin ? parseInt(hourlyRateMin, 10) : undefined,
+        medicalBookExpiresOn: medicalBookExpiresOn || undefined,
         isActivelyLooking,
       });
 
@@ -630,6 +719,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
+          ref={scrollViewRef}
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
@@ -660,7 +750,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
               )}
               <TouchableOpacity
                 style={styles.avatarUploadButton}
-                onPress={handleAvatarUpload}
+                onPress={handleAvatarPick}
                 disabled={isSaving}>
                 <Text style={styles.avatarUploadButtonText}>
                   {profile.avatarUrl
@@ -707,7 +797,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           </View>
 
-          <View style={styles.section}>
+          <View style={styles.section} onLayout={handleSectionLayout('personal')}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
                 {t('baristaProfileScreen.personalInfo', { defaultValue: 'Личная информация' })}
@@ -858,7 +948,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
             )}
           </View>
 
-          <View style={styles.section}>
+          <View style={styles.section} onLayout={handleSectionLayout('professional')}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
                 {t('baristaProfileScreen.professionalInfo', {
@@ -900,25 +990,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                     defaultValue: 'Опыт работы с оборудованием',
                   })}
                 </Text>
-                <View style={styles.chipsContainer}>
-                  {EQUIPMENT_TYPES.map(equipment => (
-                    <TouchableOpacity
-                      key={equipment}
-                      style={[
-                        styles.chip,
-                        selectedEquipment.includes(equipment) && styles.chipSelected,
-                      ]}
-                      onPress={() => toggleEquipment(equipment)}>
-                      <Text
-                        style={[
-                          styles.chipText,
-                          selectedEquipment.includes(equipment) && styles.chipTextSelected,
-                        ]}>
-                        {equipment}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                <EquipmentChips selected={selectedEquipment} onToggle={toggleEquipment} />
 
                 <Text style={styles.label}>
                   {t('baristaProfileScreen.certifications', { defaultValue: 'Сертификаты' })}
@@ -929,6 +1001,59 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   onAdd={handleAddCertificate}
                   onRemove={handleRemoveCertificate}
                 />
+
+                <Text style={styles.label}>{t('medicalBook.label')}</Text>
+                <Text style={styles.medicalBookHelper}>{t('medicalBook.helper')}</Text>
+                <View style={styles.medicalBookRow}>
+                  <TouchableOpacity
+                    style={[styles.datePickerButton, styles.medicalBookButton]}
+                    onPress={() => setShowMedicalBookPicker(true)}>
+                    <Text
+                      style={[
+                        styles.datePickerText,
+                        !medicalBookExpiresOn && styles.datePickerPlaceholder,
+                      ]}>
+                      {medicalBookExpiresOn
+                        ? formatDisplayDate(medicalBookExpiresOn)
+                        : t('medicalBook.noDate')}
+                    </Text>
+                  </TouchableOpacity>
+                  {medicalBookExpiresOn && (
+                    <TouchableOpacity
+                      style={styles.medicalBookClearButton}
+                      onPress={() => setMedicalBookExpiresOn('')}
+                      hitSlop={8}>
+                      <Text style={styles.medicalBookClearText}>
+                        {t('common.delete', { defaultValue: 'Удалить' })}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                {showMedicalBookPicker && (
+                  <>
+                    <DateTimePicker
+                      value={medicalBookExpiresOn ? new Date(medicalBookExpiresOn) : new Date()}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                      themeVariant="light"
+                      textColor="#000000"
+                      onChange={(_, date) => {
+                        if (date) setMedicalBookExpiresOn(formatLocalDate(date));
+                        if (Platform.OS !== 'ios') setShowMedicalBookPicker(false);
+                      }}
+                      minimumDate={new Date(2020, 0, 1)}
+                    />
+                    {Platform.OS === 'ios' && (
+                      <TouchableOpacity
+                        style={styles.datePickerDoneButton}
+                        onPress={() => setShowMedicalBookPicker(false)}>
+                        <Text style={styles.datePickerDoneText}>
+                          {t('baristaProfileScreen.done', { defaultValue: 'Готово' })}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </>
+                )}
               </>
             ) : (
               (() => {
@@ -936,9 +1061,10 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 const hasYears = profile.yearsOfExperience != null && profile.yearsOfExperience > 0;
                 const hasEquipment = profile.equipmentExperience.length > 0;
                 const hasCerts = profile.certifications.length > 0;
-                if (!hasBio && !hasYears && !hasEquipment && !hasCerts) {
-                  return <Text style={styles.emptySection}>{t('common.notSpecified')}</Text>;
-                }
+                // The medical book row renders unconditionally — `none` becomes
+                // a visible "Нет санкнижки" badge so employers see the absence
+                // explicitly rather than a missing field.
+                const medStatus = computeMedicalBookStatus(profile.medicalBookExpiresOn);
                 return (
                   <>
                     {hasBio && <Text style={styles.bioText}>{profile.bio}</Text>}
@@ -957,15 +1083,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                         <Text style={styles.label}>
                           {t('baristaProfileScreen.equipment', { defaultValue: 'Оборудование' })}
                         </Text>
-                        <View style={styles.chipsContainer}>
-                          {profile.equipmentExperience.map(equipment => (
-                            <View key={equipment} style={[styles.chip, styles.chipSelected]}>
-                              <Text style={[styles.chipText, styles.chipTextSelected]}>
-                                {equipment}
-                              </Text>
-                            </View>
-                          ))}
-                        </View>
+                        <EquipmentChipsDisplay selected={profile.equipmentExperience} />
                       </>
                     )}
                     {hasCerts && (
@@ -982,13 +1100,29 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                         ))}
                       </>
                     )}
+                    <View style={styles.medicalBookDisplay}>
+                      <Text style={styles.label}>{t('medicalBook.label')}</Text>
+                      <View style={[styles.medicalBookBadge, medicalBookBadgeStyle(medStatus)]}>
+                        <Text
+                          style={[
+                            styles.medicalBookBadgeText,
+                            medicalBookBadgeTextStyle(medStatus),
+                          ]}>
+                          {t(`medicalBook.status.${medStatus}`, {
+                            date: profile.medicalBookExpiresOn
+                              ? formatDisplayDate(profile.medicalBookExpiresOn)
+                              : '',
+                          })}
+                        </Text>
+                      </View>
+                    </View>
                   </>
                 );
               })()
             )}
           </View>
 
-          <View style={styles.section}>
+          <View style={styles.section} onLayout={handleSectionLayout('workExperience')}>
             <View style={styles.workExpHeader}>
               <Text style={styles.sectionTitle}>{t('barista.workExperience.title')}</Text>
               {(profile.workExperiences ?? []).length > 0 &&
@@ -1008,15 +1142,19 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
             {isEditing ? (
               <WorkExperienceEditor
                 experiences={workExperienceDrafts}
-                onChange={setWorkExperienceDrafts}
+                onChange={next => {
+                  setWorkExperienceDrafts(next);
+                  if (workExperienceErrors.length > 0) setWorkExperienceErrors([]);
+                }}
                 disabled={isSaving}
+                errorsByIndex={workExperienceErrors}
               />
             ) : (
               <WorkExperienceList experiences={profile.workExperiences ?? []} />
             )}
           </View>
 
-          <View style={styles.section}>
+          <View style={styles.section} onLayout={handleSectionLayout('preferences')}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
                 {t('baristaProfileScreen.workPreferences', {
@@ -1105,7 +1243,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                           })}
                         </Text>
                         <Text style={styles.infoText}>
-                          {profile.preferredMetroStations.join(', ')}
+                          {isMetroAnySelection(profile.preferredMetroStations)
+                            ? t('metro.anyOptionTitle', { defaultValue: 'Любая станция' })
+                            : profile.preferredMetroStations.join(', ')}
                         </Text>
                       </>
                     )}
@@ -1147,7 +1287,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
             )}
           </View>
 
-          <View style={styles.section}>
+          <View style={styles.section} onLayout={handleSectionLayout('portfolio')}>
             <View style={styles.portfolioHeader}>
               <Text style={styles.sectionTitle}>
                 {t('baristaProfileScreen.portfolio', { defaultValue: 'Портфолио' })}
@@ -1618,6 +1758,42 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  medicalBookHelper: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginBottom: 8,
+  },
+  medicalBookRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  medicalBookButton: {
+    flex: 1,
+  },
+  medicalBookClearButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  medicalBookClearText: {
+    color: COLORS.error,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  medicalBookDisplay: {
+    marginTop: 8,
+  },
+  medicalBookBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    marginTop: 4,
+  },
+  medicalBookBadgeText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   uploadButton: {
     backgroundColor: COLORS.backgroundSecondary,

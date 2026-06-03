@@ -12,6 +12,7 @@ interface JobCardProps {
   onPress?: (jobId: string) => void;
   onLongPress?: (job: Job) => void;
   ownerAggregate?: UserReviewAggregate;
+  alreadyApplied?: boolean;
 }
 
 const formatCurrency = (amount: number, locale: string): string => {
@@ -77,125 +78,134 @@ const getCompensationText = (job: Job, t: TFunction, locale: string): string => 
   }
 };
 
-export const JobCard = React.memo<JobCardProps>(({ job, onPress, onLongPress, ownerAggregate }) => {
-  const { t, i18n } = useTranslation();
-  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
-  const handlePress = useCallback(() => {
-    if (onPress) onPress(job.id);
-  }, [onPress, job.id]);
-  const handleLongPress = useCallback(() => {
-    if (onLongPress) onLongPress(job);
-  }, [onLongPress, job]);
+export const JobCard = React.memo<JobCardProps>(
+  ({ job, onPress, onLongPress, ownerAggregate, alreadyApplied }) => {
+    const { t, i18n } = useTranslation();
+    const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
+    const handlePress = useCallback(() => {
+      if (onPress) onPress(job.id);
+    }, [onPress, job.id]);
+    const handleLongPress = useCallback(() => {
+      if (onLongPress) onLongPress(job);
+    }, [onLongPress, job]);
 
-  const statusColor = getStatusColor(job.status);
-  const statusText = getStatusText(job.status, t);
-  const jobTypeText =
-    job.jobType === 'temporary' ? t('filters.jobType.temporary') : t('filters.jobType.permanent');
-  const compensationText = getCompensationText(job, t, locale);
-  const shiftDate = formatShiftDate(job.shiftDetails.startDate, locale);
-  const shiftTime = formatShiftTime(job.shiftDetails.startTime, job.shiftDetails.endTime);
+    const statusColor = getStatusColor(job.status);
+    const statusText = getStatusText(job.status, t);
+    const jobTypeText =
+      job.jobType === 'temporary' ? t('filters.jobType.temporary') : t('filters.jobType.permanent');
+    const compensationText = getCompensationText(job, t, locale);
+    const shiftDate = formatShiftDate(job.shiftDetails.startDate, locale);
+    const shiftTime = formatShiftTime(job.shiftDetails.startTime, job.shiftDetails.endTime);
 
-  const visibleEquipment = job.requiredEquipmentExperience.slice(0, 3);
-  const remainingEquipmentCount = job.requiredEquipmentExperience.length - 3;
+    const visibleEquipment = job.requiredEquipmentExperience.slice(0, 3);
+    const remainingEquipmentCount = job.requiredEquipmentExperience.length - 3;
 
-  const hasUrgentTag = job.tags.includes('urgent');
-  const branchThumbUri = job.branchPhotos?.[0];
+    const hasUrgentTag = job.tags.includes('urgent');
+    const branchThumbUri = job.branchPhotos?.[0];
 
-  return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={handlePress}
-      onLongPress={onLongPress ? handleLongPress : undefined}
-      delayLongPress={400}
-      activeOpacity={0.7}
-      disabled={!onPress && !onLongPress}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{job.title}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-          <Text style={styles.statusText}>{statusText}</Text>
-        </View>
-      </View>
-
-      <View style={styles.bodyRow}>
-        <View style={styles.bodyLeft}>
-          <View style={styles.businessInfo}>
-            <Text style={styles.businessText}>
-              {job.businessName}
-              {job.branchName && ` • ${job.branchName}`}
-            </Text>
-            {ownerAggregate && ownerAggregate.reviewCount > 0 && (
-              <StarRow
-                rating={ownerAggregate.averageRating}
-                count={ownerAggregate.reviewCount}
-                showValue
-                size={12}
-              />
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={handlePress}
+        onLongPress={onLongPress ? handleLongPress : undefined}
+        delayLongPress={400}
+        activeOpacity={0.7}
+        disabled={!onPress && !onLongPress}>
+        <View style={styles.header}>
+          <Text style={styles.title}>{job.title}</Text>
+          <View style={styles.headerBadges}>
+            {alreadyApplied && (
+              <View style={styles.appliedBadge}>
+                <Text style={styles.appliedBadgeText}>{t('jobs.alreadyApplied')}</Text>
+              </View>
             )}
-          </View>
-
-          <View style={styles.detailsRow}>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{jobTypeText}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+              <Text style={styles.statusText}>{statusText}</Text>
             </View>
-            {hasUrgentTag && (
-              <View style={[styles.badge, styles.urgentBadge]}>
-                <Text style={[styles.badgeText, styles.urgentText]}>{t('jobs.urgent')}</Text>
+          </View>
+        </View>
+
+        <View style={styles.bodyRow}>
+          <View style={styles.bodyLeft}>
+            <View style={styles.businessInfo}>
+              <Text style={styles.businessText}>
+                {job.businessName}
+                {job.branchName && ` • ${job.branchName}`}
+              </Text>
+              {ownerAggregate && ownerAggregate.reviewCount > 0 && (
+                <StarRow
+                  rating={ownerAggregate.averageRating}
+                  count={ownerAggregate.reviewCount}
+                  showValue
+                  size={12}
+                />
+              )}
+            </View>
+
+            <View style={styles.detailsRow}>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{jobTypeText}</Text>
+              </View>
+              {hasUrgentTag && (
+                <View style={[styles.badge, styles.urgentBadge]}>
+                  <Text style={[styles.badgeText, styles.urgentText]}>{t('jobs.urgent')}</Text>
+                </View>
+              )}
+            </View>
+
+            <View style={styles.shiftInfo}>
+              <Text style={styles.shiftText}>
+                {shiftDate} • {shiftTime}
+              </Text>
+            </View>
+
+            <View style={styles.compensationRow}>
+              <Text style={styles.compensationText}>{compensationText}</Text>
+            </View>
+
+            {job.metroStation && (
+              <View style={styles.metroRow}>
+                <Text style={styles.metroIcon}>Ⓜ</Text>
+                <Text style={styles.metroText}>{job.metroStation}</Text>
+              </View>
+            )}
+
+            {job.location?.address && (
+              <Text style={styles.addressText} numberOfLines={2}>
+                {job.location.address}
+              </Text>
+            )}
+
+            {job.requiredEquipmentExperience.length > 0 && (
+              <View style={styles.equipmentRow}>
+                {visibleEquipment.map((equipment, index) => (
+                  <View key={index} style={styles.equipmentChip}>
+                    <Text style={styles.equipmentText}>{equipment}</Text>
+                  </View>
+                ))}
+                {remainingEquipmentCount > 0 && (
+                  <View style={styles.equipmentChip}>
+                    <Text style={styles.equipmentText}>+{remainingEquipmentCount}</Text>
+                  </View>
+                )}
               </View>
             )}
           </View>
 
-          <View style={styles.shiftInfo}>
-            <Text style={styles.shiftText}>
-              {shiftDate} • {shiftTime}
-            </Text>
-          </View>
-
-          <View style={styles.compensationRow}>
-            <Text style={styles.compensationText}>{compensationText}</Text>
-          </View>
-
-          {job.metroStation && (
-            <View style={styles.metroRow}>
-              <Text style={styles.metroIcon}>Ⓜ</Text>
-              <Text style={styles.metroText}>{job.metroStation}</Text>
-            </View>
-          )}
-
-          {job.location?.address && (
-            <Text style={styles.addressText} numberOfLines={2}>
-              {job.location.address}
-            </Text>
-          )}
-
-          {job.requiredEquipmentExperience.length > 0 && (
-            <View style={styles.equipmentRow}>
-              {visibleEquipment.map((equipment, index) => (
-                <View key={index} style={styles.equipmentChip}>
-                  <Text style={styles.equipmentText}>{equipment}</Text>
-                </View>
-              ))}
-              {remainingEquipmentCount > 0 && (
-                <View style={styles.equipmentChip}>
-                  <Text style={styles.equipmentText}>+{remainingEquipmentCount}</Text>
-                </View>
-              )}
-            </View>
+          {branchThumbUri && (
+            <Image source={{ uri: branchThumbUri }} style={styles.branchThumb} resizeMode="cover" />
           )}
         </View>
 
-        {branchThumbUri && (
-          <Image source={{ uri: branchThumbUri }} style={styles.branchThumb} resizeMode="cover" />
-        )}
-      </View>
-
-      <View style={styles.footer}>
-        <Text style={styles.applicationCount}>
-          {t('jobs.applicationsCount', { count: job.applicationCount ?? 0 })}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-});
+        <View style={styles.footer}>
+          <Text style={styles.applicationCount}>
+            {t('jobs.applicationsCount', { count: job.applicationCount ?? 0 })}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   card: {
@@ -226,6 +236,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
+  },
+  headerBadges: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexShrink: 0,
+  },
+  appliedBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: 'rgba(39, 174, 96, 0.14)',
+  },
+  appliedBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.success,
   },
   bodyRow: {
     flexDirection: 'row',

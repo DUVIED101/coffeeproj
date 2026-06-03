@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { Alert, View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../config/supabase';
 import { useAuthStore } from '../../stores/authStore';
@@ -103,12 +103,19 @@ export const ProfileBootstrapScreen: React.FC = () => {
       useAuthStore.getState().setUser(profile);
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Unknown error';
-      console.error('ProfileBootstrap failed:', message);
+      if (message === 'email_already_registered_different_role') {
+        Alert.alert(
+          t('auth.profileBootstrap.failedTitle'),
+          t('auth.profileBootstrap.differentRole')
+        );
+      } else {
+        console.error('ProfileBootstrap failed:', message);
+      }
       setError(message);
     } finally {
       setIsWorking(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void attempt();

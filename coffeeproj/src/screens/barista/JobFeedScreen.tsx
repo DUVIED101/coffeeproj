@@ -17,6 +17,7 @@ import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
 import { ReviewService } from '../../services/ReviewService';
+import { ApplicationService } from '../../services/ApplicationService';
 import { useAuthStore } from '../../stores/authStore';
 import { FilterBar } from '../../components/FilterBar';
 import { JobCard } from '../../components/JobCard';
@@ -41,7 +42,8 @@ const JobCardWithDistance = React.memo<{
   job: Job;
   onPressJobId: (jobId: string) => void;
   ownerAggregate?: UserReviewAggregate;
-}>(({ job, onPressJobId, ownerAggregate }) => {
+  alreadyApplied?: boolean;
+}>(({ job, onPressJobId, ownerAggregate, alreadyApplied }) => {
   const { t } = useTranslation();
   const hasDistance = job.distance != null;
   const distanceLabel = hasDistance
@@ -52,7 +54,12 @@ const JobCardWithDistance = React.memo<{
     : '';
   return (
     <View>
-      <JobCard job={job} onPress={onPressJobId} ownerAggregate={ownerAggregate} />
+      <JobCard
+        job={job}
+        onPress={onPressJobId}
+        ownerAggregate={ownerAggregate}
+        alreadyApplied={alreadyApplied}
+      />
       {hasDistance && <Text style={styles.distanceText}>{distanceLabel}</Text>}
     </View>
   );
@@ -72,6 +79,7 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
   const [ownerAggregates, setOwnerAggregates] = useState<Map<UserId, UserReviewAggregate>>(
     new Map()
   );
+  const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
 
   const isFocused = useIsFocused();
 
@@ -90,6 +98,16 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [user?.id]);
 
+  const loadAppliedJobs = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const ids = await ApplicationService.getActiveAppliedJobIds(user.id);
+      setAppliedJobIds(ids);
+    } catch (error) {
+      console.error('Error loading applied job ids:', error);
+    }
+  }, [user?.id]);
+
   useEffect(() => {
     initializeLocation();
   }, []);
@@ -101,7 +119,8 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
   useEffect(() => {
     if (!isFocused) return;
     loadBaristaProfile();
-  }, [isFocused, loadBaristaProfile]);
+    loadAppliedJobs();
+  }, [isFocused, loadBaristaProfile, loadAppliedJobs]);
 
   useEffect(() => {
     loadJobs();
@@ -182,9 +201,10 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
         job={item}
         onPressJobId={handleJobPress}
         ownerAggregate={ownerAggregates.get(item.businessOwnerId as UserId)}
+        alreadyApplied={appliedJobIds.has(item.id)}
       />
     ),
-    [handleJobPress, ownerAggregates]
+    [handleJobPress, ownerAggregates, appliedJobIds]
   );
 
   const renderEmpty = () => (

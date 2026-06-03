@@ -104,3 +104,29 @@ export function isDraftValid(d: WorkExperienceDraft): boolean {
   const endTotal = d.endYear * 12 + d.endMonth;
   return endTotal >= startTotal;
 }
+
+export type WorkExperienceFieldError = 'employer' | 'position' | 'startDate' | 'endDate';
+
+/**
+ * Returns the set of fields preventing this draft from being saved. Empty
+ * when the draft is valid. Callers use this to gate save AND highlight the
+ * specific inputs in the editor card.
+ */
+export function findDraftErrors(d: WorkExperienceDraft): WorkExperienceFieldError[] {
+  const errors: WorkExperienceFieldError[] = [];
+  if (d.employer.trim().length === 0) errors.push('employer');
+  if (d.position.trim().length === 0) errors.push('position');
+  if (d.startYear === null || d.startMonth === null) errors.push('startDate');
+  if (!d.isCurrent) {
+    if (d.endYear === null || d.endMonth === null) {
+      errors.push('endDate');
+    } else if (
+      d.startYear !== null &&
+      d.startMonth !== null &&
+      d.endYear * 12 + d.endMonth < d.startYear * 12 + d.startMonth
+    ) {
+      errors.push('endDate');
+    }
+  }
+  return errors;
+}

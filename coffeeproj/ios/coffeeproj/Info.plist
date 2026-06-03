@@ -60,8 +60,12 @@
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>БыстроБариста использует геолокацию, чтобы показывать вакансии рядом с вами.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Камера нужна, чтобы снять фото профиля или заведения прямо в приложении.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Нужен доступ к фото для загрузки изображений профиля и заведения.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Разрешение нужно, чтобы сохранять обработанные фото обратно в галерею.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>MaterialCommunityIcons.ttf</string>

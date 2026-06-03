@@ -31,6 +31,9 @@ export interface BaristaProfile {
   hourlyRateMax?: number;
   availableFromDate?: string;
 
+  // Compliance
+  medicalBookExpiresOn?: string; // ISO date (YYYY-MM-DD)
+
   // Portfolio
   portfolioPhotos: string[];
 
@@ -60,6 +63,7 @@ export interface CreateBaristaProfileData {
   preferredShiftTimes?: ShiftTime[];
   hourlyRateMin?: number;
   hourlyRateMax?: number;
+  medicalBookExpiresOn?: string;
 }
 
 export interface UpdateBaristaProfileData extends Partial<

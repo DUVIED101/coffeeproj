@@ -458,6 +458,21 @@ export class ApplicationService {
   }
 
   /**
+   * Return the set of job ids the barista has applied to (excluding withdrawn).
+   * Lightweight projection used by the JobFeed to badge cards inline.
+   */
+  static async getActiveAppliedJobIds(baristaId: string): Promise<Set<string>> {
+    const { data, error } = await supabase
+      .from('applications')
+      .select('job_id, status')
+      .eq('barista_id', baristaId)
+      .neq('status', 'withdrawn');
+
+    if (error) throw error;
+    return new Set((data ?? []).map(row => row.job_id as string));
+  }
+
+  /**
    * Check if barista has already applied to a job
    * Returns the application if exists, null otherwise
    */

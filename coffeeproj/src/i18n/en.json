@@ -25,6 +25,7 @@
     "tabs": {
       "profile": "Profile",
       "jobs": "Jobs",
+      "applications": "Applications",
       "business": "Business",
       "baristas": "Baristas"
     }
@@ -53,6 +54,8 @@
     "selectedCount": "{{count}} stations",
     "nearbySection": "Near you",
     "allSection": "All stations",
+    "anyOptionTitle": "Any station",
+    "anyOptionSubtitle": "No metro preference",
     "cityTab": {
       "spb": "Saint Petersburg",
       "moscow": "Moscow"
@@ -79,6 +82,7 @@
   },
   "jobs": {
     "urgent": "Urgent",
+    "alreadyApplied": "Applied",
     "applicationsCount": "{{count}} applications",
     "applicationsCount_one": "{{count}} application",
     "applicationsCount_other": "{{count}} applications"
@@ -117,7 +121,10 @@
       "description": "Description (optional)",
       "removeConfirm": "Remove this work experience?",
       "limitReached": "Maximum {{max}} entries",
-      "totalShort": "Total: {{years}}y {{months}}m"
+      "totalShort": "Total: {{years}}y {{months}}m",
+      "errors": {
+        "fillRequired": "Fill in the required fields or remove the entry."
+      }
     }
   },
   "shiftHistory": {
@@ -1141,6 +1148,36 @@
   },
   "imageViewer": {
     "closeA11y": "Close"
+  },
+  "avatarPreview": {
+    "title": "Avatar preview",
+    "save": "Done",
+    "saving": "Saving…",
+    "repick": "Pick another photo",
+    "hint": "Pinch to zoom, drag to reposition."
+  },
+  "equipmentCategories": {
+    "espresso": "Espresso machines",
+    "grinder": "Grinders"
+  },
+  "medicalBook": {
+    "label": "Medical book",
+    "helper": "Enter the date of your next medical exam so employers can see it is current.",
+    "noDate": "Not provided",
+    "status": {
+      "none": "No medical book",
+      "valid": "Valid through {{date}}",
+      "expiringSoon": "Expires {{date}} — renew soon",
+      "expired": "Expired {{date}}"
+    }
+  },
+  "photoErrors": {
+    "tooLarge_one": "File exceeds {{maxMb}} MB and was skipped.",
+    "tooLarge_other": "Skipped {{count}} files larger than {{maxMb}} MB.",
+    "invalidFormat_one": "Unsupported file format. Use JPEG, PNG, HEIC or WEBP.",
+    "invalidFormat_other": "Skipped {{count}} files with an unsupported format. Use JPEG, PNG, HEIC or WEBP.",
+    "uploadFailedTitle": "Upload failed",
+    "uploadFailedBody": "Network error during upload. Please try again."
   },
   "common": {
     "save": "Save",

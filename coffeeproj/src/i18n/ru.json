@@ -25,6 +25,7 @@
     "tabs": {
       "profile": "Профиль",
       "jobs": "Работа",
+      "applications": "Отклики",
       "business": "Бизнес",
       "baristas": "Бариста"
     }
@@ -53,6 +54,8 @@
     "selectedCount": "{{count}} станций",
     "nearbySection": "Рядом с вами",
     "allSection": "Все станции",
+    "anyOptionTitle": "Любая станция",
+    "anyOptionSubtitle": "Без предпочтений по метро",
     "cityTab": {
       "spb": "Санкт-Петербург",
       "moscow": "Москва"
@@ -79,6 +82,7 @@
   },
   "jobs": {
     "urgent": "Срочно",
+    "alreadyApplied": "Вы откликнулись",
     "applicationsCount": "{{count}} заявок",
     "applicationsCount_one": "{{count}} заявка",
     "applicationsCount_few": "{{count}} заявки",
@@ -121,7 +125,10 @@
       "description": "Описание (опционально)",
       "removeConfirm": "Удалить запись об опыте?",
       "limitReached": "Максимум {{max}} записей",
-      "totalShort": "Всего: {{years}} г. {{months}} мес."
+      "totalShort": "Всего: {{years}} г. {{months}} мес.",
+      "errors": {
+        "fillRequired": "Заполните обязательные поля или удалите запись."
+      }
     }
   },
   "shiftHistory": {
@@ -1157,6 +1164,40 @@
   },
   "imageViewer": {
     "closeA11y": "Закрыть"
+  },
+  "avatarPreview": {
+    "title": "Предпросмотр аватара",
+    "save": "Готово",
+    "saving": "Сохранение…",
+    "repick": "Выбрать другое фото",
+    "hint": "Щипком пальцами увеличьте, потяните, чтобы переместить."
+  },
+  "equipmentCategories": {
+    "espresso": "Кофемашины",
+    "grinder": "Кофемолки"
+  },
+  "medicalBook": {
+    "label": "Санитарная книжка",
+    "helper": "Укажите дату следующего медосмотра, чтобы работодатели видели, что книжка актуальна.",
+    "noDate": "Не указано",
+    "status": {
+      "none": "Нет санкнижки",
+      "valid": "Актуальна до {{date}}",
+      "expiringSoon": "Истекает {{date}} — обновите",
+      "expired": "Истекла {{date}}"
+    }
+  },
+  "photoErrors": {
+    "tooLarge_one": "Файл превышает {{maxMb}} МБ и не был загружен.",
+    "tooLarge_few": "Пропущено {{count}} файла: больше {{maxMb}} МБ.",
+    "tooLarge_many": "Пропущено {{count}} файлов: больше {{maxMb}} МБ.",
+    "tooLarge_other": "Пропущено {{count}} файлов: больше {{maxMb}} МБ.",
+    "invalidFormat_one": "Неподдерживаемый формат файла. Используйте JPEG, PNG, HEIC или WEBP.",
+    "invalidFormat_few": "Пропущено {{count}} файла: неподдерживаемый формат. Используйте JPEG, PNG, HEIC или WEBP.",
+    "invalidFormat_many": "Пропущено {{count}} файлов: неподдерживаемый формат. Используйте JPEG, PNG, HEIC или WEBP.",
+    "invalidFormat_other": "Пропущено {{count}} файлов: неподдерживаемый формат. Используйте JPEG, PNG, HEIC или WEBP.",
+    "uploadFailedTitle": "Не удалось загрузить",
+    "uploadFailedBody": "Сетевая ошибка при загрузке. Попробуйте ещё раз."
   },
   "common": {
     "save": "Сохранить",

@@ -4,13 +4,18 @@ import { useTranslation } from 'react-i18next';
 import { COLORS, RADII } from '../config/constants';
 import { MonthYearPicker } from './MonthYearPicker';
 import { MAX_WORK_EXPERIENCES, computeDuration, makeEmptyDraft } from '../types/workExperience';
-import type { WorkExperienceDraft } from '../types/workExperience';
+import type { WorkExperienceDraft, WorkExperienceFieldError } from '../types/workExperience';
 import { clampToEffectiveLength } from '../utils/textLength';
 
 type Props = {
   experiences: WorkExperienceDraft[];
   onChange: (next: WorkExperienceDraft[]) => void;
   disabled?: boolean;
+  /**
+   * Per-index field errors. Parent computes these via `findDraftErrors` after
+   * a save attempt and re-renders so each card highlights the missing inputs.
+   */
+  errorsByIndex?: ReadonlyArray<ReadonlyArray<WorkExperienceFieldError>>;
 };
 
 const EMPLOYER_MAX = 120;
@@ -21,6 +26,7 @@ export const WorkExperienceEditor: React.FC<Props> = ({
   experiences,
   onChange,
   disabled = false,
+  errorsByIndex,
 }) => {
   const { t } = useTranslation();
 
@@ -47,6 +53,8 @@ export const WorkExperienceEditor: React.FC<Props> = ({
   return (
     <View>
       {experiences.map((exp, index) => {
+        const cardErrors = errorsByIndex?.[index] ?? [];
+        const hasError = (field: WorkExperienceFieldError): boolean => cardErrors.includes(field);
         const duration =
           exp.startYear !== null && exp.startMonth !== null
             ? computeDuration({
@@ -61,7 +69,7 @@ export const WorkExperienceEditor: React.FC<Props> = ({
         const showDuration = exp.startYear !== null && exp.startMonth !== null;
 
         return (
-          <View key={index} style={styles.card}>
+          <View key={index} style={[styles.card, cardErrors.length > 0 && styles.cardError]}>
             <View style={styles.cardHeader}>
               <Text style={styles.cardTitle}>#{index + 1}</Text>
               <TouchableOpacity
@@ -78,7 +86,7 @@ export const WorkExperienceEditor: React.FC<Props> = ({
             <View style={styles.row}>
               <View style={styles.half}>
                 <MonthYearPicker
-                  label={t('barista.workExperience.startDate')}
+                  label={t('barista.workExperience.startDate') + ' *'}
                   value={
                     exp.startYear !== null && exp.startMonth !== null
                       ? { year: exp.startYear, month: exp.startMonth }
@@ -150,7 +158,7 @@ export const WorkExperienceEditor: React.FC<Props> = ({
               {t('barista.workExperience.employer')} <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, hasError('employer') && styles.inputError]}
               value={exp.employer}
               onChangeText={text => update(index, { employer: text })}
               placeholder={t('workExperienceEditor.employerPlaceholder', {
@@ -165,7 +173,7 @@ export const WorkExperienceEditor: React.FC<Props> = ({
               {t('barista.workExperience.position')} <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, hasError('position') && styles.inputError]}
               value={exp.position}
               onChangeText={text => update(index, { position: text })}
               placeholder={t('workExperienceEditor.positionPlaceholder', {
@@ -175,6 +183,14 @@ export const WorkExperienceEditor: React.FC<Props> = ({
               maxLength={POSITION_MAX}
               editable={!disabled}
             />
+
+            {cardErrors.length > 0 && (
+              <Text style={styles.errorText}>
+                {t('barista.workExperience.errors.fillRequired', {
+                  defaultValue: 'Заполните обязательные поля или удалите запись.',
+                })}
+              </Text>
+            )}
 
             <Text style={styles.label}>{t('barista.workExperience.description')}</Text>
             <TextInput
@@ -216,6 +232,17 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
     backgroundColor: '#fff',
+  },
+  cardError: {
+    borderColor: COLORS.error,
+  },
+  inputError: {
+    borderColor: COLORS.error,
+  },
+  errorText: {
+    color: COLORS.error,
+    fontSize: 12,
+    marginTop: 8,
   },
   cardHeader: {
     flexDirection: 'row',

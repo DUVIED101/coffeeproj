@@ -18,7 +18,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS, EQUIPMENT_TYPES } from '../../config/constants';
+import { COLORS } from '../../config/constants';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
 import { WorkExperienceService } from '../../services/WorkExperienceService';
 import { MetroSelector } from '../../components/MetroSelector';
@@ -26,6 +26,7 @@ import { CityToggle } from '../../components/CityToggle';
 import { CertificatesEditor } from '../../components/CertificatesEditor';
 import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { WorkExperienceEditor } from '../../components/WorkExperienceEditor';
+import { EquipmentChips } from '../../components/EquipmentChips';
 import { useAuthStore } from '../../stores/authStore';
 import { formatLocalDate } from '../../utils/dateUtils';
 import {
@@ -44,7 +45,8 @@ import type { ShiftTime, BaristaProfile } from '../../types/baristaProfile';
 import type { CityCode } from '../../types/city';
 import { DEFAULT_CITY, toCityCode } from '../../types/city';
 import type { BaristaProfileId } from '../../types/ids';
-import type { WorkExperienceDraft } from '../../types/workExperience';
+import type { WorkExperienceDraft, WorkExperienceFieldError } from '../../types/workExperience';
+import { findDraftErrors } from '../../types/workExperience';
 
 type BaristaStackParamList = {
   JobFeed: undefined;
@@ -96,8 +98,13 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const [preferredMetroStations, setPreferredMetroStations] = useState<string[]>([]);
   const [selectedShiftTimes, setSelectedShiftTimes] = useState<ShiftTime[]>([]);
   const [hourlyRateMin, setHourlyRateMin] = useState('');
+  const [medicalBookExpiresOn, setMedicalBookExpiresOn] = useState<string>('');
+  const [showMedicalBookPicker, setShowMedicalBookPicker] = useState(false);
 
   const [workExperiences, setWorkExperiences] = useState<WorkExperienceDraft[]>([]);
+  const [workExperienceErrors, setWorkExperienceErrors] = useState<
+    ReadonlyArray<ReadonlyArray<WorkExperienceFieldError>>
+  >([]);
 
   const [userLocation, setUserLocation] = useState<GeoPoint | undefined>(undefined);
 
@@ -143,6 +150,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         setPreferredMetroStations(profile.preferredMetroStations);
         setSelectedShiftTimes(profile.preferredShiftTimes);
         setHourlyRateMin(profile.hourlyRateMin?.toString() || '');
+        setMedicalBookExpiresOn(profile.medicalBookExpiresOn ?? '');
 
         const existingExperiences = await WorkExperienceService.listForProfile(
           profile.id as BaristaProfileId
@@ -244,6 +252,20 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
+    const draftErrors = workExperiences.map(findDraftErrors);
+    if (draftErrors.some(e => e.length > 0)) {
+      setWorkExperienceErrors(draftErrors);
+      setCurrentStep(STEP_KEYS.indexOf('baristaSetup.stepWorkExperience'));
+      Alert.alert(
+        t('baristaSetup.validationTitle', { defaultValue: 'Проверьте данные' }),
+        t('barista.workExperience.errors.fillRequired', {
+          defaultValue: 'Заполните обязательные поля или удалите запись.',
+        })
+      );
+      return;
+    }
+    setWorkExperienceErrors([]);
+
     try {
       setIsSubmitting(true);
 
@@ -260,6 +282,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         preferredMetroStations,
         preferredShiftTimes: selectedShiftTimes,
         hourlyRateMin: hourlyRateMin ? parseInt(hourlyRateMin, 10) : undefined,
+        medicalBookExpiresOn: medicalBookExpiresOn || undefined,
       };
 
       let profileId: BaristaProfileId;
@@ -284,7 +307,10 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         [
           {
             text: t('common.ok', { defaultValue: 'ОК' }),
-            onPress: () => navigation.replace('BaristaProfile'),
+            // reset() rather than replace() so the original (empty-state)
+            // BaristaProfile underneath the setup screen is dropped — otherwise
+            // pressing the Profile tab pops back to it and shows "not yet created".
+            onPress: () => navigation.reset({ index: 0, routes: [{ name: 'BaristaProfile' }] }),
           },
         ]
       );
@@ -475,25 +501,81 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 defaultValue: 'Опыт работы с оборудованием (опционально)',
               })}
             </Text>
-            <View style={styles.chipsContainer}>
-              {EQUIPMENT_TYPES.map(equipment => (
-                <TouchableOpacity
-                  key={equipment}
+            <EquipmentChips selected={selectedEquipment} onToggle={toggleEquipment} />
+
+            <Text style={styles.label}>{t('medicalBook.label')}</Text>
+            <Text style={styles.medicalBookHelper}>{t('medicalBook.helper')}</Text>
+            <View style={styles.medicalBookRow}>
+              <TouchableOpacity
+                style={[styles.datePickerButton, styles.medicalBookButton]}
+                onPress={() => setShowMedicalBookPicker(true)}>
+                <Text
                   style={[
-                    styles.chip,
-                    selectedEquipment.includes(equipment) && styles.chipSelected,
-                  ]}
-                  onPress={() => toggleEquipment(equipment)}>
-                  <Text
-                    style={[
-                      styles.chipText,
-                      selectedEquipment.includes(equipment) && styles.chipTextSelected,
-                    ]}>
-                    {equipment}
-                  </Text>
+                    styles.datePickerText,
+                    !medicalBookExpiresOn && styles.datePickerPlaceholder,
+                  ]}>
+                  {medicalBookExpiresOn
+                    ? formatDisplayDate(medicalBookExpiresOn)
+                    : t('medicalBook.noDate')}
+                </Text>
+              </TouchableOpacity>
+              {medicalBookExpiresOn !== '' && (
+                <TouchableOpacity
+                  style={styles.medicalBookClearButton}
+                  onPress={() => setMedicalBookExpiresOn('')}
+                  hitSlop={8}>
+                  <Text style={styles.medicalBookClearText}>{t('common.delete')}</Text>
                 </TouchableOpacity>
-              ))}
+              )}
             </View>
+            {showMedicalBookPicker &&
+              (Platform.OS === 'ios' ? (
+                <Modal
+                  transparent
+                  animationType="slide"
+                  visible
+                  onRequestClose={() => setShowMedicalBookPicker(false)}>
+                  <TouchableWithoutFeedback onPress={() => setShowMedicalBookPicker(false)}>
+                    <View style={styles.datePickerBackdrop}>
+                      <TouchableWithoutFeedback>
+                        <View style={styles.datePickerSheet}>
+                          <DateTimePicker
+                            value={
+                              medicalBookExpiresOn ? new Date(medicalBookExpiresOn) : new Date()
+                            }
+                            mode="date"
+                            display="spinner"
+                            themeVariant="light"
+                            textColor="#000000"
+                            onChange={(_, date) => {
+                              if (date) setMedicalBookExpiresOn(formatLocalDate(date));
+                            }}
+                            minimumDate={new Date(2020, 0, 1)}
+                          />
+                          <TouchableOpacity
+                            style={styles.datePickerDoneButton}
+                            onPress={() => setShowMedicalBookPicker(false)}>
+                            <Text style={styles.datePickerDoneText}>
+                              {t('baristaSetup.done', { defaultValue: 'Готово' })}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      </TouchableWithoutFeedback>
+                    </View>
+                  </TouchableWithoutFeedback>
+                </Modal>
+              ) : (
+                <DateTimePicker
+                  value={medicalBookExpiresOn ? new Date(medicalBookExpiresOn) : new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={(_, date) => {
+                    setShowMedicalBookPicker(false);
+                    if (date) setMedicalBookExpiresOn(formatLocalDate(date));
+                  }}
+                  minimumDate={new Date(2020, 0, 1)}
+                />
+              ))}
           </View>
         );
 
@@ -634,8 +716,12 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
             <WorkExperienceEditor
               experiences={workExperiences}
-              onChange={setWorkExperiences}
+              onChange={next => {
+                setWorkExperiences(next);
+                if (workExperienceErrors.length > 0) setWorkExperienceErrors([]);
+              }}
               disabled={isSubmitting}
+              errorsByIndex={workExperienceErrors}
             />
           </View>
         );
@@ -832,6 +918,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  medicalBookHelper: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginBottom: 8,
+  },
+  medicalBookRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  medicalBookButton: {
+    flex: 1,
+  },
+  medicalBookClearButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  medicalBookClearText: {
+    color: COLORS.error,
+    fontSize: 14,
+    fontWeight: '500',
   },
   textArea: {
     minHeight: 100,

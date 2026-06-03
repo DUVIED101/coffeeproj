@@ -15,11 +15,13 @@ import { BusinessSearchStack } from './BusinessSearchStack';
 import { BaristaStack } from './BaristaStack';
 import { ProfileStack } from './ProfileStack';
 import { ChatsStack } from './ChatsStack';
+import { ApplicationsStack } from './ApplicationsStack';
 import type { ChatsStackParamList } from './ChatsStack';
 
 export type MainTabsParamList = {
   Profile: NavigatorScreenParams<BusinessProfileStackParamList> | undefined;
   Jobs: undefined;
+  Applications: undefined;
   Business: undefined;
   Baristas: undefined;
   Chats: NavigatorScreenParams<ChatsStackParamList> | undefined;
@@ -89,6 +91,28 @@ export const MainTabs: React.FC = () => {
           tabBarIcon: ({ color, size, focused }) => (
             <MaterialCommunityIcons
               name={focused ? 'briefcase-search' : 'briefcase-search-outline'}
+              color={color}
+              size={size}
+            />
+          ),
+          tabBarButton: (props: BottomTabBarButtonProps) => {
+            const { user } = useAuthStore.getState();
+            const isBaristaUser = user?.accountType === 'barista';
+            if (!isBaristaUser) return null;
+            return <Pressable {...props} />;
+          },
+        }}
+      />
+      <Tab.Screen
+        name="Applications"
+        component={ApplicationsStack}
+        options={{
+          title: t('nav.tabs.applications', { defaultValue: 'Мои отклики' }),
+          tabBarLabel: t('nav.tabs.applications', { defaultValue: 'Отклики' }),
+          headerShown: false,
+          tabBarIcon: ({ color, size, focused }) => (
+            <MaterialCommunityIcons
+              name={focused ? 'file-document' : 'file-document-outline'}
               color={color}
               size={size}
             />

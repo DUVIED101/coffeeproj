@@ -19,6 +19,17 @@ import { COLORS } from '../config/constants';
 
 const NEARBY_LIMIT = 5;
 
+/**
+ * Sentinel that lives in `preferredMetroStations` arrays to mean "the barista
+ * has explicitly said: any station, no preference". Distinct from `[]` which
+ * just means "user hasn't filled this in yet". Filter callers (FilterBar)
+ * strip it before applying so it never reaches downstream search logic.
+ */
+export const METRO_ANY = '__any__';
+
+export const isMetroAnySelection = (stations: readonly string[]): boolean =>
+  stations.length === 1 && stations[0] === METRO_ANY;
+
 type StationRow = MetroStation & { distance?: number };
 
 type CommonProps = {
@@ -27,6 +38,11 @@ type CommonProps = {
   city: CityCode;
   onCityChange: (city: CityCode) => void;
   userLocation?: GeoPoint;
+  /**
+   * When true, hides the "Any station" row. Used for business branches where
+   * a specific metro must be set (a coffee shop has one location).
+   */
+  hideAnyOption?: boolean;
 };
 
 type SingleMetroSelectorProps = CommonProps & {
@@ -52,6 +68,7 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
     city,
     onCityChange,
     userLocation,
+    hideAnyOption,
   } = props;
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,6 +80,8 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
     return props.value ? [props.value] : [];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.value, props.multiSelect]);
+
+  const hasAnySentinel = isMetroAnySelection(selectedStations);
 
   const nearbyStations = useMemo<StationRow[]>(() => {
     if (!userLocation || searchQuery.trim()) return [];
@@ -91,9 +110,12 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
 
   const handleSelectStation = (station: MetroStation) => {
     if (props.multiSelect) {
-      const newSelection = props.value.includes(station.name)
-        ? props.value.filter(s => s !== station.name)
-        : [...props.value, station.name];
+      // Picking a real station overrides the "Any" sentinel — they're
+      // mutually exclusive intents.
+      const cleaned = props.value.filter(s => s !== METRO_ANY);
+      const newSelection = cleaned.includes(station.name)
+        ? cleaned.filter(s => s !== station.name)
+        : [...cleaned, station.name];
       props.onChange(newSelection);
       setSearchQuery('');
     } else {
@@ -101,6 +123,16 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
       setIsOpen(false);
       setSearchQuery('');
     }
+  };
+
+  const handleSelectAny = () => {
+    if (props.multiSelect) {
+      props.onChange([METRO_ANY]);
+    } else {
+      props.onChange(null);
+    }
+    setIsOpen(false);
+    setSearchQuery('');
   };
 
   const handleCityTab = (nextCity: CityCode) => {
@@ -127,6 +159,9 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
   };
 
   const getDisplayText = (): string => {
+    if (hasAnySentinel) {
+      return t('metro.anyOptionTitle', { defaultValue: 'Любая станция' });
+    }
     if (selectedStations.length === 0) return placeholder;
     if (selectedStations.length === 1) return selectedStations[0];
     return t('metro.selectedCount', { count: selectedStations.length });
@@ -243,6 +278,27 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
               style={styles.stationList}
               keyboardShouldPersistTaps="handled"
               stickySectionHeadersEnabled={false}
+              ListHeaderComponent={
+                hideAnyOption || searchQuery.trim() ? null : (
+                  <TouchableOpacity
+                    style={[styles.anyOptionRow, hasAnySentinel && styles.anyOptionRowSelected]}
+                    onPress={handleSelectAny}
+                    accessibilityRole="button">
+                    <Text style={styles.anyOptionIcon}>★</Text>
+                    <View style={styles.anyOptionTextWrap}>
+                      <Text style={styles.anyOptionTitle}>
+                        {t('metro.anyOptionTitle', { defaultValue: 'Любая станция' })}
+                      </Text>
+                      <Text style={styles.anyOptionSubtitle}>
+                        {t('metro.anyOptionSubtitle', {
+                          defaultValue: 'Без предпочтений по метро',
+                        })}
+                      </Text>
+                    </View>
+                    {hasAnySentinel && <Text style={styles.checkmark}>✓</Text>}
+                  </TouchableOpacity>
+                )
+              }
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
                   <Text style={styles.emptyText}>{t('metro.noResults')}</Text>
@@ -383,6 +439,40 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+  },
+  anyOptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    backgroundColor: COLORS.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  anyOptionRowSelected: {
+    backgroundColor: 'rgba(139, 69, 19, 0.08)',
+    borderColor: COLORS.primary,
+  },
+  anyOptionIcon: {
+    fontSize: 18,
+    color: COLORS.primary,
+    marginRight: 12,
+  },
+  anyOptionTextWrap: {
+    flex: 1,
+  },
+  anyOptionTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  anyOptionSubtitle: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 2,
   },
   lineIndicator: {
     width: 4,

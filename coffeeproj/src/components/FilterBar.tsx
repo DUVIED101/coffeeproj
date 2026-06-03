@@ -10,11 +10,11 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { JobFilters, JobType } from '../types/job';
-import type { Equipment, GeoPoint } from '../types/business';
+import type { GeoPoint } from '../types/business';
 import type { CityCode } from '../types/city';
 import { DEFAULT_CITY } from '../types/city';
-import { COLORS, EQUIPMENT_TYPES } from '../config/constants';
-import { MetroSelector } from './MetroSelector';
+import { COLORS } from '../config/constants';
+import { MetroSelector, METRO_ANY } from './MetroSelector';
 
 interface FilterBarProps {
   onFilterChange: (filters: JobFilters) => void;
@@ -22,14 +22,11 @@ interface FilterBarProps {
   userLocation?: GeoPoint;
 }
 
-const EQUIPMENT_OPTIONS: readonly Equipment[] = EQUIPMENT_TYPES;
-
 const DISTANCE_OPTIONS_KM = [5, 10, 25, 50] as const;
 
 export const FilterBar = React.memo<FilterBarProps>(
   ({ onFilterChange, currentFilters, userLocation }) => {
     const { t } = useTranslation();
-    const [showEquipmentModal, setShowEquipmentModal] = useState(false);
     const [showDistanceModal, setShowDistanceModal] = useState(false);
 
     const handleJobTypeChange = useCallback(
@@ -42,26 +39,14 @@ export const FilterBar = React.memo<FilterBarProps>(
       [currentFilters, onFilterChange]
     );
 
-    const handleEquipmentToggle = useCallback(
-      (equipment: string) => {
-        const currentEquipment = currentFilters.equipment || [];
-        const newEquipment = currentEquipment.includes(equipment)
-          ? currentEquipment.filter(e => e !== equipment)
-          : [...currentEquipment, equipment];
-
-        onFilterChange({
-          ...currentFilters,
-          equipment: newEquipment.length > 0 ? newEquipment : undefined,
-        });
-      },
-      [currentFilters, onFilterChange]
-    );
-
     const handleMetroChange = useCallback(
       (stationNames: string[]) => {
+        // Filter context: "Любая" === no filter, so strip the sentinel before
+        // it can reach the JobService search query.
+        const real = stationNames.filter(s => s !== METRO_ANY);
         onFilterChange({
           ...currentFilters,
-          metroStations: stationNames.length > 0 ? stationNames : undefined,
+          metroStations: real.length > 0 ? real : undefined,
         });
       },
       [currentFilters, onFilterChange]
@@ -89,21 +74,11 @@ export const FilterBar = React.memo<FilterBarProps>(
       [currentFilters, onFilterChange]
     );
 
-    const handleClearEquipment = useCallback(() => {
-      onFilterChange({
-        ...currentFilters,
-        equipment: undefined,
-      });
-      setShowEquipmentModal(false);
-    }, [currentFilters, onFilterChange]);
-
     const getDistanceLabel = (distance?: number): string => {
       if (!distance) return t('filters.distance');
       const km = distance / 1000;
       return t('filters.distanceKm', { km });
     };
-
-    const selectedEquipmentCount = currentFilters.equipment?.length || 0;
 
     return (
       <View style={styles.container}>
@@ -153,19 +128,6 @@ export const FilterBar = React.memo<FilterBarProps>(
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.filterChip, selectedEquipmentCount > 0 && styles.filterChipActive]}
-            onPress={() => setShowEquipmentModal(true)}>
-            <Text
-              style={[
-                styles.filterChipText,
-                selectedEquipmentCount > 0 && styles.filterChipTextActive,
-              ]}>
-              {t('filters.equipment')}
-              {selectedEquipmentCount > 0 && ` (${selectedEquipmentCount})`}
-            </Text>
-          </TouchableOpacity>
-
           <View style={styles.metroSelectorContainer}>
             <MetroSelector
               multiSelect
@@ -195,64 +157,6 @@ export const FilterBar = React.memo<FilterBarProps>(
             </TouchableOpacity>
           )}
         </ScrollView>
-
-        <Modal
-          visible={showEquipmentModal}
-          animationType="slide"
-          transparent
-          onRequestClose={() => setShowEquipmentModal(false)}>
-          <Pressable style={styles.modalOverlay} onPress={() => setShowEquipmentModal(false)}>
-            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{t('filters.chooseEquipment')}</Text>
-                <TouchableOpacity onPress={() => setShowEquipmentModal(false)}>
-                  <Text style={styles.closeButton}>✕</Text>
-                </TouchableOpacity>
-              </View>
-
-              <ScrollView
-                style={styles.equipmentScroll}
-                contentContainerStyle={styles.equipmentList}
-                showsVerticalScrollIndicator={false}>
-                {EQUIPMENT_OPTIONS.map(equipment => {
-                  const isSelected = currentFilters.equipment?.includes(equipment) || false;
-                  return (
-                    <TouchableOpacity
-                      key={equipment}
-                      style={[styles.equipmentItem, isSelected && styles.equipmentItemSelected]}
-                      onPress={() => handleEquipmentToggle(equipment)}>
-                      <Text
-                        style={[
-                          styles.equipmentItemText,
-                          isSelected && styles.equipmentItemTextSelected,
-                        ]}>
-                        {equipment}
-                      </Text>
-                      {isSelected && <Text style={styles.checkmark}>✓</Text>}
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-
-              <View style={styles.modalButtonsRow}>
-                {selectedEquipmentCount > 0 && (
-                  <TouchableOpacity
-                    style={[styles.doneButton, styles.clearButton]}
-                    onPress={handleClearEquipment}>
-                    <Text style={[styles.doneButtonText, styles.clearButtonText]}>
-                      {t('filters.clear')}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity
-                  style={[styles.doneButton, selectedEquipmentCount > 0 && styles.doneButtonHalf]}
-                  onPress={() => setShowEquipmentModal(false)}>
-                  <Text style={styles.doneButtonText}>{t('common.done')}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Pressable>
-        </Modal>
 
         <Modal
           visible={showDistanceModal}
@@ -365,32 +269,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: COLORS.textSecondary,
   },
-  equipmentScroll: {
-    flexGrow: 0,
-  },
-  equipmentList: {
-    padding: 16,
-  },
-  equipmentItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: COLORS.backgroundSecondary,
-    marginBottom: 8,
-  },
-  equipmentItemSelected: {
-    backgroundColor: COLORS.primary,
-  },
-  equipmentItemText: {
-    fontSize: 16,
-    color: COLORS.text,
-  },
-  equipmentItemTextSelected: {
-    color: COLORS.background,
-    fontWeight: '600',
-  },
   checkmark: {
     fontSize: 18,
     color: COLORS.background,
@@ -433,25 +311,6 @@ const styles = StyleSheet.create({
   },
   metroSelectorContainer: {
     minWidth: 120,
-  },
-  modalButtonsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginHorizontal: 16,
-  },
-  doneButtonHalf: {
-    flex: 1,
-    margin: 0,
-  },
-  clearButton: {
-    flex: 1,
-    backgroundColor: COLORS.backgroundSecondary,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    margin: 0,
-  },
-  clearButtonText: {
-    color: COLORS.text,
   },
   resetButton: {
     margin: 16,

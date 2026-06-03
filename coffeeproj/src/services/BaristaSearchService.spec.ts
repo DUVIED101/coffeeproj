@@ -162,7 +162,9 @@ describe('searchBaristas', () => {
     expect(builder.overlaps).toHaveBeenCalledWith('equipment_experience', filters.equipment);
     expect(builder.overlaps).toHaveBeenCalledWith(
       'preferred_metro_stations',
-      filters.metroStations
+      // BaristaSearchService appends METRO_ANY so baristas who said "any
+      // station" still match a specific-station recruiter filter.
+      [...(filters.metroStations ?? []), '__any__']
     );
     expect(builder.overlaps).toHaveBeenCalledWith('preferred_shift_times', filters.shiftTimes);
     expect(builder.overlaps).toHaveBeenCalledWith('languages', filters.languages);

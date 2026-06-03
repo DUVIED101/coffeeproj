@@ -109,9 +109,11 @@ export const sanitizeNameInput = (raw: string): string => {
 };
 
 // Years of experience: digits with optional decimal (comma or period). We
-// normalize commas to periods so downstream parseFloat works, and cap to a
-// reasonable max length (e.g. "12.5" → 4 chars).
+// normalize commas to periods so downstream parseFloat works, cap to a
+// reasonable max length (e.g. "12.5" → 4 chars) AND clamp to YEARS_MAX_VALUE
+// so the field can't hold an absurd value like "999" career years.
 export const YEARS_MAX_LENGTH = 4;
+export const YEARS_MAX_VALUE = 50;
 
 export const sanitizeYearsInput = (raw: string): string => {
   // Replace comma with period (Russian decimal convention).
@@ -127,6 +129,11 @@ export const sanitizeYearsInput = (raw: string): string => {
       sawDot = true;
     }
     if (result.length >= YEARS_MAX_LENGTH) break;
+  }
+  if (!result || result === '.') return result;
+  const parsed = parseFloat(result);
+  if (!Number.isNaN(parsed) && parsed > YEARS_MAX_VALUE) {
+    return String(YEARS_MAX_VALUE);
   }
   return result;
 };

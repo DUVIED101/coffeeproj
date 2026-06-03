@@ -14,7 +14,7 @@ import type { Equipment } from '../types/business';
 import type { CityCode } from '../types/city';
 import { DEFAULT_CITY, CITY_CODES } from '../types/city';
 import { COLORS, EQUIPMENT_TYPES } from '../config/constants';
-import { MetroSelector } from './MetroSelector';
+import { MetroSelector, METRO_ANY } from './MetroSelector';
 
 type BaristaFilterBarProps = {
   onFilterChange: (filters: BaristaFilters) => void;
@@ -103,9 +103,10 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
 
     const handleMetroChange = useCallback(
       (stationNames: string[]) => {
+        const real = stationNames.filter(s => s !== METRO_ANY);
         onFilterChange({
           ...currentFilters,
-          metroStations: stationNames.length > 0 ? stationNames : undefined,
+          metroStations: real.length > 0 ? real : undefined,
         });
       },
       [currentFilters, onFilterChange]
