@@ -50,8 +50,11 @@ const ShiftHistoryCard = React.memo<{
   const businessName = entry.job?.businessName ?? '';
   const branchName = entry.job?.branchName;
   const metro = entry.job?.metroStation;
-  const range = entry.job?.shiftDetails
-    ? formatRange(entry.job.shiftDetails.startDate, entry.job.shiftDetails.endDate, locale)
+  const shiftDetails = entry.job?.shiftDetails;
+  const range = shiftDetails
+    ? shiftDetails.kind === 'permanent'
+      ? formatRange(shiftDetails.startDate, undefined, locale)
+      : formatRange(shiftDetails.startDate, shiftDetails.endDate, locale)
     : '';
 
   const canRate = !entry.baristaReview && Boolean(entry.job?.businessOwnerId);

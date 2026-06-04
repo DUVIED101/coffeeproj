@@ -22,7 +22,7 @@ import { JobService } from '../../services/JobService';
 import { BusinessService } from '../../services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
 import type { Branch, Equipment } from '../../types/business';
-import type { JobType, CompensationType } from '../../types/job';
+import type { JobType, CompensationType, ShiftDetails, WeekdayKey } from '../../types/job';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import type { MainTabsParamList } from '../../navigation/MainTabs';
 import {
@@ -53,7 +53,35 @@ const EQUIPMENT_OPTIONS: readonly Equipment[] = EQUIPMENT_TYPES;
 
 const TAG_OPTIONS = ['urgent', 'flexible', 'training-provided'];
 
-const WEEKDAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
+const WEEKDAY_KEYS: readonly WeekdayKey[] = [
+  'mon',
+  'tue',
+  'wed',
+  'thu',
+  'fri',
+  'sat',
+  'sun',
+] as const;
+
+const HOURS_PER_WEEK_MIN = 1;
+const HOURS_PER_WEEK_MAX = 80;
+
+// Allows digits + a single dot with one fractional digit, e.g. "37", "37.5".
+// Integer part is capped at two digits so users can't type past the 0-80 range
+// (validate() still enforces the upper bound on submit).
+// Empty string and a bare trailing dot are intermediate states the user may
+// type while editing, so we accept them and let `validate()` reject on submit.
+const sanitizeHoursPerWeekInput = (input: string): string => {
+  const cleaned = input.replace(/,/g, '.').replace(/[^\d.]/g, '');
+  const firstDot = cleaned.indexOf('.');
+  if (firstDot === -1) return cleaned.slice(0, 2);
+  const intPart = cleaned.slice(0, firstDot).slice(0, 2);
+  const fracPart = cleaned
+    .slice(firstDot + 1)
+    .replace(/\./g, '')
+    .slice(0, 1);
+  return `${intPart}.${fracPart}`;
+};
 
 export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
   const { t } = useTranslation();
@@ -83,6 +111,8 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
   const [endTime, setEndTime] = useState<Date>(new Date());
   const [isRecurring, setIsRecurring] = useState(false);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const [hoursPerWeek, setHoursPerWeek] = useState('');
+  const [preferredDayIdxs, setPreferredDayIdxs] = useState<number[]>([]);
   const [compensationType, setCompensationType] = useState<CompensationType>('hourly');
   const [compensationAmount, setCompensationAmount] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -138,22 +168,31 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           jobMaxDate()
         );
         setStartDate(loadedStart);
-        setEndDate(
-          job.shiftDetails.endDate
-            ? clampDate(new Date(job.shiftDetails.endDate), loadedStart, jobMaxDate())
-            : undefined
-        );
-        setStartTime(parseTimeString(job.shiftDetails.startTime));
-        setEndTime(parseTimeString(job.shiftDetails.endTime));
-        setIsRecurring(job.shiftDetails.isRecurring);
-        if (job.shiftDetails.recurringDays) {
-          setSelectedDays(
-            job.shiftDetails.recurringDays
-              .map(day => DAY_NAMES.indexOf(day))
+        if (job.shiftDetails.kind === 'permanent') {
+          setHoursPerWeek(String(job.shiftDetails.hoursPerWeek));
+          setPreferredDayIdxs(
+            (job.shiftDetails.preferredDays ?? [])
+              .map(day => WEEKDAY_KEYS.indexOf(day))
               .filter(idx => idx >= 0)
           );
+        } else {
+          setEndDate(
+            job.shiftDetails.endDate
+              ? clampDate(new Date(job.shiftDetails.endDate), loadedStart, jobMaxDate())
+              : undefined
+          );
+          setStartTime(parseTimeString(job.shiftDetails.startTime));
+          setEndTime(parseTimeString(job.shiftDetails.endTime));
+          setIsRecurring(job.shiftDetails.isRecurring);
+          if (job.shiftDetails.recurringDays) {
+            setSelectedDays(
+              job.shiftDetails.recurringDays
+                .map(day => DAY_NAMES.indexOf(day))
+                .filter(idx => idx >= 0)
+            );
+          }
         }
-        setCompensationType(job.compensation.type);
+        setCompensationType(job.jobType === 'permanent' ? 'hourly' : job.compensation.type);
         setCompensationAmount(String(job.compensation.amount));
         setSelectedTags(job.tags ?? []);
       } catch (err) {
@@ -221,6 +260,12 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   };
 
+  const togglePreferredDay = (dayIndex: number) => {
+    setPreferredDayIdxs(prev =>
+      prev.includes(dayIndex) ? prev.filter(d => d !== dayIndex) : [...prev, dayIndex]
+    );
+  };
+
   const addRequirement = () => {
     setRequirements([...requirements, '']);
   };
@@ -262,7 +307,10 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     const amount = parseFloat(compensationAmount) || 0;
 
     if (compensationType === 'hourly') {
-      const totalHours = calculateTotalHours();
+      // Permanent positions don't have a fixed per-shift duration, so hourly
+      // pay totals the weekly hours commitment instead of a single-shift span.
+      const totalHours =
+        jobType === 'permanent' ? parseFloat(hoursPerWeek) || 0 : calculateTotalHours();
       const totalAmount = amount * totalHours;
       const platformFee = totalAmount * 0.15;
       const totalWithFee = totalAmount + platformFee;
@@ -275,7 +323,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
 
     return { totalHours: 0, totalAmount, platformFee, totalWithFee };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [compensationAmount, compensationType, startTime, endTime]);
+  }, [compensationAmount, compensationType, startTime, endTime, jobType, hoursPerWeek]);
 
   const validate = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -289,9 +337,6 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     if (!compensationAmount || parseFloat(compensationAmount) <= 0) {
       newErrors.compensation = t('createJob.errors.compensationRequired');
     }
-    if (isRecurring && selectedDays.length === 0) {
-      newErrors.recurringDays = t('createJob.errors.recurringDaysRequired');
-    }
     const minStart = jobMinDate();
     const maxEnd = jobMaxDate();
     if (startDate.getTime() < minStart.getTime()) {
@@ -299,21 +344,40 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     } else if (startDate.getTime() > maxEnd.getTime()) {
       newErrors.startDate = t('createJob.errors.startDateTooFar');
     }
-    if (endDate && endDate.getTime() > maxEnd.getTime()) {
-      newErrors.endDate = t('createJob.errors.endDateTooFar');
-    }
-    const startMinutes = startTime.getHours() * 60 + startTime.getMinutes();
-    const endMinutes = endTime.getHours() * 60 + endTime.getMinutes();
-    // Within a single day (no endDate or endDate == startDate) the end time must
-    // come strictly after the start. Multi-day shifts can have end < start because
-    // the end falls on the next calendar day.
-    const isSingleDay =
-      !endDate ||
-      (endDate.getFullYear() === startDate.getFullYear() &&
-        endDate.getMonth() === startDate.getMonth() &&
-        endDate.getDate() === startDate.getDate());
-    if (isSingleDay && endMinutes <= startMinutes) {
-      newErrors.endTime = t('createJob.errors.endTimeDiffersFromStart');
+
+    if (jobType === 'permanent') {
+      const hours = parseFloat(hoursPerWeek);
+      if (
+        !hoursPerWeek ||
+        Number.isNaN(hours) ||
+        hours < HOURS_PER_WEEK_MIN ||
+        hours > HOURS_PER_WEEK_MAX
+      ) {
+        newErrors.hoursPerWeek = t('createJob.errors.hoursPerWeekInvalid', {
+          min: HOURS_PER_WEEK_MIN,
+          max: HOURS_PER_WEEK_MAX,
+        });
+      }
+    } else {
+      if (isRecurring && selectedDays.length === 0) {
+        newErrors.recurringDays = t('createJob.errors.recurringDaysRequired');
+      }
+      if (endDate && endDate.getTime() > maxEnd.getTime()) {
+        newErrors.endDate = t('createJob.errors.endDateTooFar');
+      }
+      const startMinutes = startTime.getHours() * 60 + startTime.getMinutes();
+      const endMinutes = endTime.getHours() * 60 + endTime.getMinutes();
+      // Within a single day (no endDate or endDate == startDate) the end time must
+      // come strictly after the start. Multi-day shifts can have end < start because
+      // the end falls on the next calendar day.
+      const isSingleDay =
+        !endDate ||
+        (endDate.getFullYear() === startDate.getFullYear() &&
+          endDate.getMonth() === startDate.getMonth() &&
+          endDate.getDate() === startDate.getDate());
+      if (isSingleDay && endMinutes <= startMinutes) {
+        newErrors.endTime = t('createJob.errors.endTimeDiffersFromStart');
+      }
     }
 
     setErrors(newErrors);
@@ -346,9 +410,28 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
         throw new Error(t('createJob.errors.branchNotFound'));
       }
 
-      const recurringDays = isRecurring ? selectedDays.map(index => DAY_NAMES[index]) : undefined;
-
       const filteredRequirements = requirements.filter(r => r.trim() !== '');
+
+      const shiftDetails: ShiftDetails =
+        jobType === 'permanent'
+          ? {
+              kind: 'permanent',
+              startDate: startDate.toISOString(),
+              hoursPerWeek: parseFloat(hoursPerWeek),
+              preferredDays:
+                preferredDayIdxs.length > 0
+                  ? preferredDayIdxs.map(idx => WEEKDAY_KEYS[idx])
+                  : undefined,
+            }
+          : {
+              kind: 'temporary',
+              startDate: startDate.toISOString(),
+              endDate: endDate ? endDate.toISOString() : undefined,
+              startTime: formatTime(startTime),
+              endTime: formatTime(endTime),
+              isRecurring,
+              recurringDays: isRecurring ? selectedDays.map(index => DAY_NAMES[index]) : undefined,
+            };
 
       const jobData = {
         businessId: business.id,
@@ -365,14 +448,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           coordinates: selectedBranch.coordinates,
           metroStation: selectedBranch.metroStation,
         },
-        shiftDetails: {
-          startDate: startDate.toISOString(),
-          endDate: endDate ? endDate.toISOString() : undefined,
-          startTime: formatTime(startTime),
-          endTime: formatTime(endTime),
-          isRecurring,
-          recurringDays,
-        },
+        shiftDetails,
         compensation: {
           type: compensationType,
           amount: parseFloat(compensationAmount),
@@ -466,7 +542,10 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.segmentButton, jobType === 'permanent' && styles.segmentButtonActive]}
-              onPress={() => setJobType('permanent')}>
+              onPress={() => {
+                setJobType('permanent');
+                setCompensationType('hourly');
+              }}>
               <Text
                 style={[
                   styles.segmentButtonText,
@@ -592,7 +671,10 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           <Text style={styles.sectionTitle}>{t('createJob.sections.shiftDetails')}</Text>
 
           <Text style={styles.label}>
-            {t('createJob.fields.startDate')} <Text style={styles.required}>*</Text>
+            {jobType === 'permanent'
+              ? t('createJob.fields.permanentStartDate')
+              : t('createJob.fields.startDate')}{' '}
+            <Text style={styles.required}>*</Text>
           </Text>
           <TouchableOpacity style={styles.dateButton} onPress={() => setShowStartDatePicker(true)}>
             <Text style={styles.dateButtonText}>{formatDate(startDate)}</Text>
@@ -628,169 +710,223 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           )}
           {errors.startDate && <Text style={styles.errorText}>{errors.startDate}</Text>}
 
-          <Text style={styles.label}>{t('createJob.fields.endDate')}</Text>
-          <TouchableOpacity style={styles.dateButton} onPress={() => setShowEndDatePicker(true)}>
-            <Text style={styles.dateButtonText}>
-              {endDate ? formatDate(endDate) : t('createJob.fields.selectDate')}
-            </Text>
-          </TouchableOpacity>
-          {showEndDatePicker && (
+          {jobType === 'permanent' ? (
             <>
-              <DateTimePicker
-                value={clampDate(endDate ?? startDate, startDate, jobMaxDate())}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                themeVariant="light"
-                textColor="#000000"
-                minimumDate={startDate}
-                maximumDate={jobMaxDate()}
-                onChange={(_event, selectedDate) => {
-                  if (selectedDate) {
-                    setEndDate(clampDate(selectedDate, startDate, jobMaxDate()));
-                  }
+              <Text style={styles.label}>
+                {t('createJob.fields.hoursPerWeek')} <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={[styles.input, errors.hoursPerWeek ? styles.inputError : null]}
+                placeholder={t('createJob.fields.hoursPerWeekPlaceholder')}
+                keyboardType="decimal-pad"
+                value={hoursPerWeek}
+                onChangeText={text => {
+                  setHoursPerWeek(sanitizeHoursPerWeekInput(text));
+                  const { hoursPerWeek: _, ...rest } = errors;
+                  setErrors(rest);
                 }}
+                returnKeyType="done"
               />
-              <TouchableOpacity
-                style={styles.pickerDoneButton}
-                onPress={() => setShowEndDatePicker(false)}>
-                <Text style={styles.pickerDoneText}>{t('createJob.done')}</Text>
-              </TouchableOpacity>
-            </>
-          )}
+              {errors.hoursPerWeek && <Text style={styles.errorText}>{errors.hoursPerWeek}</Text>}
 
-          <View style={styles.timeRow}>
-            <View style={styles.timeInput}>
-              <Text style={styles.label}>
-                {t('createJob.fields.startTime')} <Text style={styles.required}>*</Text>
-              </Text>
-              <TouchableOpacity
-                style={styles.dateButton}
-                onPress={() => setShowStartTimePicker(true)}>
-                <Text style={styles.dateButtonText}>{formatTime(startTime)}</Text>
-              </TouchableOpacity>
-              {showStartTimePicker && (
-                <>
-                  <DateTimePicker
-                    value={startTime}
-                    mode="time"
-                    is24Hour={true}
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    themeVariant="light"
-                    textColor="#000000"
-                    onChange={(_event, selectedTime) => {
-                      if (!selectedTime) return;
-                      setStartTime(selectedTime);
-                      const isSingleDay =
-                        !endDate ||
-                        (endDate.getFullYear() === startDate.getFullYear() &&
-                          endDate.getMonth() === startDate.getMonth() &&
-                          endDate.getDate() === startDate.getDate());
-                      if (isSingleDay) {
-                        const startMin = selectedTime.getHours() * 60 + selectedTime.getMinutes();
-                        const endMin = endTime.getHours() * 60 + endTime.getMinutes();
-                        if (endMin <= startMin) {
-                          const nextEnd = new Date(selectedTime);
-                          const clampedMin = Math.min(startMin + 1, 23 * 60 + 59);
-                          nextEnd.setHours(Math.floor(clampedMin / 60), clampedMin % 60, 0, 0);
-                          setEndTime(nextEnd);
-                        }
-                      }
-                      const { startTime: _, ...rest } = errors;
-                      setErrors(rest);
-                    }}
-                  />
-                  <TouchableOpacity
-                    style={styles.pickerDoneButton}
-                    onPress={() => setShowStartTimePicker(false)}>
-                    <Text style={styles.pickerDoneText}>{t('createJob.done')}</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-              {errors.startTime && <Text style={styles.errorText}>{errors.startTime}</Text>}
-            </View>
-
-            <View style={styles.timeInput}>
-              <Text style={styles.label}>
-                {t('createJob.fields.endTime')} <Text style={styles.required}>*</Text>
-              </Text>
-              <TouchableOpacity
-                style={styles.dateButton}
-                onPress={() => setShowEndTimePicker(true)}>
-                <Text style={styles.dateButtonText}>{formatTime(endTime)}</Text>
-              </TouchableOpacity>
-              {showEndTimePicker && (
-                <>
-                  <DateTimePicker
-                    value={endTime}
-                    mode="time"
-                    is24Hour={true}
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    themeVariant="light"
-                    textColor="#000000"
-                    onChange={(_event, selectedTime) => {
-                      if (!selectedTime) return;
-                      const isSingleDay =
-                        !endDate ||
-                        (endDate.getFullYear() === startDate.getFullYear() &&
-                          endDate.getMonth() === startDate.getMonth() &&
-                          endDate.getDate() === startDate.getDate());
-                      const startMin = startTime.getHours() * 60 + startTime.getMinutes();
-                      const pickedMin = selectedTime.getHours() * 60 + selectedTime.getMinutes();
-                      let next = selectedTime;
-                      if (isSingleDay && pickedMin <= startMin) {
-                        // Clamp to start + 1 min so the range stays positive.
-                        next = new Date(selectedTime);
-                        const clampedMin = Math.min(startMin + 1, 23 * 60 + 59);
-                        next.setHours(Math.floor(clampedMin / 60), clampedMin % 60, 0, 0);
-                      }
-                      setEndTime(next);
-                      const { endTime: _, ...rest } = errors;
-                      setErrors(rest);
-                    }}
-                  />
-                  <TouchableOpacity
-                    style={styles.pickerDoneButton}
-                    onPress={() => setShowEndTimePicker(false)}>
-                    <Text style={styles.pickerDoneText}>{t('createJob.done')}</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-              {errors.endTime && <Text style={styles.errorText}>{errors.endTime}</Text>}
-            </View>
-          </View>
-
-          <View style={styles.switchRow}>
-            <Text style={styles.label}>{t('createJob.fields.isRecurring')}</Text>
-            <Switch
-              value={isRecurring}
-              onValueChange={setIsRecurring}
-              trackColor={{ false: COLORS.border, true: COLORS.primary }}
-            />
-          </View>
-
-          {isRecurring && (
-            <View>
-              <Text style={styles.label}>
-                {t('createJob.fields.recurringDays')} <Text style={styles.required}>*</Text>
-              </Text>
+              <Text style={styles.label}>{t('createJob.fields.preferredDays')}</Text>
+              <Text style={styles.helperText}>{t('createJob.fields.preferredDaysHint')}</Text>
               <View style={styles.daysGrid}>
                 {WEEKDAY_KEYS.map((dayKey, index) => (
                   <TouchableOpacity
-                    key={index}
-                    style={[styles.dayChip, selectedDays.includes(index) && styles.dayChipSelected]}
-                    onPress={() => toggleDay(index)}>
+                    key={dayKey}
+                    style={[
+                      styles.dayChip,
+                      preferredDayIdxs.includes(index) && styles.dayChipSelected,
+                    ]}
+                    onPress={() => togglePreferredDay(index)}>
                     <Text
                       style={[
                         styles.dayChipText,
-                        selectedDays.includes(index) && styles.dayChipTextSelected,
+                        preferredDayIdxs.includes(index) && styles.dayChipTextSelected,
                       ]}>
                       {t(`createJob.weekdays.${dayKey}`)}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
-              {errors.recurringDays && <Text style={styles.errorText}>{errors.recurringDays}</Text>}
-            </View>
+            </>
+          ) : (
+            <>
+              <Text style={styles.label}>{t('createJob.fields.endDate')}</Text>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setShowEndDatePicker(true)}>
+                <Text style={styles.dateButtonText}>
+                  {endDate ? formatDate(endDate) : t('createJob.fields.selectDate')}
+                </Text>
+              </TouchableOpacity>
+              {showEndDatePicker && (
+                <>
+                  <DateTimePicker
+                    value={clampDate(endDate ?? startDate, startDate, jobMaxDate())}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                    themeVariant="light"
+                    textColor="#000000"
+                    minimumDate={startDate}
+                    maximumDate={jobMaxDate()}
+                    onChange={(_event, selectedDate) => {
+                      if (selectedDate) {
+                        setEndDate(clampDate(selectedDate, startDate, jobMaxDate()));
+                      }
+                    }}
+                  />
+                  <TouchableOpacity
+                    style={styles.pickerDoneButton}
+                    onPress={() => setShowEndDatePicker(false)}>
+                    <Text style={styles.pickerDoneText}>{t('createJob.done')}</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              <View style={styles.timeRow}>
+                <View style={styles.timeInput}>
+                  <Text style={styles.label}>
+                    {t('createJob.fields.startTime')} <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.dateButton}
+                    onPress={() => setShowStartTimePicker(true)}>
+                    <Text style={styles.dateButtonText}>{formatTime(startTime)}</Text>
+                  </TouchableOpacity>
+                  {showStartTimePicker && (
+                    <>
+                      <DateTimePicker
+                        value={startTime}
+                        mode="time"
+                        is24Hour={true}
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        themeVariant="light"
+                        textColor="#000000"
+                        onChange={(_event, selectedTime) => {
+                          if (!selectedTime) return;
+                          setStartTime(selectedTime);
+                          const isSingleDay =
+                            !endDate ||
+                            (endDate.getFullYear() === startDate.getFullYear() &&
+                              endDate.getMonth() === startDate.getMonth() &&
+                              endDate.getDate() === startDate.getDate());
+                          if (isSingleDay) {
+                            const startMin =
+                              selectedTime.getHours() * 60 + selectedTime.getMinutes();
+                            const endMin = endTime.getHours() * 60 + endTime.getMinutes();
+                            if (endMin <= startMin) {
+                              const nextEnd = new Date(selectedTime);
+                              const clampedMin = Math.min(startMin + 1, 23 * 60 + 59);
+                              nextEnd.setHours(Math.floor(clampedMin / 60), clampedMin % 60, 0, 0);
+                              setEndTime(nextEnd);
+                            }
+                          }
+                          const { startTime: _, ...rest } = errors;
+                          setErrors(rest);
+                        }}
+                      />
+                      <TouchableOpacity
+                        style={styles.pickerDoneButton}
+                        onPress={() => setShowStartTimePicker(false)}>
+                        <Text style={styles.pickerDoneText}>{t('createJob.done')}</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                  {errors.startTime && <Text style={styles.errorText}>{errors.startTime}</Text>}
+                </View>
+
+                <View style={styles.timeInput}>
+                  <Text style={styles.label}>
+                    {t('createJob.fields.endTime')} <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.dateButton}
+                    onPress={() => setShowEndTimePicker(true)}>
+                    <Text style={styles.dateButtonText}>{formatTime(endTime)}</Text>
+                  </TouchableOpacity>
+                  {showEndTimePicker && (
+                    <>
+                      <DateTimePicker
+                        value={endTime}
+                        mode="time"
+                        is24Hour={true}
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        themeVariant="light"
+                        textColor="#000000"
+                        onChange={(_event, selectedTime) => {
+                          if (!selectedTime) return;
+                          const isSingleDay =
+                            !endDate ||
+                            (endDate.getFullYear() === startDate.getFullYear() &&
+                              endDate.getMonth() === startDate.getMonth() &&
+                              endDate.getDate() === startDate.getDate());
+                          const startMin = startTime.getHours() * 60 + startTime.getMinutes();
+                          const pickedMin =
+                            selectedTime.getHours() * 60 + selectedTime.getMinutes();
+                          let next = selectedTime;
+                          if (isSingleDay && pickedMin <= startMin) {
+                            // Clamp to start + 1 min so the range stays positive.
+                            next = new Date(selectedTime);
+                            const clampedMin = Math.min(startMin + 1, 23 * 60 + 59);
+                            next.setHours(Math.floor(clampedMin / 60), clampedMin % 60, 0, 0);
+                          }
+                          setEndTime(next);
+                          const { endTime: _, ...rest } = errors;
+                          setErrors(rest);
+                        }}
+                      />
+                      <TouchableOpacity
+                        style={styles.pickerDoneButton}
+                        onPress={() => setShowEndTimePicker(false)}>
+                        <Text style={styles.pickerDoneText}>{t('createJob.done')}</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                  {errors.endTime && <Text style={styles.errorText}>{errors.endTime}</Text>}
+                </View>
+              </View>
+
+              <View style={styles.switchRow}>
+                <Text style={styles.label}>{t('createJob.fields.isRecurring')}</Text>
+                <Switch
+                  value={isRecurring}
+                  onValueChange={setIsRecurring}
+                  trackColor={{ false: COLORS.border, true: COLORS.primary }}
+                />
+              </View>
+
+              {isRecurring && (
+                <View>
+                  <Text style={styles.label}>
+                    {t('createJob.fields.recurringDays')} <Text style={styles.required}>*</Text>
+                  </Text>
+                  <View style={styles.daysGrid}>
+                    {WEEKDAY_KEYS.map((dayKey, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={[
+                          styles.dayChip,
+                          selectedDays.includes(index) && styles.dayChipSelected,
+                        ]}
+                        onPress={() => toggleDay(index)}>
+                        <Text
+                          style={[
+                            styles.dayChipText,
+                            selectedDays.includes(index) && styles.dayChipTextSelected,
+                          ]}>
+                          {t(`createJob.weekdays.${dayKey}`)}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  {errors.recurringDays && (
+                    <Text style={styles.errorText}>{errors.recurringDays}</Text>
+                  )}
+                </View>
+              )}
+            </>
           )}
         </View>
 
@@ -801,7 +937,10 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
             {t('createJob.fields.compensationType')} <Text style={styles.required}>*</Text>
           </Text>
           <View style={styles.compensationTypes}>
-            {(['hourly', 'daily', 'fixed'] as CompensationType[]).map(type => (
+            {(jobType === 'permanent'
+              ? (['hourly'] as CompensationType[])
+              : (['hourly', 'daily', 'fixed'] as CompensationType[])
+            ).map(type => (
               <TouchableOpacity
                 key={type}
                 style={[
@@ -984,6 +1123,12 @@ const styles = StyleSheet.create({
     color: COLORS.error,
     fontSize: 12,
     marginTop: 4,
+  },
+  helperText: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    marginTop: -4,
+    marginBottom: 8,
   },
   segmentedControl: {
     flexDirection: 'row',

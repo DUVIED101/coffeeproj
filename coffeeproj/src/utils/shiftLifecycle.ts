@@ -19,7 +19,22 @@ const dateAtTime = (isoDate: string, time: string): Date => {
   return new Date(y, mo - 1, d, h, m);
 };
 
+const dateAtMidnight = (isoDate: string): Date => {
+  const [y, mo, d] = isoDate.split('-').map(part => parseInt(part, 10));
+  return new Date(y, mo - 1, d, 0, 0);
+};
+
+// Permanent jobs have no shift boundary in the same sense — startDate marks
+// when the position opens, with no defined end. Treating "end" as effectively
+// never lets callers (cancel windows, lifecycle classification) reuse the same
+// shape without permanent-specific branches.
+const FAR_FUTURE_MS = MS_PER_DAY * 365 * 100;
+
 const shiftBoundary = (shift: ShiftDetails): { start: Date; end: Date } => {
+  if (shift.kind === 'permanent') {
+    const start = dateAtMidnight(shift.startDate);
+    return { start, end: new Date(start.getTime() + FAR_FUTURE_MS) };
+  }
   const start = dateAtTime(shift.startDate, shift.startTime);
   const endDateStr = shift.endDate ?? shift.startDate;
   let end = dateAtTime(endDateStr, shift.endTime);

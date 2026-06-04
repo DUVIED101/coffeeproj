@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { COLORS } from '../config/constants';
 import { StarRow } from './StarRow';
 import { BranchPhotoGallery } from './BranchPhotoGallery';
-import type { Job } from '../types/job';
+import type { Job, WeekdayKey } from '../types/job';
 import type { UserReviewAggregate } from '../types/review';
 
 type Props = {
@@ -14,6 +15,9 @@ type Props = {
   distance?: number | null;
   onPhotoPress?: (index: number) => void;
 };
+
+const formatWeekdayKeys = (days: readonly WeekdayKey[], t: TFunction): string =>
+  days.map(d => t(`createJob.weekdays.${d}`)).join(', ');
 
 const formatRecurringDays = (days: string[], locale: 'ru-RU' | 'en-US'): string => {
   const dayMap: Record<string, string> =
@@ -131,33 +135,60 @@ export const JobDetailsContent: React.FC<Props> = ({
         <Text style={styles.sectionTitle}>
           {t('jobDetails.shiftDetails', { defaultValue: 'Детали смены' })}
         </Text>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>{t('jobDetails.date', { defaultValue: 'Дата:' })}</Text>
-          <Text style={styles.detailValue}>{formatDate(job.shiftDetails.startDate)}</Text>
-        </View>
-        {job.shiftDetails.endDate && (
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>
-              {t('jobDetails.endDate', { defaultValue: 'Дата окончания:' })}
-            </Text>
-            <Text style={styles.detailValue}>{formatDate(job.shiftDetails.endDate)}</Text>
-          </View>
-        )}
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>{t('jobDetails.time', { defaultValue: 'Время:' })}</Text>
-          <Text style={styles.detailValue}>
-            {job.shiftDetails.startTime} - {job.shiftDetails.endTime}
-          </Text>
-        </View>
-        {job.shiftDetails.isRecurring && job.shiftDetails.recurringDays && (
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>
-              {t('jobDetails.recurring', { defaultValue: 'Повторяется:' })}
-            </Text>
-            <Text style={styles.detailValue}>
-              {formatRecurringDays(job.shiftDetails.recurringDays, locale)}
-            </Text>
-          </View>
+        {job.shiftDetails.kind === 'permanent' ? (
+          <>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t('jobDetails.startDatePermanent')}</Text>
+              <Text style={styles.detailValue}>{formatDate(job.shiftDetails.startDate)}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t('jobDetails.hoursPerWeek')}</Text>
+              <Text style={styles.detailValue}>{job.shiftDetails.hoursPerWeek}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t('jobDetails.preferredDays')}</Text>
+              <Text style={styles.detailValue}>
+                {job.shiftDetails.preferredDays && job.shiftDetails.preferredDays.length > 0
+                  ? formatWeekdayKeys(job.shiftDetails.preferredDays, t)
+                  : t('jobDetails.anyDay')}
+              </Text>
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>
+                {t('jobDetails.date', { defaultValue: 'Дата:' })}
+              </Text>
+              <Text style={styles.detailValue}>{formatDate(job.shiftDetails.startDate)}</Text>
+            </View>
+            {job.shiftDetails.endDate && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>
+                  {t('jobDetails.endDate', { defaultValue: 'Дата окончания:' })}
+                </Text>
+                <Text style={styles.detailValue}>{formatDate(job.shiftDetails.endDate)}</Text>
+              </View>
+            )}
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>
+                {t('jobDetails.time', { defaultValue: 'Время:' })}
+              </Text>
+              <Text style={styles.detailValue}>
+                {job.shiftDetails.startTime} - {job.shiftDetails.endTime}
+              </Text>
+            </View>
+            {job.shiftDetails.isRecurring && job.shiftDetails.recurringDays && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>
+                  {t('jobDetails.recurring', { defaultValue: 'Повторяется:' })}
+                </Text>
+                <Text style={styles.detailValue}>
+                  {formatRecurringDays(job.shiftDetails.recurringDays, locale)}
+                </Text>
+              </View>
+            )}
+          </>
         )}
       </View>
 

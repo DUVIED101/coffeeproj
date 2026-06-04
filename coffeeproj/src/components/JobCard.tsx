@@ -95,7 +95,10 @@ export const JobCard = React.memo<JobCardProps>(
       job.jobType === 'temporary' ? t('filters.jobType.temporary') : t('filters.jobType.permanent');
     const compensationText = getCompensationText(job, t, locale);
     const shiftDate = formatShiftDate(job.shiftDetails.startDate, locale);
-    const shiftTime = formatShiftTime(job.shiftDetails.startTime, job.shiftDetails.endTime);
+    const shiftSubtitle =
+      job.shiftDetails.kind === 'permanent'
+        ? t('jobDetails.hoursPerWeekShort', { hours: job.shiftDetails.hoursPerWeek })
+        : formatShiftTime(job.shiftDetails.startTime, job.shiftDetails.endTime);
 
     const visibleEquipment = job.requiredEquipmentExperience.slice(0, 3);
     const remainingEquipmentCount = job.requiredEquipmentExperience.length - 3;
@@ -155,7 +158,7 @@ export const JobCard = React.memo<JobCardProps>(
 
             <View style={styles.shiftInfo}>
               <Text style={styles.shiftText}>
-                {shiftDate} • {shiftTime}
+                {shiftDate} • {shiftSubtitle}
               </Text>
             </View>
 

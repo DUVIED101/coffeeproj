@@ -35,9 +35,10 @@ credentials/
 supabase/.temp/
 supabase/.branches/
 
-# Claude Code personal settings (shared .claude/settings.json is OK to track)
-.claude/settings.local.json
-.claude/projects/
+# Claude Code: ignore everything under .claude/ except shared settings.json
+# (covers settings.local.json, projects/, scheduled_tasks.lock, worktrees/, …)
+.claude/*
+!.claude/settings.json
 
 # Test coverage
 coverage/

@@ -18,7 +18,6 @@ import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ReviewService } from '../../services/ReviewService';
 import { ReviewModal } from '../../components/ReviewModal';
-import { ShiftConfirmationModal } from '../../components/ShiftConfirmationModal';
 import { getShiftEnd, canBaristaCancelShift, getShiftStart } from '../../utils/shiftLifecycle';
 import type { Application, DisputeSummary } from '../../types/application';
 import type { ApplicationId, UserId } from '../../types/ids';
@@ -361,7 +360,6 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
         now
       )
     : currentStatus === 'accepted';
-  const showConfirmModal = currentStatus === 'accepted' && shiftConfirmationStatus === 'pending';
   const showCompletionStatus = currentStatus === 'accepted' || currentStatus === 'completed';
 
   if (isLoadingApp || !application) {
@@ -413,29 +411,68 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
         {job?.shiftDetails && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('applications.details.shiftDetails')}</Text>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{t('applications.details.shiftDate')}</Text>
-              <Text style={styles.detailValue}>{formatJobDate(job.shiftDetails.startDate)}</Text>
-            </View>
-            {job.shiftDetails.endDate && (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>{t('applications.details.shiftEndDate')}</Text>
-                <Text style={styles.detailValue}>{formatJobDate(job.shiftDetails.endDate)}</Text>
-              </View>
-            )}
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{t('applications.details.shiftTime')}</Text>
-              <Text style={styles.detailValue}>
-                {job.shiftDetails.startTime} – {job.shiftDetails.endTime}
-              </Text>
-            </View>
-            {job.shiftDetails.isRecurring && job.shiftDetails.recurringDays && (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>{t('applications.details.shiftRecurring')}</Text>
-                <Text style={styles.detailValue}>
-                  {formatRecurringDays(job.shiftDetails.recurringDays)}
-                </Text>
-              </View>
+            {job.shiftDetails.kind === 'permanent' ? (
+              <>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>
+                    {t('applications.details.shiftStartDatePermanent')}
+                  </Text>
+                  <Text style={styles.detailValue}>
+                    {formatJobDate(job.shiftDetails.startDate)}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>
+                    {t('applications.details.shiftHoursPerWeek')}
+                  </Text>
+                  <Text style={styles.detailValue}>{job.shiftDetails.hoursPerWeek}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>
+                    {t('applications.details.shiftPreferredDays')}
+                  </Text>
+                  <Text style={styles.detailValue}>
+                    {job.shiftDetails.preferredDays && job.shiftDetails.preferredDays.length > 0
+                      ? job.shiftDetails.preferredDays
+                          .map(d => t(`createJob.weekdays.${d}`))
+                          .join(', ')
+                      : t('applications.details.shiftAnyDay')}
+                  </Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>{t('applications.details.shiftDate')}</Text>
+                  <Text style={styles.detailValue}>
+                    {formatJobDate(job.shiftDetails.startDate)}
+                  </Text>
+                </View>
+                {job.shiftDetails.endDate && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>{t('applications.details.shiftEndDate')}</Text>
+                    <Text style={styles.detailValue}>
+                      {formatJobDate(job.shiftDetails.endDate)}
+                    </Text>
+                  </View>
+                )}
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>{t('applications.details.shiftTime')}</Text>
+                  <Text style={styles.detailValue}>
+                    {job.shiftDetails.startTime} – {job.shiftDetails.endTime}
+                  </Text>
+                </View>
+                {job.shiftDetails.isRecurring && job.shiftDetails.recurringDays && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>
+                      {t('applications.details.shiftRecurring')}
+                    </Text>
+                    <Text style={styles.detailValue}>
+                      {formatRecurringDays(job.shiftDetails.recurringDays)}
+                    </Text>
+                  </View>
+                )}
+              </>
             )}
           </View>
         )}
@@ -543,18 +580,6 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
           </View>
         )}
       </ScrollView>
-
-      {showConfirmModal && job?.title && (
-        <ShiftConfirmationModal
-          applicationId={applicationId}
-          jobTitle={job.title}
-          onConfirmed={() => setShiftConfirmationStatus('confirmed')}
-          onDeclined={() => {
-            setShiftConfirmationStatus('declined');
-            setCurrentStatus('withdrawn');
-          }}
-        />
-      )}
 
       {businessOwnerId && (
         <ReviewModal

@@ -156,7 +156,11 @@ export const OfferJobScreen: React.FC<Props> = ({ navigation, route }) => {
           {item.shiftDetails?.startDate && (
             <Text style={[styles.jobMeta, isOffered && styles.jobTextDisabled]}>
               {new Date(item.shiftDetails.startDate).toLocaleDateString('ru-RU')}
-              {item.shiftDetails.startTime ? ` · ${item.shiftDetails.startTime}` : ''}
+              {item.shiftDetails.kind === 'permanent'
+                ? ` · ${t('jobDetails.hoursPerWeekShort', { hours: item.shiftDetails.hoursPerWeek })}`
+                : item.shiftDetails.startTime
+                  ? ` · ${item.shiftDetails.startTime}`
+                  : ''}
             </Text>
           )}
         </TouchableOpacity>

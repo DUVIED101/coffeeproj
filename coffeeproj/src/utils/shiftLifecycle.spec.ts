@@ -3,10 +3,11 @@ import type {
   ShiftConfirmationStatus,
   ShiftLifecycleStatus,
 } from '../types/application';
-import type { JobStatus, ShiftDetails } from '../types/job';
+import type { JobStatus, ShiftDetails, TemporaryShiftDetails } from '../types/job';
 import { canBaristaCancelShift, classifyShiftLifecycle } from './shiftLifecycle';
 
-const baseShift = (overrides: Partial<ShiftDetails> = {}): ShiftDetails => ({
+const baseShift = (overrides: Partial<TemporaryShiftDetails> = {}): TemporaryShiftDetails => ({
+  kind: 'temporary',
   startDate: '2026-05-20',
   endDate: '2026-05-20',
   startTime: '09:00',

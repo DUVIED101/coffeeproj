@@ -57,6 +57,11 @@ const countMatchingWeekdays = (
 };
 
 export const computeShiftHours = (shift: ShiftDetails): number => {
+  // Permanent positions don't have a fixed total — hoursPerWeek is the
+  // commitment, not the worked total. Historical "hours worked" for permanent
+  // completions has to come from elsewhere (e.g. timesheets); return 0 here.
+  if (shift.kind === 'permanent') return 0;
+
   const perDay = dailyHours(shift.startTime, shift.endTime);
 
   if (shift.isRecurring && shift.recurringDays && shift.endDate) {

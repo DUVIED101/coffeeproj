@@ -47,7 +47,10 @@ export interface JobLocation {
   metroStation?: string;
 }
 
-export interface ShiftDetails {
+export type WeekdayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+
+export interface TemporaryShiftDetails {
+  kind: 'temporary';
   startDate: string; // ISO date string
   endDate?: string; // ISO date string
   startTime: string; // HH:mm format
@@ -55,6 +58,15 @@ export interface ShiftDetails {
   isRecurring: boolean;
   recurringDays?: string[]; // ['monday', 'tuesday', ...]
 }
+
+export interface PermanentShiftDetails {
+  kind: 'permanent';
+  startDate: string; // ISO date — first day on the job
+  hoursPerWeek: number; // 1.0-80.0, one decimal place
+  preferredDays?: WeekdayKey[];
+}
+
+export type ShiftDetails = TemporaryShiftDetails | PermanentShiftDetails;
 
 export interface Compensation {
   type: CompensationType;

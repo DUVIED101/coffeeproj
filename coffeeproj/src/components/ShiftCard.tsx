@@ -72,7 +72,10 @@ export const ShiftCard = React.memo<ShiftCardProps>(
     }, [acceptedApp, onPressAcceptedChat]);
 
     const shiftDate = formatShiftDate(job.shiftDetails.startDate, locale);
-    const shiftTime = `${job.shiftDetails.startTime}–${job.shiftDetails.endTime}`;
+    const shiftSubtitle =
+      job.shiftDetails.kind === 'permanent'
+        ? t('jobDetails.hoursPerWeekShort', { hours: job.shiftDetails.hoursPerWeek })
+        : `${job.shiftDetails.startTime}–${job.shiftDetails.endTime}`;
     const cityLabel = isCityCode(job.location.city)
       ? t(`city.codes.${job.location.city}`)
       : job.location.city;
@@ -97,7 +100,7 @@ export const ShiftCard = React.memo<ShiftCardProps>(
               />
               <Text style={styles.metaText}>{shiftDate}</Text>
               <Text style={styles.metaDot}>·</Text>
-              <Text style={styles.metaText}>{shiftTime}</Text>
+              <Text style={styles.metaText}>{shiftSubtitle}</Text>
             </View>
             {metroOrBranch ? (
               <View style={styles.metaRow}>

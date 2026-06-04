@@ -13,6 +13,7 @@ import { routePushPayload, navigationRef } from './navigation/navigationRef';
 import { CommonActions } from '@react-navigation/native';
 import { initI18n } from './i18n';
 import { InAppToast } from './components/InAppToast';
+import { ShiftConfirmationGate } from './components/ShiftConfirmationGate';
 import { JobOfferService } from './services/JobOfferService';
 import { pendingOfferActionsQueue } from './services/pendingOfferActionsQueue';
 import { useNotificationFeedStore } from './stores/notificationFeedStore';
@@ -115,6 +116,7 @@ function AppContent(): React.JSX.Element {
       <View style={appStyles.root}>
         <AppNavigator />
         <InAppToast />
+        <ShiftConfirmationGate />
       </View>
     </SafeAreaProvider>
   );

@@ -42,7 +42,7 @@ export const ShiftConfirmationModal = React.memo(
     };
 
     return (
-      <Modal transparent animationType="fade" visible>
+      <Modal transparent animationType="fade" visible onRequestClose={() => {}}>
         <View style={styles.backdrop}>
           <View style={styles.card}>
             <Text style={styles.title}>{t('shifts.confirmation.modalTitle')}</Text>

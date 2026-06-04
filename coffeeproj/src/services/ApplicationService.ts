@@ -595,6 +595,29 @@ export class ApplicationService {
   }
 
   /**
+   * Returns the oldest pending shift confirmation for a barista, if any.
+   * Used by the root-level gate so the prompt persists across navigation.
+   */
+  static async getPendingShiftConfirmation(
+    baristaId: string
+  ): Promise<{ applicationId: ApplicationId; jobTitle: string } | null> {
+    const { data, error } = await supabase
+      .from('applications')
+      .select('id, jobs!inner(title)')
+      .eq('barista_id', baristaId)
+      .eq('status', 'accepted')
+      .eq('shift_confirmation_status', 'pending')
+      .order('shift_confirmation_requested_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    const jobs = data.jobs as { title?: string } | { title?: string }[] | null;
+    const title = Array.isArray(jobs) ? (jobs[0]?.title ?? '') : (jobs?.title ?? '');
+    return { applicationId: data.id as ApplicationId, jobTitle: title };
+  }
+
+  /**
    * Barista responds to the shift confirmation request.
    * 'confirmed' locks the cancel button; 'declined' withdraws the application.
    * Idempotent: RPC returns the current status on repeated calls.

@@ -1,6 +1,40 @@
 import { supabase } from '../config/supabase';
-import type { Job, CreateJobData, JobStatus, JobFilters } from '../types/job';
+import type {
+  Job,
+  CreateJobData,
+  JobStatus,
+  JobFilters,
+  JobType,
+  ShiftDetails,
+} from '../types/job';
 import type { GeoPoint } from '../types/business';
+
+// shift_details is JSONB without a runtime schema. Legacy rows pre-date `kind`,
+// so we fall back to job_type and field shape. Permanent rows that still hold
+// date-based shift_details (no hoursPerWeek) keep working by rendering as
+// temporary until the owner edits and saves them under the new form.
+function normalizeShiftDetails(raw: any, jobType: JobType): ShiftDetails {
+  const r = (raw ?? {}) as Record<string, any>;
+  const isPermanent =
+    r.kind === 'permanent' || (jobType === 'permanent' && typeof r.hoursPerWeek === 'number');
+  if (isPermanent) {
+    return {
+      kind: 'permanent',
+      startDate: r.startDate,
+      hoursPerWeek: Number(r.hoursPerWeek),
+      preferredDays: r.preferredDays,
+    };
+  }
+  return {
+    kind: 'temporary',
+    startDate: r.startDate,
+    endDate: r.endDate,
+    startTime: r.startTime,
+    endTime: r.endTime,
+    isRecurring: r.isRecurring ?? false,
+    recurringDays: r.recurringDays,
+  };
+}
 
 export class JobService {
   /**
@@ -18,7 +52,7 @@ export class JobService {
       requirements: db.requirements || [],
       requiredEquipmentExperience: db.required_equipment_experience || [],
       location: db.location,
-      shiftDetails: db.shift_details,
+      shiftDetails: normalizeShiftDetails(db.shift_details, db.job_type),
       compensation: db.compensation,
       payment: db.payment,
       paymentStatus: db.payment_status,
@@ -48,7 +82,7 @@ export class JobService {
       requirements: db.requirements || [],
       requiredEquipmentExperience: db.required_equipment_experience || [],
       location: db.location,
-      shiftDetails: db.shift_details,
+      shiftDetails: normalizeShiftDetails(db.shift_details, db.job_type),
       compensation: db.compensation,
       payment: db.payment,
       paymentStatus: db.payment_status,
@@ -245,7 +279,7 @@ export class JobService {
         requirements: job.requirements || [],
         requiredEquipmentExperience: job.required_equipment_experience || [],
         location: job.location,
-        shiftDetails: job.shift_details,
+        shiftDetails: normalizeShiftDetails(job.shift_details, job.job_type),
         compensation: job.compensation,
         payment: job.payment,
         paymentStatus: job.payment_status,

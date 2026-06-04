@@ -1,7 +1,8 @@
-import type { ShiftDetails } from '../types/job';
+import type { ShiftDetails, TemporaryShiftDetails } from '../types/job';
 import { computeShiftHours } from './shiftHours';
 
-const baseShift = (overrides: Partial<ShiftDetails>): ShiftDetails => ({
+const baseShift = (overrides: Partial<TemporaryShiftDetails>): TemporaryShiftDetails => ({
+  kind: 'temporary',
   startDate: '2026-04-13',
   endDate: undefined,
   startTime: '09:00',
@@ -92,6 +93,18 @@ describe('computeShiftHours', () => {
         isRecurring: true,
         recurringDays: ['tuesday'],
       });
+
+      expect(computeShiftHours(shift)).toBe(0);
+    });
+  });
+
+  describe('permanent shifts', () => {
+    it('returns 0 because completed-hours data lives outside the shift descriptor', () => {
+      const shift: ShiftDetails = {
+        kind: 'permanent',
+        startDate: '2026-04-13',
+        hoursPerWeek: 40,
+      };
 
       expect(computeShiftHours(shift)).toBe(0);
     });

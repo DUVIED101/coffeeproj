@@ -123,7 +123,7 @@ export const DeleteAccountScreen: React.FC = () => {
     ? password.length > 0
     : isAppleOnly
       ? appleIdToken !== null
-      : otpCode.length > 0;
+      : otpCode.length === 6;
   const canSubmit =
     keywordMatches && credentialPresent && (!needsForce || forceConfirmed) && !isSubmitting;
 
@@ -289,13 +289,13 @@ export const DeleteAccountScreen: React.FC = () => {
                 style={[styles.input, otpError ? styles.inputError : null]}
                 value={otpCode}
                 onChangeText={text => {
-                  setOtpCode(text.replace(/\s/g, ''));
+                  setOtpCode(text.replace(/\D/g, '').slice(0, 6));
                   if (otpError) setOtpError(null);
                 }}
                 keyboardType="number-pad"
                 autoCapitalize="none"
                 autoCorrect={false}
-                maxLength={10}
+                maxLength={6}
                 textContentType="oneTimeCode"
               />
               {otpError ? <Text style={styles.errorText}>{otpError}</Text> : null}

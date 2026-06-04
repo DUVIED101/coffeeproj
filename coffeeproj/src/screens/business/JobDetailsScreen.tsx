@@ -222,26 +222,51 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         {/* Shift Details */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('businessJobDetails.shiftDetails')}</Text>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>{t('businessJobDetails.date')}</Text>
-            <Text style={styles.detailValue}>
-              {formatDate(job.shiftDetails.startDate)}
-              {job.shiftDetails.endDate && ` - ${formatDate(job.shiftDetails.endDate)}`}
-            </Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>{t('businessJobDetails.time')}</Text>
-            <Text style={styles.detailValue}>
-              {job.shiftDetails.startTime} - {job.shiftDetails.endTime}
-            </Text>
-          </View>
-          {job.shiftDetails.isRecurring && job.shiftDetails.recurringDays && (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{t('businessJobDetails.recurring')}</Text>
-              <Text style={styles.detailValue}>
-                {formatRecurringDays(job.shiftDetails.recurringDays)}
-              </Text>
-            </View>
+          {job.shiftDetails.kind === 'permanent' ? (
+            <>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('businessJobDetails.startDatePermanent')}</Text>
+                <Text style={styles.detailValue}>{formatDate(job.shiftDetails.startDate)}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('businessJobDetails.hoursPerWeek')}</Text>
+                <Text style={styles.detailValue}>{job.shiftDetails.hoursPerWeek}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('businessJobDetails.preferredDays')}</Text>
+                <Text style={styles.detailValue}>
+                  {job.shiftDetails.preferredDays && job.shiftDetails.preferredDays.length > 0
+                    ? job.shiftDetails.preferredDays
+                        .map(d => t(`createJob.weekdays.${d}`))
+                        .join(', ')
+                    : t('businessJobDetails.anyDay')}
+                </Text>
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('businessJobDetails.date')}</Text>
+                <Text style={styles.detailValue}>
+                  {formatDate(job.shiftDetails.startDate)}
+                  {job.shiftDetails.endDate && ` - ${formatDate(job.shiftDetails.endDate)}`}
+                </Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>{t('businessJobDetails.time')}</Text>
+                <Text style={styles.detailValue}>
+                  {job.shiftDetails.startTime} - {job.shiftDetails.endTime}
+                </Text>
+              </View>
+              {job.shiftDetails.isRecurring && job.shiftDetails.recurringDays && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>{t('businessJobDetails.recurring')}</Text>
+                  <Text style={styles.detailValue}>
+                    {formatRecurringDays(job.shiftDetails.recurringDays)}
+                  </Text>
+                </View>
+              )}
+            </>
           )}
         </View>
 

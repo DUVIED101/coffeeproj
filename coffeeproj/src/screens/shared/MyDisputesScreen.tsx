@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,10 @@ export const MyDisputesScreen: React.FC<Props> = ({ navigation }) => {
   const { t } = useTranslation();
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ title: t('disputes.myDisputesTitle') });
+  }, [navigation, t]);
 
   useFocusEffect(
     useCallback(() => {
