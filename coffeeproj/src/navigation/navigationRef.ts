@@ -95,7 +95,11 @@ export const dispatchPayload = (payload: PushNotificationPayload): void => {
 
   if (kind === 'shift_reminder_24h' || kind === 'shift_reminder_3h') {
     if (accountType === 'barista') {
-      navigateTab('Jobs', { screen: 'Applications' });
+      if (applicationId) {
+        navigateTab('Jobs', { screen: 'ApplicationDetails', params: { applicationId } });
+      } else {
+        navigateTab('Jobs', { screen: 'Applications' });
+      }
     } else if (jobId) {
       navigateTab('Business', { screen: 'Applicants', params: { jobId } });
     } else {

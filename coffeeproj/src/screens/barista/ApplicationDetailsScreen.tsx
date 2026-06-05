@@ -15,6 +15,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
+import { ShiftCountdownBanner } from '../../components/ShiftCountdownBanner';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ReviewService } from '../../services/ReviewService';
 import { ReviewModal } from '../../components/ReviewModal';
@@ -370,9 +371,17 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
     );
   }
 
+  const shiftStartDate =
+    currentStatus === 'accepted' && job?.shiftDetails && job.shiftDetails.kind === 'temporary'
+      ? getShiftStart(job.shiftDetails)
+      : null;
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        {shiftStartDate && job?.title ? (
+          <ShiftCountdownBanner shiftStart={shiftStartDate} jobTitle={job.title} />
+        ) : null}
         {/* Status Badge */}
         <View style={styles.statusContainer}>
           <Text style={styles.statusLabel}>{t('applications.details.applicationStatus')}</Text>

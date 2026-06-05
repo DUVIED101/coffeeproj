@@ -162,7 +162,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         geocodedKeyRef.current = `${result.formattedAddress}|${branchCity}`;
         setBranchAddress(result.formattedAddress);
       }
-    }, 500);
+    }, 3000);
 
     return () => {
       clearTimeout(timeoutId);

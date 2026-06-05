@@ -262,7 +262,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
         geocodedKeyRef.current = `${result.formattedAddress}|${city}`;
         setAddress(result.formattedAddress);
       }
-    }, 500);
+    }, 3000);
 
     return () => {
       clearTimeout(timeoutId);

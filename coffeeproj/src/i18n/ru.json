@@ -1082,6 +1082,12 @@
     "fileTooLarge": "Файл слишком большой. Максимум {{maxMb}} МБ.",
     "someTooLarge": "Пропущено файлов: {{count}} — больше {{maxMb}} МБ."
   },
+  "shiftCountdown": {
+    "started": "Смена уже началась",
+    "daysHours": "Через {{days}} д {{hours}} ч",
+    "hoursMinutes": "Через {{hours}} ч {{minutes}} мин",
+    "minutes": "Через {{minutes}} мин"
+  },
   "shifts": {
     "empty": "По выбранным фильтрам смен нет",
     "noApplicantsYet": "Откликов пока нет",

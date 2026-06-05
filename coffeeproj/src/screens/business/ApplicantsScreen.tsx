@@ -23,6 +23,7 @@ import { JobOfferService } from '../../services/JobOfferService';
 import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { ReviewModal } from '../../components/ReviewModal';
+import { ShiftCountdownBanner } from '../../components/ShiftCountdownBanner';
 import { getShiftEnd, getShiftStart, canCancelShiftNow } from '../../utils/shiftLifecycle';
 import type { Application, ApplicationStatus, DisputeSummary } from '../../types/application';
 import type { JobOffer } from '../../types/jobOffer';
@@ -330,6 +331,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
     rateeId: UserId;
   } | null>(null);
   const [shiftDetails, setShiftDetails] = useState<ShiftDetails | null>(null);
+  const [jobTitle, setJobTitle] = useState<string>('');
   const [now, setNow] = useState<Date>(() => new Date());
   const [ownDisputeMap, setOwnDisputeMap] = useState<Record<string, DisputeSummary>>({});
   const promptedAppIds = useRef<Set<string>>(new Set());
@@ -346,7 +348,10 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
     const loadJob = async () => {
       try {
         const job = await JobService.getJobById(jobId);
-        if (!cancelled) setShiftDetails(job.shiftDetails);
+        if (!cancelled) {
+          setShiftDetails(job.shiftDetails);
+          setJobTitle(job.title);
+        }
       } catch (error) {
         console.error('Error loading job for shift gating:', error);
       }
@@ -704,6 +709,22 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
     </View>
   );
 
+  // Banner is anchored to the accepted application; for temporary shifts only,
+  // since permanent jobs don't have a single start-of-shift moment.
+  const acceptedApplication = applications.find(a => a.status === 'accepted');
+  const shiftStartDate =
+    shiftDetails && shiftDetails.kind === 'temporary' ? getShiftStart(shiftDetails) : null;
+  const showCountdownBanner =
+    acceptedApplication && shiftStartDate && jobTitle.length > 0 ? true : false;
+  const handleOpenShiftAlert = useCallback(() => {
+    if (!acceptedApplication || !shiftStartDate) return;
+    navigation.navigate('ShiftAlert', {
+      applicationId: acceptedApplication.id as ApplicationId,
+      jobTitle,
+      shiftStartIso: shiftStartDate.toISOString(),
+    });
+  }, [acceptedApplication, jobTitle, navigation, shiftStartDate]);
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -728,6 +749,15 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         renderItem={renderApplicant}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
+        ListFooterComponent={
+          showCountdownBanner && shiftStartDate ? (
+            <ShiftCountdownBanner
+              shiftStart={shiftStartDate}
+              jobTitle={jobTitle}
+              onPress={handleOpenShiftAlert}
+            />
+          ) : null
+        }
         ListHeaderComponent={
           pendingOffers.length > 0 ? (
             <View style={styles.pendingOffersSection}>
