@@ -8,10 +8,11 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Image,
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
+import { transformedImageUrl } from '../../utils/imageTransform';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
@@ -207,7 +208,7 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
               <TouchableOpacity
                 onPress={() => openViewer([profile.avatarUrl as string], 0)}
                 accessibilityLabel={t('viewBarista.viewAvatarA11y')}>
-                <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
+                <FastImage source={{ uri: transformedImageUrl(profile.avatarUrl, 80) }} style={styles.avatar} />
               </TouchableOpacity>
             ) : (
               <View style={styles.avatarPlaceholder}>
@@ -426,7 +427,7 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
                   accessibilityLabel={t('viewBarista.viewPortfolioPhotoA11y', {
                     index: index + 1,
                   })}>
-                  <Image source={{ uri: photo }} style={styles.portfolioPhoto} />
+                  <FastImage source={{ uri: transformedImageUrl(photo, 100) }} style={styles.portfolioPhoto} />
                 </TouchableOpacity>
               ))}
             </View>

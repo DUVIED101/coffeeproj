@@ -28,6 +28,7 @@ import type { Job } from '../../types/job';
 import type { JobId, UserId } from '../../types/ids';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import { clampToEffectiveLength, effectiveTextLength } from '../../utils/textLength';
+import { showErrorToast } from '../../stores/errorToastStore';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'OfferJob'>;
@@ -69,7 +70,7 @@ export const OfferJobScreen: React.FC<Props> = ({ navigation, route }) => {
         setOfferedJobIds(new Set(pendingOffers.map(o => o.jobId)));
       } catch (error) {
         console.error('Error loading own jobs:', error);
-        Alert.alert(t('common.error'), t('offerJob.loadFailure'));
+        showErrorToast(t('offerJob.loadFailure'));
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -108,9 +109,9 @@ export const OfferJobScreen: React.FC<Props> = ({ navigation, route }) => {
       ]);
     } catch (error) {
       if (error instanceof JobOfferAlreadyAppliedError) {
-        Alert.alert(t('common.error'), t('offerJob.baristaAlreadyApplied'));
+        showErrorToast(t('offerJob.baristaAlreadyApplied'));
       } else if (error instanceof JobOfferDuplicatePendingError) {
-        Alert.alert(t('common.error'), t('offerJob.duplicatePending'));
+        showErrorToast(t('offerJob.duplicatePending'));
         setOfferedJobIds(prev => {
           const next = new Set(prev);
           next.add(selectedJob.id);
@@ -120,7 +121,7 @@ export const OfferJobScreen: React.FC<Props> = ({ navigation, route }) => {
         setMessage('');
       } else {
         console.error('Error creating job offer:', error);
-        Alert.alert(t('common.error'), t('offerJob.sendFailure'));
+        showErrorToast(t('offerJob.sendFailure'));
       }
     } finally {
       setIsSending(false);

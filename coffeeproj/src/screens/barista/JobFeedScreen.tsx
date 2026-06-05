@@ -6,7 +6,6 @@ import {
   StyleSheet,
   SafeAreaView,
   FlatList,
-  ActivityIndicator,
   RefreshControl,
   Alert,
   TouchableOpacity,
@@ -21,7 +20,14 @@ import { ApplicationService } from '../../services/ApplicationService';
 import { useAuthStore } from '../../stores/authStore';
 import { FilterBar } from '../../components/FilterBar';
 import { JobCard } from '../../components/JobCard';
-import { requestLocationPermission, getCurrentLocation } from '../../utils/geolocation';
+import { Skeleton } from '../../components/Skeleton';
+import { showErrorToast } from '../../stores/errorToastStore';
+import { mapAnyError } from '../../utils/errorHandler';
+import {
+  requestLocationPermission,
+  getCurrentLocation,
+  getLastKnownLocationFast,
+} from '../../utils/geolocation';
 import type { Job, JobFilters } from '../../types/job';
 import type { GeoPoint } from '../../types/business';
 import type { BaristaProfile } from '../../types/baristaProfile';
@@ -66,7 +72,7 @@ const JobCardWithDistance = React.memo<{
 });
 
 export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
-  const { user } = useAuthStore();
+  const user = useAuthStore(s => s.user);
   const { t } = useTranslation();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -128,17 +134,24 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
 
   const initializeLocation = async () => {
     try {
-      const hasPermission = await requestLocationPermission();
+      // Hydrate from cache first so distance renders immediately on relaunches.
+      const cached = await getLastKnownLocationFast();
+      if (cached) {
+        setUserLocation(cached);
+        setLocationPermissionDenied(false);
+      }
 
-      if (hasPermission) {
-        const location = await getCurrentLocation();
-        if (location) {
-          setUserLocation(location);
-          setLocationPermissionDenied(false);
-        } else {
-          setLocationPermissionDenied(true);
-        }
-      } else {
+      const hasPermission = await requestLocationPermission();
+      if (!hasPermission) {
+        if (!cached) setLocationPermissionDenied(true);
+        return;
+      }
+
+      const location = await getCurrentLocation();
+      if (location) {
+        setUserLocation(location);
+        setLocationPermissionDenied(false);
+      } else if (!cached) {
         setLocationPermissionDenied(true);
       }
     } catch (error) {
@@ -163,12 +176,9 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
       }
     } catch (error) {
       console.error('❌ Error loading jobs:', error);
-      Alert.alert(
-        t('jobFeed.loadFailedTitle', { defaultValue: 'Ошибка' }),
-        t('jobFeed.loadFailedBody', {
-          defaultValue: 'Не удалось загрузить вакансии. Попробуйте еще раз.',
-        })
-      );
+      showErrorToast(mapAnyError(error), () => {
+        loadJobs();
+      });
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -219,8 +229,15 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+        <View style={styles.listContent}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <View key={i} style={styles.skeletonCard}>
+              <Skeleton width="70%" height={18} />
+              <Skeleton width="50%" height={14} style={styles.skeletonGap} />
+              <Skeleton width="40%" height={14} style={styles.skeletonGap} />
+              <Skeleton width="30%" height={14} style={styles.skeletonGap} />
+            </View>
+          ))}
         </View>
       </SafeAreaView>
     );
@@ -280,13 +297,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   listContent: {
     padding: 16,
+  },
+  skeletonCard: {
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 16,
+    marginBottom: 12,
+  },
+  skeletonGap: {
+    marginTop: 8,
   },
   emptyContainer: {
     alignItems: 'center',

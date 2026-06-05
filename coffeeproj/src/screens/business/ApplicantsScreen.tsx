@@ -9,10 +9,11 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Alert,
-  Image,
   RefreshControl,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import FastImage from 'react-native-fast-image';
+import { transformedImageUrl } from '../../utils/imageTransform';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
@@ -24,6 +25,7 @@ import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { ReviewModal } from '../../components/ReviewModal';
 import { ShiftCountdownBanner } from '../../components/ShiftCountdownBanner';
+import { Skeleton } from '../../components/Skeleton';
 import { getShiftEnd, getShiftStart, canCancelShiftNow } from '../../utils/shiftLifecycle';
 import type { Application, ApplicationStatus, DisputeSummary } from '../../types/application';
 import type { JobOffer } from '../../types/jobOffer';
@@ -32,6 +34,7 @@ import type { ApplicationId, JobId, UserId } from '../../types/ids';
 import type { ApplicationReview } from '../../types/review';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import type { TFunction } from 'i18next';
+import { showErrorToast, showSuccessToast } from '../../stores/errorToastStore';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'Applicants'>;
@@ -174,7 +177,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
         <View style={styles.applicantHeader}>
           <View style={styles.applicantHeaderLeft}>
             {baristaProfile?.avatarUrl ? (
-              <Image source={{ uri: baristaProfile.avatarUrl }} style={styles.avatar} />
+              <FastImage source={{ uri: transformedImageUrl(baristaProfile.avatarUrl, 48) }} style={styles.avatar} />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarPlaceholderText}>
@@ -447,7 +450,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
       }
     } catch (error) {
       console.error('Error loading applicants:', error);
-      Alert.alert(t('common.error'), t('applicants.loadFailed'));
+      showErrorToast(t('applicants.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -475,10 +478,10 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         markProcessing(applicationId, true);
         await ApplicationService.updateApplicationStatus(applicationId, 'accepted', user.id);
         await loadApplicants();
-        Alert.alert(t('common.success'), t('applicants.acceptSuccess'));
+        showSuccessToast(t('applicants.acceptSuccess'));
       } catch (error) {
         console.error('Error accepting application:', error);
-        Alert.alert(t('common.error'), t('applicants.acceptFailure'));
+        showErrorToast(t('applicants.acceptFailure'));
       } finally {
         markProcessing(applicationId, false);
       }
@@ -493,10 +496,10 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         markProcessing(applicationId, true);
         await ApplicationService.updateApplicationStatus(applicationId, 'rejected', user.id);
         await loadApplicants();
-        Alert.alert(t('common.success'), t('applicants.rejectSuccess'));
+        showSuccessToast(t('applicants.rejectSuccess'));
       } catch (error) {
         console.error('Error rejecting application:', error);
-        Alert.alert(t('common.error'), t('applicants.rejectFailure'));
+        showErrorToast(t('applicants.rejectFailure'));
       } finally {
         markProcessing(applicationId, false);
       }
@@ -524,10 +527,10 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
                   user.id
                 );
                 await loadApplicants();
-                Alert.alert(t('common.success'), t('applications.cancelShift.success'));
+                showSuccessToast(t('applications.cancelShift.success'));
               } catch (error) {
                 console.error('Error cancelling shift:', error);
-                Alert.alert(t('common.error'), t('applications.cancelShift.failure'));
+                showErrorToast(t('applications.cancelShift.failure'));
               } finally {
                 markProcessing(applicationId, false);
               }
@@ -583,10 +586,10 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
             });
           }
         }
-        Alert.alert(t('common.success'), t('applicants.confirmCompletionSuccess'));
+        showSuccessToast(t('applicants.confirmCompletionSuccess'));
       } catch (error) {
         console.error('Error confirming completion:', error);
-        Alert.alert(t('common.error'), t('applicants.confirmCompletionFailure'));
+        showErrorToast(t('applicants.confirmCompletionFailure'));
       } finally {
         markProcessing(applicationId, false);
       }
@@ -622,7 +625,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
               setPendingOffers(prev => prev.filter(o => o.id !== offer.id));
             } catch (error) {
               console.error('Error cancelling offer:', error);
-              Alert.alert(t('common.error'), t('applicants.cancelOfferFailure'));
+              showErrorToast(t('applicants.cancelOfferFailure'));
             } finally {
               setCancellingOfferIds(prev => {
                 const next = new Set(prev);
@@ -728,8 +731,20 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+        <View style={styles.skeletonList}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <View key={i} style={styles.skeletonCard}>
+              <View style={styles.skeletonHeaderRow}>
+                <Skeleton width={48} height={48} borderRadius={24} />
+                <View style={styles.skeletonHeaderText}>
+                  <Skeleton width="60%" height={15} />
+                  <Skeleton width="40%" height={12} style={styles.skeletonGap} />
+                </View>
+              </View>
+              <Skeleton width="90%" height={13} style={styles.skeletonGapBig} />
+              <Skeleton width="70%" height={13} style={styles.skeletonGap} />
+            </View>
+          ))}
         </View>
       </SafeAreaView>
     );
@@ -783,8 +798,8 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
                         defaultValue: `Открыть профиль ${name}`,
                       })}>
                       {offer.baristaAvatarUrl ? (
-                        <Image
-                          source={{ uri: offer.baristaAvatarUrl }}
+                        <FastImage
+                          source={{ uri: transformedImageUrl(offer.baristaAvatarUrl, 36) }}
                           style={styles.pendingOfferAvatar}
                         />
                       ) : (
@@ -848,10 +863,30 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  skeletonList: {
+    padding: 16,
+  },
+  skeletonCard: {
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 16,
+    marginBottom: 12,
+  },
+  skeletonHeaderRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
+  },
+  skeletonHeaderText: {
+    flex: 1,
+  },
+  skeletonGap: {
+    marginTop: 6,
+  },
+  skeletonGapBig: {
+    marginTop: 14,
   },
   header: {
     padding: 16,

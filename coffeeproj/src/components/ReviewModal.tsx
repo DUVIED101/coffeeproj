@@ -17,6 +17,7 @@ import { ReviewService } from '../services/ReviewService';
 import type { ApplicationId, UserId } from '../types/ids';
 import type { ApplicationReview, RaterRole, StarRating } from '../types/review';
 import { clampToEffectiveLength, effectiveTextLength } from '../utils/textLength';
+import { showErrorToast } from '../stores/errorToastStore';
 
 const MAX_COMMENT_LENGTH = 500;
 
@@ -70,7 +71,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
       console.error('Error submitting review:', error);
       const detail =
         error instanceof Error && error.message ? error.message : String(error ?? 'Unknown error');
-      Alert.alert(t('common.error'), `${t('reviews.errors.submitFailed')}\n\n${detail}`);
+      showErrorToast(`${t('reviews.errors.submitFailed')}\n\n${detail}`);
       setIsSubmitting(false);
     }
   }, [rating, comment, applicationId, raterRole, rateeId, t, onSubmitted, reset]);

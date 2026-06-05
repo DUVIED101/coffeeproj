@@ -7,10 +7,11 @@ import {
   ActivityIndicator,
   ScrollView,
   RefreshControl,
-  Image,
   Linking,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { transformedImageUrl } from '../../utils/imageTransform';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -222,7 +223,7 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
               onPress={() => setAvatarViewerVisible(true)}
               activeOpacity={0.85}
               accessibilityRole="button">
-              <Image source={{ uri: business.logoUrl }} style={styles.avatarImage} />
+              <FastImage source={{ uri: transformedImageUrl(business.logoUrl, 72) }} style={styles.avatarImage} />
             </TouchableOpacity>
           ) : (
             <View style={styles.avatarPlaceholder}>

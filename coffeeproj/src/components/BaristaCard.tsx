@@ -1,6 +1,8 @@
 import React, { useCallback } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { useTranslation } from 'react-i18next';
+import { transformedImageUrl } from '../utils/imageTransform';
 import type { TFunction } from 'i18next';
 import type { BaristaProfile } from '../types/baristaProfile';
 import type { UserReviewAggregate } from '../types/review';
@@ -72,7 +74,7 @@ export const BaristaCard = React.memo<BaristaCardProps>(({ profile, onPress, rev
       disabled={!onPress}>
       <View style={styles.headerRow}>
         {avatarUrl ? (
-          <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+          <FastImage source={{ uri: transformedImageUrl(avatarUrl, 80) }} style={styles.avatar} />
         ) : (
           <View style={[styles.avatar, styles.avatarFallback]}>
             <Text style={styles.avatarInitials}>{getInitials(firstName, lastName)}</Text>

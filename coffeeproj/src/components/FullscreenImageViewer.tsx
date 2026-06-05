@@ -3,7 +3,6 @@ import {
   Animated,
   Dimensions,
   FlatList,
-  Image,
   Modal,
   ScrollView,
   StyleSheet,
@@ -11,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import {
   GestureHandlerRootView,
   NativeViewGestureHandler,
@@ -107,8 +107,7 @@ export const FullscreenImageViewer: React.FC<Props> = ({
           maxPointers={1}
           activeOffsetY={[-8, 8]}
           failOffsetX={[-14, 14]}>
-          <Animated.View
-            style={[styles.foreground, { transform: [{ translateY }] }]}>
+          <Animated.View style={[styles.foreground, { transform: [{ translateY }] }]}>
             <TouchableOpacity
               accessibilityLabel={t('imageViewer.closeA11y', { defaultValue: 'Close' })}
               style={styles.closeButton}
@@ -145,7 +144,11 @@ export const FullscreenImageViewer: React.FC<Props> = ({
                     }}
                     scrollEventThrottle={32}
                     centerContent>
-                    <Image source={{ uri: item }} style={styles.image} resizeMode="contain" />
+                    <FastImage
+                      source={{ uri: item }}
+                      style={styles.image}
+                      resizeMode={FastImage.resizeMode.contain}
+                    />
                   </ScrollView>
                 )}
               />

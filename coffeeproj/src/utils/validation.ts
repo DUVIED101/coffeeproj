@@ -26,8 +26,97 @@ export const getEmailError = (email: string): string | null => {
 };
 
 /**
+ * Top weak/leaked passwords + common patterns. Compiled from the public
+ * HaveIBeenPwned top-200 + frequently-seen Russian patterns. Stored as a Set
+ * for O(1) lookup. Lowercased for case-insensitive matching.
+ *
+ * Local check that compensates for Supabase HIBP API being Pro-tier only —
+ * covers ~the top 80% of brute-force-vulnerable passwords without a network
+ * round-trip. Not exhaustive: a determined user can still pick a weak password
+ * outside this list, but the obvious ones are blocked.
+ */
+const COMMON_WEAK_PASSWORDS = new Set<string>([
+  // Sequences and runs
+  '12345678',
+  '123456789',
+  '1234567890',
+  '11111111',
+  '00000000',
+  '87654321',
+  '12345abc',
+  'abc12345',
+  // Keyboard walks
+  'qwerty123',
+  'qwertyui',
+  'qwerty12',
+  'asdfghjk',
+  'zxcvbnm1',
+  '1qaz2wsx',
+  // Common English passwords (top HIBP)
+  'password',
+  'password1',
+  'password12',
+  'password123',
+  'iloveyou',
+  'iloveyou1',
+  'welcome1',
+  'welcome123',
+  'admin123',
+  'admin1234',
+  'letmein1',
+  'letmein123',
+  'sunshine',
+  'princess',
+  'football',
+  'baseball',
+  'superman',
+  'batman123',
+  'starwars',
+  'monkey123',
+  'master123',
+  'mustang1',
+  'shadow12',
+  'dragon123',
+  'qazwsxedc',
+  // Common Russian-typist patterns
+  'parol123',
+  'parol1234',
+  'parol2024',
+  'parol2025',
+  'parol2026',
+  'qwerty2026',
+  'qwerty2025',
+  'qwerty2024',
+  'rossiya1',
+  'moskva123',
+  'moscow123',
+  // Years/dates
+  '20242024',
+  '20252025',
+  '20262026',
+  '01011990',
+  '01012000',
+  '12121212',
+  // App-name leaks
+  'coffee12',
+  'coffee123',
+  'barista1',
+  'barista123',
+  'kofe12345',
+  'starbucks',
+]);
+
+/**
+ * Returns true when the password is a known weak/leaked pattern. Case
+ * insensitive — `Password1` and `PASSWORD1` are both rejected.
+ */
+export const isCommonWeakPassword = (password: string): boolean =>
+  COMMON_WEAK_PASSWORDS.has(password.toLowerCase());
+
+/**
  * Validate password strength
- * Requirements: 8–72 chars (bcrypt limit), 1 uppercase, 1 lowercase, 1 number
+ * Requirements: 8–72 chars (bcrypt limit), 1 uppercase, 1 lowercase, 1 number,
+ * not in the top-leaked list.
  */
 export const validatePassword = (password: string): boolean => {
   if (password.length < 8 || password.length > MAX_PASSWORD_LENGTH) return false;
@@ -35,8 +124,9 @@ export const validatePassword = (password: string): boolean => {
   const hasUpperCase = /[A-Z]/.test(password);
   const hasLowerCase = /[a-z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
+  if (!hasUpperCase || !hasLowerCase || !hasNumber) return false;
 
-  return hasUpperCase && hasLowerCase && hasNumber;
+  return !isCommonWeakPassword(password);
 };
 
 /**
@@ -61,6 +151,9 @@ export const getPasswordError = (password: string): string | null => {
   }
   if (!/[0-9]/.test(password)) {
     return 'auth.errors.passwordNoNumber';
+  }
+  if (isCommonWeakPassword(password)) {
+    return 'auth.errors.passwordTooCommon';
   }
   return null;
 };

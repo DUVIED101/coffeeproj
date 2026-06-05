@@ -1,6 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, LogBox } from 'react-native';
+import { View, StyleSheet, LogBox, Text, TextInput } from 'react-native';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
+
+// Project-wide Dynamic Type cap: iOS users with the largest accessibility
+// font sizes (xxxLarge / AX5) can otherwise multiply text up to 3.5×, which
+// shatters tight layouts (bottom tabs, status badges, list cards). 1.5× is
+// generous for readability while staying inside designed bounds. Individual
+// components can override with maxFontSizeMultiplier on the <Text> if needed.
+//
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const textWithDefaults = Text as unknown as { defaultProps?: Record<string, unknown> };
+textWithDefaults.defaultProps = textWithDefaults.defaultProps ?? {};
+textWithDefaults.defaultProps.maxFontSizeMultiplier = 1.5;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const tiWithDefaults = TextInput as unknown as { defaultProps?: Record<string, unknown> };
+tiWithDefaults.defaultProps = tiWithDefaults.defaultProps ?? {};
+tiWithDefaults.defaultProps.maxFontSizeMultiplier = 1.5;
 
 // RN 0.73 + iOS 18+ leaks pending callbacks from AccessibilityInfo when the
 // app backgrounds (e.g. during OAuth SFSafariViewController). Dev-only noise

@@ -1,6 +1,8 @@
 import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { useTranslation } from 'react-i18next';
+import { transformedImageUrl } from '../utils/imageTransform';
 import type { TFunction } from 'i18next';
 import type { Job } from '../types/job';
 import type { UserReviewAggregate } from '../types/review';
@@ -106,6 +108,16 @@ export const JobCard = React.memo<JobCardProps>(
     const hasUrgentTag = job.tags.includes('urgent');
     const branchThumbUri = job.branchPhotos?.[0];
 
+    const accessibilityLabel = [
+      job.title,
+      job.businessName,
+      compensationText,
+      `${shiftDate} ${shiftSubtitle}`,
+      statusText,
+    ]
+      .filter(Boolean)
+      .join(', ');
+
     return (
       <TouchableOpacity
         style={styles.card}
@@ -113,6 +125,8 @@ export const JobCard = React.memo<JobCardProps>(
         onLongPress={onLongPress ? handleLongPress : undefined}
         delayLongPress={400}
         activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
         disabled={!onPress && !onLongPress}>
         <View style={styles.header}>
           <Text style={styles.title}>{job.title}</Text>
@@ -196,7 +210,11 @@ export const JobCard = React.memo<JobCardProps>(
           </View>
 
           {branchThumbUri && (
-            <Image source={{ uri: branchThumbUri }} style={styles.branchThumb} resizeMode="cover" />
+            <FastImage
+              source={{ uri: transformedImageUrl(branchThumbUri, 96) }}
+              style={styles.branchThumb}
+              resizeMode={FastImage.resizeMode.cover}
+            />
           )}
         </View>
 

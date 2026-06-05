@@ -21,6 +21,8 @@ import { COLORS, EQUIPMENT_TYPES, RADII } from '../../config/constants';
 import { JobService } from '../../services/JobService';
 import { BusinessService } from '../../services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
+import { showErrorToast } from '../../stores/errorToastStore';
+import { mapAnyError } from '../../utils/errorHandler';
 import type { Branch, Equipment } from '../../types/business';
 import type { JobType, CompensationType, ShiftDetails, WeekdayKey } from '../../types/job';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
@@ -85,7 +87,7 @@ const sanitizeHoursPerWeekInput = (input: string): string => {
 
 export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
   const { t } = useTranslation();
-  const { user } = useAuthStore();
+  const user = useAuthStore(s => s.user);
 
   const editJobId =
     route.name === 'EditJob'
@@ -144,13 +146,13 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
         const job = await JobService.getJobById(editJobId);
         if (cancelled || !job) {
           if (!cancelled && !job) {
-            Alert.alert(t('common.error'), t('createJob.errors.jobNotFound'));
+            showErrorToast(t('createJob.errors.jobNotFound'));
             navigation.goBack();
           }
           return;
         }
         if (job.status !== 'open') {
-          Alert.alert(t('common.error'), t('createJob.errors.onlyOpenEditable'));
+          showErrorToast(t('createJob.errors.onlyOpenEditable'));
           navigation.goBack();
           return;
         }
@@ -198,7 +200,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
       } catch (err) {
         console.error('Error loading job for edit:', err);
         if (!cancelled) {
-          Alert.alert(t('common.error'), t('createJob.errors.loadJobFailed'));
+          showErrorToast(mapAnyError(err));
           navigation.goBack();
         }
       } finally {
@@ -226,7 +228,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
       }
     } catch (error) {
       console.error('Error loading branches:', error);
-      Alert.alert(t('common.error'), t('createJob.errors.loadBranchesFailed'));
+      showErrorToast(mapAnyError(error));
     } finally {
       setIsLoadingBranches(false);
     }
@@ -392,7 +394,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     }
 
     if (!user?.id) {
-      Alert.alert(t('common.error'), t('createJob.errors.userNotAuthenticated'));
+      showErrorToast(t('createJob.errors.userNotAuthenticated'));
       return;
     }
 
@@ -478,10 +480,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
       }
     } catch (error) {
       console.error(editJobId ? 'Error updating job:' : 'Error creating job:', error);
-      Alert.alert(
-        t('common.error'),
-        editJobId ? t('createJob.errors.updateFailed') : t('createJob.errors.createFailed')
-      );
+      showErrorToast(mapAnyError(error));
     } finally {
       setIsSaving(false);
       isSubmittingRef.current = false;

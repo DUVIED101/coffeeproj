@@ -25,6 +25,15 @@ export class BranchHasActiveJobsError extends Error {
   }
 }
 
+type BusinessCacheEntry = {
+  timestamp: number;
+  value?: Business | null;
+  inflight?: Promise<Business | null>;
+};
+
+const CACHE_TTL_MS = 30_000;
+const businessByOwnerCache = new Map<string, BusinessCacheEntry>();
+
 export class BusinessService {
   /**
    * Map database business object to Business type
@@ -112,7 +121,9 @@ export class BusinessService {
       }
       if (!business) throw new Error('Failed to create business');
 
-      return this.mapBusiness(business);
+      const mapped = this.mapBusiness(business);
+      businessByOwnerCache.delete(data.ownerId);
+      return mapped;
     } catch (error) {
       console.error('Error in createBusiness:', error);
       throw error;
@@ -141,29 +152,46 @@ export class BusinessService {
   }
 
   /**
-   * Get business by owner ID
+   * Get business by owner ID. Multiple screens (BusinessHome, profile,
+   * settings, CreateJob) call this on the same focus event — the TTL cache
+   * collapses those into a single network round-trip, which dominated the
+   * "businesses" rows in the egress report.
    */
   static async getBusinessByOwnerId(ownerId: string): Promise<Business | null> {
-    try {
-      const { data, error } = await supabase
-        .from('businesses')
-        .select('*')
-        .eq('owner_id', ownerId)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // No rows returned
-          return null;
+    const cached = businessByOwnerCache.get(ownerId);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      return cached.inflight ? cached.inflight : Promise.resolve(cached.value ?? null);
+    }
+    const inflight = (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('businesses')
+          .select('*')
+          .eq('owner_id', ownerId)
+          .single();
+        if (error) {
+          if (error.code === 'PGRST116') {
+            businessByOwnerCache.set(ownerId, { value: null, timestamp: Date.now() });
+            return null;
+          }
+          throw error;
         }
+        const mapped = data ? this.mapBusiness(data) : null;
+        businessByOwnerCache.set(ownerId, { value: mapped, timestamp: Date.now() });
+        return mapped;
+      } catch (error) {
+        businessByOwnerCache.delete(ownerId);
+        console.error('Error in getBusinessByOwnerId:', error);
         throw error;
       }
+    })();
+    businessByOwnerCache.set(ownerId, { inflight, timestamp: Date.now() });
+    return inflight;
+  }
 
-      return data ? this.mapBusiness(data) : null;
-    } catch (error) {
-      console.error('Error in getBusinessByOwnerId:', error);
-      throw error;
-    }
+  /** Drop the cached business for the given owner — call after mutations. */
+  static invalidateBusinessByOwner(ownerId: string): void {
+    businessByOwnerCache.delete(ownerId);
   }
 
   /**
@@ -211,7 +239,9 @@ export class BusinessService {
       if (error) throw error;
       if (!data) throw new Error('Failed to update business');
 
-      return this.mapBusiness(data);
+      const mapped = this.mapBusiness(data);
+      if (mapped.ownerId) businessByOwnerCache.delete(mapped.ownerId);
+      return mapped;
     } catch (error) {
       console.error('Error in updateBusiness:', error);
       throw error;
@@ -434,10 +464,8 @@ export class BusinessService {
     userId: string
   ): Promise<{ disputes30d: number; reliabilityScore: number } | null> {
     const { data, error } = await supabase
-      .from('business_reliability')
-      .select('disputes_30d, reliability_score')
-      .eq('user_id', userId)
-      .maybeSingle();
+      .rpc('get_business_reliability', { p_user_id: userId })
+      .maybeSingle<{ disputes_30d: number | null; reliability_score: number | null }>();
     if (error) throw error;
     if (!data) return null;
     return {

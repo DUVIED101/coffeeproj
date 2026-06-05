@@ -21,6 +21,7 @@ import { JobCard } from '../../components/JobCard';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { ShiftCard } from '../../components/ShiftCard';
 import { ShiftFilterSheet } from '../../components/ShiftFilterSheet';
+import { Skeleton } from '../../components/Skeleton';
 import { AddFab } from '../../components/AddFab';
 import type { ShiftFilters } from '../../components/ShiftFilterSheet';
 import { JobService } from '../../services/JobService';
@@ -59,7 +60,7 @@ const LIFECYCLE_TAB_VALUES: LifecycleTabValue[] = [
 
 export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigation, route }) => {
   const [activeTab, setActiveTab] = useState<TabType>('jobs');
-  const { user } = useAuthStore();
+  const user = useAuthStore(s => s.user);
   const { t } = useTranslation();
   const unreadCount = useNotificationFeedStore(state => state.unreadCount);
 
@@ -185,14 +186,10 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     }
   }, [businessId]);
 
-  useEffect(() => {
-    if (activeTab === 'jobs') {
-      loadJobs();
-    } else {
-      loadShifts();
-    }
-  }, [activeTab, loadJobs, loadShifts]);
-
+  // Combined focus + tab-switch loader. useFocusEffect re-fires on focus AND
+  // whenever its callback identity changes, so depending on `activeTab` lets
+  // us drop a parallel useEffect (which was double-firing on mount-and-focus
+  // and ~doubling egress on this screen).
   useFocusEffect(
     useCallback(() => {
       if (activeTab === 'jobs') {
@@ -389,7 +386,15 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
       </View>
 
       {isLoadingJobs ? (
-        <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
+        <View style={styles.skeletonList}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <View key={i} style={styles.skeletonCard}>
+              <Skeleton width="70%" height={18} />
+              <Skeleton width="50%" height={14} style={styles.skeletonGap} />
+              <Skeleton width="35%" height={14} style={styles.skeletonGap} />
+            </View>
+          ))}
+        </View>
       ) : (
         <FlatList
           data={filteredJobs}
@@ -473,7 +478,15 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
       </View>
 
       {isLoadingShifts ? (
-        <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
+        <View style={styles.skeletonList}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <View key={i} style={styles.skeletonCard}>
+              <Skeleton width="65%" height={17} />
+              <Skeleton width="45%" height={14} style={styles.skeletonGap} />
+              <Skeleton width="55%" height={14} style={styles.skeletonGap} />
+            </View>
+          ))}
+        </View>
       ) : (
         <FlatList
           data={filteredShiftEntries}
@@ -672,6 +685,20 @@ const styles = StyleSheet.create({
   },
   loader: {
     marginTop: 32,
+  },
+  skeletonList: {
+    padding: 16,
+  },
+  skeletonCard: {
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 16,
+    marginBottom: 12,
+  },
+  skeletonGap: {
+    marginTop: 8,
   },
   listContent: {
     padding: 16,

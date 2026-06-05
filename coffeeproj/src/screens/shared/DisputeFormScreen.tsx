@@ -17,6 +17,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import type { ApplicationId } from '../../types/ids';
+import { showErrorToast } from '../../stores/errorToastStore';
 
 type DisputeCategory =
   | 'no_show'
@@ -89,11 +90,11 @@ export const DisputeFormScreen: React.FC<Props> = ({ route, navigation }) => {
     } catch (err: any) {
       const code: string = err?.message ?? '';
       if (code.includes('ALREADY_FILED') || code.includes('unique')) {
-        Alert.alert(t('common.error'), t('disputes.errors.alreadyFiled'));
+        showErrorToast(t('disputes.errors.alreadyFiled'));
       } else if (code.includes('APPLICATION_NOT_ACTIVE')) {
-        Alert.alert(t('common.error'), t('disputes.errors.notEligible'));
+        showErrorToast(t('disputes.errors.notEligible'));
       } else {
-        Alert.alert(t('common.error'), t('common.tryAgain'));
+        showErrorToast(t('common.tryAgain'));
       }
     } finally {
       setBusy(false);

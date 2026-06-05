@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { COLORS } from '../config/constants';
 import { ApplicationService } from '../services/ApplicationService';
 import type { ApplicationId } from '../types/ids';
+import { showErrorToast } from '../stores/errorToastStore';
 
 type Props = {
   applicationId: ApplicationId;
@@ -35,7 +36,7 @@ export const ShiftConfirmationModal = React.memo(
           onDeclined();
         }
       } catch {
-        Alert.alert(t('common.error'), t('common.tryAgain'));
+        showErrorToast(t('common.tryAgain'));
       } finally {
         setBusy(false);
       }

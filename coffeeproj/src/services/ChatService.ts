@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase';
+import { withRetry } from '../utils/withRetry';
 import type { Conversation, Message, SendMessageData, ConversationId } from '../types/chat';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -328,11 +329,16 @@ export class ChatService {
   ): Promise<Record<string, { message_text: string; sender_id: string }>> {
     if (conversationIds.length === 0) return {};
 
+    // Cap server-side rows to avoid pulling unbounded message history per
+    // conversation when an inbox has many active threads. Client-side
+    // bucketing keeps only the newest per conversation, so e.g. 50 chats →
+    // 50 × ~10 recent messages is enough headroom even for chatty inboxes.
     const { data, error } = await supabase
       .from('messages')
       .select('conversation_id, message_text, sender_id, created_at')
       .in('conversation_id', conversationIds)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(Math.min(conversationIds.length * 10, 500));
 
     if (error) {
       console.error('Error in fetchLastMessagePerConversation:', error);
@@ -361,25 +367,30 @@ export class ChatService {
     try {
       const userIdField = accountType === 'barista' ? 'barista_id' : 'business_id';
 
-      const { data, error } = await supabase
-        .from('conversations')
-        .select(
-          `
-          *,
-          applications(
-            status,
-            jobs!inner(
-              title,
-              businesses!inner(name, logo_url)
+      const { data, error } = await withRetry(async () => {
+        const res = await supabase
+          .from('conversations')
+          .select(
+            `
+            *,
+            applications(
+              status,
+              jobs!inner(
+                title,
+                businesses!inner(name, logo_url)
+              )
+            ),
+            users!barista_id(
+              barista_profiles(first_name, last_name, avatar_url)
             )
-          ),
-          users!barista_id(
-            barista_profiles(first_name, last_name, avatar_url)
+          `
           )
-        `
-        )
-        .eq(userIdField, userId)
-        .order('last_message_at', { ascending: false, nullsFirst: false });
+          .eq(userIdField, userId)
+          .order('last_message_at', { ascending: false, nullsFirst: false })
+          .limit(50);
+        if (res.error) throw res.error;
+        return res;
+      });
 
       if (error) throw error;
 
@@ -568,6 +579,44 @@ export class ChatService {
    */
   static unsubscribeFromMessages(channel: RealtimeChannel): void {
     channel.unsubscribe();
+  }
+
+  /**
+   * Subscribe to conversation rows that affect the given user's unread badge.
+   * Returns a teardown function. Caller invokes onChange with no arg — they
+   * decide how to recompute (refetch total, or apply diff).
+   */
+  static subscribeToUnreadChanges(
+    userId: string,
+    accountType: 'barista' | 'business',
+    onChange: () => void
+  ): () => void {
+    const idField = accountType === 'barista' ? 'barista_id' : 'business_id';
+    const name = `unread:${accountType}:${userId}`;
+    // Defensive: if a prior mount left a channel with this name in the
+    // Supabase registry (HMR, double-mount on StrictMode-equivalent), remove
+    // it before creating a fresh one.
+    for (const existing of supabase.getChannels()) {
+      if (existing.topic === `realtime:${name}`) {
+        supabase.removeChannel(existing);
+      }
+    }
+    const channel = supabase
+      .channel(name)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'conversations',
+          filter: `${idField}=eq.${userId}`,
+        },
+        () => onChange()
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }
 
   /**

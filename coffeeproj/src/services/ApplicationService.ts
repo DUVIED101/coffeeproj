@@ -202,7 +202,8 @@ export class ApplicationService {
         )
         .eq('barista_id', baristaId)
         .eq('status', 'completed')
-        .order('completed_at', { ascending: false });
+        .order('completed_at', { ascending: false })
+        .limit(50);
 
       if (error) throw error;
 
@@ -272,7 +273,8 @@ export class ApplicationService {
         `
         )
         .eq('jobs.business_id', businessId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(200);
 
       if (error) throw error;
       if (!applications || applications.length === 0) return [];
@@ -295,7 +297,8 @@ export class ApplicationService {
           )
         `
         )
-        .in('id', baristaIds);
+        .in('id', baristaIds)
+        .limit(200);
 
       if (usersError) throw usersError;
 
@@ -349,7 +352,8 @@ export class ApplicationService {
         .from('applications')
         .select('*')
         .eq('job_id', jobId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (appsError) throw appsError;
       if (!applications || applications.length === 0) return [];
@@ -374,7 +378,8 @@ export class ApplicationService {
           )
         `
         )
-        .in('id', baristaIds);
+        .in('id', baristaIds)
+        .limit(100);
 
       if (usersError) throw usersError;
 

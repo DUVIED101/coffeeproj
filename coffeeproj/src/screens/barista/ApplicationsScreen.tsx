@@ -6,7 +6,6 @@ import {
   StyleSheet,
   SafeAreaView,
   FlatList,
-  ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
@@ -16,6 +15,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ChatService } from '../../services/ChatService';
+import { Skeleton } from '../../components/Skeleton';
 import { useAuthStore } from '../../stores/authStore';
 import type { Application, ApplicationStatus } from '../../types/application';
 import type { ConversationId } from '../../types/chat';
@@ -249,8 +249,14 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+        <View style={styles.skeletonList}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <View key={i} style={styles.skeletonRow}>
+              <Skeleton width="65%" height={16} />
+              <Skeleton width="45%" height={13} style={styles.skeletonGap} />
+              <Skeleton width="30%" height={13} style={styles.skeletonGap} />
+            </View>
+          ))}
         </View>
       </SafeAreaView>
     );
@@ -285,10 +291,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  skeletonList: {
+    padding: 16,
+  },
+  skeletonRow: {
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 16,
+    marginBottom: 12,
+  },
+  skeletonGap: {
+    marginTop: 8,
   },
   header: {
     padding: 16,

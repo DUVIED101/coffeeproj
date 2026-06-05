@@ -8,6 +8,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { NotificationPreferencesService } from '../../services/NotificationPreferencesService';
 import type { UserId } from '../../types/ids';
 import type { UpdateNotificationPreferences } from '../../types/notificationPreferences';
+import { showErrorToast } from '../../stores/errorToastStore';
 
 type PrefKey = keyof UpdateNotificationPreferences;
 
@@ -130,7 +131,7 @@ export const NotificationsScreen: React.FC = () => {
     } catch (err) {
       console.error('Error in upsertPreferences:', err);
       setPrefs(s => ({ ...s, [key]: previous }));
-      Alert.alert(t('common.error'), t('common.retry'));
+      showErrorToast(t('common.retry'));
     }
   };
 

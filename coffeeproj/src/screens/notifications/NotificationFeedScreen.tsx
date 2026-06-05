@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
   Alert,
@@ -15,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../config/constants';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
+import { Skeleton } from '../../components/Skeleton';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { dispatchPayload } from '../../navigation/navigationRef';
@@ -407,8 +407,16 @@ export const NotificationFeedScreen: React.FC<{ navigation: any }> = ({ navigati
         </TouchableOpacity>
       </View>
       {isLoading && notifications.length === 0 ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+        <View style={styles.skeletonList}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <View key={i} style={styles.skeletonRow}>
+              <Skeleton width={36} height={36} borderRadius={18} />
+              <View style={styles.skeletonRowText}>
+                <Skeleton width="60%" height={14} />
+                <Skeleton width="85%" height={13} style={styles.skeletonGap} />
+              </View>
+            </View>
+          ))}
         </View>
       ) : (
         <FlatList
@@ -437,10 +445,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  skeletonList: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  skeletonRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    gap: 12,
+  },
+  skeletonRowText: {
+    flex: 1,
+  },
+  skeletonGap: {
+    marginTop: 6,
   },
   listContent: {
     padding: 16,

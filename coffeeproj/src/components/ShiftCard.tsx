@@ -1,6 +1,8 @@
 import React, { useCallback, useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { useTranslation } from 'react-i18next';
+import { transformedImageUrl } from '../utils/imageTransform';
 import type { TFunction } from 'i18next';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS, RADII } from '../config/constants';
@@ -119,8 +121,10 @@ export const ShiftCard = React.memo<ShiftCardProps>(
         {acceptedApp ? (
           <View style={styles.acceptedRow}>
             {acceptedApp.baristaProfile?.avatarUrl ? (
-              <Image
-                source={{ uri: acceptedApp.baristaProfile.avatarUrl }}
+              <FastImage
+                source={{
+                  uri: transformedImageUrl(acceptedApp.baristaProfile.avatarUrl, AVATAR_SIZE),
+                }}
                 style={styles.acceptedAvatar}
               />
             ) : (
@@ -166,8 +170,10 @@ export const ShiftCard = React.memo<ShiftCardProps>(
                     { marginLeft: idx === 0 ? 0 : -10, zIndex: MAX_VISIBLE_AVATARS - idx },
                   ]}>
                   {app.baristaProfile?.avatarUrl ? (
-                    <Image
-                      source={{ uri: app.baristaProfile.avatarUrl }}
+                    <FastImage
+                      source={{
+                        uri: transformedImageUrl(app.baristaProfile.avatarUrl, PENDING_AVATAR_SIZE),
+                      }}
                       style={styles.pendingAvatar}
                     />
                   ) : (

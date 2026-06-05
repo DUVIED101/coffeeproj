@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS, RADII } from '../config/constants';
+import { useNowMinute } from '../hooks/useNowMinute';
 
 type Props = {
   shiftStart: Date;
@@ -33,14 +34,9 @@ const formatRemaining = (
 
 export const ShiftCountdownBanner: React.FC<Props> = ({ shiftStart, jobTitle, onPress }) => {
   const { t } = useTranslation();
-  const [now, setNow] = useState<Date>(() => new Date());
+  const now = useNowMinute();
 
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), MS_PER_MINUTE);
-    return () => clearInterval(id);
-  }, []);
-
-  const remainingMs = shiftStart.getTime() - now.getTime();
+  const remainingMs = shiftStart.getTime() - now;
   // Hide once the shift's start is more than a day past — by then the banner is
   // noise. Within the 24h cushion after start we keep it visible so the actor
   // can still see the "shift began" hint.

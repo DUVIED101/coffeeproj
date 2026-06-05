@@ -7,6 +7,7 @@ import { COLORS } from '../../config/constants';
 import { useAuthStore } from '../../stores/authStore';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
 import { BusinessService } from '../../services/BusinessService';
+import { showErrorToast } from '../../stores/errorToastStore';
 
 export const VisibilityScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -65,7 +66,7 @@ export const VisibilityScreen: React.FC = () => {
     } catch (err) {
       console.error('Error in VisibilityScreen.handleToggle:', err);
       setEnabled(previous);
-      Alert.alert(t('common.error'), t('common.retry'));
+      showErrorToast(t('common.retry'));
     }
   };
 

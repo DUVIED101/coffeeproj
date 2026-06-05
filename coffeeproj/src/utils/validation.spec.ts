@@ -1,4 +1,10 @@
-import { sanitizeYearsInput, YEARS_MAX_VALUE } from './validation';
+import {
+  sanitizeYearsInput,
+  YEARS_MAX_VALUE,
+  isCommonWeakPassword,
+  validatePassword,
+  getPasswordError,
+} from './validation';
 
 describe('sanitizeYearsInput', () => {
   it('passes through small valid integers', () => {
@@ -41,5 +47,47 @@ describe('sanitizeYearsInput', () => {
   it('does not promote a lone period into a numeric value', () => {
     expect(sanitizeYearsInput('.')).toBe('');
     expect(sanitizeYearsInput(',')).toBe('');
+  });
+});
+
+describe('isCommonWeakPassword', () => {
+  it.each(['password123', 'qwerty123', '12345678', 'admin123', 'iloveyou', 'qwerty2026'])(
+    'rejects known leaked password %s',
+    p => {
+      expect(isCommonWeakPassword(p)).toBe(true);
+    }
+  );
+
+  it('is case-insensitive', () => {
+    expect(isCommonWeakPassword('Password123')).toBe(true);
+    expect(isCommonWeakPassword('PASSWORD123')).toBe(true);
+  });
+
+  it.each(['Tr0ub4dor&3', 'CorrectHorseBatteryStaple9!', 'My$ecur3Cof33', 'D@vid2026X'])(
+    'allows strong password %s',
+    p => {
+      expect(isCommonWeakPassword(p)).toBe(false);
+    }
+  );
+});
+
+describe('validatePassword + getPasswordError integration', () => {
+  it('rejects a leaked password that otherwise meets char-class requirements', () => {
+    // Password123 has upper, lower, digit AND ≥ 8 chars — pre-existing rules pass.
+    // The new check must still reject because it's a known leaked pattern.
+    expect(validatePassword('Password123')).toBe(false);
+    expect(getPasswordError('Password123')).toBe('auth.errors.passwordTooCommon');
+  });
+
+  it('keeps existing char-class errors when password is short and weak', () => {
+    // 'qwerty12' is a weak pattern AND lacks an uppercase letter. Char-class
+    // error wins because it surfaces first — that's intentional, more
+    // actionable feedback.
+    expect(getPasswordError('qwerty12')).toBe('auth.errors.passwordNoUpper');
+  });
+
+  it('accepts a strong, non-leaked password', () => {
+    expect(validatePassword('Tr0ub4dor&3')).toBe(true);
+    expect(getPasswordError('Tr0ub4dor&3')).toBeNull();
   });
 });

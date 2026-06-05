@@ -7,6 +7,31 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import { useAuthStore } from '../stores/authStore';
 import { useChatUnreadStore } from '../stores/chatUnreadStore';
+import { ChatService } from '../services/ChatService';
+import { ErrorBoundary } from '../components/ErrorBoundary';
+
+// Tab-scoped ErrorBoundary wrappers so a crash in one tab cannot tear down
+// the whole tree (the root <NavigationContainer> would otherwise be unmounted).
+// Defined at module scope so React keeps a stable component identity per tab.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const wrapWithBoundary = (Comp: React.ComponentType<any>): React.ComponentType<any> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const Wrapped: React.FC<any> = props => (
+    <ErrorBoundary>
+      <Comp {...props} />
+    </ErrorBoundary>
+  );
+  Wrapped.displayName = `WithBoundary(${Comp.displayName ?? Comp.name ?? 'Component'})`;
+  return Wrapped;
+};
+
+const ProfileStackBoundary = wrapWithBoundary(ProfileStack);
+const BusinessProfileStackBoundary = wrapWithBoundary(BusinessProfileStack);
+const BaristaStackBoundary = wrapWithBoundary(BaristaStack);
+const ApplicationsStackBoundary = wrapWithBoundary(ApplicationsStack);
+const BusinessStackBoundary = wrapWithBoundary(BusinessStack);
+const BusinessSearchStackBoundary = wrapWithBoundary(BusinessSearchStack);
+const ChatsStackBoundary = wrapWithBoundary(ChatsStack);
 import { COLORS } from '../config/constants';
 import { BusinessStack } from './BusinessStack';
 import { BusinessProfileStack } from './BusinessProfileStack';
@@ -30,16 +55,21 @@ export type MainTabsParamList = {
 const Tab = createBottomTabNavigator<MainTabsParamList>();
 
 export const MainTabs: React.FC = () => {
-  const { user, isLoading } = useAuthStore();
+  const user = useAuthStore(s => s.user);
+  const isLoading = useAuthStore(s => s.isLoading);
   const { t } = useTranslation();
   const chatUnreadCount = useChatUnreadStore(s => s.unreadCount);
   const refreshChatUnread = useChatUnreadStore(s => s.refresh);
 
   useEffect(() => {
     if (!user?.id || !user.accountType) return;
-    refreshChatUnread(user.id, user.accountType);
-    const interval = setInterval(() => refreshChatUnread(user.id, user.accountType!), 30_000);
-    return () => clearInterval(interval);
+    const userId = user.id;
+    const accountType = user.accountType;
+    refreshChatUnread(userId, accountType);
+    const unsubscribe = ChatService.subscribeToUnreadChanges(userId, accountType, () => {
+      refreshChatUnread(userId, accountType);
+    });
+    return unsubscribe;
   }, [user?.id, user?.accountType, refreshChatUnread]);
 
   if (isLoading || !user) {
@@ -67,7 +97,9 @@ export const MainTabs: React.FC = () => {
       }}>
       <Tab.Screen
         name="Profile"
-        component={user.accountType === 'barista' ? ProfileStack : BusinessProfileStack}
+        component={
+          user.accountType === 'barista' ? ProfileStackBoundary : BusinessProfileStackBoundary
+        }
         options={{
           title: t('nav.tabs.profile'),
           tabBarLabel: t('nav.tabs.profile'),
@@ -83,7 +115,7 @@ export const MainTabs: React.FC = () => {
       />
       <Tab.Screen
         name="Jobs"
-        component={BaristaStack}
+        component={BaristaStackBoundary}
         options={{
           title: t('nav.tabs.jobs'),
           tabBarLabel: t('nav.tabs.jobs'),
@@ -105,7 +137,7 @@ export const MainTabs: React.FC = () => {
       />
       <Tab.Screen
         name="Applications"
-        component={ApplicationsStack}
+        component={ApplicationsStackBoundary}
         options={{
           title: t('nav.tabs.applications', { defaultValue: 'Мои отклики' }),
           tabBarLabel: t('nav.tabs.applications', { defaultValue: 'Отклики' }),
@@ -127,7 +159,7 @@ export const MainTabs: React.FC = () => {
       />
       <Tab.Screen
         name="Business"
-        component={BusinessStack}
+        component={BusinessStackBoundary}
         options={{
           title: t('nav.tabs.business'),
           tabBarLabel: t('nav.tabs.business'),
@@ -149,7 +181,7 @@ export const MainTabs: React.FC = () => {
       />
       <Tab.Screen
         name="Baristas"
-        component={BusinessSearchStack}
+        component={BusinessSearchStackBoundary}
         options={{
           title: t('nav.tabs.baristas'),
           tabBarLabel: t('nav.tabs.baristas'),
@@ -171,7 +203,7 @@ export const MainTabs: React.FC = () => {
       />
       <Tab.Screen
         name="Chats"
-        component={ChatsStack}
+        component={ChatsStackBoundary}
         options={{
           title: t('chats.title'),
           tabBarLabel: t('chats.title'),

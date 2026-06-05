@@ -34,6 +34,7 @@ credentials/
 # Supabase CLI local state
 supabase/.temp/
 supabase/.branches/
+coffeeproj/supabase/
 
 # Claude Code: ignore everything under .claude/ except shared settings.json
 # (covers settings.local.json, projects/, scheduled_tasks.lock, worktrees/, …)
@@ -64,5 +65,12 @@ docs/push-notifications-setup.md
 docs/testflight-setup.md
 docs/resend-custom-domain.md
 docs/pre-public-cleanup.md
+docs/RUNBOOK.md
+docs/DEPLOYMENT.md
+docs/ONCALL.md
+docs/CONTRIBUTING.md
+docs/CHANGELOG.md
+docs/email-templates.md
+docs/PHASE_8_REMAINING.md
 coffeeproj/scripts/seed-simulation.js
 coffeeproj/scripts/seed-test-jobs.js

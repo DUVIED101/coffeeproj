@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase';
+import { withRetry } from '../utils/withRetry';
 import type {
   Job,
   CreateJobData,
@@ -198,7 +199,8 @@ export class JobService {
         `
         )
         .eq('business_id', businessId)
-        .order('posted_at', { ascending: false });
+        .order('posted_at', { ascending: false })
+        .limit(100);
 
       if (error) throw error;
 
@@ -264,7 +266,11 @@ export class JobService {
         offset_count: offset,
       };
 
-      const { data, error } = await supabase.rpc('search_jobs', params);
+      const { data, error } = await withRetry(async () => {
+        const res = await supabase.rpc('search_jobs', params);
+        if (res.error) throw res.error;
+        return res;
+      });
 
       if (error) throw error;
 

@@ -9,11 +9,11 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import FastImage from 'react-native-fast-image';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { BusinessService } from '../../services/BusinessService';
@@ -42,6 +42,7 @@ import {
   YEAR_MAX_DIGITS,
   FOUNDED_YEAR_MIN,
 } from '../../utils/validation';
+import { showErrorToast } from '../../stores/errorToastStore';
 
 type SetupStackParamList = {
   BusinessProfileSetup: undefined;
@@ -180,7 +181,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
           : outcome.reason === 'invalidFormat'
             ? 'photoErrors.invalidFormat_one'
             : 'photoErrors.uploadFailedBody';
-      Alert.alert(t('common.error'), t(bodyKey, { maxMb: 7, count: 1 }) as string);
+      showErrorToast(t(bodyKey, { maxMb: 7, count: 1 }) as string);
       return;
     }
     setPendingLogoUri(outcome.uri);
@@ -189,7 +190,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const handlePickBranchPhoto = useCallback(async () => {
     const remaining = PHOTO_LIMIT - pendingBranchPhotoUris.length;
     if (remaining <= 0) {
-      Alert.alert(t('common.error'), t('branchPhotos.limitReached', { max: PHOTO_LIMIT }));
+      showErrorToast(t('branchPhotos.limitReached', { max: PHOTO_LIMIT }));
       return;
     }
     const picked = await pickPhotos({
@@ -220,7 +221,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const validateStep = useCallback((): boolean => {
     if (currentStep === 0) {
       if (!name.trim() || name.trim().length < 2) {
-        Alert.alert(t('common.error'), t('businessSetup.basics.nameRequired'));
+        showErrorToast(t('businessSetup.basics.nameRequired'));
         return false;
       }
     }
@@ -228,21 +229,18 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       if (foundedYear) {
         const year = parseInt(foundedYear, 10);
         if (year < FOUNDED_YEAR_MIN) {
-          Alert.alert(
-            t('common.error'),
-            t('businessSetup.errors.foundedYearInvalid', { min: FOUNDED_YEAR_MIN })
-          );
+          showErrorToast(t('businessSetup.errors.foundedYearInvalid', { min: FOUNDED_YEAR_MIN }));
           return false;
         }
       }
     }
     if (currentStep === 2) {
       if (!branchName.trim()) {
-        Alert.alert(t('common.error'), t('branches.form.nameRequired'));
+        showErrorToast(t('branches.form.nameRequired'));
         return false;
       }
       if (!branchAddress.trim()) {
-        Alert.alert(t('common.error'), t('branches.form.addressRequired'));
+        showErrorToast(t('branches.form.addressRequired'));
         return false;
       }
     }
@@ -268,7 +266,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleFinish = useCallback(async () => {
     if (!user?.id) {
-      Alert.alert(t('common.error'), t('businessSetup.errors.notAuthenticated'));
+      showErrorToast(t('businessSetup.errors.notAuthenticated'));
       return;
     }
     setIsSubmitting(true);
@@ -386,7 +384,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error finishing business setup:', error);
-      Alert.alert(t('common.error'), t('businessSetup.errors.saveFailed'));
+      showErrorToast(t('businessSetup.errors.saveFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -567,7 +565,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               <View style={styles.logoRow}>
                 <View style={styles.logoPreview}>
                   {displayLogo ? (
-                    <Image source={{ uri: displayLogo }} style={styles.logoImage} />
+                    <FastImage source={{ uri: displayLogo }} style={styles.logoImage} />
                   ) : (
                     <Text style={styles.logoPlaceholder}>{t('businessSetup.brand.noLogo')}</Text>
                   )}

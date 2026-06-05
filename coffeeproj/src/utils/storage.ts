@@ -41,9 +41,12 @@ export const uploadImageToBucket = async ({
 }: UploadImageInput): Promise<string> => {
   const arrayBuffer = await readFileAsArrayBuffer(uri);
 
+  // Paths are immutable (uuid + timestamp), so cache aggressively at the CDN
+  // and on-device. 1 year matches typical "cache-forever for immutable URLs"
+  // guidance — reduces origin-egress refetches when CDN edges evict.
   const { error } = await supabase.storage.from(bucket).upload(path, arrayBuffer, {
     contentType,
-    cacheControl: '3600',
+    cacheControl: '31536000, immutable',
     upsert: false,
   });
 

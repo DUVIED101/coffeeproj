@@ -20,6 +20,7 @@ import { COLORS } from '../../config/constants';
 import { AuthService } from '../../services/AuthService';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 import type { AuthStackParamList } from '../../navigation/AuthStack';
+import { showErrorToast } from '../../stores/errorToastStore';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'EmailVerification'>;
@@ -67,7 +68,7 @@ export const EmailVerificationScreen: React.FC<Props> = ({ navigation, route }) 
       await AuthService.resendSignupOtp(email);
       Alert.alert(t('auth.verify.codeResentTitle'), t('auth.verify.codeResentBody'));
     } catch (error: unknown) {
-      Alert.alert(t('common.error'), getErrorMessage(error));
+      showErrorToast(getErrorMessage(error));
     } finally {
       setIsResending(false);
     }

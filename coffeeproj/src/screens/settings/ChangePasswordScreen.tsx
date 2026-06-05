@@ -18,6 +18,7 @@ import { COLORS } from '../../config/constants';
 import { AuthService } from '../../services/AuthService';
 import { PasswordInput } from '../../components/PasswordInput';
 import type { SettingsStackParamList } from '../../navigation/SettingsStack';
+import { showErrorToast } from '../../stores/errorToastStore';
 
 type Navigation = NativeStackNavigationProp<SettingsStackParamList, 'ChangePassword'>;
 
@@ -79,7 +80,7 @@ export const ChangePasswordScreen: React.FC = () => {
       } else if (message === 'password_reused') {
         setNewError(t('settings.password.passwordReused'));
       } else {
-        Alert.alert(t('common.error'), message || t('common.error'));
+        showErrorToast(message || t('common.error'));
       }
     } finally {
       setIsSubmitting(false);

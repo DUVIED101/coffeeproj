@@ -21,6 +21,7 @@ import { AuthService } from '../../services/AuthService';
 import { PasswordInput } from '../../components/PasswordInput';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 import type { AuthStackParamList } from '../../navigation/AuthStack';
+import { showErrorToast } from '../../stores/errorToastStore';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'PasswordReset'>;
@@ -84,7 +85,7 @@ export const PasswordResetScreen: React.FC<Props> = ({ navigation, route }) => {
       await AuthService.resetPassword(email);
       Alert.alert(t('auth.passwordReset.codeResentTitle'), t('auth.passwordReset.codeResentBody'));
     } catch (error: unknown) {
-      Alert.alert(t('common.error'), getErrorMessage(error));
+      showErrorToast(getErrorMessage(error));
     } finally {
       setIsResending(false);
     }

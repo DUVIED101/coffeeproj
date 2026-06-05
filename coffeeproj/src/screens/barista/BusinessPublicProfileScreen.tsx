@@ -4,13 +4,14 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   TouchableOpacity,
   ActivityIndicator,
   Linking,
   SafeAreaView,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import FastImage from 'react-native-fast-image';
+import { transformedImageUrl } from '../../utils/imageTransform';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { TFunction } from 'i18next';
@@ -148,7 +149,7 @@ export const BusinessPublicProfileScreen: React.FC<Props> = ({ route, navigation
               onPress={() => setAvatarViewerVisible(true)}
               activeOpacity={0.85}
               accessibilityRole="button">
-              <Image source={{ uri: business.logoUrl }} style={styles.avatarImage} />
+              <FastImage source={{ uri: transformedImageUrl(business.logoUrl, 72) }} style={styles.avatarImage} />
             </TouchableOpacity>
           ) : (
             <View style={styles.avatarPlaceholder}>

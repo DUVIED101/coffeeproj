@@ -8,12 +8,15 @@ import { flushPendingPushPayload, navigationRef } from './navigationRef';
 import { ProfileBootstrapScreen } from '../screens/auth/ProfileBootstrapScreen';
 import { COLORS } from '../config/constants';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { ErrorToast } from '../components/ErrorToast';
 
 export const AppNavigator: React.FC = () => {
-  const { isAuthenticated, user, isLoading, initialize } = useAuthStore();
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated);
+  const user = useAuthStore(s => s.user);
+  const isLoading = useAuthStore(s => s.isLoading);
+  const initialize = useAuthStore(s => s.initialize);
 
   useEffect(() => {
-    // Initialize auth state on app mount
     initialize();
   }, [initialize]);
 
@@ -38,6 +41,7 @@ export const AppNavigator: React.FC = () => {
   return (
     <NavigationContainer ref={navigationRef} onReady={flushPendingPushPayload}>
       <ErrorBoundary>{renderRoot()}</ErrorBoundary>
+      <ErrorToast />
     </NavigationContainer>
   );
 };

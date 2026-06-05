@@ -9,11 +9,12 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
+import { transformedImageUrl } from '../../utils/imageTransform';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -37,6 +38,7 @@ import { pickAndCropAvatar } from '../../utils/imageCrop';
 import { CertificatesEditor } from '../../components/CertificatesEditor';
 import { WorkExperienceEditor } from '../../components/WorkExperienceEditor';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
+import { Skeleton } from '../../components/Skeleton';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { formatLocalDate } from '../../utils/dateUtils';
@@ -69,6 +71,7 @@ import type {
 } from '../../types/workExperience';
 import { computeDuration, computeTotalDuration, findDraftErrors } from '../../types/workExperience';
 import { computeMedicalBookStatus, type MedicalBookStatus } from '../../utils/medicalBook';
+import { showErrorToast } from '../../stores/errorToastStore';
 
 type Props = {
   navigation: NativeStackNavigationProp<ProfileStackParamList, 'BaristaProfile'>;
@@ -401,7 +404,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
           : outcome.reason === 'invalidFormat'
             ? 'photoErrors.invalidFormat_one'
             : 'photoErrors.uploadFailedBody';
-      Alert.alert(t('common.error'), t(bodyKey, { maxMb: 7, count: 1 }) as string);
+      showErrorToast(t(bodyKey, { maxMb: 7, count: 1 }) as string);
       return;
     }
     try {
@@ -650,8 +653,14 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container} edges={['left', 'right']}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+        <View style={styles.skeletonRoot}>
+          <View style={styles.skeletonHero}>
+            <Skeleton width={96} height={96} borderRadius={48} />
+            <Skeleton width="50%" height={20} style={styles.skeletonGapBig} />
+            <Skeleton width="35%" height={14} style={styles.skeletonGap} />
+          </View>
+          <Skeleton width="100%" height={140} borderRadius={12} style={styles.skeletonBlock} />
+          <Skeleton width="100%" height={140} borderRadius={12} style={styles.skeletonBlock} />
         </View>
       </SafeAreaView>
     );
@@ -745,7 +754,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   accessibilityLabel={t('baristaProfileScreen.viewAvatarA11y', {
                     defaultValue: 'Открыть аватар на весь экран',
                   })}>
-                  <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
+                  <FastImage source={{ uri: transformedImageUrl(profile.avatarUrl, 80) }} style={styles.avatar} />
                 </TouchableOpacity>
               ) : (
                 <View style={styles.avatarPlaceholder}>
@@ -1331,7 +1340,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                         index: index + 1,
                         defaultValue: 'Открыть фото портфолио {{index}}',
                       })}>
-                      <Image source={{ uri: photo }} style={styles.portfolioPhoto} />
+                      <FastImage source={{ uri: transformedImageUrl(photo, 100) }} style={styles.portfolioPhoto} />
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.portfolioRemoveButton}
@@ -1410,6 +1419,22 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  skeletonRoot: {
+    padding: 20,
+  },
+  skeletonHero: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  skeletonGap: {
+    marginTop: 6,
+  },
+  skeletonGapBig: {
+    marginTop: 14,
+  },
+  skeletonBlock: {
+    marginTop: 16,
   },
   emptyContainer: {
     flex: 1,

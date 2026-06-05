@@ -36,6 +36,7 @@ import { PHOTO_LIMIT } from '../../utils/storage';
 import { pickPhotos, reportRejections } from '../../utils/pickPhotos';
 import { geocodeAddress } from '../../utils/geocode';
 import { SHORT_TEXT_MAX_LENGTH, ADDRESS_MAX_LENGTH } from '../../utils/validation';
+import { showErrorToast, showSuccessToast } from '../../stores/errorToastStore';
 
 type BusinessStackParamList = {
   BusinessProfileSetup: undefined;
@@ -138,7 +139,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
       setBranches(data);
     } catch (error) {
       console.error('Error loading branches:', error);
-      Alert.alert(t('common.error'), t('branches.errors.loadFailed'));
+      showErrorToast(t('branches.errors.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -313,7 +314,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
           equipment: selectedEquipment,
         });
 
-        Alert.alert(t('common.success'), t('branches.save.updateSuccess'));
+        showSuccessToast(t('branches.save.updateSuccess'));
       } else {
         await BusinessService.createBranch({
           businessId,
@@ -325,14 +326,14 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
           equipment: selectedEquipment,
         });
 
-        Alert.alert(t('common.success'), t('branches.save.success'));
+        showSuccessToast(t('branches.save.success'));
       }
 
       closeForm();
       loadBranches();
     } catch (error) {
       console.error('Error saving branch:', error);
-      Alert.alert(t('common.error'), t('branches.errors.saveFailed'));
+      showErrorToast(t('branches.errors.saveFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -348,18 +349,15 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
           onPress: async () => {
             try {
               await BusinessService.deleteBranch(branchId);
-              Alert.alert(t('common.success'), t('branches.delete.success'));
+              showSuccessToast(t('branches.delete.success'));
               loadBranches();
             } catch (error) {
               if (error instanceof BranchHasActiveJobsError) {
-                Alert.alert(
-                  t('common.error'),
-                  t('branches.errors.hasActiveJobs', { count: error.count })
-                );
+                showErrorToast(t('branches.errors.hasActiveJobs', { count: error.count }));
                 return;
               }
               console.error('Error deleting branch:', error);
-              Alert.alert(t('common.error'), t('branches.errors.deleteFailed'));
+              showErrorToast(t('branches.errors.deleteFailed'));
             }
           },
         },
@@ -377,13 +375,13 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
   const handleAddPhoto = useCallback(
     async (branchId: string) => {
       if (!ownerId) {
-        Alert.alert(t('common.error'), t('businessSetup.errors.notAuthenticated'));
+        showErrorToast(t('businessSetup.errors.notAuthenticated'));
         return;
       }
       const branch = branches.find(b => b.id === branchId);
       const remaining = PHOTO_LIMIT - (branch?.photos.length ?? 0);
       if (remaining <= 0) {
-        Alert.alert(t('common.error'), t('branchPhotos.limitReached', { max: PHOTO_LIMIT }));
+        showErrorToast(t('branchPhotos.limitReached', { max: PHOTO_LIMIT }));
         return;
       }
 
@@ -404,7 +402,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
           uploadedCount += 1;
         } catch (error) {
           if (error instanceof BranchPhotoLimitError) {
-            Alert.alert(t('common.error'), t('branchPhotos.limitReached', { max: PHOTO_LIMIT }));
+            showErrorToast(t('branchPhotos.limitReached', { max: PHOTO_LIMIT }));
             break;
           }
           console.error('Error adding branch photo:', error);
@@ -427,7 +425,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
         await loadBranches();
       } catch (error) {
         console.error('Error removing branch photo:', error);
-        Alert.alert(t('common.error'), t('branchPhotos.removeFailed'));
+        showErrorToast(t('branchPhotos.removeFailed'));
       }
     },
     [loadBranches, t]

@@ -1,13 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  RefreshControl,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +10,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { Avatar } from '../../components/Avatar';
+import { Skeleton } from '../../components/Skeleton';
 import type { Conversation } from '../../types/chat';
 
 const AVATAR_SIZE = 48;
@@ -66,8 +59,21 @@ const ConversationItem = React.memo<{
       : otherPartyName || ''
     : '';
 
+  const a11yLabel = [
+    title,
+    otherPartyName && otherPartyName !== title ? otherPartyName : null,
+    unreadCount > 0 ? t('conversations.unreadA11y', { count: unreadCount }) : null,
+    conversation.lastMessageText,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
   return (
-    <TouchableOpacity style={styles.conversationCard} onPress={handlePress}>
+    <TouchableOpacity
+      style={styles.conversationCard}
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={a11yLabel}>
       <View style={styles.conversationHeader}>
         <Avatar size={AVATAR_SIZE} uri={otherPartyAvatarUrl} name={otherPartyName} />
         <View style={styles.conversationInfo}>
@@ -199,8 +205,16 @@ export function ConversationsListScreen({ navigation }: any) {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container} edges={['left', 'right']}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+        <View style={styles.skeletonList}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <View key={i} style={styles.skeletonRow}>
+              <Skeleton width={AVATAR_SIZE} height={AVATAR_SIZE} borderRadius={AVATAR_SIZE / 2} />
+              <View style={styles.skeletonRowText}>
+                <Skeleton width="55%" height={15} />
+                <Skeleton width="80%" height={13} style={styles.skeletonGap} />
+              </View>
+            </View>
+          ))}
         </View>
       </SafeAreaView>
     );
@@ -243,10 +257,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  skeletonList: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  skeletonRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    gap: 12,
+  },
+  skeletonRowText: {
+    flex: 1,
+  },
+  skeletonGap: {
+    marginTop: 6,
   },
   header: {
     padding: 16,

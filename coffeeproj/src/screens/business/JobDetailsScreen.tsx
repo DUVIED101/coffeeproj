@@ -21,6 +21,7 @@ import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import type { Job, JobStatus } from '../../types/job';
 import type { JobId } from '../../types/ids';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
+import { showErrorToast } from '../../stores/errorToastStore';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'JobDetails'>;
@@ -84,7 +85,7 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
       Alert.alert(t('common.success'), t(successKey));
     } catch (err) {
       console.error('Error updating job status:', err);
-      Alert.alert(t('common.error'), t('job.errors.updateFailed'));
+      showErrorToast(t('job.errors.updateFailed'));
     } finally {
       setIsUpdatingStatus(false);
     }

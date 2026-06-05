@@ -25,6 +25,7 @@ import type { JobOffer } from '../../types/jobOffer';
 import type { JobOfferId, UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
 import type { BaristaStackParamList } from '../../navigation/BaristaStack';
+import { showErrorToast } from '../../stores/errorToastStore';
 
 type Props = {
   navigation: NativeStackNavigationProp<BaristaStackParamList, 'JobOffer'>;
@@ -93,12 +94,12 @@ export const JobOfferScreen: React.FC<Props> = ({ navigation, route }) => {
       }
     } catch (error) {
       if (error instanceof JobOfferJobUnavailableError) {
-        Alert.alert(t('common.error'), t('jobOffer.jobUnavailable'));
+        showErrorToast(t('jobOffer.jobUnavailable'));
       } else if (error instanceof JobOfferTerminalError) {
-        Alert.alert(t('common.error'), t('jobOffer.alreadyResolved'));
+        showErrorToast(t('jobOffer.alreadyResolved'));
       } else {
         console.error('Error accepting job offer:', error);
-        Alert.alert(t('common.error'), t('jobOffer.respondFailure'));
+        showErrorToast(t('jobOffer.respondFailure'));
       }
     } finally {
       setIsProcessing(false);
@@ -118,10 +119,10 @@ export const JobOfferScreen: React.FC<Props> = ({ navigation, route }) => {
       navigation.goBack();
     } catch (error) {
       if (error instanceof JobOfferTerminalError) {
-        Alert.alert(t('common.error'), t('jobOffer.alreadyResolved'));
+        showErrorToast(t('jobOffer.alreadyResolved'));
       } else {
         console.error('Error declining job offer:', error);
-        Alert.alert(t('common.error'), t('jobOffer.respondFailure'));
+        showErrorToast(t('jobOffer.respondFailure'));
       }
     } finally {
       setIsProcessing(false);

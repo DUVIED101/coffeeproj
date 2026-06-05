@@ -22,6 +22,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { JobCard } from '../../components/JobCard';
 import { AddFab } from '../../components/AddFab';
 import type { Job, JobStatus } from '../../types/job';
+import { showErrorToast } from '../../stores/errorToastStore';
 
 type BusinessStackParamList = {
   CreateJob: undefined;
@@ -109,7 +110,7 @@ export const ManageJobsScreen: React.FC<Props> = ({ navigation }) => {
         Alert.alert(t('common.success'), t(successKey));
       } catch (err) {
         console.error('Error updating job status:', err);
-        Alert.alert(t('common.error'), t('job.errors.updateFailed'));
+        showErrorToast(t('job.errors.updateFailed'));
       }
     },
     [loadJobs, t]

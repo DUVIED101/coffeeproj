@@ -16,6 +16,9 @@ import type { RouteProp } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { ShiftCountdownBanner } from '../../components/ShiftCountdownBanner';
+import { useStaleCallback } from '../../hooks/useStaleCallback';
+import { showErrorToast, showSuccessToast } from '../../stores/errorToastStore';
+import { mapAnyError } from '../../utils/errorHandler';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ReviewService } from '../../services/ReviewService';
 import { ReviewModal } from '../../components/ReviewModal';
@@ -94,19 +97,31 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
     [persistentApplicationId]
   );
 
+  // Coalesce focus + AppState refreshes so rapid foreground/focus events don't
+  // fire the same fetch twice within a short window.
+  const refreshIfStale = useStaleCallback(() => {
+    void refreshApplication(false);
+  }, 30_000);
+
   useFocusEffect(
     useCallback(() => {
-      void refreshApplication(application === undefined);
+      if (application === undefined) {
+        // First mount — always fetch with the spinner so the screen has data.
+        void refreshApplication(true);
+        refreshIfStale.reset();
+      } else {
+        refreshIfStale();
+      }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [refreshApplication])
+    }, [refreshApplication, refreshIfStale])
   );
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', state => {
-      if (state === 'active') void refreshApplication(false);
+      if (state === 'active') refreshIfStale();
     });
     return () => sub.remove();
-  }, [refreshApplication]);
+  }, [refreshIfStale]);
 
   const job = application?.job;
   const businessOwnerId = job?.businessOwnerId as UserId | undefined;
@@ -230,11 +245,11 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
               setIsWithdrawing(true);
               await ApplicationService.withdrawApplication(application!.id);
               setCurrentStatus('withdrawn');
-              Alert.alert(t('common.success'), t('applications.details.withdrawSuccess'));
+              showSuccessToast(t('applications.details.withdrawSuccess'));
               navigation.goBack();
             } catch (error) {
               console.error('Error withdrawing application:', error);
-              Alert.alert(t('common.error'), t('applications.details.withdrawFailure'));
+              showErrorToast(mapAnyError(error));
             } finally {
               setIsWithdrawing(false);
             }
@@ -259,11 +274,11 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
             setIsCancellingShift(true);
             await ApplicationService.withdrawApplication(application!.id);
             setCurrentStatus('withdrawn');
-            Alert.alert(t('common.success'), t('applications.cancelShift.success'));
+            showSuccessToast(t('applications.cancelShift.success'));
             navigation.goBack();
           } catch (error) {
             console.error('Error cancelling shift:', error);
-            Alert.alert(t('common.error'), t('applications.cancelShift.failure'));
+            showErrorToast(mapAnyError(error));
           } finally {
             setIsCancellingShift(false);
           }
@@ -291,16 +306,11 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
         hasPromptedThisSession.current = true;
         setShowReviewModal(true);
       } else {
-        Alert.alert(t('common.success'), t('applications.details.markCompleteSuccess'));
+        showSuccessToast(t('applications.details.markCompleteSuccess'));
       }
     } catch (error) {
       console.error('Error marking work complete:', error);
-      const detail =
-        error instanceof Error && error.message ? error.message : String(error ?? 'Unknown error');
-      Alert.alert(
-        t('common.error'),
-        `${t('applications.details.markCompleteFailure')}\n\n${detail}`
-      );
+      showErrorToast(mapAnyError(error));
     } finally {
       setIsMarkingComplete(false);
     }

@@ -415,11 +415,12 @@ export class BaristaProfileService {
   }
 
   static async getReliabilityScore(userId: UserId): Promise<ReliabilityScore | null> {
+    // RPC replaces the prior `.from('barista_reliability')` view read. The
+    // function is STABLE SECURITY DEFINER with a pinned search_path — same
+    // behaviour, with the security_definer_view advisor flag retired.
     const { data, error } = await supabase
-      .from('barista_reliability')
-      .select('incidents_30d, reliability_score')
-      .eq('user_id', userId)
-      .maybeSingle();
+      .rpc('get_barista_reliability', { p_user_id: userId })
+      .maybeSingle<{ incidents_30d: number | null; reliability_score: number | null }>();
     if (error) throw error;
     if (!data) return null;
     return {

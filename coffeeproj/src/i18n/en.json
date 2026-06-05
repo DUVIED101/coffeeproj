@@ -28,7 +28,8 @@
       "applications": "Applications",
       "business": "Business",
       "baristas": "Baristas"
-    }
+    },
+    "notifications": "Notifications"
   },
   "filters": {
     "jobType": {
@@ -654,7 +655,8 @@
       "passwordTooLong": "Password must be at most {{max}} characters",
       "passwordNoUpper": "Password must contain at least one uppercase letter",
       "passwordNoLower": "Password must contain at least one lowercase letter",
-      "passwordNoNumber": "Password must contain at least one number"
+      "passwordNoNumber": "Password must contain at least one number",
+      "passwordTooCommon": "This password is too common — it appears in known breaches. Please choose another."
     },
     "social": {
       "or": "or",
@@ -695,7 +697,8 @@
     "emptyTitle": "No conversations yet",
     "emptyBarista": "Apply to jobs to start conversations with businesses",
     "emptyBusiness": "Conversations will appear here when baristas apply to your jobs",
-    "youPrefix": "You"
+    "youPrefix": "You",
+    "unreadA11y": "{{count}} unread"
   },
   "businessPublicProfile": {
     "notFound": "Business profile not found",
@@ -1411,5 +1414,26 @@
     "scoreOf": "{{score}}/5",
     "incidents": "{{count}} inc. (30d)",
     "noIncidents": "No incidents (30d)"
+  },
+  "errors": {
+    "auth": {
+      "invalidCredentials": "Invalid email or password",
+      "emailNotConfirmed": "Please confirm your email before logging in",
+      "rateLimit": "Too many attempts. Try again later",
+      "userExists": "An account with this email already exists",
+      "linkInvalid": "This link is invalid or has expired"
+    },
+    "db": {
+      "uniqueViolation": "This record already exists",
+      "foreignKey": "Related data is missing",
+      "permission": "You do not have permission to do this",
+      "notFound": "Data not found"
+    },
+    "network": {
+      "offline": "No internet connection",
+      "timeout": "The request timed out",
+      "aborted": "Request cancelled"
+    },
+    "unknown": "Something went wrong. Please try again"
   }
 }

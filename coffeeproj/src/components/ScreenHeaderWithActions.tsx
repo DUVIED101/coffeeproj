@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTranslation } from 'react-i18next';
 import { COLORS, RADII } from '../config/constants';
 import { Avatar } from './Avatar';
 
@@ -10,6 +11,8 @@ export type HeaderAction = {
   label?: string;
   /** MaterialCommunityIcons name — renders an icon button instead of a pill. */
   icon?: string;
+  /** VoiceOver label — required for icon-only actions (no visual text). */
+  accessibilityLabel?: string;
   /** Number badge (e.g. unread count). Only rendered in icon mode. */
   badgeCount?: number;
   onPress: () => void;
@@ -36,6 +39,7 @@ const formatBadge = (count: number): string => (count > 99 ? '99+' : String(coun
 export const ScreenHeaderWithActions = React.memo<ScreenHeaderWithActionsProps>(
   ({ title, actions, onBack, avatarUri, avatarName, onAvatarPress }) => {
     const insets = useSafeAreaInsets();
+    const { t } = useTranslation();
     const hasAvatar = avatarUri !== undefined || avatarName !== undefined;
 
     const avatarNode = hasAvatar ? (
@@ -50,6 +54,8 @@ export const ScreenHeaderWithActions = React.memo<ScreenHeaderWithActionsProps>(
               style={styles.backButton}
               onPress={onBack}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.back')}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 0 }}>
               <Text style={styles.backArrow}>‹</Text>
             </TouchableOpacity>
@@ -74,17 +80,30 @@ export const ScreenHeaderWithActions = React.memo<ScreenHeaderWithActionsProps>(
               {actions.map((action, index) => {
                 const key = action.testID ?? action.label ?? action.icon ?? `action-${index}`;
                 if (action.icon) {
+                  const a11yLabel =
+                    action.accessibilityLabel ??
+                    (action.icon === 'bell-outline'
+                      ? t('nav.notifications')
+                      : (action.label ?? action.icon));
                   return (
                     <TouchableOpacity
                       key={key}
                       style={styles.iconButton}
                       onPress={action.onPress}
                       activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        action.badgeCount && action.badgeCount > 0
+                          ? `${a11yLabel}, ${action.badgeCount}`
+                          : a11yLabel
+                      }
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                       <MaterialCommunityIcons name={action.icon} size={24} color={COLORS.primary} />
                       {action.badgeCount !== undefined && action.badgeCount > 0 && (
                         <View style={styles.badge}>
-                          <Text style={styles.badgeText}>{formatBadge(action.badgeCount)}</Text>
+                          <Text style={styles.badgeText} maxFontSizeMultiplier={1.2}>
+                            {formatBadge(action.badgeCount)}
+                          </Text>
                         </View>
                       )}
                     </TouchableOpacity>
@@ -95,7 +114,9 @@ export const ScreenHeaderWithActions = React.memo<ScreenHeaderWithActionsProps>(
                     key={key}
                     style={styles.pillButton}
                     onPress={action.onPress}
-                    activeOpacity={0.7}>
+                    activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={action.accessibilityLabel ?? action.label}>
                     <Text style={styles.pillButtonText}>{action.label}</Text>
                   </TouchableOpacity>
                 );

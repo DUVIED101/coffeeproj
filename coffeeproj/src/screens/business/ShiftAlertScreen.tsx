@@ -16,6 +16,7 @@ import { COLORS } from '../../config/constants';
 import type { ApplicationId } from '../../types/ids';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
+import { showErrorToast } from '../../stores/errorToastStore';
 
 type Props = NativeStackScreenProps<BusinessStackParamList, 'ShiftAlert'>;
 
@@ -65,7 +66,7 @@ export const ShiftAlertScreen: React.FC<Props> = ({ route, navigation }) => {
               );
               navigation.goBack();
             } catch {
-              Alert.alert(t('common.error'), t('common.tryAgain'));
+              showErrorToast(t('common.tryAgain'));
             } finally {
               setBusy(false);
             }
