@@ -19,6 +19,7 @@ interface AuthState {
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
   initialize: () => Promise<void>;
+  refreshUserProfile: () => Promise<User | null>;
   signOut: () => Promise<void>;
   deleteAccount: (
     params:
@@ -93,6 +94,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } finally {
       set({ isLoading: false });
     }
+  },
+
+  // Refetch the user row from public.users without going through full
+  // initialize(). Used when the client detects an account_blocked write to
+  // catch up suspended_until / banned_at before showing the explanation UI.
+  refreshUserProfile: async () => {
+    const session = get().session;
+    if (!session?.user?.id) return null;
+    const profile = await fetchUserProfile(session.user.id);
+    if (profile) {
+      set({ user: profile });
+    }
+    return profile;
   },
 
   // Sign out
@@ -180,6 +194,9 @@ async function fetchUserProfile(userId: string): Promise<User | null> {
     isVerified: data.is_verified,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
+    suspendedUntil: data.suspended_until ?? null,
+    bannedAt: data.banned_at ?? null,
+    banReason: data.ban_reason ?? null,
   };
 }
 

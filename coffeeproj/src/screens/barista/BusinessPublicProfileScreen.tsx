@@ -20,6 +20,7 @@ import { BusinessService } from '../../services/BusinessService';
 import { ReviewService } from '../../services/ReviewService';
 import { StarRow } from '../../components/StarRow';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
+import { ReportButton } from '../../components/ReportButton';
 import type { BaristaStackParamList } from '../../navigation/BaristaStack';
 import type { Business, Branch, SocialLink, SocialPlatform } from '../../types/business';
 import type { UserId } from '../../types/ids';
@@ -149,7 +150,10 @@ export const BusinessPublicProfileScreen: React.FC<Props> = ({ route, navigation
               onPress={() => setAvatarViewerVisible(true)}
               activeOpacity={0.85}
               accessibilityRole="button">
-              <FastImage source={{ uri: transformedImageUrl(business.logoUrl, 72) }} style={styles.avatarImage} />
+              <FastImage
+                source={{ uri: transformedImageUrl(business.logoUrl, 72) }}
+                style={styles.avatarImage}
+              />
             </TouchableOpacity>
           ) : (
             <View style={styles.avatarPlaceholder}>
@@ -183,6 +187,9 @@ export const BusinessPublicProfileScreen: React.FC<Props> = ({ route, navigation
               {t('businessPublicProfile.viewJobs', { defaultValue: 'Посмотреть вакансии' })}
             </Text>
           </TouchableOpacity>
+          <View style={styles.reportSlot}>
+            <ReportButton targetType="business" targetId={business.id} variant="icon" />
+          </View>
         </View>
 
         {(business.website || business.socialLinks.length > 0 || business.foundedYear) && (
@@ -364,6 +371,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     fontWeight: '600',
+  },
+  reportSlot: {
+    marginTop: 12,
+    alignItems: 'center',
   },
   section: {
     marginTop: 16,

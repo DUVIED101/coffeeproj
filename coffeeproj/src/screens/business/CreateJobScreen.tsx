@@ -22,7 +22,7 @@ import { JobService } from '../../services/JobService';
 import { BusinessService } from '../../services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
 import { showErrorToast } from '../../stores/errorToastStore';
-import { mapAnyError } from '../../utils/errorHandler';
+import { handleApiError } from '../../utils/handleApiError';
 import type { Branch, Equipment } from '../../types/business';
 import type { JobType, CompensationType, ShiftDetails, WeekdayKey } from '../../types/job';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
@@ -200,7 +200,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
       } catch (err) {
         console.error('Error loading job for edit:', err);
         if (!cancelled) {
-          showErrorToast(mapAnyError(err));
+          void handleApiError(err);
           navigation.goBack();
         }
       } finally {
@@ -228,7 +228,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
       }
     } catch (error) {
       console.error('Error loading branches:', error);
-      showErrorToast(mapAnyError(error));
+      void handleApiError(error);
     } finally {
       setIsLoadingBranches(false);
     }
@@ -480,7 +480,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
       }
     } catch (error) {
       console.error(editJobId ? 'Error updating job:' : 'Error creating job:', error);
-      showErrorToast(mapAnyError(error));
+      void handleApiError(error);
     } finally {
       setIsSaving(false);
       isSubmittingRef.current = false;

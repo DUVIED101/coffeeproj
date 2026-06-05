@@ -1435,5 +1435,34 @@
       "aborted": "Request cancelled"
     },
     "unknown": "Something went wrong. Please try again"
+  },
+  "report": {
+    "buttonLabel": "Report",
+    "title": "Report a violation",
+    "subtitle": "Describe the problem — moderators will review the report.",
+    "chooseReason": "Reason",
+    "reason": {
+      "spam": "Spam",
+      "fraud": "Fraud",
+      "harassment": "Harassment",
+      "noshow": "Did not show up for shift",
+      "offensive_photo": "Inappropriate photos",
+      "other": "Other"
+    },
+    "detailsPlaceholder": "Additional details (optional, up to 500 chars)",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "success": "Thanks. Your report was sent to moderators.",
+    "error": "Could not submit report. Please try again later."
+  },
+  "account": {
+    "suspendedBanner": "Account restricted until {{date}}.",
+    "bannedTitle": "Account access blocked",
+    "bannedBody": "If you believe this is a mistake, write to support@quickbarista.app.",
+    "bannedReasonLabel": "Reason",
+    "bannedSignOut": "Sign out",
+    "blockedActionTitle": "Action unavailable",
+    "blockedActionBody": "Your account is restricted until {{date}}. During this period you cannot post jobs, apply to jobs, or send messages.",
+    "blockedActionGeneric": "Your account is restricted. Actions are temporarily unavailable."
   }
 }

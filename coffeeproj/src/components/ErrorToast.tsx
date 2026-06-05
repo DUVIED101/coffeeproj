@@ -12,12 +12,12 @@ const SLIDE_OUT_MS = 180;
 const SWIPE_DISMISS_DISTANCE = 24;
 
 const ICON_BY_KIND = {
-  error: 'alert-circle-outline',
-  success: 'check-circle-outline',
-  info: 'information-outline',
+  error: 'alert-circle',
+  success: 'check-circle',
+  info: 'information',
 } as const;
 
-const COLOR_BY_KIND = {
+const ACCENT_BY_KIND = {
   error: COLORS.error ?? '#EF4444',
   success: COLORS.success ?? '#10B981',
   info: COLORS.primary ?? '#3B82F6',
@@ -73,15 +73,20 @@ const Card: React.FC<CardProps> = ({ toast, onDismiss }) => {
     })
   ).current;
 
-  const tint = COLOR_BY_KIND[toast.kind];
+  const accent = ACCENT_BY_KIND[toast.kind];
 
   return (
     <Animated.View
       pointerEvents="box-none"
       style={[styles.container, { top: topInset, transform: [{ translateY }] }]}
       {...panResponder.panHandlers}>
-      <View style={[styles.card, { borderLeftColor: tint }]}>
-        <MaterialCommunityIcons name={ICON_BY_KIND[toast.kind]} size={22} color={tint} />
+      <View style={styles.card}>
+        <MaterialCommunityIcons
+          name={ICON_BY_KIND[toast.kind]}
+          size={18}
+          color={accent}
+          style={styles.icon}
+        />
         <Text style={styles.message} numberOfLines={3} maxFontSizeMultiplier={1.3}>
           {toast.message}
         </Text>
@@ -92,7 +97,7 @@ const Card: React.FC<CardProps> = ({ toast, onDismiss }) => {
               dismiss();
             }}
             hitSlop={8}>
-            <Text style={[styles.retry, { color: tint }]} maxFontSizeMultiplier={1.3}>
+            <Text style={[styles.retry, { color: accent }]} maxFontSizeMultiplier={1.3}>
               {t('common.retry')}
             </Text>
           </TouchableOpacity>
@@ -112,33 +117,37 @@ export const ErrorToast: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    left: 12,
-    right: 12,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
     zIndex: 9999,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
-    borderRadius: RADII.card,
-    borderLeftWidth: 4,
-    paddingVertical: 12,
+    backgroundColor: '#1C1C1E',
+    borderRadius: RADII.pill ?? 999,
+    paddingVertical: 10,
     paddingHorizontal: 14,
-    gap: 12,
+    maxWidth: '92%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOpacity: 0.22,
+    shadowRadius: 14,
+    elevation: 6,
+  },
+  icon: {
+    marginRight: 8,
   },
   message: {
-    flex: 1,
-    color: COLORS.text,
+    flexShrink: 1,
+    color: '#FFFFFF',
     fontSize: 14,
     lineHeight: 18,
   },
   retry: {
     fontSize: 14,
     fontWeight: '600',
+    marginLeft: 12,
   },
 });

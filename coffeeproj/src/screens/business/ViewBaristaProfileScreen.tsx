@@ -25,6 +25,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { getInitials } from '../../utils/getInitials';
 import { StarRow } from '../../components/StarRow';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
+import { ReportButton } from '../../components/ReportButton';
 import { EquipmentChipsDisplay } from '../../components/EquipmentChips';
 import { isMetroAnySelection } from '../../components/MetroSelector';
 import { computeMedicalBookStatus, type MedicalBookStatus } from '../../utils/medicalBook';
@@ -208,7 +209,10 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
               <TouchableOpacity
                 onPress={() => openViewer([profile.avatarUrl as string], 0)}
                 accessibilityLabel={t('viewBarista.viewAvatarA11y')}>
-                <FastImage source={{ uri: transformedImageUrl(profile.avatarUrl, 80) }} style={styles.avatar} />
+                <FastImage
+                  source={{ uri: transformedImageUrl(profile.avatarUrl, 80) }}
+                  style={styles.avatar}
+                />
               </TouchableOpacity>
             ) : (
               <View style={styles.avatarPlaceholder}>
@@ -260,6 +264,10 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
           <Text style={styles.reviewsLinkLabel}>{t('viewBarista.allReviews')}</Text>
           <Text style={styles.reviewsLinkChevron}>›</Text>
         </TouchableOpacity>
+
+        <View style={styles.reportSlot}>
+          <ReportButton targetType="user" targetId={profile.userId} variant="icon" />
+        </View>
 
         {profile.bio && (
           <View style={styles.section}>
@@ -427,7 +435,10 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
                   accessibilityLabel={t('viewBarista.viewPortfolioPhotoA11y', {
                     index: index + 1,
                   })}>
-                  <FastImage source={{ uri: transformedImageUrl(photo, 100) }} style={styles.portfolioPhoto} />
+                  <FastImage
+                    source={{ uri: transformedImageUrl(photo, 100) }}
+                    style={styles.portfolioPhoto}
+                  />
                 </TouchableOpacity>
               ))}
             </View>
@@ -550,6 +561,11 @@ const styles = StyleSheet.create({
   reviewsLinkChevron: {
     fontSize: 22,
     color: COLORS.textSecondary,
+  },
+  reportSlot: {
+    marginTop: 8,
+    paddingHorizontal: 20,
+    alignItems: 'center',
   },
   section: {
     backgroundColor: '#fff',

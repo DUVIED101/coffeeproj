@@ -18,7 +18,7 @@ import { COLORS } from '../../config/constants';
 import { ShiftCountdownBanner } from '../../components/ShiftCountdownBanner';
 import { useStaleCallback } from '../../hooks/useStaleCallback';
 import { showErrorToast, showSuccessToast } from '../../stores/errorToastStore';
-import { mapAnyError } from '../../utils/errorHandler';
+import { handleApiError } from '../../utils/handleApiError';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ReviewService } from '../../services/ReviewService';
 import { ReviewModal } from '../../components/ReviewModal';
@@ -249,7 +249,7 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
               navigation.goBack();
             } catch (error) {
               console.error('Error withdrawing application:', error);
-              showErrorToast(mapAnyError(error));
+              void handleApiError(error);
             } finally {
               setIsWithdrawing(false);
             }
@@ -278,7 +278,7 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
             navigation.goBack();
           } catch (error) {
             console.error('Error cancelling shift:', error);
-            showErrorToast(mapAnyError(error));
+            void handleApiError(error);
           } finally {
             setIsCancellingShift(false);
           }
@@ -310,7 +310,7 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
       }
     } catch (error) {
       console.error('Error marking work complete:', error);
-      showErrorToast(mapAnyError(error));
+      void handleApiError(error);
     } finally {
       setIsMarkingComplete(false);
     }

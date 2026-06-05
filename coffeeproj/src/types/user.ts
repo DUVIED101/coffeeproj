@@ -10,6 +10,9 @@ export interface User {
   isVerified: boolean;
   createdAt: string;
   updatedAt: string;
+  suspendedUntil: string | null;
+  bannedAt: string | null;
+  banReason: string | null;
 }
 
 export interface CreateUserData {

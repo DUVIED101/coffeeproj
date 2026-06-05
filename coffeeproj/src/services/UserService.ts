@@ -15,6 +15,9 @@ export class UserService {
       isVerified: dbUser.is_verified,
       createdAt: dbUser.created_at,
       updatedAt: dbUser.updated_at,
+      suspendedUntil: dbUser.suspended_until ?? null,
+      bannedAt: dbUser.banned_at ?? null,
+      banReason: dbUser.ban_reason ?? null,
     };
   }
 

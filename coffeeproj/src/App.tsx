@@ -30,6 +30,8 @@ import { CommonActions } from '@react-navigation/native';
 import { initI18n } from './i18n';
 import { InAppToast } from './components/InAppToast';
 import { ShiftConfirmationGate } from './components/ShiftConfirmationGate';
+import { SuspendedUserBanner } from './components/SuspendedUserBanner';
+import { BannedUserBlocker } from './components/BannedUserBlocker';
 import { JobOfferService } from './services/JobOfferService';
 import { pendingOfferActionsQueue } from './services/pendingOfferActionsQueue';
 import { useNotificationFeedStore } from './stores/notificationFeedStore';
@@ -130,9 +132,11 @@ function AppContent(): React.JSX.Element {
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <View style={appStyles.root}>
+        <SuspendedUserBanner />
         <AppNavigator />
         <InAppToast />
         <ShiftConfirmationGate />
+        <BannedUserBlocker />
       </View>
     </SafeAreaProvider>
   );

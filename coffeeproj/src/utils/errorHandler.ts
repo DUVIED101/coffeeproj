@@ -1,10 +1,30 @@
 import i18next from 'i18next';
 
-type Shape = { message?: unknown; code?: unknown; name?: unknown; status?: unknown };
+type Shape = {
+  message?: unknown;
+  code?: unknown;
+  name?: unknown;
+  status?: unknown;
+  hint?: unknown;
+  details?: unknown;
+};
 
 const asShape = (e: unknown): Shape => (e && typeof e === 'object' ? (e as Shape) : {});
 
 const t = (key: string): string => i18next.t(key);
+
+/**
+ * True when the Postgres trigger from migration 100 (raise_if_user_blocked)
+ * rejected the write because the caller is suspended or banned. We surface a
+ * dedicated UX for this — never the generic "permission denied" toast.
+ */
+export const isAccountBlocked = (error: unknown): boolean => {
+  const { code, hint, message } = asShape(error);
+  if (code !== '42501') return false;
+  if (typeof hint === 'string' && hint === 'account_blocked') return true;
+  if (typeof message === 'string' && message === 'Account is restricted') return true;
+  return false;
+};
 
 export const mapAuthError = (error: unknown): string | null => {
   const { message } = asShape(error);

@@ -98,6 +98,9 @@ export const ProfileBootstrapScreen: React.FC = () => {
         isVerified: data.is_verified,
         createdAt: data.created_at,
         updatedAt: data.updated_at,
+        suspendedUntil: data.suspended_until ?? null,
+        bannedAt: data.banned_at ?? null,
+        banReason: data.ban_reason ?? null,
       };
 
       useAuthStore.getState().setUser(profile);
