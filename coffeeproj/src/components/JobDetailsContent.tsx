@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { COLORS } from '../config/constants';
@@ -14,6 +15,7 @@ type Props = {
   businessReliability?: { disputes30d: number; reliabilityScore: number } | null;
   distance?: number | null;
   onPhotoPress?: (index: number) => void;
+  onBusinessPress?: () => void;
 };
 
 const formatWeekdayKeys = (days: readonly WeekdayKey[], t: TFunction): string =>
@@ -49,6 +51,7 @@ export const JobDetailsContent: React.FC<Props> = ({
   businessReliability,
   distance,
   onPhotoPress,
+  onBusinessPress,
 }) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
@@ -81,7 +84,26 @@ export const JobDetailsContent: React.FC<Props> = ({
       <View style={styles.header}>
         <Text style={styles.title}>{job.title}</Text>
         <View style={styles.businessInfo}>
-          <Text style={styles.businessName}>{job.businessName}</Text>
+          {onBusinessPress ? (
+            <TouchableOpacity
+              style={styles.businessNameRow}
+              onPress={onBusinessPress}
+              activeOpacity={0.7}
+              accessibilityRole="link"
+              accessibilityLabel={t('jobDetails.viewBusinessProfile', {
+                defaultValue: 'Открыть профиль бизнеса',
+              })}>
+              <Text style={styles.businessNameLink}>{job.businessName}</Text>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={18}
+                color={COLORS.primary}
+                style={styles.businessNameChevron}
+              />
+            </TouchableOpacity>
+          ) : (
+            <Text style={styles.businessName}>{job.businessName}</Text>
+          )}
           {job.branchName && <Text style={styles.branchName}>{job.branchName}</Text>}
           {ownerAggregate && ownerAggregate.reviewCount > 0 && (
             <StarRow
@@ -293,6 +315,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: COLORS.text,
+  },
+  businessNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  businessNameLink: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  businessNameChevron: {
+    marginLeft: 2,
   },
   branchName: {
     fontSize: 16,

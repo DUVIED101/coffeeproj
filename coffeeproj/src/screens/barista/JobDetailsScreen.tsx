@@ -31,6 +31,7 @@ type BaristaStackParamList = {
   JobFeed: undefined;
   JobDetails: { jobId: string; distance?: number };
   Apply: { job: Job };
+  BusinessPublicProfile: { businessOwnerId: string };
 };
 
 type Props = {
@@ -223,6 +224,14 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             setViewerIndex(index);
             setViewerVisible(true);
           }}
+          onBusinessPress={
+            job.businessOwnerId
+              ? () =>
+                  navigation.navigate('BusinessPublicProfile', {
+                    businessOwnerId: job.businessOwnerId,
+                  })
+              : undefined
+          }
         />
       </ScrollView>
 

@@ -99,12 +99,13 @@
       "missingTitle": "Still to add",
       "items": {
         "basicInfo": "First name, last name, city and date of birth",
-        "bio": "About you (at least 50 characters)",
+        "bio": "About you (at least 20 characters)",
         "experience": "Years of experience and equipment",
         "workHistory": "At least one place of work",
         "preferences": "Preferred metro stations and shifts",
         "hourlyRate": "Desired hourly rate",
-        "portfolio": "At least one portfolio photo"
+        "portfolio": "At least one portfolio photo",
+        "medicalBook": "Valid sanitary medical book"
       }
     },
     "workExperience": {
@@ -292,6 +293,7 @@
     "applicationStatus": "Application Status:",
     "applied": "Applied: {{date}}",
     "applyCta": "Apply for this Job",
+    "viewBusinessProfile": "Open business profile",
     "errorTitle": "Error",
     "loadFailed": "Failed to load job details",
     "notFound": "Job not found",
@@ -697,6 +699,10 @@
     "emptyTitle": "No conversations yet",
     "emptyBarista": "Apply to jobs to start conversations with businesses",
     "emptyBusiness": "Conversations will appear here when baristas apply to your jobs",
+    "emptyArchive": "Archive is empty",
+    "emptyFiltered": "No conversations match this filter",
+    "tabActive": "Active",
+    "tabArchive": "Archive",
     "youPrefix": "You",
     "unreadA11y": "{{count}} unread"
   },
@@ -1382,6 +1388,8 @@
       "critical": "Critical"
     },
     "descriptionLabel": "Describe the situation (min 30 characters)",
+    "descriptionLabelOwn": "Your description",
+    "descriptionLabelAgainst": "Description of the situation",
     "descriptionPlaceholder": "Describe what happened in detail",
     "evidenceLabel": "Evidence (photos, optional)",
     "submit": "Submit complaint",

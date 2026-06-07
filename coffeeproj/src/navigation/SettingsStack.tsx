@@ -12,6 +12,7 @@ import { SupportScreen } from '../screens/settings/SupportScreen';
 import { MyDisputesScreen } from '../screens/shared/MyDisputesScreen';
 import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
 import { COLORS } from '../config/constants';
+import { useTranslation } from 'react-i18next';
 
 export type SettingsStackParamList = {
   SettingsHome: undefined;
@@ -24,12 +25,13 @@ export type SettingsStackParamList = {
   PrivacyPolicy: undefined;
   Support: undefined;
   MyDisputes: undefined;
-  DisputeDetails: { applicationId: string };
+  DisputeDetails: { applicationId?: string; disputeId?: string };
 };
 
 const Stack = createNativeStackNavigator<SettingsStackParamList>();
 
 export const SettingsStack: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <Stack.Navigator
       screenOptions={{
@@ -49,7 +51,11 @@ export const SettingsStack: React.FC = () => {
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
       <Stack.Screen name="MyDisputes" component={MyDisputesScreen} />
-      <Stack.Screen name="DisputeDetails" component={DisputeDetailsScreen} />
+      <Stack.Screen
+        name="DisputeDetails"
+        component={DisputeDetailsScreen}
+        options={{ title: t('disputes.detailsTitle') }}
+      />
     </Stack.Navigator>
   );
 };

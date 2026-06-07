@@ -92,7 +92,7 @@ export const BaristaStack: React.FC = () => {
       <Stack.Screen
         name="NotificationFeed"
         component={NotificationFeedScreen}
-        options={{ headerShown: false }}
+        options={{ title: t('notifications.feed.title'), headerShown: false }}
       />
       <Stack.Screen
         name="BusinessJobs"

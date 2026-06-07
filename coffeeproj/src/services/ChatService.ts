@@ -377,7 +377,8 @@ export class ChatService {
               status,
               jobs!inner(
                 title,
-                businesses!inner(name, logo_url)
+                businesses!inner(name, logo_url),
+                branches(city, metro_station)
               )
             ),
             users!barista_id(
@@ -397,6 +398,7 @@ export class ChatService {
       const mapped = (data || []).map(conv => {
         const baristaProfile = conv.users?.barista_profiles;
         const joinedBusiness = conv.applications?.jobs?.businesses;
+        const joinedBranch = conv.applications?.jobs?.branches;
         return {
           ...this.mapConversation(conv),
           jobTitle: conv.applications?.jobs?.title,
@@ -407,6 +409,8 @@ export class ChatService {
             : undefined,
           baristaAvatarUrl: baristaProfile?.avatar_url ?? undefined,
           applicationStatus: conv.applications?.status,
+          city: joinedBranch?.city ?? undefined,
+          metroStation: joinedBranch?.metro_station ?? undefined,
         };
       });
 

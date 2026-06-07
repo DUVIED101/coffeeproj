@@ -132,8 +132,9 @@ function AppContent(): React.JSX.Element {
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <View style={appStyles.root}>
-        <SuspendedUserBanner />
-        <AppNavigator />
+        <SuspendedUserBanner>
+          <AppNavigator />
+        </SuspendedUserBanner>
         <InAppToast />
         <ShiftConfirmationGate />
         <BannedUserBlocker />

@@ -80,7 +80,7 @@ export const BusinessStack: React.FC = () => {
       <Stack.Screen
         name="NotificationFeed"
         component={NotificationFeedScreen}
-        options={{ headerShown: false }}
+        options={{ title: t('notifications.feed.title'), headerShown: false }}
       />
       <Stack.Screen
         name="ShiftAlert"

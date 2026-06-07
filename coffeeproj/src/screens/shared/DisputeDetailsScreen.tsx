@@ -9,7 +9,7 @@ import type { DisputeSummary, DisputeStatus } from '../../types/application';
 import type { ApplicationId } from '../../types/ids';
 
 type ParamList = {
-  DisputeDetails: { applicationId: string };
+  DisputeDetails: { applicationId?: string; disputeId?: string };
 };
 
 type Props = NativeStackScreenProps<ParamList, 'DisputeDetails'>;
@@ -28,7 +28,7 @@ const SEVERITY_COLOR: Record<string, string> = {
 };
 
 export const DisputeDetailsScreen: React.FC<Props> = ({ route }) => {
-  const { applicationId } = route.params;
+  const { applicationId, disputeId } = route.params;
   const { t } = useTranslation();
   const [dispute, setDispute] = useState<DisputeSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,7 +38,11 @@ export const DisputeDetailsScreen: React.FC<Props> = ({ route }) => {
     let cancelled = false;
     const load = async () => {
       try {
-        const data = await ApplicationService.getOwnDispute(applicationId as ApplicationId);
+        const data = disputeId
+          ? await ApplicationService.getDisputeById(disputeId)
+          : applicationId
+            ? await ApplicationService.getOwnDispute(applicationId as ApplicationId)
+            : null;
         if (!cancelled) {
           if (data) setDispute(data);
           else setNotFound(true);
@@ -53,7 +57,7 @@ export const DisputeDetailsScreen: React.FC<Props> = ({ route }) => {
     return () => {
       cancelled = true;
     };
-  }, [applicationId]);
+  }, [applicationId, disputeId]);
 
   if (loading) {
     return (
@@ -110,6 +114,17 @@ export const DisputeDetailsScreen: React.FC<Props> = ({ route }) => {
             <Text style={styles.chipText}>{t(`disputes.severity.${dispute.severity}`)}</Text>
           </View>
         </View>
+
+        {dispute.description ? (
+          <View style={styles.section}>
+            <Text style={styles.label}>
+              {dispute.myRole === 'reporter'
+                ? t('disputes.descriptionLabelOwn', { defaultValue: 'Что вы написали' })
+                : t('disputes.descriptionLabelAgainst', { defaultValue: 'Описание ситуации' })}
+            </Text>
+            <Text style={styles.bodyText}>{dispute.description}</Text>
+          </View>
+        ) : null}
 
         {dispute.resolutionNote ? (
           <View style={styles.section}>

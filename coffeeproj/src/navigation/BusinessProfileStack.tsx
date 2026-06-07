@@ -20,7 +20,7 @@ export type BusinessProfileStackParamList = {
   BusinessReviews: undefined;
   UserReviews: { userId: string };
   NotificationFeed: undefined;
-  DisputeDetails: { applicationId: string };
+  DisputeDetails: { applicationId?: string; disputeId?: string };
   Settings: NavigatorScreenParams<SettingsStackParamList> | undefined;
 };
 
@@ -64,7 +64,7 @@ export const BusinessProfileStack: React.FC = () => {
       <Stack.Screen
         name="NotificationFeed"
         component={NotificationFeedScreen}
-        options={{ headerShown: false }}
+        options={{ title: t('notifications.feed.title'), headerShown: false }}
       />
       <Stack.Screen
         name="DisputeDetails"

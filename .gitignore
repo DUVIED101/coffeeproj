@@ -36,10 +36,8 @@ supabase/.temp/
 supabase/.branches/
 coffeeproj/supabase/
 
-# Claude Code: ignore everything under .claude/ except shared settings.json
-# (covers settings.local.json, projects/, scheduled_tasks.lock, worktrees/, …)
-.claude/*
-!.claude/settings.json
+# Claude Code: ignore everything under .claude/
+.claude/
 
 # Test coverage
 coverage/

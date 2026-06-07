@@ -1,6 +1,6 @@
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaInsetsContext, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../config/constants';
 import { useAuthStore } from '../stores/authStore';
@@ -17,12 +17,17 @@ function formatSuspendedUntil(value: string, locale: string): string {
   }
 }
 
+type Props = {
+  children: React.ReactNode;
+};
+
 /**
- * Top-of-app banner shown while users.suspended_until > now(). Bans are handled
- * by BannedUserBlocker (full-screen modal). Re-checks every minute to clear
- * itself when the suspension expires without requiring a refetch.
+ * Wraps the app: when users.suspended_until > now(), renders a top banner that
+ * consumes the device's top safe-area, then overrides SafeAreaInsetsContext for
+ * children so screen headers below don't double-pad. Re-checks every minute so
+ * it clears itself when the suspension expires.
  */
-export const SuspendedUserBanner: React.FC = memo(() => {
+export const SuspendedUserBanner: React.FC<Props> = memo(({ children }) => {
   const { t, i18n } = useTranslation();
   const user = useAuthStore(s => s.user);
   const insets = useSafeAreaInsets();
@@ -33,19 +38,30 @@ export const SuspendedUserBanner: React.FC = memo(() => {
     return () => clearInterval(id);
   }, []);
 
-  if (!user || !user.suspendedUntil || user.bannedAt) return null;
+  const adjustedInsets = useMemo(() => ({ ...insets, top: 0 }), [insets]);
 
-  const untilMs = new Date(user.suspendedUntil).getTime();
-  if (Number.isNaN(untilMs) || untilMs <= now) return null;
+  const isSuspended =
+    !!user &&
+    !!user.suspendedUntil &&
+    !user.bannedAt &&
+    !Number.isNaN(new Date(user.suspendedUntil).getTime()) &&
+    new Date(user.suspendedUntil).getTime() > now;
+
+  if (!isSuspended) return <>{children}</>;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 6 }]}>
-      <Text style={styles.text} numberOfLines={1}>
-        {t('account.suspendedBanner', {
-          date: formatSuspendedUntil(user.suspendedUntil, i18n.language),
-        })}
-      </Text>
-    </View>
+    <>
+      <View style={[styles.container, { paddingTop: insets.top + 6 }]}>
+        <Text style={styles.text} numberOfLines={1}>
+          {t('account.suspendedBanner', {
+            date: formatSuspendedUntil(user!.suspendedUntil!, i18n.language),
+          })}
+        </Text>
+      </View>
+      <SafeAreaInsetsContext.Provider value={adjustedInsets}>
+        {children}
+      </SafeAreaInsetsContext.Provider>
+    </>
   );
 });
 

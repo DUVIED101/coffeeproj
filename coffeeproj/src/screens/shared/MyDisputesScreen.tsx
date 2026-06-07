@@ -81,7 +81,7 @@ export const MyDisputesScreen: React.FC<Props> = ({ navigation }) => {
     ({ item }: { item: MyDisputeItem }) => (
       <TouchableOpacity
         style={styles.card}
-        onPress={() => navigation.navigate('DisputeDetails', { applicationId: item.applicationId })}
+        onPress={() => navigation.navigate('DisputeDetails', { disputeId: item.id })}
         activeOpacity={0.7}>
         <View style={styles.cardHeader}>
           <Text style={styles.jobTitle} numberOfLines={1}>

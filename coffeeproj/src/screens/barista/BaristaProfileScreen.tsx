@@ -92,6 +92,7 @@ const COMPLETENESS_TO_SECTION: Record<CompletenessItemKey, EditableSectionKey> =
   preferences: 'preferences',
   hourlyRate: 'preferences',
   portfolio: 'portfolio',
+  medicalBook: 'professional',
 };
 
 const SHIFT_TIME_KEYS: { value: ShiftTime; labelKey: string }[] = [
@@ -754,7 +755,10 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   accessibilityLabel={t('baristaProfileScreen.viewAvatarA11y', {
                     defaultValue: 'Открыть аватар на весь экран',
                   })}>
-                  <FastImage source={{ uri: transformedImageUrl(profile.avatarUrl, 80) }} style={styles.avatar} />
+                  <FastImage
+                    source={{ uri: transformedImageUrl(profile.avatarUrl, 80) }}
+                    style={styles.avatar}
+                  />
                 </TouchableOpacity>
               ) : (
                 <View style={styles.avatarPlaceholder}>
@@ -963,7 +967,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
               </TouchableOpacity>
             )}
 
-            <View style={[styles.historyRow, styles.historyRowSecondary]}>
+            <TouchableOpacity
+              style={[styles.historyRow, styles.historyRowSecondary]}
+              onPress={() => navigation.navigate('Settings', { screen: 'MyDisputes' })}>
               <View style={styles.historyRowLeft}>
                 <Text style={styles.historyRowTitle}>{t('reliability.sectionTitle')}</Text>
                 {reliability ? (
@@ -975,7 +981,8 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   </Text>
                 ) : null}
               </View>
-            </View>
+              <Text style={styles.historyRowChevron}>›</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.section} onLayout={handleSectionLayout('professional')}>
@@ -1340,7 +1347,10 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                         index: index + 1,
                         defaultValue: 'Открыть фото портфолио {{index}}',
                       })}>
-                      <FastImage source={{ uri: transformedImageUrl(photo, 100) }} style={styles.portfolioPhoto} />
+                      <FastImage
+                        source={{ uri: transformedImageUrl(photo, 100) }}
+                        style={styles.portfolioPhoto}
+                      />
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.portfolioRemoveButton}

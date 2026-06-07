@@ -1,8 +1,9 @@
 import type { BaristaProfile } from '../types/baristaProfile';
+import { computeMedicalBookStatus } from './medicalBook';
 
 // Keys map to i18n labels under `barista.completeness.items.*` so the UI can
 // localise. Keep in sync with
-// supabase/migrations/048_completeness_with_work_experience.sql — this function
+// supabase/migrations/082_completeness_with_medical_book.sql — this function
 // mirrors the DB trigger so the client checklist matches the percent that the
 // DB will store.
 export type CompletenessItemKey =
@@ -12,7 +13,8 @@ export type CompletenessItemKey =
   | 'workHistory'
   | 'preferences'
   | 'hourlyRate'
-  | 'portfolio';
+  | 'portfolio'
+  | 'medicalBook';
 
 export type CompletenessItem = {
   key: CompletenessItemKey;
@@ -25,13 +27,14 @@ export type ProfileCompleteness = {
   items: CompletenessItem[];
 };
 
-const BIO_MIN_LENGTH = 50;
+const BIO_MIN_LENGTH = 20;
 
 const isNonEmptyString = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0;
 
 const isNonEmptyArray = (v: unknown): boolean => Array.isArray(v) && v.length > 0;
 
 export function computeProfileCompleteness(profile: BaristaProfile): ProfileCompleteness {
+  const medicalStatus = computeMedicalBookStatus(profile.medicalBookExpiresOn);
   const items: CompletenessItem[] = [
     {
       key: 'basicInfo',
@@ -55,12 +58,12 @@ export function computeProfileCompleteness(profile: BaristaProfile): ProfileComp
     },
     {
       key: 'workHistory',
-      weight: 15,
+      weight: 10,
       satisfied: isNonEmptyArray(profile.workExperiences),
     },
     {
       key: 'preferences',
-      weight: 20,
+      weight: 15,
       satisfied:
         isNonEmptyArray(profile.preferredMetroStations) &&
         isNonEmptyArray(profile.preferredShiftTimes),
@@ -75,6 +78,11 @@ export function computeProfileCompleteness(profile: BaristaProfile): ProfileComp
       key: 'portfolio',
       weight: 10,
       satisfied: isNonEmptyArray(profile.portfolioPhotos),
+    },
+    {
+      key: 'medicalBook',
+      weight: 10,
+      satisfied: medicalStatus === 'valid' || medicalStatus === 'expiringSoon',
     },
   ];
 

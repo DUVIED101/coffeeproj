@@ -1,4 +1,5 @@
 import type { ApplicationStatus } from './application';
+import type { CityCode } from './city';
 
 // Brand utility type for type-safe IDs
 type Brand<K, T> = K & { __brand: T };
@@ -23,6 +24,8 @@ export interface Conversation {
   baristaName?: string;
   baristaAvatarUrl?: string;
   applicationStatus?: ApplicationStatus;
+  city?: CityCode;
+  metroStation?: string;
   lastMessageText?: string;
   lastMessageSenderId?: string;
   firstBusinessMessageAt?: string | null;

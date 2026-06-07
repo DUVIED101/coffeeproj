@@ -168,7 +168,20 @@ export const JobOfferScreen: React.FC<Props> = ({ navigation, route }) => {
             <Text style={styles.messageText}>{offer.message}</Text>
           </View>
         )}
-        {offer.job && <JobDetailsContent job={offer.job} ownerAggregate={ownerAggregate} />}
+        {offer.job && (
+          <JobDetailsContent
+            job={offer.job}
+            ownerAggregate={ownerAggregate}
+            onBusinessPress={
+              offer.job.businessOwnerId
+                ? () =>
+                    navigation.navigate('BusinessPublicProfile', {
+                      businessOwnerId: offer.job!.businessOwnerId,
+                    })
+                : undefined
+            }
+          />
+        )}
 
         {!isPending && (
           <View style={styles.statusBanner}>

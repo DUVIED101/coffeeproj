@@ -1,5 +1,13 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  RefreshControl,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +20,13 @@ import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithAction
 import { Avatar } from '../../components/Avatar';
 import { Skeleton } from '../../components/Skeleton';
 import type { Conversation } from '../../types/chat';
+import type { CityCode } from '../../types/city';
+import { CITY_LABELS_RU, CITY_LABELS_EN } from '../../types/city';
+import type { ApplicationStatus } from '../../types/application';
+
+const ARCHIVED_STATUSES: ReadonlyArray<ApplicationStatus> = ['rejected', 'withdrawn', 'completed'];
+const isArchived = (status?: ApplicationStatus): boolean =>
+  !!status && ARCHIVED_STATUSES.includes(status);
 
 const AVATAR_SIZE = 48;
 
@@ -125,11 +140,15 @@ const ConversationItem = React.memo<{
 export function ConversationsListScreen({ navigation }: any) {
   const user = useAuthStore(state => state.user);
   const unreadCount = useNotificationFeedStore(state => state.unreadCount);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const cityLabels = i18n.language === 'ru' ? CITY_LABELS_RU : CITY_LABELS_EN;
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [archiveTab, setArchiveTab] = useState<'active' | 'archive'>('active');
+  const [cityFilter, setCityFilter] = useState<CityCode | null>(null);
+  const [metroFilter, setMetroFilter] = useState<string | null>(null);
 
   const loadConversations = useCallback(async () => {
     if (!user?.id || !user?.accountType) {
@@ -171,6 +190,48 @@ export function ConversationsListScreen({ navigation }: any) {
 
   const fallbackTitle = t('chat.fallbackTitle', { defaultValue: 'Chat' });
 
+  const tabFiltered = useMemo(
+    () =>
+      conversations.filter(c =>
+        archiveTab === 'archive'
+          ? isArchived(c.applicationStatus)
+          : !isArchived(c.applicationStatus)
+      ),
+    [conversations, archiveTab]
+  );
+
+  const availableCities = useMemo(() => {
+    const set = new Set<CityCode>();
+    for (const c of tabFiltered) if (c.city) set.add(c.city);
+    return Array.from(set);
+  }, [tabFiltered]);
+
+  const availableMetros = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of tabFiltered) {
+      if (!c.metroStation) continue;
+      if (cityFilter && c.city !== cityFilter) continue;
+      set.add(c.metroStation);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [tabFiltered, cityFilter]);
+
+  const visibleConversations = useMemo(
+    () =>
+      tabFiltered.filter(c => {
+        if (cityFilter && c.city !== cityFilter) return false;
+        if (metroFilter && c.metroStation !== metroFilter) return false;
+        return true;
+      }),
+    [tabFiltered, cityFilter, metroFilter]
+  );
+
+  const archiveCount = useMemo(
+    () => conversations.filter(c => isArchived(c.applicationStatus)).length,
+    [conversations]
+  );
+  const activeCount = conversations.length - archiveCount;
+
   const renderConversation = useCallback(
     ({ item }: { item: Conversation }) => (
       <ConversationItem
@@ -185,22 +246,38 @@ export function ConversationsListScreen({ navigation }: any) {
     [handleConversationPress, user?.accountType, user?.id, fallbackTitle, t]
   );
 
-  const renderEmpty = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>
-        {t('conversations.emptyTitle', { defaultValue: 'No conversations yet' })}
-      </Text>
-      <Text style={styles.emptySubtext}>
-        {user?.accountType === 'barista'
-          ? t('conversations.emptyBarista', {
-              defaultValue: 'Apply to jobs to start conversations with businesses',
-            })
-          : t('conversations.emptyBusiness', {
-              defaultValue: 'Conversations will appear here when baristas apply to your jobs',
-            })}
-      </Text>
-    </View>
-  );
+  const hasActiveFilter = cityFilter !== null || metroFilter !== null;
+  const renderEmpty = () => {
+    if (hasActiveFilter || archiveTab === 'archive') {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>
+            {archiveTab === 'archive'
+              ? t('conversations.emptyArchive', { defaultValue: 'В архиве пусто' })
+              : t('conversations.emptyFiltered', {
+                  defaultValue: 'Ничего не найдено по этому фильтру',
+                })}
+          </Text>
+        </View>
+      );
+    }
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>
+          {t('conversations.emptyTitle', { defaultValue: 'No conversations yet' })}
+        </Text>
+        <Text style={styles.emptySubtext}>
+          {user?.accountType === 'barista'
+            ? t('conversations.emptyBarista', {
+                defaultValue: 'Apply to jobs to start conversations with businesses',
+              })
+            : t('conversations.emptyBusiness', {
+                defaultValue: 'Conversations will appear here when baristas apply to your jobs',
+              })}
+        </Text>
+      </View>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -234,8 +311,78 @@ export function ConversationsListScreen({ navigation }: any) {
         ]}
       />
 
+      <View style={styles.tabRow}>
+        <TouchableOpacity
+          style={[styles.tab, archiveTab === 'active' && styles.tabActive]}
+          onPress={() => setArchiveTab('active')}
+          activeOpacity={0.7}>
+          <Text style={[styles.tabText, archiveTab === 'active' && styles.tabTextActive]}>
+            {t('conversations.tabActive', { count: activeCount, defaultValue: 'Активные' })}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, archiveTab === 'archive' && styles.tabActive]}
+          onPress={() => setArchiveTab('archive')}
+          activeOpacity={0.7}>
+          <Text style={[styles.tabText, archiveTab === 'archive' && styles.tabTextActive]}>
+            {t('conversations.tabArchive', { count: archiveCount, defaultValue: 'Архив' })}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {(availableCities.length > 1 || availableMetros.length > 0) && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipScroller}>
+          {availableCities.length > 1 &&
+            availableCities.map(code => {
+              const selected = cityFilter === code;
+              return (
+                <TouchableOpacity
+                  key={`city-${code}`}
+                  style={[styles.chip, selected && styles.chipActive]}
+                  onPress={() => {
+                    setCityFilter(selected ? null : code);
+                    setMetroFilter(null);
+                  }}
+                  activeOpacity={0.7}>
+                  <Text style={[styles.chipText, selected && styles.chipTextActive]}>
+                    {cityLabels[code]}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          {availableMetros.map(station => {
+            const selected = metroFilter === station;
+            return (
+              <TouchableOpacity
+                key={`metro-${station}`}
+                style={[styles.chip, selected && styles.chipActive]}
+                onPress={() => setMetroFilter(selected ? null : station)}
+                activeOpacity={0.7}>
+                <Text style={[styles.chipText, selected && styles.chipTextActive]}>{station}</Text>
+              </TouchableOpacity>
+            );
+          })}
+          {(cityFilter || metroFilter) && (
+            <TouchableOpacity
+              style={styles.chipReset}
+              onPress={() => {
+                setCityFilter(null);
+                setMetroFilter(null);
+              }}
+              activeOpacity={0.7}>
+              <Text style={styles.chipResetText}>
+                {t('filters.reset', { defaultValue: 'Сбросить' })}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
+      )}
+
       <FlatList
-        data={conversations}
+        data={visibleConversations}
         renderItem={renderConversation}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
@@ -350,6 +497,70 @@ const styles = StyleSheet.create({
   lastMessageTime: {
     fontSize: 12,
     color: COLORS.textSecondary,
+  },
+  tabRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+    gap: 8,
+  },
+  tab: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    backgroundColor: COLORS.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  tabActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  tabText: {
+    fontSize: 13,
+    color: COLORS.text,
+    fontWeight: '600',
+  },
+  tabTextActive: {
+    color: '#fff',
+  },
+  chipScroller: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+    gap: 8,
+    alignItems: 'center',
+  },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.background,
+    marginRight: 8,
+  },
+  chipActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  chipText: {
+    fontSize: 12,
+    color: COLORS.text,
+  },
+  chipTextActive: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  chipReset: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  chipResetText: {
+    fontSize: 12,
+    color: COLORS.primary,
+    fontWeight: '600',
   },
   emptyContainer: {
     alignItems: 'center',

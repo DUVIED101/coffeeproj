@@ -71,11 +71,14 @@ export type DisputeStatus = 'submitted' | 'under_review' | 'resolved' | 'dismiss
 
 export type DisputeSummary = {
   id: string;
+  applicationId: string;
   categories: string[];
   severity: string;
   status: DisputeStatus;
   resolutionNote?: string;
+  description?: string;
   createdAt: string;
+  myRole: 'reporter' | 'reportee';
 };
 
 export type MyDisputeItem = {

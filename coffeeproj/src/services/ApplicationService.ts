@@ -656,22 +656,55 @@ export class ApplicationService {
     if (error) throw error;
   }
 
+  /**
+   * Get the current user's "own dispute" for an application — either the one
+   * they filed (reporter) or the one filed against them (reportee). When the
+   * user is involved on both sides (rare but possible), the reporter row wins,
+   * since the user files for themselves and is more likely to want their own
+   * filing back. RLS keeps reporter/reportee visibility separate.
+   */
   static async getOwnDispute(applicationId: ApplicationId): Promise<DisputeSummary | null> {
+    const userId = (await supabase.auth.getUser()).data.user?.id ?? '';
     const { data, error } = await supabase
       .from('application_disputes')
-      .select('id, categories, severity, status, resolution_note, created_at')
-      .eq('application_id', applicationId)
-      .eq('reporter_id', (await supabase.auth.getUser()).data.user?.id ?? '')
+      .select(
+        'id, application_id, reporter_id, reportee_id, categories, severity, status, resolution_note, description, created_at'
+      )
+      .eq('application_id', applicationId);
+    if (error) throw error;
+    if (!data || data.length === 0) return null;
+    const reporterRow = data.find(r => r.reporter_id === userId);
+    const row = reporterRow ?? data[0];
+    return ApplicationService.toDisputeSummary(row, userId);
+  }
+
+  static async getDisputeById(disputeId: string): Promise<DisputeSummary | null> {
+    const userId = (await supabase.auth.getUser()).data.user?.id ?? '';
+    const { data, error } = await supabase
+      .from('application_disputes')
+      .select(
+        'id, application_id, reporter_id, reportee_id, categories, severity, status, resolution_note, description, created_at'
+      )
+      .eq('id', disputeId)
       .maybeSingle();
     if (error) throw error;
     if (!data) return null;
+    return ApplicationService.toDisputeSummary(data, userId);
+  }
+
+  private static toDisputeSummary(row: any, viewerUserId: string): DisputeSummary {
+    const myRole: 'reporter' | 'reportee' =
+      row.reporter_id === viewerUserId ? 'reporter' : 'reportee';
     return {
-      id: data.id,
-      categories: data.categories ?? [],
-      severity: data.severity,
-      status: data.status as DisputeStatus,
-      resolutionNote: data.resolution_note ?? undefined,
-      createdAt: data.created_at,
+      id: row.id,
+      applicationId: row.application_id,
+      categories: row.categories ?? [],
+      severity: row.severity,
+      status: row.status as DisputeStatus,
+      resolutionNote: row.resolution_note ?? undefined,
+      description: row.description ?? undefined,
+      createdAt: row.created_at,
+      myRole,
     };
   }
 
@@ -679,21 +712,19 @@ export class ApplicationService {
     applicationIds: ApplicationId[]
   ): Promise<Record<string, DisputeSummary>> {
     if (applicationIds.length === 0) return {};
+    const userId = (await supabase.auth.getUser()).data.user?.id ?? '';
     const { data, error } = await supabase
       .from('application_disputes')
-      .select('id, application_id, categories, severity, status, resolution_note, created_at')
+      .select(
+        'id, application_id, reporter_id, reportee_id, categories, severity, status, resolution_note, description, created_at'
+      )
       .in('application_id', applicationIds);
     if (error) throw error;
     const map: Record<string, DisputeSummary> = {};
     for (const row of data ?? []) {
-      map[row.application_id] = {
-        id: row.id,
-        categories: row.categories ?? [],
-        severity: row.severity,
-        status: row.status as DisputeStatus,
-        resolutionNote: row.resolution_note ?? undefined,
-        createdAt: row.created_at,
-      };
+      const existing = map[row.application_id];
+      if (existing && existing.myRole === 'reporter') continue;
+      map[row.application_id] = ApplicationService.toDisputeSummary(row, userId);
     }
     return map;
   }

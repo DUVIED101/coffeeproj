@@ -21,7 +21,7 @@ export type ProfileStackParamList = {
   ApplicationDetails: { application: Application } | { applicationId: string };
   UserReviews: { userId: string };
   NotificationFeed: undefined;
-  DisputeDetails: { applicationId: string };
+  DisputeDetails: { applicationId?: string; disputeId?: string };
   Settings: NavigatorScreenParams<SettingsStackParamList> | undefined;
 };
 
@@ -66,7 +66,7 @@ export const ProfileStack: React.FC = () => {
       <Stack.Screen
         name="NotificationFeed"
         component={NotificationFeedScreen}
-        options={{ headerShown: false }}
+        options={{ title: t('notifications.feed.title'), headerShown: false }}
       />
       <Stack.Screen
         name="DisputeDetails"

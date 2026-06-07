@@ -3,6 +3,9 @@ import { computeProfileCompleteness } from './profileCompleteness';
 import type { BaristaProfile } from '../types/baristaProfile';
 import type { BaristaProfileId, WorkExperienceId } from '../types/ids';
 
+// Future date well within the 50-year sanity-check constraint.
+const FUTURE_MEDICAL_BOOK_EXPIRY = '2099-12-31';
+
 const baseProfile: BaristaProfile = {
   id: 'p1',
   userId: 'u1',
@@ -19,6 +22,7 @@ const baseProfile: BaristaProfile = {
   preferredShiftTimes: ['morning'],
   hourlyRateMin: 500,
   hourlyRateMax: 800,
+  medicalBookExpiresOn: FUTURE_MEDICAL_BOOK_EXPIRY,
   portfolioPhotos: ['https://example.com/p1.jpg'],
   workExperiences: [
     {
@@ -62,21 +66,22 @@ describe('computeProfileCompleteness', () => {
       preferredShiftTimes: [],
       hourlyRateMin: undefined,
       hourlyRateMax: undefined,
+      medicalBookExpiresOn: undefined,
       portfolioPhotos: [],
       workExperiences: [],
     };
     expect(computeProfileCompleteness(empty).percent).toEqual(0);
   });
 
-  it('counts a 49-char bio as not satisfied (DB trigger requires ≥50)', () => {
-    const result = computeProfileCompleteness({ ...baseProfile, bio: 'x'.repeat(49) });
+  it('counts a 19-char bio as not satisfied (DB trigger requires ≥20)', () => {
+    const result = computeProfileCompleteness({ ...baseProfile, bio: 'x'.repeat(19) });
     expect(result.percent).toEqual(90);
     expect(result.items.find(i => i.key === 'bio')?.satisfied).toEqual(false);
   });
 
-  it('drops 20% when only one of metro/shift preferences is set', () => {
+  it('drops 15% when only one of metro/shift preferences is set', () => {
     expect(computeProfileCompleteness({ ...baseProfile, preferredShiftTimes: [] }).percent).toEqual(
-      80
+      85
     );
   });
 
@@ -100,14 +105,26 @@ describe('computeProfileCompleteness', () => {
     ).toEqual(100);
   });
 
-  it('drops 15% when work history is empty', () => {
-    expect(computeProfileCompleteness({ ...baseProfile, workExperiences: [] }).percent).toEqual(85);
+  it('drops 10% when work history is empty', () => {
+    expect(computeProfileCompleteness({ ...baseProfile, workExperiences: [] }).percent).toEqual(90);
   });
 
-  it('drops 15% when work history is undefined', () => {
+  it('drops 10% when work history is undefined', () => {
     expect(
       computeProfileCompleteness({ ...baseProfile, workExperiences: undefined }).percent
-    ).toEqual(85);
+    ).toEqual(90);
+  });
+
+  it('drops 10% when medical book is missing', () => {
+    expect(
+      computeProfileCompleteness({ ...baseProfile, medicalBookExpiresOn: undefined }).percent
+    ).toEqual(90);
+  });
+
+  it('drops 10% when medical book is expired', () => {
+    expect(
+      computeProfileCompleteness({ ...baseProfile, medicalBookExpiresOn: '2000-01-01' }).percent
+    ).toEqual(90);
   });
 
   it('exposes per-item weights and satisfaction for UI checklist', () => {

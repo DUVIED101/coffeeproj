@@ -78,6 +78,10 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [business, setBusiness] = useState<Business | null>(null);
   const [branchCount, setBranchCount] = useState<number>(0);
   const [reviewAggregate, setReviewAggregate] = useState<UserReviewAggregate | null>(null);
+  const [reliability, setReliability] = useState<{
+    disputes30d: number;
+    reliabilityScore: number;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [avatarViewerVisible, setAvatarViewerVisible] = useState(false);
@@ -92,12 +96,14 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
       setBusiness(fetchedBusiness);
 
       if (fetchedBusiness) {
-        const [branches, aggregate] = await Promise.all([
+        const [branches, aggregate, rel] = await Promise.all([
           BusinessService.getBranches(fetchedBusiness.id),
           ReviewService.getAggregateForUser(userId),
+          BusinessService.getBusinessReliabilityScore(userId),
         ]);
         setBranchCount(branches.length);
         setReviewAggregate(aggregate);
+        setReliability(rel);
       }
     } catch (error) {
       console.error('Error loading business profile:', error);
@@ -223,7 +229,10 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
               onPress={() => setAvatarViewerVisible(true)}
               activeOpacity={0.85}
               accessibilityRole="button">
-              <FastImage source={{ uri: transformedImageUrl(business.logoUrl, 72) }} style={styles.avatarImage} />
+              <FastImage
+                source={{ uri: transformedImageUrl(business.logoUrl, 72) }}
+                style={styles.avatarImage}
+              />
             </TouchableOpacity>
           ) : (
             <View style={styles.avatarPlaceholder}>
@@ -347,6 +356,26 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
             </View>
             <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
+
+          {reliability && (
+            <TouchableOpacity
+              style={styles.row}
+              onPress={() => navigation.navigate('Settings', { screen: 'MyDisputes' })}>
+              <View style={styles.rowIcon}>
+                <MaterialCommunityIcons name="shield-check-outline" size={22} color={COLORS.text} />
+              </View>
+              <View style={styles.rowLabelWrap}>
+                <Text style={styles.rowLabel}>{t('reliability.sectionTitle')}</Text>
+                <Text style={styles.rowSubLabel}>
+                  {t('reliability.scoreOf', { score: reliability.reliabilityScore.toFixed(1) })}
+                  {reliability.disputes30d > 0
+                    ? ` · ${t('reliability.incidents', { count: reliability.disputes30d })}`
+                    : ` · ${t('reliability.noIncidents')}`}
+                </Text>
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
       {business.logoUrl && (
