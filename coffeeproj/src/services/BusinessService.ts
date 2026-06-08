@@ -51,7 +51,6 @@ export class BusinessService {
       logoUrl: db.logo_url ?? undefined,
       website: db.website ?? undefined,
       socialLinks: Array.isArray(db.social_links) ? db.social_links : [],
-      foundedYear: db.founded_year ?? undefined,
       createdAt: db.created_at,
       updatedAt: db.updated_at,
     };
@@ -94,7 +93,6 @@ export class BusinessService {
           logo_url: data.logoUrl,
           website: data.website,
           social_links: data.socialLinks ?? [],
-          founded_year: data.foundedYear,
         })
         .select()
         .single();
@@ -113,7 +111,6 @@ export class BusinessService {
               logoUrl: data.logoUrl,
               website: data.website,
               socialLinks: data.socialLinks,
-              foundedYear: data.foundedYear,
             });
           }
         }
@@ -224,9 +221,6 @@ export class BusinessService {
       }
       if (updates.socialLinks !== undefined) {
         dbUpdates.social_links = updates.socialLinks;
-      }
-      if (updates.foundedYear !== undefined) {
-        dbUpdates.founded_year = updates.foundedYear;
       }
 
       const { data, error } = await supabase

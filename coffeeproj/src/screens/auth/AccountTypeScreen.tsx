@@ -10,7 +10,6 @@ type AuthStackParamList = {
   AccountType: undefined;
   Signup: { accountType: AccountType };
   Login: undefined;
-  Diagnostic: undefined;
 };
 
 type Props = {
@@ -29,15 +28,9 @@ export const AccountTypeScreen: React.FC<Props> = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
 
       <View style={styles.content}>
-        {/* Header — long-press on the title opens the diagnostic panel, used
-            for support when the app can't reach Supabase from Russia. */}
+        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            activeOpacity={1}
-            delayLongPress={1500}
-            onLongPress={() => navigation.navigate('Diagnostic')}>
-            <Text style={styles.title}>{t('auth.accountType.welcome')}</Text>
-          </TouchableOpacity>
+          <Text style={styles.title}>{t('auth.accountType.welcome')}</Text>
           <Text style={styles.subtitle}>{t('auth.accountType.subtitle')}</Text>
         </View>
 

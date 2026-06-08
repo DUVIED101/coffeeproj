@@ -34,13 +34,10 @@ import { pickAndCropAvatar } from '../../utils/imageCrop';
 import { geocodeAddress } from '../../utils/geocode';
 import { clampToEffectiveLength } from '../../utils/textLength';
 import {
-  sanitizeDigitsInput,
   SHORT_TEXT_MAX_LENGTH,
   DESCRIPTION_MAX_LENGTH,
   ADDRESS_MAX_LENGTH,
   URL_MAX_LENGTH,
-  YEAR_MAX_DIGITS,
-  FOUNDED_YEAR_MIN,
 } from '../../utils/validation';
 import { showErrorToast } from '../../stores/errorToastStore';
 import { handleApiError } from '../../utils/handleApiError';
@@ -81,7 +78,6 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const [pendingLogoUri, setPendingLogoUri] = useState<string | null>(null);
   const [website, setWebsite] = useState('');
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
-  const [foundedYear, setFoundedYear] = useState('');
 
   // Step 3 — First branch
   const [branchName, setBranchName] = useState('');
@@ -117,7 +113,6 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
           setLogoUrl(business.logoUrl);
           setWebsite(business.website ?? '');
           setSocialLinks(business.socialLinks ?? []);
-          setFoundedYear(business.foundedYear?.toString() ?? '');
 
           const branches = await BusinessService.getBranches(business.id);
           const first = branches[branches.length - 1] ?? null; // oldest = first created
@@ -227,15 +222,6 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         return false;
       }
     }
-    if (currentStep === 1) {
-      if (foundedYear) {
-        const year = parseInt(foundedYear, 10);
-        if (year < FOUNDED_YEAR_MIN) {
-          showErrorToast(t('businessSetup.errors.foundedYearInvalid', { min: FOUNDED_YEAR_MIN }));
-          return false;
-        }
-      }
-    }
     if (currentStep === 2) {
       if (!branchName.trim()) {
         showErrorToast(t('branches.form.nameRequired'));
@@ -292,7 +278,6 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
             legalForm,
             website: website.trim() || undefined,
             socialLinks: sanitizedSocialLinks,
-            foundedYear: foundedYear ? parseInt(foundedYear, 10) : undefined,
           })
         : await BusinessService.createBusiness({
             ownerId: user.id,
@@ -302,7 +287,6 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
             legalForm,
             website: website.trim() || undefined,
             socialLinks: sanitizedSocialLinks,
-            foundedYear: foundedYear ? parseInt(foundedYear, 10) : undefined,
           });
 
       // 2) Upload logo if a new one was picked
@@ -405,7 +389,6 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
     pendingLogoUri,
     website,
     socialLinks,
-    foundedYear,
     branchName,
     branchAddress,
     branchCity,
@@ -599,17 +582,6 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
               <Text style={styles.label}>{t('businessSetup.brand.socialLinks')}</Text>
               <SocialLinksEditor links={socialLinks} onChange={setSocialLinks} />
-
-              <Text style={styles.label}>{t('businessSetup.brand.foundedYear')}</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="2024"
-                placeholderTextColor={COLORS.textSecondary}
-                value={foundedYear}
-                onChangeText={text => setFoundedYear(sanitizeDigitsInput(text, YEAR_MAX_DIGITS))}
-                keyboardType="number-pad"
-                maxLength={YEAR_MAX_DIGITS}
-              />
             </View>
           )}
 

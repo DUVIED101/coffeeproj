@@ -1013,7 +1013,6 @@
     "brandSection": "Brand",
     "website": "Website",
     "socialLinks": "Social networks",
-    "foundedYear": "Founded",
     "branches": "Branches",
     "branchesCount_one": "{{count}} branch",
     "branchesCount_other": "{{count}} branches",
@@ -1052,8 +1051,7 @@
       "pickLogo": "Choose photo",
       "changeLogo": "Change",
       "website": "Website",
-      "socialLinks": "Social networks",
-      "foundedYear": "Founded year"
+      "socialLinks": "Social networks"
     },
     "branch": {
       "title": "First branch",
@@ -1066,8 +1064,7 @@
     "errors": {
       "notAuthenticated": "You are not authenticated",
       "saveFailed": "Failed to save business profile",
-      "partialSuccess": "Profile saved but some items failed: {{items}}. Try again from your profile.",
-      "foundedYearInvalid": "Founded year cannot be earlier than {{min}}"
+      "partialSuccess": "Profile saved but some items failed: {{items}}. Try again from your profile."
     }
   },
   "branchPhotos": {
@@ -1270,7 +1267,6 @@
     "body": "We can't reach our server. This sometimes happens on Russian mobile networks. Tap Retry, or check the diagnostic details below.",
     "retry": "Retry",
     "diagDetailsTitle": "Diagnostic details",
-    "diagIntro": "This screen checks which servers your device can reach. Share the diagnostic info with support if the app fails to load.",
     "rerunCheck": "Re-run check",
     "copyInfo": "Diagnostic info (copy for support)",
     "diagHint": "If this persists, try mobile data instead of Wi-Fi, or contact support.",
@@ -1308,7 +1304,6 @@
       "privacyPolicy": "Privacy Policy",
       "support": "Support",
       "appVersion": "App Version",
-      "diagnostic": "Diagnostic",
       "yandexMapsTerms": "Yandex Maps API Terms",
       "signOut": "Sign Out",
       "deleteAccount": "Delete Account"

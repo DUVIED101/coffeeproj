@@ -232,13 +232,11 @@ export const sanitizeYearsInput = (raw: string): string => {
 };
 
 // Integer-only sanitizer: strips non-digits, leading zeros, and truncates to
-// maxLength. Used for compensation amounts, founded year, etc.
+// maxLength. Used for compensation amounts, etc.
 export const sanitizeDigitsInput = (raw: string, maxLength: number): string => {
   const filtered = raw.replace(/\D+/g, '').replace(/^0+/, '');
   return filtered.slice(0, maxLength);
 };
-
-export const FOUNDED_YEAR_MIN = 1950;
 
 // Limits for common free-text fields. These are length caps only — we don't
 // restrict character set because users legitimately mix Cyrillic + Latin +
@@ -250,4 +248,3 @@ export const ADDRESS_MAX_LENGTH = 200;
 export const HANDLE_MAX_LENGTH = 100;
 export const URL_MAX_LENGTH = 200;
 export const COMPENSATION_MAX_DIGITS = 6;
-export const YEAR_MAX_DIGITS = 4;

@@ -35,7 +35,6 @@ export interface Business {
   logoUrl?: string;
   website?: string;
   socialLinks: SocialLink[];
-  foundedYear?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -73,7 +72,6 @@ export interface CreateBusinessData {
   logoUrl?: string;
   website?: string;
   socialLinks?: SocialLink[];
-  foundedYear?: number;
 }
 
 export interface UpdateBusinessData {
@@ -85,7 +83,6 @@ export interface UpdateBusinessData {
   logoUrl?: string;
   website?: string;
   socialLinks?: SocialLink[];
-  foundedYear?: number;
 }
 
 export interface CreateBranchData {

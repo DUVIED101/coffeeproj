@@ -266,7 +266,7 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {(business.website || business.socialLinks.length > 0 || business.foundedYear) && (
+        {(business.website || business.socialLinks.length > 0) && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('businessProfile.brandSection')}</Text>
             {business.website && (
@@ -318,17 +318,6 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
                 </View>
               );
             })}
-            {business.foundedYear && (
-              <View style={styles.row}>
-                <View style={styles.rowIcon}>
-                  <MaterialCommunityIcons name="calendar" size={22} color={COLORS.text} />
-                </View>
-                <View style={styles.rowLabelWrap}>
-                  <Text style={styles.rowLabel}>{t('businessProfile.foundedYear')}</Text>
-                  <Text style={styles.rowSubLabel}>{business.foundedYear}</Text>
-                </View>
-              </View>
-            )}
           </View>
         )}
 

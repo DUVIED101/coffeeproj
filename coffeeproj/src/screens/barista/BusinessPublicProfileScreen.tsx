@@ -192,7 +192,7 @@ export const BusinessPublicProfileScreen: React.FC<Props> = ({ route, navigation
           </View>
         </View>
 
-        {(business.website || business.socialLinks.length > 0 || business.foundedYear) && (
+        {(business.website || business.socialLinks.length > 0) && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
               {t('businessProfile.brandSection', { defaultValue: 'Бренд' })}
@@ -248,19 +248,6 @@ export const BusinessPublicProfileScreen: React.FC<Props> = ({ route, navigation
                 </View>
               );
             })}
-            {business.foundedYear && (
-              <View style={styles.row}>
-                <View style={styles.rowIcon}>
-                  <MaterialCommunityIcons name="calendar" size={22} color={COLORS.text} />
-                </View>
-                <View style={styles.rowLabelWrap}>
-                  <Text style={styles.rowLabel}>
-                    {t('businessProfile.foundedYear', { defaultValue: 'Год основания' })}
-                  </Text>
-                  <Text style={styles.rowSubLabel}>{business.foundedYear}</Text>
-                </View>
-              </View>
-            )}
           </View>
         )}
 

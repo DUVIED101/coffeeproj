@@ -9,7 +9,6 @@ import { VisibilityScreen } from '../screens/settings/VisibilityScreen';
 import { TermsScreen } from '../screens/settings/TermsScreen';
 import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
 import { SupportScreen } from '../screens/settings/SupportScreen';
-import { DiagnosticScreen } from '../screens/settings/DiagnosticScreen';
 import { MyDisputesScreen } from '../screens/shared/MyDisputesScreen';
 import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
 import { COLORS } from '../config/constants';
@@ -25,7 +24,6 @@ export type SettingsStackParamList = {
   Terms: undefined;
   PrivacyPolicy: undefined;
   Support: undefined;
-  Diagnostic: undefined;
   MyDisputes: undefined;
   DisputeDetails: { applicationId?: string; disputeId?: string };
 };
@@ -52,11 +50,6 @@ export const SettingsStack: React.FC = () => {
       <Stack.Screen name="Terms" component={TermsScreen} />
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
-      <Stack.Screen
-        name="Diagnostic"
-        component={DiagnosticScreen}
-        options={{ title: t('settings.items.diagnostic') }}
-      />
       <Stack.Screen name="MyDisputes" component={MyDisputesScreen} />
       <Stack.Screen
         name="DisputeDetails"
