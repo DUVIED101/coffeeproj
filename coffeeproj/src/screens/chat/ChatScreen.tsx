@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { FlatList } from 'react-native';
 import {
+  ActionSheetIOS,
   View,
   Text,
   StyleSheet,
@@ -29,6 +30,8 @@ import type { UserId } from '../../types/ids';
 import type { Message, ConversationId, Conversation } from '../../types/chat';
 import { formatDateHeader, isSameDay } from '../../utils/dateUtils';
 import { clampToEffectiveLength } from '../../utils/textLength';
+import { useReportSheet } from '../../hooks/useReportSheet';
+import { handleApiError } from '../../utils/handleApiError';
 
 const MESSAGE_MAX_LENGTH = 500;
 
@@ -87,10 +90,17 @@ const DateHeader = React.memo<{ date: string }>(({ date }) => {
 const MessageBubble = React.memo<{
   message: Message;
   isOwnMessage: boolean;
-}>(({ message, isOwnMessage }) => {
+  onLongPress?: () => void;
+}>(({ message, isOwnMessage, onLongPress }) => {
   const linkTextStyle = isOwnMessage ? styles.ownMessageLink : styles.otherMessageLink;
   return (
-    <View
+    <TouchableOpacity
+      activeOpacity={1}
+      onLongPress={onLongPress}
+      delayLongPress={300}
+      // Without an onPress the TouchableOpacity still triggers ripple; passing a
+      // noop keeps Android happy. iOS ignores.
+      onPress={() => {}}
       style={[
         styles.messageBubble,
         isOwnMessage ? styles.ownMessageBubble : styles.otherMessageBubble,
@@ -113,7 +123,7 @@ const MessageBubble = React.memo<{
           minute: '2-digit',
         })}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 });
 
@@ -323,10 +333,30 @@ export function ChatScreen({ navigation, route }: any) {
     } catch (error) {
       console.error('Error sending message:', error);
       setMessageText(textToSend);
+      void handleApiError(error);
     } finally {
       setIsSending(false);
     }
   }, [messageText, conversation, user?.id, isSending]);
+
+  const { open: openReportSheet, sheet: reportSheet } = useReportSheet();
+
+  const handleLongPressMessage = useCallback(
+    (messageId: string) => {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title: t('chat.report.actionSheetTitle'),
+          options: [t('report.buttonLabel'), t('report.cancel')],
+          destructiveButtonIndex: 0,
+          cancelButtonIndex: 1,
+        },
+        index => {
+          if (index === 0) openReportSheet({ type: 'message', id: messageId });
+        }
+      );
+    },
+    [t, openReportSheet]
+  );
 
   const renderMessage = useCallback(
     ({ item, index }: { item: Message; index: number }) => {
@@ -345,11 +375,15 @@ export function ChatScreen({ navigation, route }: any) {
       return (
         <>
           {showDateHeader && <DateHeader date={formatDateHeader(currentMessageDate)} />}
-          <MessageBubble message={item} isOwnMessage={isOwnMessage} />
+          <MessageBubble
+            message={item}
+            isOwnMessage={isOwnMessage}
+            onLongPress={isOwnMessage ? undefined : () => handleLongPressMessage(item.id)}
+          />
         </>
       );
     },
-    [user?.id, messages]
+    [user?.id, messages, handleLongPressMessage]
   );
 
   const renderEmpty = () => (
@@ -467,6 +501,7 @@ export function ChatScreen({ navigation, route }: any) {
           </TouchableOpacity>
         </View>
       )}
+      {reportSheet}
     </KeyboardAvoidingView>
   );
 }

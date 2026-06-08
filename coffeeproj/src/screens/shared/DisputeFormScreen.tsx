@@ -18,6 +18,8 @@ import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import type { ApplicationId } from '../../types/ids';
 import { showErrorToast } from '../../stores/errorToastStore';
+import { handleApiError } from '../../utils/handleApiError';
+import { isAccountBlocked } from '../../utils/errorHandler';
 
 type DisputeCategory =
   | 'no_show'
@@ -88,13 +90,17 @@ export const DisputeFormScreen: React.FC<Props> = ({ route, navigation }) => {
         { text: t('common.ok'), onPress: () => navigation.goBack() },
       ]);
     } catch (err: any) {
-      const code: string = err?.message ?? '';
-      if (code.includes('ALREADY_FILED') || code.includes('unique')) {
-        showErrorToast(t('disputes.errors.alreadyFiled'));
-      } else if (code.includes('APPLICATION_NOT_ACTIVE')) {
-        showErrorToast(t('disputes.errors.notEligible'));
+      if (isAccountBlocked(err)) {
+        void handleApiError(err);
       } else {
-        showErrorToast(t('common.tryAgain'));
+        const code: string = err?.message ?? '';
+        if (code.includes('ALREADY_FILED') || code.includes('unique')) {
+          showErrorToast(t('disputes.errors.alreadyFiled'));
+        } else if (code.includes('APPLICATION_NOT_ACTIVE')) {
+          showErrorToast(t('disputes.errors.notEligible'));
+        } else {
+          showErrorToast(t('common.tryAgain'));
+        }
       }
     } finally {
       setBusy(false);

@@ -6,6 +6,7 @@ import type { TFunction } from 'i18next';
 import { COLORS } from '../config/constants';
 import { StarRow } from './StarRow';
 import { BranchPhotoGallery } from './BranchPhotoGallery';
+import { ReportButton } from './ReportButton';
 import type { Job, WeekdayKey } from '../types/job';
 import type { UserReviewAggregate } from '../types/review';
 
@@ -16,6 +17,9 @@ type Props = {
   distance?: number | null;
   onPhotoPress?: (index: number) => void;
   onBusinessPress?: () => void;
+  // Hide the "Пожаловаться" link when the viewer is the job's owner. Default
+  // false — only the business-side detail screen sets it true.
+  isOwnJob?: boolean;
 };
 
 const formatWeekdayKeys = (days: readonly WeekdayKey[], t: TFunction): string =>
@@ -52,6 +56,7 @@ export const JobDetailsContent: React.FC<Props> = ({
   distance,
   onPhotoPress,
   onBusinessPress,
+  isOwnJob = false,
 }) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
@@ -291,6 +296,12 @@ export const JobDetailsContent: React.FC<Props> = ({
           <Text style={styles.detailValue}>{formatDate(job.postedAt)}</Text>
         </View>
       </View>
+
+      {!isOwnJob && (
+        <View style={styles.reportSection}>
+          <ReportButton targetType="job" targetId={job.id} variant="icon" />
+        </View>
+      )}
     </View>
   );
 };
@@ -404,6 +415,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.text,
     lineHeight: 24,
+  },
+  reportSection: {
+    alignItems: 'center',
+    paddingVertical: 12,
   },
   bulletItem: {
     fontSize: 16,

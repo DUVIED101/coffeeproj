@@ -378,7 +378,7 @@ export class ChatService {
               jobs!inner(
                 title,
                 businesses!inner(name, logo_url),
-                branches(city, metro_station)
+                branches(id, name, city, metro_station)
               )
             ),
             users!barista_id(
@@ -411,6 +411,8 @@ export class ChatService {
           applicationStatus: conv.applications?.status,
           city: joinedBranch?.city ?? undefined,
           metroStation: joinedBranch?.metro_station ?? undefined,
+          branchId: joinedBranch?.id ?? undefined,
+          branchName: joinedBranch?.name ?? undefined,
         };
       });
 

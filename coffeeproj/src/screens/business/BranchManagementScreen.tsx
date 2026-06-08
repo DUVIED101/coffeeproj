@@ -37,6 +37,8 @@ import { pickPhotos, reportRejections } from '../../utils/pickPhotos';
 import { geocodeAddress } from '../../utils/geocode';
 import { SHORT_TEXT_MAX_LENGTH, ADDRESS_MAX_LENGTH } from '../../utils/validation';
 import { showErrorToast, showSuccessToast } from '../../stores/errorToastStore';
+import { handleApiError } from '../../utils/handleApiError';
+import { isAccountBlocked } from '../../utils/errorHandler';
 
 type BusinessStackParamList = {
   BusinessProfileSetup: undefined;
@@ -333,7 +335,11 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
       loadBranches();
     } catch (error) {
       console.error('Error saving branch:', error);
-      showErrorToast(t('branches.errors.saveFailed'));
+      if (isAccountBlocked(error)) {
+        void handleApiError(error);
+      } else {
+        showErrorToast(t('branches.errors.saveFailed'));
+      }
     } finally {
       setIsSaving(false);
     }

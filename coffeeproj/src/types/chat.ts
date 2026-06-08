@@ -26,6 +26,8 @@ export interface Conversation {
   applicationStatus?: ApplicationStatus;
   city?: CityCode;
   metroStation?: string;
+  branchId?: string;
+  branchName?: string;
   lastMessageText?: string;
   lastMessageSenderId?: string;
   firstBusinessMessageAt?: string | null;

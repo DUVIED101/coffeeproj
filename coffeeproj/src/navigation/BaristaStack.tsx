@@ -15,6 +15,7 @@ import { BusinessJobsScreen } from '../screens/barista/BusinessJobsScreen';
 import { BusinessPublicProfileScreen } from '../screens/barista/BusinessPublicProfileScreen';
 import { JobOfferScreen } from '../screens/barista/JobOfferScreen';
 import { DisputeFormScreen } from '../screens/shared/DisputeFormScreen';
+import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
 import { useNotificationFeedStore } from '../stores/notificationFeedStore';
 import type { Job } from '../types';
 import type { Application } from '../types/application';
@@ -33,6 +34,7 @@ export type BaristaStackParamList = {
   BusinessPublicProfile: { businessOwnerId: string };
   JobOffer: { offerId: string };
   DisputeForm: { applicationId: string; role: 'barista' | 'business' };
+  DisputeDetails: { applicationId?: string; disputeId?: string };
 };
 
 const Stack = createNativeStackNavigator<BaristaStackParamList>();
@@ -113,6 +115,11 @@ export const BaristaStack: React.FC = () => {
         name="DisputeForm"
         component={DisputeFormScreen}
         options={{ title: t('disputes.formTitle') }}
+      />
+      <Stack.Screen
+        name="DisputeDetails"
+        component={DisputeDetailsScreen}
+        options={{ title: t('disputes.detailsTitle') }}
       />
     </Stack.Navigator>
   );

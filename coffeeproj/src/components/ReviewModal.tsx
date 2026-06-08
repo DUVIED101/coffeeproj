@@ -17,6 +17,8 @@ import { ReviewService } from '../services/ReviewService';
 import type { ApplicationId, UserId } from '../types/ids';
 import type { ApplicationReview, RaterRole, StarRating } from '../types/review';
 import { clampToEffectiveLength, effectiveTextLength } from '../utils/textLength';
+import { handleApiError } from '../utils/handleApiError';
+import { isAccountBlocked } from '../utils/errorHandler';
 import { showErrorToast } from '../stores/errorToastStore';
 
 const MAX_COMMENT_LENGTH = 500;
@@ -69,9 +71,15 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
       onSubmitted(review);
     } catch (error) {
       console.error('Error submitting review:', error);
-      const detail =
-        error instanceof Error && error.message ? error.message : String(error ?? 'Unknown error');
-      showErrorToast(`${t('reviews.errors.submitFailed')}\n\n${detail}`);
+      if (isAccountBlocked(error)) {
+        void handleApiError(error);
+      } else {
+        const detail =
+          error instanceof Error && error.message
+            ? error.message
+            : String(error ?? 'Unknown error');
+        showErrorToast(`${t('reviews.errors.submitFailed')}\n\n${detail}`);
+      }
       setIsSubmitting(false);
     }
   }, [rating, comment, applicationId, raterRole, rateeId, t, onSubmitted, reset]);

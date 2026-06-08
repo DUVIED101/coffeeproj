@@ -6,6 +6,15 @@ import { supabase } from '../config/supabase';
 import { AuthService } from '../services/AuthService';
 import { NotificationService } from '../services/NotificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SUPABASE_URL } from '@env';
+import { withTimeout, TimeoutError } from '../utils/withTimeout';
+import { readCachedSession } from '../utils/cachedSession';
+
+// Cold-start network calls are wrapped in this timeout so the app cannot
+// hang on the spinner forever when Supabase is unreachable (Cloudflare-fronted,
+// blocked intermittently from Russian ISPs). 8s is the sweet spot — long enough
+// that a slow-but-working network completes, short enough to feel responsive.
+const STARTUP_TIMEOUT_MS = 8000;
 
 interface AuthState {
   // State
@@ -13,12 +22,19 @@ interface AuthState {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  // null = healthy. 'timeout' = startup network call exceeded STARTUP_TIMEOUT_MS
+  // and no cached session was available to fall back on.
+  connectionError: 'timeout' | null;
+  // true when we proceeded on a locally-cached session because the server
+  // round-trip timed out. Surfaced for UX (stale-data toast) and debugging.
+  sessionStaleFromCache: boolean;
 
   // Actions
   setSession: (session: Session | null) => void;
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
   initialize: () => Promise<void>;
+  retryInitialize: () => Promise<void>;
   refreshUserProfile: () => Promise<User | null>;
   signOut: () => Promise<void>;
   deleteAccount: (
@@ -36,6 +52,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isLoading: true,
   isAuthenticated: false,
+  connectionError: null,
+  sessionStaleFromCache: false,
 
   // Set session and update authenticated state
   setSession: (session: Session | null) => {
@@ -55,20 +73,46 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading });
   },
 
-  // Initialize auth state on app start
+  // Initialize auth state on app start.
+  //
+  // Both getSession() and fetchUserProfile() are wrapped in withTimeout so the
+  // app cannot hang on the spinner forever when Supabase is unreachable.
+  // On getSession timeout: fall back to a locally-cached session if one exists
+  // (returning users keep working offline); otherwise surface connectionError
+  // so AppNavigator routes to ConnectionErrorScreen.
   initialize: async () => {
     try {
-      set({ isLoading: true });
+      set({ isLoading: true, connectionError: null, sessionStaleFromCache: false });
 
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
-
-      if (error) {
-        console.error('Error getting session:', error);
-        get().clearAuth();
-        return;
+      let session: Session | null;
+      try {
+        const result = await withTimeout(
+          supabase.auth.getSession(),
+          STARTUP_TIMEOUT_MS,
+          'getSession'
+        );
+        if (result.error) {
+          console.error('Error getting session:', result.error);
+          get().clearAuth();
+          return;
+        }
+        session = result.data.session;
+      } catch (error) {
+        if (error instanceof TimeoutError) {
+          const cached = await readCachedSession(SUPABASE_URL);
+          if (cached) {
+            // Returning user, Supabase unreachable: hydrate from cache and
+            // proceed. supabase-js autoRefreshToken will retry in background.
+            set({ sessionStaleFromCache: true });
+            get().setSession(cached);
+            void backgroundFetchProfile(cached.user.id);
+            return;
+          }
+          set({ connectionError: 'timeout' });
+          get().clearAuth();
+          return;
+        }
+        throw error;
       }
 
       if (!session) {
@@ -76,7 +120,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return;
       }
 
-      const user = await fetchUserProfile(session.user.id);
+      let user: User | null = null;
+      try {
+        user = await withTimeout(
+          fetchUserProfile(session.user.id),
+          STARTUP_TIMEOUT_MS,
+          'fetchUserProfile'
+        );
+      } catch (error) {
+        if (error instanceof TimeoutError) {
+          // Session valid, profile fetch timed out. Keep session — the
+          // ProfileBootstrap path / banners re-fire when the profile arrives.
+          set({ sessionStaleFromCache: true });
+          get().setSession(session);
+          void backgroundFetchProfile(session.user.id);
+          return;
+        }
+        throw error;
+      }
+
       if (!user || !user.isActive) {
         // Clear local state immediately — do NOT await signOut() here.
         // The /logout endpoint can timeout (504) and would hold isLoading:true
@@ -94,6 +156,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } finally {
       set({ isLoading: false });
     }
+  },
+
+  retryInitialize: async () => {
+    if (get().isLoading) return;
+    await get().initialize();
   },
 
   // Refetch the user row from public.users without going through full
@@ -174,6 +241,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
 }));
+
+// Used after the cached-session fallback fires. Fetches the profile in the
+// background once the user is already inside the app; failure is non-fatal
+// (BannedUserBlocker / SuspendedUserBanner re-render when the profile lands).
+async function backgroundFetchProfile(userId: string): Promise<void> {
+  try {
+    const user = await withTimeout(fetchUserProfile(userId), STARTUP_TIMEOUT_MS, 'bgFetchProfile');
+    if (user && user.isActive) {
+      useAuthStore.getState().setUser(user);
+    }
+  } catch (error) {
+    if (!(error instanceof TimeoutError)) {
+      console.warn('backgroundFetchProfile failed:', error);
+    }
+  }
+}
 
 async function fetchUserProfile(userId: string): Promise<User | null> {
   const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();

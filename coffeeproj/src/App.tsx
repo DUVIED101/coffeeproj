@@ -35,6 +35,7 @@ import { BannedUserBlocker } from './components/BannedUserBlocker';
 import { JobOfferService } from './services/JobOfferService';
 import { pendingOfferActionsQueue } from './services/pendingOfferActionsQueue';
 import { useNotificationFeedStore } from './stores/notificationFeedStore';
+import { useDiagnosticsStore } from './stores/diagnosticsStore';
 import { JOB_OFFER_ACTION_ACCEPT, JOB_OFFER_ACTION_DECLINE } from './types/notification';
 import type { PushNotificationPayload } from './types/notification';
 import type { ApplicationId, JobOfferId } from './types/ids';
@@ -152,6 +153,8 @@ function App(): React.JSX.Element {
 
   useEffect(() => {
     initI18n().finally(() => setI18nReady(true));
+    void useDiagnosticsStore.getState().loadLastReport();
+    void useDiagnosticsStore.getState().runProbe();
   }, []);
 
   if (!i18nReady) {

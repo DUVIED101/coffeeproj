@@ -20,8 +20,6 @@ import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithAction
 import { Avatar } from '../../components/Avatar';
 import { Skeleton } from '../../components/Skeleton';
 import type { Conversation } from '../../types/chat';
-import type { CityCode } from '../../types/city';
-import { CITY_LABELS_RU, CITY_LABELS_EN } from '../../types/city';
 import type { ApplicationStatus } from '../../types/application';
 
 const ARCHIVED_STATUSES: ReadonlyArray<ApplicationStatus> = ['rejected', 'withdrawn', 'completed'];
@@ -140,15 +138,14 @@ const ConversationItem = React.memo<{
 export function ConversationsListScreen({ navigation }: any) {
   const user = useAuthStore(state => state.user);
   const unreadCount = useNotificationFeedStore(state => state.unreadCount);
-  const { t, i18n } = useTranslation();
-  const cityLabels = i18n.language === 'ru' ? CITY_LABELS_RU : CITY_LABELS_EN;
+  const { t } = useTranslation();
+  const isBusiness = user?.accountType === 'business';
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [archiveTab, setArchiveTab] = useState<'active' | 'archive'>('active');
-  const [cityFilter, setCityFilter] = useState<CityCode | null>(null);
-  const [metroFilter, setMetroFilter] = useState<string | null>(null);
+  const [branchFilter, setBranchFilter] = useState<string | null>(null);
 
   const loadConversations = useCallback(async () => {
     if (!user?.id || !user?.accountType) {
@@ -200,30 +197,24 @@ export function ConversationsListScreen({ navigation }: any) {
     [conversations, archiveTab]
   );
 
-  const availableCities = useMemo(() => {
-    const set = new Set<CityCode>();
-    for (const c of tabFiltered) if (c.city) set.add(c.city);
-    return Array.from(set);
-  }, [tabFiltered]);
-
-  const availableMetros = useMemo(() => {
-    const set = new Set<string>();
+  const availableBranches = useMemo(() => {
+    if (!isBusiness) return [];
+    const byId = new Map<string, string>();
     for (const c of tabFiltered) {
-      if (!c.metroStation) continue;
-      if (cityFilter && c.city !== cityFilter) continue;
-      set.add(c.metroStation);
+      if (c.branchId) byId.set(c.branchId, c.branchName ?? c.branchId);
     }
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [tabFiltered, cityFilter]);
+    return Array.from(byId.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [tabFiltered, isBusiness]);
 
   const visibleConversations = useMemo(
     () =>
       tabFiltered.filter(c => {
-        if (cityFilter && c.city !== cityFilter) return false;
-        if (metroFilter && c.metroStation !== metroFilter) return false;
+        if (branchFilter && c.branchId !== branchFilter) return false;
         return true;
       }),
-    [tabFiltered, cityFilter, metroFilter]
+    [tabFiltered, branchFilter]
   );
 
   const archiveCount = useMemo(
@@ -246,7 +237,7 @@ export function ConversationsListScreen({ navigation }: any) {
     [handleConversationPress, user?.accountType, user?.id, fallbackTitle, t]
   );
 
-  const hasActiveFilter = cityFilter !== null || metroFilter !== null;
+  const hasActiveFilter = branchFilter !== null;
   const renderEmpty = () => {
     if (hasActiveFilter || archiveTab === 'archive') {
       return (
@@ -330,48 +321,29 @@ export function ConversationsListScreen({ navigation }: any) {
         </TouchableOpacity>
       </View>
 
-      {(availableCities.length > 1 || availableMetros.length > 0) && (
+      {isBusiness && availableBranches.length > 1 && (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.chipScroller}>
-          {availableCities.length > 1 &&
-            availableCities.map(code => {
-              const selected = cityFilter === code;
-              return (
-                <TouchableOpacity
-                  key={`city-${code}`}
-                  style={[styles.chip, selected && styles.chipActive]}
-                  onPress={() => {
-                    setCityFilter(selected ? null : code);
-                    setMetroFilter(null);
-                  }}
-                  activeOpacity={0.7}>
-                  <Text style={[styles.chipText, selected && styles.chipTextActive]}>
-                    {cityLabels[code]}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          {availableMetros.map(station => {
-            const selected = metroFilter === station;
+          {availableBranches.map(branch => {
+            const selected = branchFilter === branch.id;
             return (
               <TouchableOpacity
-                key={`metro-${station}`}
+                key={`branch-${branch.id}`}
                 style={[styles.chip, selected && styles.chipActive]}
-                onPress={() => setMetroFilter(selected ? null : station)}
+                onPress={() => setBranchFilter(selected ? null : branch.id)}
                 activeOpacity={0.7}>
-                <Text style={[styles.chipText, selected && styles.chipTextActive]}>{station}</Text>
+                <Text style={[styles.chipText, selected && styles.chipTextActive]}>
+                  {branch.name}
+                </Text>
               </TouchableOpacity>
             );
           })}
-          {(cityFilter || metroFilter) && (
+          {branchFilter && (
             <TouchableOpacity
               style={styles.chipReset}
-              onPress={() => {
-                setCityFilter(null);
-                setMetroFilter(null);
-              }}
+              onPress={() => setBranchFilter(null)}
               activeOpacity={0.7}>
               <Text style={styles.chipResetText}>
                 {t('filters.reset', { defaultValue: 'Сбросить' })}

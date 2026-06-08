@@ -35,7 +35,22 @@ export const MyDisputesScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
 
   useLayoutEffect(() => {
-    navigation.setOptions({ title: t('disputes.myDisputesTitle') });
+    navigation.setOptions({
+      title: t('disputes.myDisputesTitle'),
+      headerLeft: () => (
+        <TouchableOpacity
+          onPress={() => {
+            if (navigation.canGoBack()) navigation.goBack();
+            else navigation.getParent()?.goBack();
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.back', { defaultValue: 'Назад' })}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={styles.headerBack}>
+          <Text style={styles.headerBackText}>‹</Text>
+        </TouchableOpacity>
+      ),
+    });
   }, [navigation, t]);
 
   useFocusEffect(
@@ -154,6 +169,8 @@ export const MyDisputesScreen: React.FC<Props> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
+  headerBack: { paddingHorizontal: 4, paddingVertical: 2 },
+  headerBackText: { fontSize: 28, color: COLORS.primary, lineHeight: 30 },
   loader: { flex: 1, justifyContent: 'center' },
   list: { padding: 16 },
   emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },

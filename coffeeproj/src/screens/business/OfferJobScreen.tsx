@@ -29,6 +29,8 @@ import type { JobId, UserId } from '../../types/ids';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import { clampToEffectiveLength, effectiveTextLength } from '../../utils/textLength';
 import { showErrorToast } from '../../stores/errorToastStore';
+import { handleApiError } from '../../utils/handleApiError';
+import { isAccountBlocked } from '../../utils/errorHandler';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'OfferJob'>;
@@ -108,7 +110,9 @@ export const OfferJobScreen: React.FC<Props> = ({ navigation, route }) => {
         { text: t('common.ok'), onPress: () => navigation.goBack() },
       ]);
     } catch (error) {
-      if (error instanceof JobOfferAlreadyAppliedError) {
+      if (isAccountBlocked(error)) {
+        void handleApiError(error);
+      } else if (error instanceof JobOfferAlreadyAppliedError) {
         showErrorToast(t('offerJob.baristaAlreadyApplied'));
       } else if (error instanceof JobOfferDuplicatePendingError) {
         showErrorToast(t('offerJob.duplicatePending'));

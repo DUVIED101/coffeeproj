@@ -155,6 +155,12 @@ export const SettingsScreen: React.FC = () => {
           />
           <View style={styles.separator} />
           <SettingsRow label={t('settings.items.appVersion')} value={APP_VERSION} />
+          <View style={styles.separator} />
+          <SettingsRow
+            label={t('settings.items.diagnostic')}
+            onPress={() => navigation.navigate('Diagnostic')}
+            showChevron
+          />
         </View>
 
         <Text style={styles.sectionHeader}>{t('settings.sections.activity').toUpperCase()}</Text>

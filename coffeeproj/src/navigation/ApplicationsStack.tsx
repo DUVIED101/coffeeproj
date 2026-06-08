@@ -4,12 +4,16 @@ import { useTranslation } from 'react-i18next';
 import { ApplicationsScreen } from '../screens/barista/ApplicationsScreen';
 import { ApplicationDetailsScreen } from '../screens/barista/ApplicationDetailsScreen';
 import { JobDetailsScreen } from '../screens/barista/JobDetailsScreen';
+import { BusinessPublicProfileScreen } from '../screens/barista/BusinessPublicProfileScreen';
+import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
 import type { Application } from '../types/application';
 
 export type ApplicationsStackParamList = {
   ApplicationsList: undefined;
   ApplicationDetails: { application: Application } | { applicationId: string };
   JobDetails: { jobId: string; distance?: number };
+  BusinessPublicProfile: { businessOwnerId: string };
+  DisputeDetails: { applicationId?: string; disputeId?: string };
 };
 
 const Stack = createNativeStackNavigator<ApplicationsStackParamList>();
@@ -34,6 +38,16 @@ export const ApplicationsStack: React.FC = () => {
         name="JobDetails"
         component={JobDetailsScreen}
         options={{ title: t('nav.jobDetails') }}
+      />
+      <Stack.Screen
+        name="BusinessPublicProfile"
+        component={BusinessPublicProfileScreen}
+        options={{ title: t('nav.businessPublicProfile') }}
+      />
+      <Stack.Screen
+        name="DisputeDetails"
+        component={DisputeDetailsScreen}
+        options={{ title: t('disputes.detailsTitle') }}
       />
     </Stack.Navigator>
   );

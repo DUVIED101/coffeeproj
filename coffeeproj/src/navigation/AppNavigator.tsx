@@ -6,6 +6,7 @@ import { AuthStack } from './AuthStack';
 import { MainTabs } from './MainTabs';
 import { flushPendingPushPayload, navigationRef } from './navigationRef';
 import { ProfileBootstrapScreen } from '../screens/auth/ProfileBootstrapScreen';
+import { ConnectionErrorScreen } from '../screens/auth/ConnectionErrorScreen';
 import { COLORS } from '../config/constants';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { ErrorToast } from '../components/ErrorToast';
@@ -14,6 +15,7 @@ export const AppNavigator: React.FC = () => {
   const isAuthenticated = useAuthStore(s => s.isAuthenticated);
   const user = useAuthStore(s => s.user);
   const isLoading = useAuthStore(s => s.isLoading);
+  const connectionError = useAuthStore(s => s.connectionError);
   const initialize = useAuthStore(s => s.initialize);
 
   useEffect(() => {
@@ -29,6 +31,9 @@ export const AppNavigator: React.FC = () => {
   }
 
   const renderRoot = () => {
+    if (connectionError && !isAuthenticated) {
+      return <ConnectionErrorScreen key="connection-error" />;
+    }
     if (!isAuthenticated) {
       return <AuthStack key="unauthenticated" />;
     }

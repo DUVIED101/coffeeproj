@@ -86,6 +86,7 @@ interface ApplicantItemProps {
   onConfirmCompletion: (applicationId: string) => void;
   onOpenReview: (application: Application) => void;
   onFileDispute: (applicationId: string) => void;
+  onOpenDispute: (disputeId: string) => void;
   isProcessing: boolean;
   unreadCount: number;
   needsReview: boolean;
@@ -112,6 +113,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     onConfirmCompletion,
     onOpenReview,
     onFileDispute,
+    onOpenDispute,
     isProcessing,
     unreadCount,
     needsReview,
@@ -149,6 +151,10 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     const handleFileDispute = useCallback(
       () => onFileDispute(applicationId),
       [onFileDispute, applicationId]
+    );
+    const handleOpenDispute = useCallback(
+      () => disputeSummary && onOpenDispute(disputeSummary.id),
+      [onOpenDispute, disputeSummary]
     );
     const baristaProfile = application.baristaProfile;
     const baristaEmail = application.baristaEmail || t('applicants.noEmail');
@@ -272,12 +278,17 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
 
         {(application.status === 'completed' || application.status === 'accepted') &&
           (disputeSummary ? (
-            <View style={styles.disputeStatusBox}>
+            <TouchableOpacity
+              style={styles.disputeStatusBox}
+              onPress={handleOpenDispute}
+              accessibilityRole="button"
+              accessibilityLabel={t('disputes.openDetails', { defaultValue: 'Открыть жалобу' })}
+              activeOpacity={0.7}>
               <Text style={styles.disputeStatusLabel}>{t('disputes.filedLabel')}</Text>
               <Text style={styles.disputeStatusValue}>
                 {t(`disputes.status.${disputeSummary.status}`)}
               </Text>
-            </View>
+            </TouchableOpacity>
           ) : (
             <TouchableOpacity
               style={styles.disputeButton}
@@ -611,6 +622,13 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
     [navigation]
   );
 
+  const handleOpenDispute = useCallback(
+    (disputeId: string) => {
+      navigation.navigate('DisputeDetails', { disputeId });
+    },
+    [navigation]
+  );
+
   const handleCancelOffer = useCallback(
     async (offer: JobOffer) => {
       Alert.alert(t('applicants.cancelOfferConfirmTitle'), t('applicants.cancelOfferConfirmBody'), [
@@ -669,6 +687,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         onConfirmCompletion={handleConfirmCompletion}
         onOpenReview={handleOpenReview}
         onFileDispute={handleFileDispute}
+        onOpenDispute={handleOpenDispute}
         isProcessing={processingIds.has(item.id)}
         unreadCount={unreadCounts[item.id] || 0}
         needsReview={item.status === 'completed' && !reviewedIds.has(item.id)}
@@ -691,6 +710,7 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
       handleConfirmCompletion,
       handleOpenReview,
       handleFileDispute,
+      handleOpenDispute,
       processingIds,
       unreadCounts,
       reviewedIds,

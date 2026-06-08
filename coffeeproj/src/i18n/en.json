@@ -690,6 +690,9 @@
     "waitingForBusiness": {
       "title": "Wait for the business to message first",
       "subtitle": "You'll be able to reply once the business starts the conversation."
+    },
+    "report": {
+      "actionSheetTitle": "Message actions"
     }
   },
   "chats": {
@@ -1262,6 +1265,27 @@
     "reloadScreen": "Reload screen",
     "unknownError": "Unknown error"
   },
+  "connectionError": {
+    "title": "Connection problem",
+    "body": "We can't reach our server. This sometimes happens on Russian mobile networks. Tap Retry, or check the diagnostic details below.",
+    "retry": "Retry",
+    "diagDetailsTitle": "Diagnostic details",
+    "diagIntro": "This screen checks which servers your device can reach. Share the diagnostic info with support if the app fails to load.",
+    "rerunCheck": "Re-run check",
+    "copyInfo": "Diagnostic info (copy for support)",
+    "diagHint": "If this persists, try mobile data instead of Wi-Fi, or contact support.",
+    "staleSessionToast": "Working with cached data — some info may be out of date.",
+    "probe": {
+      "reachable": "OK",
+      "unreachable": "Unreachable",
+      "supabase": "Server (Supabase)",
+      "yandex": "Yandex (RU control)",
+      "apple": "Apple (global control)",
+      "latencyMs": "{{ms}} ms",
+      "lastRunAt": "Checked: {{time}}",
+      "noReport": "No diagnostic data yet — running check…"
+    }
+  },
   "settings": {
     "title": "Settings",
     "sections": {
@@ -1284,6 +1308,7 @@
       "privacyPolicy": "Privacy Policy",
       "support": "Support",
       "appVersion": "App Version",
+      "diagnostic": "Diagnostic",
       "signOut": "Sign Out",
       "deleteAccount": "Delete Account"
     },

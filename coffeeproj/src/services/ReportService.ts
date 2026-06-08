@@ -42,7 +42,7 @@ export class ReportService {
       .single();
 
     if (error) {
-      throw new Error(error.message);
+      throw error;
     }
     return this.mapDatabaseReport(data);
   }

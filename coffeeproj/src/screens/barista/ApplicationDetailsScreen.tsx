@@ -33,6 +33,7 @@ type BaristaStackParamList = {
   Applications: undefined;
   ApplicationDetails: { application: Application } | { applicationId: string };
   DisputeForm: { applicationId: string; role: 'barista' | 'business' };
+  DisputeDetails: { applicationId?: string; disputeId?: string };
 };
 
 type Props = {
@@ -677,7 +678,14 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
           )}
           {(currentStatus === 'completed' || currentStatus === 'accepted') &&
             (disputeSummary ? (
-              <View style={styles.disputeStatusBox}>
+              <TouchableOpacity
+                style={styles.disputeStatusBox}
+                onPress={() =>
+                  navigation.navigate('DisputeDetails', { disputeId: disputeSummary.id })
+                }
+                accessibilityRole="button"
+                accessibilityLabel={t('disputes.openDetails', { defaultValue: 'Открыть жалобу' })}
+                activeOpacity={0.7}>
                 <Text style={styles.disputeStatusLabel}>{t('disputes.filedLabel')}</Text>
                 <Text style={styles.disputeStatusValue}>
                   {t(`disputes.status.${disputeSummary.status}`)}
@@ -687,7 +695,7 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
                     {t('disputes.resolutionNote')} {disputeSummary.resolutionNote}
                   </Text>
                 ) : null}
-              </View>
+              </TouchableOpacity>
             ) : (
               <TouchableOpacity
                 style={styles.disputeButton}

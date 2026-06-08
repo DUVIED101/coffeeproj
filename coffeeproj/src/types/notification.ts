@@ -1,5 +1,13 @@
 import type { ConversationId } from './chat';
-import type { ApplicationId, JobId, JobOfferId, NotificationId, ReviewId, UserId } from './ids';
+import type {
+  ApplicationId,
+  DisputeId,
+  JobId,
+  JobOfferId,
+  NotificationId,
+  ReviewId,
+  UserId,
+} from './ids';
 
 type Brand<K, T> = K & { __brand: T };
 
@@ -47,6 +55,7 @@ export type PushNotificationPayload = {
     jobId?: JobId;
     reviewId?: ReviewId;
     offerId?: JobOfferId;
+    disputeId?: DisputeId;
     jobTitle?: string;
     shiftStartIso?: string;
   };

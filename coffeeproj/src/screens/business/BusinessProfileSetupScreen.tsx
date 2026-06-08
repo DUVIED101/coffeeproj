@@ -43,6 +43,8 @@ import {
   FOUNDED_YEAR_MIN,
 } from '../../utils/validation';
 import { showErrorToast } from '../../stores/errorToastStore';
+import { handleApiError } from '../../utils/handleApiError';
+import { isAccountBlocked } from '../../utils/errorHandler';
 
 type SetupStackParamList = {
   BusinessProfileSetup: undefined;
@@ -384,7 +386,11 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error finishing business setup:', error);
-      showErrorToast(t('businessSetup.errors.saveFailed'));
+      if (isAccountBlocked(error)) {
+        void handleApiError(error);
+      } else {
+        showErrorToast(t('businessSetup.errors.saveFailed'));
+      }
     } finally {
       setIsSubmitting(false);
     }

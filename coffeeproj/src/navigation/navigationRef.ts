@@ -28,6 +28,7 @@ export const dispatchPayload = (payload: PushNotificationPayload): void => {
   const jobId = payload.data?.jobId;
   const offerId = payload.data?.offerId;
   const applicationId = payload.data?.applicationId;
+  const disputeId = payload.data?.disputeId;
   const jobTitle = payload.data?.jobTitle;
   const shiftStartIso = payload.data?.shiftStartIso;
 
@@ -127,7 +128,9 @@ export const dispatchPayload = (payload: PushNotificationPayload): void => {
   }
 
   if (kind === 'dispute_filed') {
-    if (applicationId) {
+    if (disputeId) {
+      navigateTab('Profile', { screen: 'DisputeDetails', params: { disputeId } });
+    } else if (applicationId) {
       navigateTab('Profile', { screen: 'DisputeDetails', params: { applicationId } });
     } else {
       navigateTab('Profile');
