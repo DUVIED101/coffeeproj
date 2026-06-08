@@ -43,6 +43,19 @@ describe('runConnectivityProbe', () => {
     expect(r).toMatchObject({ ok: false, status: 503 });
   });
 
+  it('treats 401/403/404 as REACHABLE (server responded, only network counts)', async () => {
+    const fetchImpl = jest.fn((input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url.includes('supabase.co')) return Promise.resolve(ok(401));
+      return Promise.resolve(ok(200));
+    }) as unknown as typeof fetch;
+
+    const report = await runConnectivityProbe({ fetchImpl });
+    expect(report.supabaseReachable).toBe(true);
+    const r = report.results.find(x => x.target === 'supabase');
+    expect(r).toMatchObject({ ok: true, status: 401 });
+  });
+
   it('records a TimeoutError when an endpoint hangs past the per-probe timeout', async () => {
     jest.useFakeTimers();
     let neverFetchResolve!: (v: Response) => void;

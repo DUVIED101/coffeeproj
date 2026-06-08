@@ -1,13 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  RefreshControl,
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -139,13 +131,10 @@ export function ConversationsListScreen({ navigation }: any) {
   const user = useAuthStore(state => state.user);
   const unreadCount = useNotificationFeedStore(state => state.unreadCount);
   const { t } = useTranslation();
-  const isBusiness = user?.accountType === 'business';
-
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [archiveTab, setArchiveTab] = useState<'active' | 'archive'>('active');
-  const [branchFilter, setBranchFilter] = useState<string | null>(null);
 
   const loadConversations = useCallback(async () => {
     if (!user?.id || !user?.accountType) {
@@ -187,7 +176,7 @@ export function ConversationsListScreen({ navigation }: any) {
 
   const fallbackTitle = t('chat.fallbackTitle', { defaultValue: 'Chat' });
 
-  const tabFiltered = useMemo(
+  const visibleConversations = useMemo(
     () =>
       conversations.filter(c =>
         archiveTab === 'archive'
@@ -195,26 +184,6 @@ export function ConversationsListScreen({ navigation }: any) {
           : !isArchived(c.applicationStatus)
       ),
     [conversations, archiveTab]
-  );
-
-  const availableBranches = useMemo(() => {
-    if (!isBusiness) return [];
-    const byId = new Map<string, string>();
-    for (const c of tabFiltered) {
-      if (c.branchId) byId.set(c.branchId, c.branchName ?? c.branchId);
-    }
-    return Array.from(byId.entries())
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [tabFiltered, isBusiness]);
-
-  const visibleConversations = useMemo(
-    () =>
-      tabFiltered.filter(c => {
-        if (branchFilter && c.branchId !== branchFilter) return false;
-        return true;
-      }),
-    [tabFiltered, branchFilter]
   );
 
   const archiveCount = useMemo(
@@ -237,17 +206,12 @@ export function ConversationsListScreen({ navigation }: any) {
     [handleConversationPress, user?.accountType, user?.id, fallbackTitle, t]
   );
 
-  const hasActiveFilter = branchFilter !== null;
   const renderEmpty = () => {
-    if (hasActiveFilter || archiveTab === 'archive') {
+    if (archiveTab === 'archive') {
       return (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
-            {archiveTab === 'archive'
-              ? t('conversations.emptyArchive', { defaultValue: 'В архиве пусто' })
-              : t('conversations.emptyFiltered', {
-                  defaultValue: 'Ничего не найдено по этому фильтру',
-                })}
+            {t('conversations.emptyArchive', { defaultValue: 'В архиве пусто' })}
           </Text>
         </View>
       );
@@ -320,38 +284,6 @@ export function ConversationsListScreen({ navigation }: any) {
           </Text>
         </TouchableOpacity>
       </View>
-
-      {isBusiness && availableBranches.length > 1 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipScroller}>
-          {availableBranches.map(branch => {
-            const selected = branchFilter === branch.id;
-            return (
-              <TouchableOpacity
-                key={`branch-${branch.id}`}
-                style={[styles.chip, selected && styles.chipActive]}
-                onPress={() => setBranchFilter(selected ? null : branch.id)}
-                activeOpacity={0.7}>
-                <Text style={[styles.chipText, selected && styles.chipTextActive]}>
-                  {branch.name}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-          {branchFilter && (
-            <TouchableOpacity
-              style={styles.chipReset}
-              onPress={() => setBranchFilter(null)}
-              activeOpacity={0.7}>
-              <Text style={styles.chipResetText}>
-                {t('filters.reset', { defaultValue: 'Сбросить' })}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </ScrollView>
-      )}
 
       <FlatList
         data={visibleConversations}
@@ -496,43 +428,6 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: '#fff',
-  },
-  chipScroller: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
-    gap: 8,
-    alignItems: 'center',
-  },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.background,
-    marginRight: 8,
-  },
-  chipActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-  chipText: {
-    fontSize: 12,
-    color: COLORS.text,
-  },
-  chipTextActive: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  chipReset: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  chipResetText: {
-    fontSize: 12,
-    color: COLORS.primary,
-    fontWeight: '600',
   },
   emptyContainer: {
     alignItems: 'center',

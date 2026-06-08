@@ -34,6 +34,7 @@ type BaristaStackParamList = {
   ApplicationDetails: { application: Application } | { applicationId: string };
   DisputeForm: { applicationId: string; role: 'barista' | 'business' };
   DisputeDetails: { applicationId?: string; disputeId?: string };
+  BusinessPublicProfile: { businessOwnerId: string };
 };
 
 type Props = {
@@ -410,7 +411,19 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('applications.details.jobDetails')}</Text>
           <Text style={styles.jobTitle}>{job?.title || ''}</Text>
-          <Text style={styles.businessName}>{job?.businessName || ''}</Text>
+          {job?.businessName ? (
+            businessOwnerId ? (
+              <TouchableOpacity
+                onPress={() => navigation.navigate('BusinessPublicProfile', { businessOwnerId })}
+                accessibilityRole="button">
+                <Text style={[styles.businessName, styles.businessNameLink]}>
+                  {job.businessName}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <Text style={styles.businessName}>{job.businessName}</Text>
+            )
+          ) : null}
           {job?.branchName && <Text style={styles.branchName}>{job.branchName}</Text>}
         </View>
 
@@ -780,6 +793,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.text,
     marginBottom: 4,
+  },
+  businessNameLink: {
+    color: COLORS.primary,
   },
   branchName: {
     fontSize: 14,

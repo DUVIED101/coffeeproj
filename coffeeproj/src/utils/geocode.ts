@@ -33,33 +33,49 @@ type YandexResponse = {
   };
 };
 
-// Yandex's `kind` describes the precision. We want street- or house-level
-// hits — never region/locality/country (which are too coarse for branch
-// addresses).
-const ADDRESS_KINDS: ReadonlySet<string> = new Set(['house', 'street']);
+// Yandex's `kind` is informational only — we don't gate on it. Earlier we
+// only accepted {house, street}, but valid addresses also come back as
+// `entrance`, `area`, `district`, `metro`, etc., and rejecting them made the
+// "address not found" message fire on real, valid input. Trust Yandex: if
+// coordinates land inside the city bbox (rspn=1 + bbox already constrain
+// Yandex too), accept the hit. Country/locality-level hits are filtered by
+// requiring the text to have at least street-level structure (>1 segment).
+const TOO_COARSE_KINDS: ReadonlySet<string> = new Set([
+  'country',
+  'province',
+  'region',
+  'area',
+  'locality',
+]);
 
 const findComponent = (obj: YandexGeoObject, kind: string): string | undefined => {
   return obj.metaDataProperty?.GeocoderMetaData?.Address?.Components?.find(c => c.kind === kind)
     ?.name;
 };
 
-// Build a short, Russian address from the response.
+// Build a short address from the Yandex response.
 //
-// Yandex returns `text` in the language requested via `lang=ru_RU` (e.g.
-// "Россия, Санкт-Петербург, Невский проспект, 22"), while
-// `Address.Components[].name` keeps the original toponym language and can
-// echo back English when the user typed transliterated input. Prefer `text`
-// and strip the country + city prefix so the result is "Невский проспект, 22".
-const composeFormattedAddress = (obj: YandexGeoObject, cityLine: string): string => {
+// Yandex's `text` field follows the shape "<Country>, <City>, <Street>, <House>"
+// (possibly with extra locality/region segments between Country and City).
+// We always want the last 1-2 segments (the street + house, or just street).
+// This is language-agnostic — when the user types transliterated input, Yandex
+// may echo English in both Components[].name AND text, so we drop the
+// country/city prefix by position, not by name match.
+const composeFormattedAddress = (obj: YandexGeoObject, _cityLine: string): string => {
   const text = obj.metaDataProperty?.GeocoderMetaData?.text ?? '';
   if (text) {
     const parts = text
       .split(',')
       .map(s => s.trim())
       .filter(Boolean);
-    const trimmed = parts.filter(p => p !== 'Россия' && p !== cityLine);
-    if (trimmed.length > 0) return trimmed.join(', ');
-    return text;
+    if (parts.length === 0) return text;
+    if (parts.length === 1) return parts[0]!;
+    // If the last segment looks like a house number (contains a digit), keep
+    // street + house. Otherwise it's a street-only hit — just the street name.
+    const last = parts[parts.length - 1]!;
+    const lastIsHouse = /\d/.test(last);
+    if (lastIsHouse) return parts.slice(-2).join(', ');
+    return last;
   }
   const street = findComponent(obj, 'street');
   const house = findComponent(obj, 'house');
@@ -83,10 +99,9 @@ const toResult = (
   if (!isInsideBounds(lat, lon, bounds)) return null;
 
   const kind = obj.metaDataProperty?.GeocoderMetaData?.kind;
-  if (!kind || !ADDRESS_KINDS.has(kind)) return null;
-  // Street-level kind must include a street component; otherwise it's a
-  // route or boulevard segment with no address shape.
-  if (kind === 'street' && !findComponent(obj, 'street')) return null;
+  // Reject only the truly-coarse kinds (a whole country/region/city/area
+  // isn't a branch address). Everything precise enough is accepted.
+  if (kind && TOO_COARSE_KINDS.has(kind)) return null;
 
   return {
     latitude: lat,
@@ -135,11 +150,12 @@ export const geocodeAddress = async (
   signal?.addEventListener('abort', onExternalAbort);
 
   const fetchOpts = { signal: controller.signal };
+  // No `kind=house` filter — that would drop street-only results entirely.
+  // Client-side toResult() already filters by ADDRESS_KINDS = {house, street}.
   const commonParams =
     `apikey=${encodeURIComponent(YANDEX_GEOCODER_API_KEY)}` +
     `&format=json&lang=ru_RU&results=5` +
-    `&bbox=${encodeURIComponent(bbox)}&rspn=1` +
-    `&kind=house`;
+    `&bbox=${encodeURIComponent(bbox)}&rspn=1`;
 
   const freeFormQ = encodeURIComponent(`${cityLine}, ${addressLine}`);
 

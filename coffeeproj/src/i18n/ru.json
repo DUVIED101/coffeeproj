@@ -1246,7 +1246,7 @@
     "status": {
       "none": "Нет санкнижки",
       "valid": "Актуальна до {{date}}",
-      "expiringSoon": "Истекает {{date}} — обновите",
+      "expiringSoon": "Истекает {{date}}",
       "expired": "Истекла {{date}}"
     }
   },
@@ -1329,6 +1329,7 @@
       "support": "Поддержка",
       "appVersion": "Версия приложения",
       "diagnostic": "Диагностика",
+      "yandexMapsTerms": "Условия API Яндекс Карт",
       "signOut": "Выйти",
       "deleteAccount": "Удалить аккаунт"
     },

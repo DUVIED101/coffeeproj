@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SUPABASE_URL } from '@env';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@env';
 import { withTimeout } from './withTimeout';
 
 export const LAST_PROBE_STORAGE_KEY = 'diagnostics.lastProbe';
@@ -28,13 +28,27 @@ export interface ConnectivityReport {
 interface ProbeTarget {
   id: ProbeTargetId;
   url: string;
+  headers?: Record<string, string>;
 }
 
 const targets: ProbeTarget[] = [
-  { id: 'supabase', url: `${SUPABASE_URL}/auth/v1/health` },
+  {
+    id: 'supabase',
+    // GoTrue's /auth/v1/health responds 200 with apikey, 401 without. We send
+    // the anon key so a healthy server returns 200. Even without it, any
+    // response < 500 proves we reached Supabase (TLS + routing OK).
+    url: `${SUPABASE_URL}/auth/v1/health`,
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+  },
   { id: 'yandex', url: 'https://yandex.ru/favicon.ico' },
   { id: 'apple', url: 'https://www.apple.com/library/test/success.html' },
 ];
+
+// The probe asks "can the device reach this host?", not "is auth correct?".
+// Any HTTP response below 500 means TCP/TLS/DNS all worked and the server
+// replied — that's reachable. Only network errors, timeouts, and 5xx count
+// as unreachable.
+const isReachableStatus = (status: number): boolean => status < 500;
 
 async function probe(
   target: ProbeTarget,
@@ -44,14 +58,14 @@ async function probe(
   const startedAt = Date.now();
   try {
     const res = await withTimeout(
-      fetchImpl(target.url, { method: 'GET', cache: 'no-store' }),
+      fetchImpl(target.url, { method: 'GET', cache: 'no-store', headers: target.headers }),
       timeoutMs,
       target.id
     );
     return {
       target: target.id,
       url: target.url,
-      ok: res.ok,
+      ok: isReachableStatus(res.status),
       status: res.status,
       durationMs: Date.now() - startedAt,
     };

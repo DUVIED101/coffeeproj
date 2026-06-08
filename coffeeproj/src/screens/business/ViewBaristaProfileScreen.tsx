@@ -255,6 +255,9 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
                 </Text>
               </View>
             )}
+            <View style={styles.reportInlineSlot}>
+              <ReportButton targetType="user" targetId={profile.userId} variant="icon" />
+            </View>
           </View>
         </View>
 
@@ -264,10 +267,6 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
           <Text style={styles.reviewsLinkLabel}>{t('viewBarista.allReviews')}</Text>
           <Text style={styles.reviewsLinkChevron}>›</Text>
         </TouchableOpacity>
-
-        <View style={styles.reportSlot}>
-          <ReportButton targetType="user" targetId={profile.userId} variant="icon" />
-        </View>
 
         {profile.bio && (
           <View style={styles.section}>
@@ -562,10 +561,10 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: COLORS.textSecondary,
   },
-  reportSlot: {
-    marginTop: 8,
-    paddingHorizontal: 20,
-    alignItems: 'center',
+  reportInlineSlot: {
+    marginTop: 6,
+    marginLeft: -8,
+    alignSelf: 'flex-start',
   },
   section: {
     backgroundColor: '#fff',

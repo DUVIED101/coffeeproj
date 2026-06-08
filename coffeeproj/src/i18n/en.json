@@ -1230,7 +1230,7 @@
     "status": {
       "none": "No medical book",
       "valid": "Valid through {{date}}",
-      "expiringSoon": "Expires {{date}} — renew soon",
+      "expiringSoon": "Expires {{date}}",
       "expired": "Expired {{date}}"
     }
   },
@@ -1309,6 +1309,7 @@
       "support": "Support",
       "appVersion": "App Version",
       "diagnostic": "Diagnostic",
+      "yandexMapsTerms": "Yandex Maps API Terms",
       "signOut": "Sign Out",
       "deleteAccount": "Delete Account"
     },
