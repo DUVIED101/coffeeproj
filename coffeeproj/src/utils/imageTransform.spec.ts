@@ -1,6 +1,6 @@
 import { transformedImageUrl } from './imageTransform';
 
-const SUPABASE_BASE = 'https://zifvfsamfzepxxuxhyhg.supabase.co';
+const SUPABASE_BASE = 'https://test.supabase.co';
 const objectUrl = (path: string) => `${SUPABASE_BASE}/storage/v1/object/public/${path}`;
 
 describe('transformedImageUrl', () => {

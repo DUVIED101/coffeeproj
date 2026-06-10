@@ -183,7 +183,10 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
         <View style={styles.applicantHeader}>
           <View style={styles.applicantHeaderLeft}>
             {baristaProfile?.avatarUrl ? (
-              <FastImage source={{ uri: transformedImageUrl(baristaProfile.avatarUrl, 48) }} style={styles.avatar} />
+              <FastImage
+                source={{ uri: transformedImageUrl(baristaProfile.avatarUrl, 48) }}
+                style={styles.avatar}
+              />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarPlaceholderText}>

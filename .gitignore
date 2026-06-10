@@ -70,5 +70,6 @@ docs/CONTRIBUTING.md
 docs/CHANGELOG.md
 docs/email-templates.md
 docs/PHASE_8_REMAINING.md
+infra/README.md
 coffeeproj/scripts/seed-simulation.js
 coffeeproj/scripts/seed-test-jobs.js
