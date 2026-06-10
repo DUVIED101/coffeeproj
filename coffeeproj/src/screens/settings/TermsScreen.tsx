@@ -12,6 +12,7 @@ const BODY_RU = `Дата вступления в силу: 7 июня 2026 г.
 
 1. ОПИСАНИЕ СЕРВИСА
 БыстроБариста — площадка для подбора персонала в кофейной индустрии. Бариста могут искать вакансии и откликаться на них; кофейни и сети заведений могут размещать вакансии, рассматривать кандидатов, принимать или отклонять отклики. Сервис выступает посредником и не является работодателем ни для одной из сторон.
+Оператор Сервиса: физическое лицо Хаит Даниил Давидович. Контакт: support@quickbarista.app.
 
 2. РЕГИСТРАЦИЯ И АККАУНТ
 2.1. Использовать Сервис могут лица, достигшие 18 лет.
@@ -61,6 +62,7 @@ These Terms of Service govern your access to and use of the BystroBarista mobile
 
 1. SERVICE DESCRIPTION
 BystroBarista is a marketplace for staffing in the coffee industry. Baristas can browse vacancies and apply to them; coffee shops and chains can post vacancies, review candidates, and accept or reject applications. The Service acts as an intermediary and is not an employer of any party.
+Service operator: Khait Daniil Davidovich (individual / physical person). Contact: support@quickbarista.app.
 
 2. SIGN-UP AND ACCOUNT
 2.1. You must be at least 18 years old to use the Service.

@@ -13,7 +13,9 @@ const BODY_RU = `Дата вступления в силу: 7 июня 2026 г.
 Используя Сервис, вы подтверждаете, что прочитали и согласны с условиями этой Политики. Если вы не согласны — пожалуйста, не используйте Сервис.
 
 1. КТО МЫ
-БыстроБариста — мобильное приложение для подбора персонала в кофейной индустрии на территории Российской Федерации. Контакт для запросов: support@quickbarista.app.
+БыстроБариста — мобильное приложение для подбора персонала в кофейной индустрии на территории Российской Федерации.
+Оператор персональных данных: физическое лицо Хаит Даниил Давидович.
+Контакт для запросов по обработке персональных данных: support@quickbarista.app.
 
 2. КАКИЕ ДАННЫЕ МЫ СОБИРАЕМ
 2.1. При регистрации: адрес электронной почты, номер телефона, имя, выбранная роль (бариста / бизнес), пароль (хранится в зашифрованном виде).
@@ -75,7 +77,9 @@ This Privacy Policy explains what personal data the BystroBarista app ("Service"
 By using the Service you confirm that you have read and agree to this Policy. If you do not agree, please do not use the Service.
 
 1. WHO WE ARE
-BystroBarista is a mobile app for matching staff in the coffee industry within the Russian Federation. Contact for inquiries: support@quickbarista.app.
+BystroBarista is a mobile app for matching staff in the coffee industry within the Russian Federation.
+Personal data operator: Khait Daniil Davidovich (individual / physical person).
+Contact for personal data inquiries: support@quickbarista.app.
 
 2. WHAT WE COLLECT
 2.1. At sign-up: email address, phone number, name, selected role (barista / business), password (stored hashed).
