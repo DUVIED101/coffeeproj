@@ -1,11 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SUPABASE_URL } from '@env';
-import { cachedSessionStorageKey } from '../utils/cachedSession';
+import { CACHED_SESSION_STORAGE_KEY } from '../utils/cachedSession';
 
-// react-native-dotenv inlines @env at babel-time, so SUPABASE_URL is the
-// real project URL even under Jest. Compute the cached-session key the same
-// way the production code does.
-const CACHED_KEY = cachedSessionStorageKey(SUPABASE_URL) ?? 'sb-unknown-auth-token';
+// Phase 8.6 Phase 2: session is now persisted under a project-stable key
+// (decoupled from the supabase URL so direct ↔ proxy swaps don't log users
+// out). The test mirrors what production code reads.
+const CACHED_KEY = CACHED_SESSION_STORAGE_KEY;
 
 jest.mock('../config/supabase', () => {
   const auth = {

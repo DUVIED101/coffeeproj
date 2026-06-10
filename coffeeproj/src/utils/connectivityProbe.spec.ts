@@ -1,4 +1,5 @@
 import { runConnectivityProbe } from './connectivityProbe';
+import { PROXY_URL } from '../config/supabaseHost';
 
 const ok = (status = 200): Response => ({ ok: status < 400, status }) as unknown as Response;
 
@@ -8,11 +9,26 @@ describe('runConnectivityProbe', () => {
     const report = await runConnectivityProbe({ fetchImpl });
     expect(report).toMatchObject({
       supabaseReachable: true,
+      supabaseProxyReachable: PROXY_URL ? true : false,
       yandexReachable: true,
       appleReachable: true,
     });
-    expect(report.results).toHaveLength(3);
+    expect(report.results).toHaveLength(PROXY_URL ? 4 : 3);
     expect(report.results.every(r => r.ok)).toBe(true);
+  });
+
+  it('marks supabase unreachable while proxy stays reachable (the RU happy path)', async () => {
+    if (!PROXY_URL) return; // skip when proxy unset in this env
+    const fetchImpl = jest.fn((input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url.startsWith(PROXY_URL)) return Promise.resolve(ok(200));
+      if (url.includes('supabase.co')) return Promise.reject(new Error('Network request failed'));
+      return Promise.resolve(ok(200));
+    }) as unknown as typeof fetch;
+
+    const report = await runConnectivityProbe({ fetchImpl });
+    expect(report.supabaseReachable).toBe(false);
+    expect(report.supabaseProxyReachable).toBe(true);
   });
 
   it('marks supabase unreachable when only supabase rejects, others unaffected', async () => {

@@ -1,21 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Session } from '@supabase/supabase-js';
+import { STABLE_STORAGE_KEY } from '../config/supabaseHost';
 
-export function projectRefFromUrl(url: string): string | null {
-  const match = url.match(/^https?:\/\/([^./]+)\.supabase\.co/i);
-  return match ? match[1] : null;
-}
+export const CACHED_SESSION_STORAGE_KEY = STABLE_STORAGE_KEY;
 
-export function cachedSessionStorageKey(supabaseUrl: string): string | null {
-  const ref = projectRefFromUrl(supabaseUrl);
-  return ref ? `sb-${ref}-auth-token` : null;
-}
-
-export async function readCachedSession(supabaseUrl: string): Promise<Session | null> {
-  const key = cachedSessionStorageKey(supabaseUrl);
-  if (!key) return null;
+export async function readCachedSession(): Promise<Session | null> {
   try {
-    const raw = await AsyncStorage.getItem(key);
+    const raw = await AsyncStorage.getItem(CACHED_SESSION_STORAGE_KEY);
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return null;

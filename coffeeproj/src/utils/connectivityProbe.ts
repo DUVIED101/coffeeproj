@@ -1,10 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@env';
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@env';
+import { PROXY_URL } from '../config/supabaseHost';
 import { withTimeout } from './withTimeout';
 
 export const LAST_PROBE_STORAGE_KEY = 'diagnostics.lastProbe';
 
-export type ProbeTargetId = 'supabase' | 'yandex' | 'apple';
+export type ProbeTargetId = 'supabase' | 'supabaseProxy' | 'yandex' | 'apple';
 
 export interface ProbeResult {
   target: ProbeTargetId;
@@ -21,6 +22,7 @@ export interface ConnectivityReport {
   finishedAt: string;
   results: ProbeResult[];
   supabaseReachable: boolean;
+  supabaseProxyReachable: boolean;
   yandexReachable: boolean;
   appleReachable: boolean;
 }
@@ -31,18 +33,30 @@ interface ProbeTarget {
   headers?: Record<string, string>;
 }
 
-const targets: ProbeTarget[] = [
-  {
-    id: 'supabase',
-    // GoTrue's /auth/v1/health responds 200 with apikey, 401 without. We send
-    // the anon key so a healthy server returns 200. Even without it, any
-    // response < 500 proves we reached Supabase (TLS + routing OK).
-    url: `${SUPABASE_URL}/auth/v1/health`,
-    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
-  },
-  { id: 'yandex', url: 'https://yandex.ru/favicon.ico' },
-  { id: 'apple', url: 'https://www.apple.com/library/test/success.html' },
-];
+function buildTargets(): ProbeTarget[] {
+  const list: ProbeTarget[] = [
+    {
+      id: 'supabase',
+      // GoTrue's /auth/v1/health responds 200 with apikey, 401 without. We send
+      // the anon key so a healthy server returns 200. Even without it, any
+      // response < 500 proves we reached Supabase (TLS + routing OK).
+      url: `${SUPABASE_URL}/auth/v1/health`,
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+    },
+  ];
+  if (PROXY_URL) {
+    list.push({
+      id: 'supabaseProxy',
+      url: `${PROXY_URL}/auth/v1/health`,
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+    });
+  }
+  list.push(
+    { id: 'yandex', url: 'https://yandex.ru/favicon.ico' },
+    { id: 'apple', url: 'https://www.apple.com/library/test/success.html' }
+  );
+  return list;
+}
 
 // The probe asks "can the device reach this host?", not "is auth correct?".
 // Any HTTP response below 500 means TCP/TLS/DNS all worked and the server
@@ -88,6 +102,7 @@ export async function runConnectivityProbe(opts?: {
 }): Promise<ConnectivityReport> {
   const timeoutMs = opts?.timeoutMs ?? 5000;
   const fetchImpl = opts?.fetchImpl ?? fetch;
+  const targets = buildTargets();
   const startedAt = new Date().toISOString();
   const results = await Promise.all(targets.map(t => probe(t, timeoutMs, fetchImpl)));
   const finishedAt = new Date().toISOString();
@@ -98,6 +113,7 @@ export async function runConnectivityProbe(opts?: {
     finishedAt,
     results,
     supabaseReachable: findReachable('supabase'),
+    supabaseProxyReachable: findReachable('supabaseProxy'),
     yandexReachable: findReachable('yandex'),
     appleReachable: findReachable('apple'),
   };

@@ -6,7 +6,6 @@ import { supabase } from '../config/supabase';
 import { AuthService } from '../services/AuthService';
 import { NotificationService } from '../services/NotificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SUPABASE_URL } from '@env';
 import { withTimeout, TimeoutError } from '../utils/withTimeout';
 import { readCachedSession } from '../utils/cachedSession';
 
@@ -99,7 +98,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         session = result.data.session;
       } catch (error) {
         if (error instanceof TimeoutError) {
-          const cached = await readCachedSession(SUPABASE_URL);
+          const cached = await readCachedSession();
           if (cached) {
             // Returning user, Supabase unreachable: hydrate from cache and
             // proceed. supabase-js autoRefreshToken will retry in background.

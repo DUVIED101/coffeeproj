@@ -14,6 +14,7 @@ jest.mock(
   () => ({
     SUPABASE_URL: 'https://test.supabase.co',
     SUPABASE_ANON_KEY: 'test-anon-key',
+    SUPABASE_PROXY_URL: 'https://api.test-proxy.example',
     NODE_ENV: 'test',
     GOOGLE_IOS_CLIENT_ID: undefined,
     YANDEX_CLIENT_ID: undefined,

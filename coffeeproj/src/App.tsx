@@ -28,6 +28,9 @@ import { useNotificationSetup } from './hooks/useNotificationSetup';
 import { routePushPayload, navigationRef } from './navigation/navigationRef';
 import { CommonActions } from '@react-navigation/native';
 import { initI18n } from './i18n';
+import { initSupabase } from './config/supabase';
+import { pickSupabaseHost } from './config/supabaseHost';
+import { migrateSessionKey } from './utils/migrateSessionKey';
 import { InAppToast } from './components/InAppToast';
 import { ShiftConfirmationGate } from './components/ShiftConfirmationGate';
 import { SuspendedUserBanner } from './components/SuspendedUserBanner';
@@ -149,15 +152,33 @@ const appStyles = StyleSheet.create({
 });
 
 function App(): React.JSX.Element {
-  const [i18nReady, setI18nReady] = useState(false);
+  const [bootstrapped, setBootstrapped] = useState(false);
 
   useEffect(() => {
-    initI18n().finally(() => setI18nReady(true));
-    void useDiagnosticsStore.getState().loadLastReport();
-    void useDiagnosticsStore.getState().runProbe();
+    (async () => {
+      // Order matters: migrate the legacy session key BEFORE supabase-js
+      // loads the new key, then resolve the proxy/direct URL, then init the
+      // client. Any error here is non-fatal — fall through so the UI still
+      // mounts and surfaces ConnectionErrorScreen via the existing flow.
+      try {
+        await migrateSessionKey();
+        const { url } = await pickSupabaseHost();
+        initSupabase(url);
+      } catch (error) {
+        console.warn('supabase bootstrap failed', error);
+      }
+      try {
+        await initI18n();
+      } catch (error) {
+        console.warn('i18n init failed', error);
+      }
+      setBootstrapped(true);
+      void useDiagnosticsStore.getState().loadLastReport();
+      void useDiagnosticsStore.getState().runProbe();
+    })();
   }, []);
 
-  if (!i18nReady) {
+  if (!bootstrapped) {
     return <></>;
   }
 

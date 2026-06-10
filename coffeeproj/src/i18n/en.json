@@ -1271,10 +1271,16 @@
     "copyInfo": "Diagnostic info (copy for support)",
     "diagHint": "If this persists, try mobile data instead of Wi-Fi, or contact support.",
     "staleSessionToast": "Working with cached data — some info may be out of date.",
+    "forceProxy": {
+      "label": "Use proxy server",
+      "help": "Turn this on if the app can't connect without a VPN. Requests will route through a fallback server closer to Russia.",
+      "restartHint": "After toggling, fully close and reopen the app for the change to take effect."
+    },
     "probe": {
       "reachable": "OK",
       "unreachable": "Unreachable",
       "supabase": "Server (Supabase)",
+      "supabaseProxy": "Server via proxy (RU)",
       "yandex": "Yandex (RU control)",
       "apple": "Apple (global control)",
       "latencyMs": "{{ms}} ms",

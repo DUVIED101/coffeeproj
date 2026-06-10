@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -6,13 +6,16 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   TextInput,
+  Switch,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SUPABASE_URL } from '@env';
 import { COLORS } from '../config/constants';
 import { useDiagnosticsStore } from '../stores/diagnosticsStore';
 import type { ConnectivityReport, ProbeTargetId } from '../utils/connectivityProbe';
 import { APP_VERSION } from '../config/version';
+import { FORCE_PROXY_STORAGE_KEY, PROXY_URL } from '../config/supabaseHost';
 
 const labelKey = (id: ProbeTargetId): string => `connectionError.probe.${id}`;
 
@@ -23,6 +26,7 @@ const buildDiagnosticText = (report: ConnectivityReport | null): string => {
     return `${r.target}: FAIL ${r.errorName ?? 'http'} ${r.errorMessage ?? r.status ?? ''}`.trim();
   });
   lines.push(`url: ${SUPABASE_URL}`);
+  if (PROXY_URL) lines.push(`proxy: ${PROXY_URL}`);
   lines.push(`app: ${APP_VERSION}`);
   try {
     lines.push(`tz: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`);
@@ -40,6 +44,15 @@ export const ConnectivityReportPanel: React.FC = () => {
   const runProbe = useDiagnosticsStore(s => s.runProbe);
 
   const diagnosticText = useMemo(() => buildDiagnosticText(report), [report]);
+
+  const [forceProxy, setForceProxy] = useState<boolean>(false);
+  useEffect(() => {
+    void AsyncStorage.getItem(FORCE_PROXY_STORAGE_KEY).then(v => setForceProxy(v === 'true'));
+  }, []);
+  const toggleForceProxy = useCallback(async (next: boolean) => {
+    setForceProxy(next);
+    await AsyncStorage.setItem(FORCE_PROXY_STORAGE_KEY, next ? 'true' : 'false');
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -81,6 +94,22 @@ export const ConnectivityReportPanel: React.FC = () => {
           <Text style={styles.secondaryButtonText}>{t('connectionError.rerunCheck')}</Text>
         )}
       </TouchableOpacity>
+
+      {PROXY_URL ? (
+        <View style={styles.toggleBlock}>
+          <View style={styles.toggleRow}>
+            <Text style={styles.toggleLabel}>{t('connectionError.forceProxy.label')}</Text>
+            <Switch
+              value={forceProxy}
+              onValueChange={v => {
+                void toggleForceProxy(v);
+              }}
+            />
+          </View>
+          <Text style={styles.toggleHelp}>{t('connectionError.forceProxy.help')}</Text>
+          <Text style={styles.toggleHelp}>{t('connectionError.forceProxy.restartHint')}</Text>
+        </View>
+      ) : null}
 
       {diagnosticText.length > 0 ? (
         <View style={styles.copyBlock}>
@@ -182,5 +211,27 @@ const styles = StyleSheet.create({
     padding: 8,
     minHeight: 100,
     textAlignVertical: 'top',
+  },
+  toggleBlock: {
+    gap: 4,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  toggleLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.text,
+    flex: 1,
+  },
+  toggleHelp: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    lineHeight: 16,
   },
 });
