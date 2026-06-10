@@ -151,15 +151,20 @@ const appStyles = StyleSheet.create({
   root: { flex: 1 },
 });
 
+// Hard ceiling for the async bootstrap chain (migrateSessionKey → host
+// pick → supabase client init → initI18n). If any of those hang on a flaky
+// platform call, we still mount AppContent so authStore.initialize can run
+// and surface ConnectionErrorScreen via the existing Phase 1 timeout path.
+// Without this, a hung AsyncStorage call would leave the UI stuck on the
+// iOS LaunchScreen indefinitely.
+const BOOTSTRAP_HARD_TIMEOUT_MS = 5000;
+
 function App(): React.JSX.Element {
   const [bootstrapped, setBootstrapped] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      // Order matters: migrate the legacy session key BEFORE supabase-js
-      // loads the new key, then resolve the proxy/direct URL, then init the
-      // client. Any error here is non-fatal — fall through so the UI still
-      // mounts and surfaces ConnectionErrorScreen via the existing flow.
+    let mounted = true;
+    const bootstrap = async (): Promise<void> => {
       try {
         await migrateSessionKey();
         const { url } = await pickSupabaseHost();
@@ -172,10 +177,19 @@ function App(): React.JSX.Element {
       } catch (error) {
         console.warn('i18n init failed', error);
       }
+    };
+    const hardTimeout = new Promise<void>(resolve =>
+      setTimeout(resolve, BOOTSTRAP_HARD_TIMEOUT_MS)
+    );
+    void Promise.race([bootstrap(), hardTimeout]).finally(() => {
+      if (!mounted) return;
       setBootstrapped(true);
       void useDiagnosticsStore.getState().loadLastReport();
       void useDiagnosticsStore.getState().runProbe();
-    })();
+    });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (!bootstrapped) {

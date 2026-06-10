@@ -1308,6 +1308,11 @@
       "noReport": "Данных пока нет — выполняется проверка…"
     }
   },
+  "diagnostic": {
+    "title": "Диагностика",
+    "intro": "Если приложение не подключается, информация ниже поможет понять, на каком этапе сбой. Все значения можно скопировать и переслать в поддержку.",
+    "summaryLabel": "Информация о подключении"
+  },
   "settings": {
     "title": "Настройки",
     "sections": {
@@ -1330,6 +1335,7 @@
       "privacyPolicy": "Политика конфиденциальности",
       "support": "Поддержка",
       "appVersion": "Версия приложения",
+      "diagnostic": "Диагностика",
       "yandexMapsTerms": "Условия API Яндекс Карт",
       "signOut": "Выйти",
       "deleteAccount": "Удалить аккаунт"
@@ -1408,7 +1414,7 @@
       "termsTitle": "Условия использования",
       "privacyTitle": "Политика конфиденциальности",
       "supportTitle": "Поддержка",
-      "supportEmail": "support@quickbarista.app",
+      "supportEmail": "support@bystrobarista.com",
       "supportContactHint": "Свяжитесь с нами:",
       "appVersion": "Версия приложения"
     }
@@ -1513,7 +1519,7 @@
   "account": {
     "suspendedBanner": "Аккаунт ограничен до {{date}}.",
     "bannedTitle": "Доступ к аккаунту заблокирован",
-    "bannedBody": "Если вы считаете блокировку ошибкой, напишите на support@quickbarista.app.",
+    "bannedBody": "Если вы считаете блокировку ошибкой, напишите на support@bystrobarista.com.",
     "bannedReasonLabel": "Причина",
     "bannedSignOut": "Выйти",
     "blockedActionTitle": "Действие недоступно",

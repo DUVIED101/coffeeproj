@@ -1288,6 +1288,11 @@
       "noReport": "No diagnostic data yet — running check…"
     }
   },
+  "diagnostic": {
+    "title": "Diagnostics",
+    "intro": "If the app can't connect, the info below pinpoints where the failure is. All values are copyable and can be sent to support.",
+    "summaryLabel": "Connection info"
+  },
   "settings": {
     "title": "Settings",
     "sections": {
@@ -1310,6 +1315,7 @@
       "privacyPolicy": "Privacy Policy",
       "support": "Support",
       "appVersion": "App Version",
+      "diagnostic": "Diagnostics",
       "yandexMapsTerms": "Yandex Maps API Terms",
       "signOut": "Sign Out",
       "deleteAccount": "Delete Account"
@@ -1388,7 +1394,7 @@
       "termsTitle": "Terms of Service",
       "privacyTitle": "Privacy Policy",
       "supportTitle": "Support",
-      "supportEmail": "support@quickbarista.app",
+      "supportEmail": "support@bystrobarista.com",
       "supportContactHint": "Contact us:",
       "appVersion": "App Version"
     }
@@ -1493,7 +1499,7 @@
   "account": {
     "suspendedBanner": "Account restricted until {{date}}.",
     "bannedTitle": "Account access blocked",
-    "bannedBody": "If you believe this is a mistake, write to support@quickbarista.app.",
+    "bannedBody": "If you believe this is a mistake, write to support@bystrobarista.com.",
     "bannedReasonLabel": "Reason",
     "bannedSignOut": "Sign out",
     "blockedActionTitle": "Action unavailable",

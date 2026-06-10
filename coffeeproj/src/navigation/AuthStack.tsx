@@ -5,6 +5,7 @@ import { SignupScreen } from '../screens/auth/SignupScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { PasswordResetScreen } from '../screens/auth/PasswordResetScreen';
 import { EmailVerificationScreen } from '../screens/auth/EmailVerificationScreen';
+import { DiagnosticScreen } from '../screens/settings/DiagnosticScreen';
 import type { AccountType } from '../types';
 
 export type AuthStackParamList = {
@@ -13,6 +14,7 @@ export type AuthStackParamList = {
   Login: undefined;
   PasswordReset: { email: string };
   EmailVerification: { email: string; accountType: AccountType };
+  Diagnostic: undefined;
 };
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
@@ -30,6 +32,7 @@ export const AuthStack: React.FC = () => {
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="PasswordReset" component={PasswordResetScreen} />
       <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
+      <Stack.Screen name="Diagnostic" component={DiagnosticScreen} />
     </Stack.Navigator>
   );
 };

@@ -11,6 +11,7 @@ import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
 import { SupportScreen } from '../screens/settings/SupportScreen';
 import { MyDisputesScreen } from '../screens/shared/MyDisputesScreen';
 import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
+import { DiagnosticScreen } from '../screens/settings/DiagnosticScreen';
 import { COLORS } from '../config/constants';
 import { useTranslation } from 'react-i18next';
 
@@ -26,6 +27,7 @@ export type SettingsStackParamList = {
   Support: undefined;
   MyDisputes: undefined;
   DisputeDetails: { applicationId?: string; disputeId?: string };
+  Diagnostic: undefined;
 };
 
 const Stack = createNativeStackNavigator<SettingsStackParamList>();
@@ -56,6 +58,7 @@ export const SettingsStack: React.FC = () => {
         component={DisputeDetailsScreen}
         options={{ title: t('disputes.detailsTitle') }}
       />
+      <Stack.Screen name="Diagnostic" component={DiagnosticScreen} />
     </Stack.Navigator>
   );
 };

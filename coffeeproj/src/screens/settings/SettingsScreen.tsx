@@ -156,6 +156,12 @@ export const SettingsScreen: React.FC = () => {
           <View style={styles.separator} />
           <SettingsRow label={t('settings.items.appVersion')} value={APP_VERSION} />
           <View style={styles.separator} />
+          <SettingsRow
+            label={t('settings.items.diagnostic')}
+            onPress={() => navigation.navigate('Diagnostic')}
+            showChevron
+          />
+          <View style={styles.separator} />
           {/* Yandex Maps API free-tier terms (yandex.ru/dev/commercial п.6):
               the app must surface a link to the API terms in About. */}
           <SettingsRow
