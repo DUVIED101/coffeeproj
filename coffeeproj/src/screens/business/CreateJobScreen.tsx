@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { RouteProp } from '@react-navigation/native';
-import { COLORS, EQUIPMENT_TYPES, RADII } from '../../config/constants';
+import { COLORS, EQUIPMENT_TYPES, RADII, SHOW_PLATFORM_FEE } from '../../config/constants';
 import { JobService } from '../../services/JobService';
 import { BusinessService } from '../../services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
@@ -988,16 +988,20 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                 amount: payment.totalAmount.toFixed(2),
               })}
             </Text>
-            <Text style={styles.paymentLine}>
-              {t('createJob.paymentSummary.platformFee', {
-                amount: payment.platformFee.toFixed(2),
-              })}
-            </Text>
-            <Text style={styles.paymentLineTotal}>
-              {t('createJob.paymentSummary.totalWithFee', {
-                amount: payment.totalWithFee.toFixed(2),
-              })}
-            </Text>
+            {SHOW_PLATFORM_FEE && (
+              <>
+                <Text style={styles.paymentLine}>
+                  {t('createJob.paymentSummary.platformFee', {
+                    amount: payment.platformFee.toFixed(2),
+                  })}
+                </Text>
+                <Text style={styles.paymentLineTotal}>
+                  {t('createJob.paymentSummary.totalWithFee', {
+                    amount: payment.totalWithFee.toFixed(2),
+                  })}
+                </Text>
+              </>
+            )}
           </View>
         </View>
 

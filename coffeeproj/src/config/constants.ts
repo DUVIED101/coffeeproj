@@ -1,6 +1,11 @@
 // Platform fee percentage (15%)
 export const PLATFORM_FEE_RATE = 0.15;
 
+// Whether to surface the platform commission to cafes in the UI. Hidden during
+// the free beta (Terms/landing say cafes pay nothing yet); the fee is still
+// computed and stored, so flip this to re-enable the breakdown at launch.
+export const SHOW_PLATFORM_FEE = false;
+
 // Default search radius in meters (50km)
 export const DEFAULT_SEARCH_RADIUS_METERS = 50000;
 

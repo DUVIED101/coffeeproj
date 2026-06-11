@@ -12,7 +12,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect, type RouteProp } from '@react-navigation/native';
-import { COLORS } from '../../config/constants';
+import { COLORS, SHOW_PLATFORM_FEE } from '../../config/constants';
 import { JobService } from '../../services/JobService';
 import { JobOfferService } from '../../services/JobOfferService';
 import { useAuthStore } from '../../stores/authStore';
@@ -284,7 +284,7 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
                 ? t('businessJobDetails.perDay')
                 : t('businessJobDetails.fixed')}
           </Text>
-          {job.payment && (
+          {SHOW_PLATFORM_FEE && job.payment && (
             <View style={styles.paymentDetails}>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>{t('businessJobDetails.platformFee')}</Text>
