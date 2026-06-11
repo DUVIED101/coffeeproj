@@ -12,7 +12,7 @@ const BODY_RU = `Дата вступления в силу: 7 июня 2026 г.
 
 1. ОПИСАНИЕ СЕРВИСА
 БыстроБариста — площадка для подбора персонала в кофейной индустрии. Бариста могут искать вакансии и откликаться на них; кофейни и сети заведений могут размещать вакансии, рассматривать кандидатов, принимать или отклонять отклики. Сервис выступает посредником и не является работодателем ни для одной из сторон.
-Оператор Сервиса: физическое лицо Хаит Даниил Давидович. Контакт: support@quickbarista.app.
+Оператор Сервиса: физическое лицо Хаит Даниил Давидович. Контакт: support@bystrobarista.com.
 
 2. РЕГИСТРАЦИЯ И АККАУНТ
 2.1. Использовать Сервис могут лица, достигшие 18 лет.
@@ -51,10 +51,10 @@ const BODY_RU = `Дата вступления в силу: 7 июня 2026 г.
 К Условиям применяется законодательство Российской Федерации. Споры рассматриваются в судах по месту нахождения оператора Сервиса, если иное не предусмотрено законом о защите прав потребителей.
 
 10. ИЗМЕНЕНИЯ
-Мы можем обновлять Условия. Об существенных изменениях уведомим в приложении. Продолжая использовать Сервис после изменений, вы соглашаетесь с новой редакцией.
+Мы можем обновлять Условия. О существенных изменениях уведомим в приложении. Продолжая использовать Сервис после изменений, вы соглашаетесь с новой редакцией.
 
 11. КОНТАКТЫ
-По вопросам, связанным с Условиями, пишите на support@quickbarista.app.`;
+По вопросам, связанным с Условиями, пишите на support@bystrobarista.com.`;
 
 const BODY_EN = `Effective date: 7 June 2026.
 
@@ -62,7 +62,7 @@ These Terms of Service govern your access to and use of the BystroBarista mobile
 
 1. SERVICE DESCRIPTION
 BystroBarista is a marketplace for staffing in the coffee industry. Baristas can browse vacancies and apply to them; coffee shops and chains can post vacancies, review candidates, and accept or reject applications. The Service acts as an intermediary and is not an employer of any party.
-Service operator: Khait Daniil Davidovich (individual / physical person). Contact: support@quickbarista.app.
+Service operator: Khait Daniil Davidovich (individual / physical person). Contact: support@bystrobarista.com.
 
 2. SIGN-UP AND ACCOUNT
 2.1. You must be at least 18 years old to use the Service.
@@ -104,7 +104,7 @@ These Terms are governed by the laws of the Russian Federation. Disputes are hea
 We may update these Terms. We will notify you of material changes in the app. Continued use of the Service after changes means you accept the new version.
 
 11. CONTACT
-For any questions about these Terms, write to support@quickbarista.app.`;
+For any questions about these Terms, write to support@bystrobarista.com.`;
 
 export const TermsScreen: React.FC = () => {
   const navigation = useNavigation();

@@ -15,7 +15,7 @@ const BODY_RU = `Дата вступления в силу: 7 июня 2026 г.
 1. КТО МЫ
 БыстроБариста — мобильное приложение для подбора персонала в кофейной индустрии на территории Российской Федерации.
 Оператор персональных данных: физическое лицо Хаит Даниил Давидович.
-Контакт для запросов по обработке персональных данных: support@quickbarista.app.
+Контакт для запросов по обработке персональных данных: support@bystrobarista.com.
 
 2. КАКИЕ ДАННЫЕ МЫ СОБИРАЕМ
 2.1. При регистрации: адрес электронной почты, номер телефона, имя, выбранная роль (бариста / бизнес), пароль (хранится в зашифрованном виде).
@@ -68,7 +68,7 @@ const BODY_RU = `Дата вступления в силу: 7 июня 2026 г.
 Мы можем обновлять Политику. О существенных изменениях уведомим в приложении или по электронной почте.
 
 12. КОНТАКТЫ
-По любым вопросам, связанным с обработкой персональных данных, пишите на support@quickbarista.app.`;
+По любым вопросам, связанным с обработкой персональных данных, пишите на support@bystrobarista.com.`;
 
 const BODY_EN = `Effective date: 7 June 2026.
 
@@ -79,7 +79,7 @@ By using the Service you confirm that you have read and agree to this Policy. If
 1. WHO WE ARE
 BystroBarista is a mobile app for matching staff in the coffee industry within the Russian Federation.
 Personal data operator: Khait Daniil Davidovich (individual / physical person).
-Contact for personal data inquiries: support@quickbarista.app.
+Contact for personal data inquiries: support@bystrobarista.com.
 
 2. WHAT WE COLLECT
 2.1. At sign-up: email address, phone number, name, selected role (barista / business), password (stored hashed).
@@ -132,7 +132,7 @@ The Service is not intended for persons under 18. If we become aware that we hav
 We may update this Policy. We will notify you of material changes in the app or by email.
 
 12. CONTACT
-For any questions about personal data processing, write to support@quickbarista.app.`;
+For any questions about personal data processing, write to support@bystrobarista.com.`;
 
 export const PrivacyPolicyScreen: React.FC = () => {
   const navigation = useNavigation();
