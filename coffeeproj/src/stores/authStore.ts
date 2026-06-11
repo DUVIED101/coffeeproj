@@ -282,47 +282,54 @@ async function fetchUserProfile(userId: string): Promise<User | null> {
   };
 }
 
+// Registered explicitly from App.tsx bootstrap (post-migrateSessionKey) so
+// the listener attaches AFTER any session-key migration has settled the
+// AsyncStorage state — otherwise supabase-js's async initialize() races
+// the migration and the listener can see stale events.
+//
 // IMPORTANT: supabase-js docs forbid awaiting other supabase calls inside
 // onAuthStateChange — it deadlocks the auth SDK lock. Defer work via setTimeout(0).
-supabase.auth.onAuthStateChange((event, session) => {
-  console.log('Auth state changed:', event);
+export function registerAuthListener(): void {
+  supabase.auth.onAuthStateChange((event, session) => {
+    console.log('Auth state changed:', event);
 
-  const store = useAuthStore.getState();
+    const store = useAuthStore.getState();
 
-  if (event === 'SIGNED_IN' && session) {
-    // SIGNED_IN also fires right after supabase.auth.signUp(), before the
-    // client has had a chance to upsert the public.users row. We must NOT
-    // sign the user out here on a missing profile — that would race with
-    // AuthService.signUpWithEmail and invalidate the session it needs.
-    // The screens (SignupScreen, LoginScreen) own profile-load failures.
-    store.setSession(session);
-    setTimeout(() => {
-      fetchUserProfile(session.user.id)
-        .then(user => {
-          if (!user) {
-            // Normal on signup — ProfileBootstrap will create the row and call
-            // setUser itself. console.log only so this doesn't surface in LogBox.
-            console.log('Profile not yet present after SIGNED_IN; waiting for bootstrap');
-            return;
-          }
-          if (!user.isActive) {
-            // Same fire-and-forget pattern as initialize() — don't await /logout.
-            useAuthStore.getState().clearAuth();
-            supabase.auth.signOut().catch(() => {});
-            return;
-          }
-          useAuthStore.getState().setUser(user);
-        })
-        .catch(err => {
-          console.error('Error fetching user profile on SIGNED_IN:', err);
-        });
-    }, 0);
-  } else if (event === 'TOKEN_REFRESHED' && session) {
-    // Periodic token refresh: just update the session. Do NOT refetch the
-    // profile — user data hasn't changed and a transient fetch failure must
-    // not log the user out mid-session.
-    store.setSession(session);
-  } else if (event === 'SIGNED_OUT') {
-    store.clearAuth();
-  }
-});
+    if (event === 'SIGNED_IN' && session) {
+      // SIGNED_IN also fires right after supabase.auth.signUp(), before the
+      // client has had a chance to upsert the public.users row. We must NOT
+      // sign the user out here on a missing profile — that would race with
+      // AuthService.signUpWithEmail and invalidate the session it needs.
+      // The screens (SignupScreen, LoginScreen) own profile-load failures.
+      store.setSession(session);
+      setTimeout(() => {
+        fetchUserProfile(session.user.id)
+          .then(user => {
+            if (!user) {
+              // Normal on signup — ProfileBootstrap will create the row and call
+              // setUser itself. console.log only so this doesn't surface in LogBox.
+              console.log('Profile not yet present after SIGNED_IN; waiting for bootstrap');
+              return;
+            }
+            if (!user.isActive) {
+              // Same fire-and-forget pattern as initialize() — don't await /logout.
+              useAuthStore.getState().clearAuth();
+              supabase.auth.signOut().catch(() => {});
+              return;
+            }
+            useAuthStore.getState().setUser(user);
+          })
+          .catch(err => {
+            console.error('Error fetching user profile on SIGNED_IN:', err);
+          });
+      }, 0);
+    } else if (event === 'TOKEN_REFRESHED' && session) {
+      // Periodic token refresh: just update the session. Do NOT refetch the
+      // profile — user data hasn't changed and a transient fetch failure must
+      // not log the user out mid-session.
+      store.setSession(session);
+    } else if (event === 'SIGNED_OUT') {
+      store.clearAuth();
+    }
+  });
+}

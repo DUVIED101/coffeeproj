@@ -28,8 +28,7 @@ import { useNotificationSetup } from './hooks/useNotificationSetup';
 import { routePushPayload, navigationRef } from './navigation/navigationRef';
 import { CommonActions } from '@react-navigation/native';
 import { initI18n } from './i18n';
-import { initSupabase } from './config/supabase';
-import { pickSupabaseHost } from './config/supabaseHost';
+import { registerAuthListener } from './stores/authStore';
 import { migrateSessionKey } from './utils/migrateSessionKey';
 import { InAppToast } from './components/InAppToast';
 import { ShiftConfirmationGate } from './components/ShiftConfirmationGate';
@@ -165,12 +164,20 @@ function App(): React.JSX.Element {
   useEffect(() => {
     let mounted = true;
     const bootstrap = async (): Promise<void> => {
+      // migrateSessionKey must finish before any supabase.auth call reads
+      // storage, otherwise existing users boot signed-out and the listener
+      // misses their initial SIGNED_IN event.
       try {
         await migrateSessionKey();
-        const { url } = await pickSupabaseHost();
-        initSupabase(url);
       } catch (error) {
-        console.warn('supabase bootstrap failed', error);
+        console.warn('session-key migration failed', error);
+      }
+      // Listener attaches AFTER migration so it doesn't race supabase-js's
+      // own async initialize().
+      try {
+        registerAuthListener();
+      } catch (error) {
+        console.warn('auth-listener registration failed', error);
       }
       try {
         await initI18n();
