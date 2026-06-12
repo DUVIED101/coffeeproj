@@ -1,12 +1,10 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../config/constants';
 import type { AccountType } from '../../types';
-import { APP_VERSION } from '../../config/version';
-import { getDeviceTimezone, pickSupabaseHostSync, PROXY_URL } from '../../config/supabaseHost';
 
 type AuthStackParamList = {
   AccountType: undefined;
@@ -25,16 +23,6 @@ export const AccountTypeScreen: React.FC<Props> = ({ navigation }) => {
   const handleSelectType = (accountType: AccountType) => {
     navigation.navigate('Signup', { accountType });
   };
-
-  // Build-info banner (Phase 8.6 Phase 2). Surfaces the host-routing pick
-  // and TZ at a glance — RU testers without a sign-in can confirm whether
-  // the device is going through the proxy by reading this line.
-  const bootInfo = useMemo(() => {
-    const tz = getDeviceTimezone() ?? '?';
-    const { url, reason } = pickSupabaseHostSync();
-    const host = url.replace(/^https?:\/\//, '');
-    return `v${APP_VERSION} · tz:${tz} · ${reason}:${host}${PROXY_URL ? '' : ' · proxy:unset'}`;
-  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -82,10 +70,6 @@ export const AccountTypeScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.linkText}>{t('auth.accountType.loginLink')}</Text>
           </TouchableOpacity>
         </View>
-
-        <Text style={styles.bootInfo} numberOfLines={2}>
-          {bootInfo}
-        </Text>
       </View>
     </SafeAreaView>
   );
@@ -169,13 +153,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.primary,
     fontWeight: '600',
-  },
-  bootInfo: {
-    marginTop: 8,
-    fontSize: 10,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-    fontFamily: 'Menlo',
-    opacity: 0.6,
   },
 });

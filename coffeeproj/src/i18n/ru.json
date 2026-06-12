@@ -1342,6 +1342,7 @@
       "notifications": "Уведомления",
       "visibility": "Видимость профиля",
       "myDisputes": "Мои жалобы",
+      "documents": "Документы",
       "terms": "Условия использования",
       "privacyPolicy": "Политика конфиденциальности",
       "personalDataPolicy": "Политика обработки персональных данных",
@@ -1429,7 +1430,7 @@
       "personalDataPolicyTitle": "Политика обработки персональных данных",
       "dataConsentTitle": "Согласие на обработку персональных данных",
       "supportTitle": "Поддержка",
-      "supportEmail": "support@bystrobarista.com",
+      "supportEmail": "bystrobarista@gmail.com",
       "supportContactHint": "Свяжитесь с нами:",
       "appVersion": "Версия приложения"
     }
@@ -1534,7 +1535,7 @@
   "account": {
     "suspendedBanner": "Аккаунт ограничен до {{date}}.",
     "bannedTitle": "Доступ к аккаунту заблокирован",
-    "bannedBody": "Если вы считаете блокировку ошибкой, напишите на support@bystrobarista.com.",
+    "bannedBody": "Если вы считаете блокировку ошибкой, напишите на bystrobarista@gmail.com.",
     "bannedReasonLabel": "Причина",
     "bannedSignOut": "Выйти",
     "blockedActionTitle": "Действие недоступно",

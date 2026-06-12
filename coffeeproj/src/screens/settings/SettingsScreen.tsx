@@ -1,5 +1,5 @@
 import React, { useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -137,26 +137,8 @@ export const SettingsScreen: React.FC = () => {
         <Text style={styles.sectionHeader}>{t('settings.sections.about').toUpperCase()}</Text>
         <View style={styles.card}>
           <SettingsRow
-            label={t('settings.items.terms')}
-            onPress={() => navigation.navigate('Terms')}
-            showChevron
-          />
-          <View style={styles.separator} />
-          <SettingsRow
-            label={t('settings.items.privacyPolicy')}
-            onPress={() => navigation.navigate('PrivacyPolicy')}
-            showChevron
-          />
-          <View style={styles.separator} />
-          <SettingsRow
-            label={t('settings.items.personalDataPolicy')}
-            onPress={() => navigation.navigate('PersonalDataPolicy')}
-            showChevron
-          />
-          <View style={styles.separator} />
-          <SettingsRow
-            label={t('settings.items.dataConsent')}
-            onPress={() => navigation.navigate('DataConsent')}
+            label={t('settings.items.documents')}
+            onPress={() => navigation.navigate('Documents')}
             showChevron
           />
           <View style={styles.separator} />
@@ -167,22 +149,6 @@ export const SettingsScreen: React.FC = () => {
           />
           <View style={styles.separator} />
           <SettingsRow label={t('settings.items.appVersion')} value={APP_VERSION} />
-          <View style={styles.separator} />
-          <SettingsRow
-            label={t('settings.items.diagnostic')}
-            onPress={() => navigation.navigate('Diagnostic')}
-            showChevron
-          />
-          <View style={styles.separator} />
-          {/* Yandex Maps API free-tier terms (yandex.ru/dev/commercial п.6):
-              the app must surface a link to the API terms in About. */}
-          <SettingsRow
-            label={t('settings.items.yandexMapsTerms')}
-            onPress={() => {
-              void Linking.openURL('https://yandex.ru/legal/maps_api/');
-            }}
-            showChevron
-          />
         </View>
 
         <Text style={styles.sectionHeader}>{t('settings.sections.activity').toUpperCase()}</Text>

@@ -6,6 +6,7 @@ import { ChangePasswordScreen } from '../screens/settings/ChangePasswordScreen';
 import { NotificationsScreen } from '../screens/settings/NotificationsScreen';
 import { DeleteAccountScreen } from '../screens/settings/DeleteAccountScreen';
 import { VisibilityScreen } from '../screens/settings/VisibilityScreen';
+import { DocumentsScreen } from '../screens/settings/DocumentsScreen';
 import { TermsScreen } from '../screens/settings/TermsScreen';
 import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
 import { PersonalDataPolicyScreen } from '../screens/settings/PersonalDataPolicyScreen';
@@ -24,6 +25,7 @@ export type SettingsStackParamList = {
   Notifications: undefined;
   DeleteAccount: undefined;
   Visibility: undefined;
+  Documents: undefined;
   Terms: undefined;
   PrivacyPolicy: undefined;
   PersonalDataPolicy: undefined;
@@ -53,6 +55,7 @@ export const SettingsStack: React.FC = () => {
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
       <Stack.Screen name="Visibility" component={VisibilityScreen} />
+      <Stack.Screen name="Documents" component={DocumentsScreen} />
       <Stack.Screen name="Terms" component={TermsScreen} />
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       <Stack.Screen name="PersonalDataPolicy" component={PersonalDataPolicyScreen} />

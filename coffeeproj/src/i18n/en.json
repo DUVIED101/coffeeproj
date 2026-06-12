@@ -1322,6 +1322,7 @@
       "notifications": "Notifications",
       "visibility": "Profile Visibility",
       "myDisputes": "My Complaints",
+      "documents": "Documents",
       "terms": "Terms of Service",
       "privacyPolicy": "Privacy Policy",
       "personalDataPolicy": "Personal Data Processing Policy",
@@ -1409,7 +1410,7 @@
       "personalDataPolicyTitle": "Personal Data Processing Policy",
       "dataConsentTitle": "Consent to Personal Data Processing",
       "supportTitle": "Support",
-      "supportEmail": "support@bystrobarista.com",
+      "supportEmail": "bystrobarista@gmail.com",
       "supportContactHint": "Contact us:",
       "appVersion": "App Version"
     }
@@ -1514,7 +1515,7 @@
   "account": {
     "suspendedBanner": "Account restricted until {{date}}.",
     "bannedTitle": "Account access blocked",
-    "bannedBody": "If you believe this is a mistake, write to support@bystrobarista.com.",
+    "bannedBody": "If you believe this is a mistake, write to bystrobarista@gmail.com.",
     "bannedReasonLabel": "Reason",
     "bannedSignOut": "Sign out",
     "blockedActionTitle": "Action unavailable",
