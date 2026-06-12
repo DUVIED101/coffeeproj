@@ -549,7 +549,18 @@
       "errorGeneric": "Не удалось создать аккаунт. Попробуйте ещё раз.",
       "errorEmailTaken": "Этот email уже зарегистрирован. Войдите в существующий аккаунт.",
       "errorInvalidEmail": "Введите корректный email.",
-      "errorPasswordRules": "Пароль не соответствует требованиям."
+      "errorPasswordRules": "Пароль не соответствует требованиям.",
+      "consent": {
+        "intro": "Для регистрации любым способом отметьте:",
+        "termsPrivacyPrefix": "Я принимаю ",
+        "termsLink": "Условия использования",
+        "termsPrivacyAnd": " и ",
+        "privacyLink": "Политику конфиденциальности",
+        "dataProcessingPrefix": "Я даю ",
+        "dataProcessingLink": "согласие на обработку персональных данных",
+        "errorTermsRequired": "Чтобы продолжить, примите Условия использования и Политику конфиденциальности.",
+        "errorDataRequired": "Чтобы продолжить, дайте согласие на обработку персональных данных."
+      }
     },
     "login": {
       "title": "С возвращением",
@@ -1333,6 +1344,8 @@
       "myDisputes": "Мои жалобы",
       "terms": "Условия использования",
       "privacyPolicy": "Политика конфиденциальности",
+      "personalDataPolicy": "Политика обработки персональных данных",
+      "dataConsent": "Согласие на обработку персональных данных",
       "support": "Поддержка",
       "appVersion": "Версия приложения",
       "diagnostic": "Диагностика",
@@ -1413,6 +1426,8 @@
     "legal": {
       "termsTitle": "Условия использования",
       "privacyTitle": "Политика конфиденциальности",
+      "personalDataPolicyTitle": "Политика обработки персональных данных",
+      "dataConsentTitle": "Согласие на обработку персональных данных",
       "supportTitle": "Поддержка",
       "supportEmail": "support@bystrobarista.com",
       "supportContactHint": "Свяжитесь с нами:",

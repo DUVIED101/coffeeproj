@@ -543,7 +543,18 @@
       "errorGeneric": "Failed to create account. Please try again.",
       "errorEmailTaken": "This email is already registered. Please login instead.",
       "errorInvalidEmail": "Please enter a valid email address.",
-      "errorPasswordRules": "Password does not meet the requirements."
+      "errorPasswordRules": "Password does not meet the requirements.",
+      "consent": {
+        "intro": "To sign up with any method, please confirm:",
+        "termsPrivacyPrefix": "I accept the ",
+        "termsLink": "Terms of Service",
+        "termsPrivacyAnd": " and ",
+        "privacyLink": "Privacy Policy",
+        "dataProcessingPrefix": "I give ",
+        "dataProcessingLink": "consent to the processing of my personal data",
+        "errorTermsRequired": "To continue, please accept the Terms of Service and Privacy Policy.",
+        "errorDataRequired": "To continue, please give consent to the processing of your personal data."
+      }
     },
     "login": {
       "title": "Welcome Back",
@@ -1313,6 +1324,8 @@
       "myDisputes": "My Complaints",
       "terms": "Terms of Service",
       "privacyPolicy": "Privacy Policy",
+      "personalDataPolicy": "Personal Data Processing Policy",
+      "dataConsent": "Consent to Personal Data Processing",
       "support": "Support",
       "appVersion": "App Version",
       "diagnostic": "Diagnostics",
@@ -1393,6 +1406,8 @@
     "legal": {
       "termsTitle": "Terms of Service",
       "privacyTitle": "Privacy Policy",
+      "personalDataPolicyTitle": "Personal Data Processing Policy",
+      "dataConsentTitle": "Consent to Personal Data Processing",
       "supportTitle": "Support",
       "supportEmail": "support@bystrobarista.com",
       "supportContactHint": "Contact us:",

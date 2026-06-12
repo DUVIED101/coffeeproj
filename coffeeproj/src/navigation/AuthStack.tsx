@@ -6,6 +6,10 @@ import { LoginScreen } from '../screens/auth/LoginScreen';
 import { PasswordResetScreen } from '../screens/auth/PasswordResetScreen';
 import { EmailVerificationScreen } from '../screens/auth/EmailVerificationScreen';
 import { DiagnosticScreen } from '../screens/settings/DiagnosticScreen';
+import { TermsScreen } from '../screens/settings/TermsScreen';
+import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
+import { DataConsentScreen } from '../screens/settings/DataConsentScreen';
+import { COLORS } from '../config/constants';
 import type { AccountType } from '../types';
 
 export type AuthStackParamList = {
@@ -15,6 +19,9 @@ export type AuthStackParamList = {
   PasswordReset: { email: string };
   EmailVerification: { email: string; accountType: AccountType };
   Diagnostic: undefined;
+  Terms: undefined;
+  PrivacyPolicy: undefined;
+  DataConsent: undefined;
 };
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
@@ -33,6 +40,36 @@ export const AuthStack: React.FC = () => {
       <Stack.Screen name="PasswordReset" component={PasswordResetScreen} />
       <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
       <Stack.Screen name="Diagnostic" component={DiagnosticScreen} />
+      <Stack.Screen
+        name="Terms"
+        component={TermsScreen}
+        options={{
+          headerShown: true,
+          headerStyle: { backgroundColor: COLORS.background },
+          headerTintColor: COLORS.text,
+          headerShadowVisible: false,
+        }}
+      />
+      <Stack.Screen
+        name="PrivacyPolicy"
+        component={PrivacyPolicyScreen}
+        options={{
+          headerShown: true,
+          headerStyle: { backgroundColor: COLORS.background },
+          headerTintColor: COLORS.text,
+          headerShadowVisible: false,
+        }}
+      />
+      <Stack.Screen
+        name="DataConsent"
+        component={DataConsentScreen}
+        options={{
+          headerShown: true,
+          headerStyle: { backgroundColor: COLORS.background },
+          headerTintColor: COLORS.text,
+          headerShadowVisible: false,
+        }}
+      />
     </Stack.Navigator>
   );
 };

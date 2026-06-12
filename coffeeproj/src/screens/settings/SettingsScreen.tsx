@@ -149,6 +149,18 @@ export const SettingsScreen: React.FC = () => {
           />
           <View style={styles.separator} />
           <SettingsRow
+            label={t('settings.items.personalDataPolicy')}
+            onPress={() => navigation.navigate('PersonalDataPolicy')}
+            showChevron
+          />
+          <View style={styles.separator} />
+          <SettingsRow
+            label={t('settings.items.dataConsent')}
+            onPress={() => navigation.navigate('DataConsent')}
+            showChevron
+          />
+          <View style={styles.separator} />
+          <SettingsRow
             label={t('settings.items.support')}
             onPress={() => navigation.navigate('Support')}
             showChevron

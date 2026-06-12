@@ -17,6 +17,7 @@ type Provider = 'apple' | 'google' | 'yandex';
 type Props = {
   accountType?: AccountType;
   separatorLabel?: string;
+  disabled?: boolean;
 };
 
 // Yandex iOS callback format used by their own Login SDK (and the only
@@ -54,7 +55,11 @@ const ensureGoogleConfigured = (): boolean => {
   return true;
 };
 
-export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel }) => {
+export const SocialAuthButtons: React.FC<Props> = ({
+  accountType,
+  separatorLabel,
+  disabled = false,
+}) => {
   const { t } = useTranslation();
   const [busy, setBusy] = useState<Provider | null>(null);
 
@@ -207,11 +212,11 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
         </View>
       )}
 
-      <View style={styles.row}>
+      <View style={[styles.row, disabled && styles.rowDisabled]}>
         <TouchableOpacity
           style={[styles.iconButton, styles.appleButton]}
           onPress={handleApple}
-          disabled={busy !== null}
+          disabled={busy !== null || disabled}
           activeOpacity={0.8}
           accessibilityRole="button"
           accessibilityLabel={t('auth.social.appleLabel')}>
@@ -225,7 +230,7 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
         <TouchableOpacity
           style={[styles.iconButton, styles.googleButton]}
           onPress={handleGoogle}
-          disabled={busy !== null}
+          disabled={busy !== null || disabled}
           activeOpacity={0.8}
           accessibilityRole="button"
           accessibilityLabel={t('auth.social.googleLabel')}>
@@ -239,7 +244,7 @@ export const SocialAuthButtons: React.FC<Props> = ({ accountType, separatorLabel
         <TouchableOpacity
           style={[styles.iconButton, styles.yandexButton]}
           onPress={handleYandex}
-          disabled={busy !== null}
+          disabled={busy !== null || disabled}
           activeOpacity={0.8}
           accessibilityRole="button"
           accessibilityLabel={t('auth.social.yandexLabel')}>
@@ -280,6 +285,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 24,
     paddingVertical: 4,
+  },
+  rowDisabled: {
+    opacity: 0.4,
   },
   iconButton: {
     width: ICON_SIZE,

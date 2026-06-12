@@ -8,6 +8,8 @@ import { DeleteAccountScreen } from '../screens/settings/DeleteAccountScreen';
 import { VisibilityScreen } from '../screens/settings/VisibilityScreen';
 import { TermsScreen } from '../screens/settings/TermsScreen';
 import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
+import { PersonalDataPolicyScreen } from '../screens/settings/PersonalDataPolicyScreen';
+import { DataConsentScreen } from '../screens/settings/DataConsentScreen';
 import { SupportScreen } from '../screens/settings/SupportScreen';
 import { MyDisputesScreen } from '../screens/shared/MyDisputesScreen';
 import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
@@ -24,6 +26,8 @@ export type SettingsStackParamList = {
   Visibility: undefined;
   Terms: undefined;
   PrivacyPolicy: undefined;
+  PersonalDataPolicy: undefined;
+  DataConsent: undefined;
   Support: undefined;
   MyDisputes: undefined;
   DisputeDetails: { applicationId?: string; disputeId?: string };
@@ -51,6 +55,8 @@ export const SettingsStack: React.FC = () => {
       <Stack.Screen name="Visibility" component={VisibilityScreen} />
       <Stack.Screen name="Terms" component={TermsScreen} />
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+      <Stack.Screen name="PersonalDataPolicy" component={PersonalDataPolicyScreen} />
+      <Stack.Screen name="DataConsent" component={DataConsentScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
       <Stack.Screen name="MyDisputes" component={MyDisputesScreen} />
       <Stack.Screen

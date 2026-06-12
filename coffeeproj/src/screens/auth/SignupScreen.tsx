@@ -43,10 +43,33 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedDataConsent, setAcceptedDataConsent] = useState(false);
 
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
+  const [termsError, setTermsError] = useState<string | null>(null);
+  const [dataConsentError, setDataConsentError] = useState<string | null>(null);
+
+  const consentsValid = acceptedTerms && acceptedDataConsent;
+
+  const validateConsents = (): boolean => {
+    let ok = true;
+    if (!acceptedTerms) {
+      setTermsError(t('auth.signup.consent.errorTermsRequired'));
+      ok = false;
+    } else {
+      setTermsError(null);
+    }
+    if (!acceptedDataConsent) {
+      setDataConsentError(t('auth.signup.consent.errorDataRequired'));
+      ok = false;
+    } else {
+      setDataConsentError(null);
+    }
+    return ok;
+  };
 
   const validateForm = (): boolean => {
     let isValid = true;
@@ -65,6 +88,8 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
     } else {
       setConfirmPasswordError(null);
     }
+
+    if (!validateConsents()) isValid = false;
 
     return isValid;
   };
@@ -198,7 +223,75 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
               )}
             </TouchableOpacity>
 
-            <SocialAuthButtons accountType={accountType} separatorLabel={t('auth.social.or')} />
+            <SocialAuthButtons
+              accountType={accountType}
+              separatorLabel={t('auth.social.or')}
+              disabled={!consentsValid}
+            />
+
+            {/* Consent checkboxes — apply to all sign-up methods above */}
+            <View style={styles.consentGroup}>
+              <Text style={styles.consentIntro}>{t('auth.signup.consent.intro')}</Text>
+              <TouchableOpacity
+                style={styles.consentRow}
+                onPress={() => {
+                  setAcceptedTerms(v => !v);
+                  setTermsError(null);
+                }}
+                activeOpacity={0.7}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: acceptedTerms }}>
+                <View
+                  style={[
+                    styles.checkbox,
+                    acceptedTerms && styles.checkboxChecked,
+                    termsError ? styles.checkboxError : null,
+                  ]}>
+                  {acceptedTerms && <Text style={styles.checkboxMark}>✓</Text>}
+                </View>
+                <Text style={styles.consentLabel}>
+                  {t('auth.signup.consent.termsPrivacyPrefix')}
+                  <Text style={styles.consentLink} onPress={() => navigation.navigate('Terms')}>
+                    {t('auth.signup.consent.termsLink')}
+                  </Text>
+                  {t('auth.signup.consent.termsPrivacyAnd')}
+                  <Text
+                    style={styles.consentLink}
+                    onPress={() => navigation.navigate('PrivacyPolicy')}>
+                    {t('auth.signup.consent.privacyLink')}
+                  </Text>
+                </Text>
+              </TouchableOpacity>
+              {termsError && <Text style={styles.errorText}>{termsError}</Text>}
+
+              <TouchableOpacity
+                style={styles.consentRow}
+                onPress={() => {
+                  setAcceptedDataConsent(v => !v);
+                  setDataConsentError(null);
+                }}
+                activeOpacity={0.7}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: acceptedDataConsent }}>
+                <View
+                  style={[
+                    styles.checkbox,
+                    acceptedDataConsent && styles.checkboxChecked,
+                    dataConsentError ? styles.checkboxError : null,
+                  ]}>
+                  {acceptedDataConsent && <Text style={styles.checkboxMark}>✓</Text>}
+                </View>
+                <Text style={styles.consentLabel}>
+                  {t('auth.signup.consent.dataProcessingPrefix')}
+                  <Text
+                    style={styles.consentLink}
+                    onPress={() => navigation.navigate('DataConsent')}>
+                    {t('auth.signup.consent.dataProcessingLink')}
+                  </Text>
+                </Text>
+              </TouchableOpacity>
+              {dataConsentError && <Text style={styles.errorText}>{dataConsentError}</Text>}
+            </View>
           </View>
 
           {/* Footer */}
@@ -225,14 +318,14 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 32,
+    paddingTop: 8,
+    paddingBottom: 16,
   },
   backButton: {
     alignSelf: 'flex-start',
-    paddingVertical: 4,
+    paddingVertical: 2,
     paddingHorizontal: 4,
-    marginBottom: 8,
+    marginBottom: 2,
   },
   backArrow: {
     fontSize: 36,
@@ -240,23 +333,23 @@ const styles = StyleSheet.create({
     color: COLORS.text,
   },
   header: {
-    marginBottom: 32,
+    marginBottom: 20,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: COLORS.text,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
     color: COLORS.textSecondary,
   },
   form: {
-    gap: 20,
+    gap: 14,
   },
   inputGroup: {
-    gap: 8,
+    gap: 6,
   },
   label: {
     fontSize: 14,
@@ -289,7 +382,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingVertical: 14,
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: 4,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -303,7 +396,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 32,
+    marginTop: 16,
   },
   footerText: {
     fontSize: 14,
@@ -311,6 +404,54 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: 14,
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
+  consentGroup: {
+    gap: 8,
+    marginTop: 4,
+  },
+  consentIntro: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginBottom: 2,
+  },
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  checkboxChecked: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  checkboxError: {
+    borderColor: COLORS.error,
+  },
+  checkboxMark: {
+    color: COLORS.background,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 16,
+  },
+  consentLabel: {
+    flex: 1,
+    fontSize: 13,
+    color: COLORS.text,
+    lineHeight: 18,
+  },
+  consentLink: {
     color: COLORS.primary,
     fontWeight: '600',
   },
