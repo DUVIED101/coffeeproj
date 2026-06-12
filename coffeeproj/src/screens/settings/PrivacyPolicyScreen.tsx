@@ -20,7 +20,7 @@ const BODY_RU = `Дата публикации: 12 июня 2026 г.
 
 Для обеспечения использования Вами Сервиса Ваша Персональная информация собирается и обрабатывается оператором — Хаитом Даниилом Давидовичем, физическим лицом, действующим в соответствии с законодательством Российской Федерации (далее — «Оператор»).
 
-Направить обращение лицу, ответственному за организацию обработки персональных данных, можно по адресу электронной почты: support@bystrobarista.com.
+Направить обращение лицу, ответственному за организацию обработки персональных данных, можно по адресу электронной почты: bystrobarista@gmail.com.
 
 3. КАКОВА ЦЕЛЬ ДАННОЙ ПОЛИТИКИ
 
@@ -139,7 +139,7 @@ const BODY_RU = `Дата публикации: 12 июня 2026 г.
 
 9.2. Как Вы можете реализовать свои права
 
-Для осуществления вышеперечисленных прав, пожалуйста, войдите в свою учётную запись и воспользуйтесь функциями интерфейса Сервиса (раздел «Профиль», Настройки → Удалить аккаунт), а в случае отсутствия специальной функции в интерфейсе свяжитесь с Оператором по адресу электронной почты support@bystrobarista.com.
+Для осуществления вышеперечисленных прав, пожалуйста, войдите в свою учётную запись и воспользуйтесь функциями интерфейса Сервиса (раздел «Профиль», Настройки → Удалить аккаунт), а в случае отсутствия специальной функции в интерфейсе свяжитесь с Оператором по адресу электронной почты bystrobarista@gmail.com.
 
 Если Вы не удовлетворены тем, как Оператор обрабатывает Вашу Персональную информацию, пожалуйста, сообщите Оператору, и Оператор рассмотрит Вашу претензию. Если Вы считаете, что Ваши права в отношении обработки Персональной информации нарушены Оператором, Вы имеете право подать жалобу в компетентный орган.
 
@@ -172,7 +172,7 @@ Push-токены передаются Apple Push Notification Service для д
 
 12. ВОПРОСЫ И ПРЕДЛОЖЕНИЯ
 
-Оператор приветствует Ваши вопросы и предложения, касающиеся исполнения или изменения настоящей Политики. Пожалуйста, воспользуйтесь адресом электронной почты support@bystrobarista.com. Вы также можете воспользоваться этим адресом для направления запросов о реализации Ваших прав или жалоб относительно обработки Персональной информации или незаконности её обработки.`;
+Оператор приветствует Ваши вопросы и предложения, касающиеся исполнения или изменения настоящей Политики. Пожалуйста, воспользуйтесь адресом электронной почты bystrobarista@gmail.com. Вы также можете воспользоваться этим адресом для направления запросов о реализации Ваших прав или жалоб относительно обработки Персональной информации или незаконности её обработки.`;
 
 const BODY_EN = `Publication date: 12 June 2026.
 
@@ -188,7 +188,7 @@ Please note that use of individual features of the Service may be regulated by a
 
 To enable Your use of the Service, Your Personal Information is collected and processed by the Operator — Daniil Davidovich Khait, a natural person acting in accordance with the laws of the Russian Federation (the "Operator").
 
-You may send an inquiry to the person responsible for organizing the processing of personal data at: support@bystrobarista.com.
+You may send an inquiry to the person responsible for organizing the processing of personal data at: bystrobarista@gmail.com.
 
 3. PURPOSE OF THIS POLICY
 
@@ -307,7 +307,7 @@ When You use the Service, the transfer of Personal Information takes place with 
 
 9.2. How You can exercise Your rights
 
-To exercise the above rights, please sign in to Your account and use the Service's interface features (the "Profile" section, Settings → Delete account); in the absence of a specific feature in the interface, contact the Operator at support@bystrobarista.com.
+To exercise the above rights, please sign in to Your account and use the Service's interface features (the "Profile" section, Settings → Delete account); in the absence of a specific feature in the interface, contact the Operator at bystrobarista@gmail.com.
 
 If You are not satisfied with how the Operator processes Your Personal Information, please notify the Operator, and the Operator will review Your complaint. If You believe that Your rights regarding the processing of Personal Information have been violated by the Operator, You have the right to file a complaint with the competent authority.
 
@@ -340,7 +340,7 @@ The Operator undertakes not to make material changes, nor to impose additional b
 
 12. QUESTIONS AND SUGGESTIONS
 
-The Operator welcomes Your questions and suggestions regarding the performance or modification of this Policy. Please use the email address support@bystrobarista.com. You can also use this address to send requests regarding the exercise of Your rights or complaints regarding the processing of Personal Information or the unlawfulness of its processing.`;
+The Operator welcomes Your questions and suggestions regarding the performance or modification of this Policy. Please use the email address bystrobarista@gmail.com. You can also use this address to send requests regarding the exercise of Your rights or complaints regarding the processing of Personal Information or the unlawfulness of its processing.`;
 
 export const PrivacyPolicyScreen: React.FC = () => {
   const navigation = useNavigation();

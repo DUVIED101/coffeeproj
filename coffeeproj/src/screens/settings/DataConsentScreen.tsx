@@ -15,7 +15,7 @@ const BODY_RU = `Дата вступления в силу: 12 июня 2026 г.
 
 2. ОПЕРАТОР
 Оператор: Хаит Даниил Давидович (физическое лицо).
-Контактный адрес для запросов по обработке персональных данных: support@bystrobarista.com.
+Контактный адрес для запросов по обработке персональных данных: bystrobarista@gmail.com.
 
 3. ПЕРЕЧЕНЬ ПЕРСОНАЛЬНЫХ ДАННЫХ, НА ОБРАБОТКУ КОТОРЫХ ДАЁТСЯ СОГЛАСИЕ
 3.1. Регистрационные данные: адрес электронной почты, номер телефона, имя, выбранная роль (бариста / бизнес), пароль (хранится в зашифрованном виде).
@@ -52,7 +52,7 @@ const BODY_RU = `Дата вступления в силу: 12 июня 2026 г.
 8. СРОК ДЕЙСТВИЯ СОГЛАСИЯ И ПОРЯДОК ЕГО ОТЗЫВА
 8.1. Согласие даётся бессрочно и действует с момента его предоставления до момента его отзыва Пользователем либо до достижения целей обработки персональных данных.
 8.2. Согласие может быть отозвано Пользователем в любой момент:
-— направлением Оператору письменного уведомления об отзыве согласия на адрес электронной почты support@bystrobarista.com с пометкой «Отзыв согласия на обработку персональных данных»;
+— направлением Оператору письменного уведомления об отзыве согласия на адрес электронной почты bystrobarista@gmail.com с пометкой «Отзыв согласия на обработку персональных данных»;
 — либо самостоятельным удалением аккаунта в Приложении в разделе Настройки → Удалить аккаунт.
 8.3. После получения отзыва согласия Оператор прекращает обработку персональных данных в срок, не превышающий 30 (тридцать) календарных дней, за исключением случаев, когда обработка данных продолжается на основании пункта 2 статьи 9 152-ФЗ (исполнение договора, требование закона и иные основания).
 8.4. Пользователь подтверждает, что осведомлён о том, что отзыв согласия может повлечь невозможность дальнейшего использования Приложения.
@@ -75,7 +75,7 @@ By accepting this Consent at registration in the App (by ticking the correspondi
 
 2. OPERATOR
 Operator: Daniil Davidovich Khait (natural person).
-Contact for personal data inquiries: support@bystrobarista.com.
+Contact for personal data inquiries: bystrobarista@gmail.com.
 
 3. PERSONAL DATA COVERED BY THIS CONSENT
 3.1. Registration data: email address, phone number, name, selected role (barista / business), password (stored hashed).
@@ -112,7 +112,7 @@ Personal data is processed both with and without the use of automation.
 8. TERM OF CONSENT AND WITHDRAWAL
 8.1. This Consent is given for an indefinite term and is in force from the moment it is given until it is withdrawn by the User, or until the purposes of processing are achieved.
 8.2. The User may withdraw consent at any time by:
-— sending the Operator a written notice of withdrawal to support@bystrobarista.com marked "Withdrawal of consent to personal data processing";
+— sending the Operator a written notice of withdrawal to bystrobarista@gmail.com marked "Withdrawal of consent to personal data processing";
 — or by deleting the account directly in the App in Settings → Delete account.
 8.3. Upon receiving the withdrawal of consent, the Operator stops processing personal data within no more than 30 (thirty) calendar days, except for cases where processing continues on the grounds of clause 2 of Article 9 of 152-FZ (performance of a contract, requirement of law, and other statutory grounds).
 8.4. The User acknowledges that withdrawal of consent may make further use of the App impossible.

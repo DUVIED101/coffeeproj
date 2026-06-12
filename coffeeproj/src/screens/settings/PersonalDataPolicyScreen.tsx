@@ -100,8 +100,8 @@ const BODY_RU = `Дата вступления в силу: 12 июня 2026 г.
 — передачи государственным органам — по законному требованию;
 — случаев, когда субъектом персональных данных дано отдельное согласие на передачу данных третьему лицу.
 Оператор не продаёт персональные данные и не передаёт их в рекламных целях.
-8.3. В случае выявления неточностей в персональных данных Пользователь может актуализировать их самостоятельно через Приложение (раздел «Профиль») либо путем направления Оператору уведомления на адрес электронной почты support@bystrobarista.com с пометкой «Актуализация персональных данных».
-8.4. Срок обработки персональных данных определяется достижением целей, для которых были собраны персональные данные, если иной срок не предусмотрен договором или действующим законодательством. Пользователь может в любой момент отозвать своё согласие на обработку персональных данных, направив Оператору уведомление по адресу support@bystrobarista.com с пометкой «Отзыв согласия на обработку персональных данных», либо удалив аккаунт в разделе Настройки → Удалить аккаунт. После удаления аккаунта персональные данные удаляются в течение 30 дней, за исключением сведений, которые Оператор обязан хранить по закону.
+8.3. В случае выявления неточностей в персональных данных Пользователь может актуализировать их самостоятельно через Приложение (раздел «Профиль») либо путем направления Оператору уведомления на адрес электронной почты bystrobarista@gmail.com с пометкой «Актуализация персональных данных».
+8.4. Срок обработки персональных данных определяется достижением целей, для которых были собраны персональные данные, если иной срок не предусмотрен договором или действующим законодательством. Пользователь может в любой момент отозвать своё согласие на обработку персональных данных, направив Оператору уведомление по адресу bystrobarista@gmail.com с пометкой «Отзыв согласия на обработку персональных данных», либо удалив аккаунт в разделе Настройки → Удалить аккаунт. После удаления аккаунта персональные данные удаляются в течение 30 дней, за исключением сведений, которые Оператор обязан хранить по закону.
 8.5. Вся информация, которая собирается сторонними сервисами, в том числе платежными системами, средствами связи и другими поставщиками услуг, хранится и обрабатывается указанными лицами (Операторами) в соответствии с их Пользовательским соглашением и Политикой конфиденциальности. Оператор не несёт ответственности за действия третьих лиц, в том числе указанных в настоящем пункте поставщиков услуг.
 8.6. Оператор при обработке персональных данных обеспечивает их конфиденциальность.
 8.7. Оператор осуществляет хранение персональных данных в форме, позволяющей определить субъекта персональных данных, не дольше, чем этого требуют цели обработки персональных данных, если срок хранения персональных данных не установлен федеральным законом или договором.
@@ -119,7 +119,7 @@ const BODY_RU = `Дата вступления в силу: 12 июня 2026 г.
 Оператор и иные лица, получившие доступ к персональным данным, обязаны не раскрывать третьим лицам и не распространять персональные данные без согласия субъекта персональных данных, если иное не предусмотрено федеральным законом.
 
 12. ЗАКЛЮЧИТЕЛЬНЫЕ ПОЛОЖЕНИЯ
-12.1. Пользователь может получить любые разъяснения по интересующим вопросам, касающимся обработки его персональных данных, обратившись к Оператору с помощью электронной почты support@bystrobarista.com.
+12.1. Пользователь может получить любые разъяснения по интересующим вопросам, касающимся обработки его персональных данных, обратившись к Оператору с помощью электронной почты bystrobarista@gmail.com.
 12.2. В данном документе будут отражены любые изменения политики обработки персональных данных Оператором. Политика действует бессрочно до замены её новой версией.
 12.3. Актуальная версия Политики в свободном доступе расположена в Приложении в разделе Настройки → О приложении, а также в сети Интернет по адресу https://bystrobarista.com/privacy-policy/.`;
 
@@ -217,8 +217,8 @@ The security of personal data processed by the Operator is ensured through legal
 — transfer to government authorities upon lawful request;
 — cases in which the data subject has given a separate consent to transfer data to a third party.
 The Operator does not sell personal data and does not transfer it for advertising purposes.
-8.3. If inaccuracies are found in personal data, the User can update them independently in the App (Profile section) or by sending the Operator a notice at support@bystrobarista.com marked "Update of personal data".
-8.4. The term of personal data processing is determined by the achievement of the purposes for which the personal data was collected, unless a different term is set by contract or by applicable law. The User may at any time withdraw consent to the processing of personal data by sending a notice to support@bystrobarista.com marked "Withdrawal of consent to personal data processing", or by deleting the account in Settings → Delete account. After account deletion, personal data is removed within 30 days, except for data that the Operator is legally required to retain.
+8.3. If inaccuracies are found in personal data, the User can update them independently in the App (Profile section) or by sending the Operator a notice at bystrobarista@gmail.com marked "Update of personal data".
+8.4. The term of personal data processing is determined by the achievement of the purposes for which the personal data was collected, unless a different term is set by contract or by applicable law. The User may at any time withdraw consent to the processing of personal data by sending a notice to bystrobarista@gmail.com marked "Withdrawal of consent to personal data processing", or by deleting the account in Settings → Delete account. After account deletion, personal data is removed within 30 days, except for data that the Operator is legally required to retain.
 8.5. All information collected by third-party services, including payment systems, communication tools, and other service providers, is stored and processed by those persons (Operators) in accordance with their User Agreements and Privacy Policies. The Operator is not responsible for the actions of third parties, including the service providers mentioned in this clause.
 8.6. The Operator ensures the confidentiality of personal data during processing.
 8.7. The Operator stores personal data in a form that allows identification of the subject no longer than required by the purposes of processing, unless the retention period is set by federal law or contract.
@@ -236,7 +236,7 @@ The Operator does not sell personal data and does not transfer it for advertisin
 The Operator and other persons who have gained access to personal data are required not to disclose personal data to third parties and not to distribute it without the data subject's consent, unless otherwise provided by federal law.
 
 12. FINAL PROVISIONS
-12.1. The User may obtain any clarifications on issues concerning the processing of personal data by contacting the Operator at support@bystrobarista.com.
+12.1. The User may obtain any clarifications on issues concerning the processing of personal data by contacting the Operator at bystrobarista@gmail.com.
 12.2. Any changes to the Operator's personal data processing policy will be reflected in this document. The Policy is valid indefinitely until it is replaced by a new version.
 12.3. The current version of the Policy is freely available in the App in Settings → About, and on the Internet at https://bystrobarista.com/privacy-policy/.`;
 
