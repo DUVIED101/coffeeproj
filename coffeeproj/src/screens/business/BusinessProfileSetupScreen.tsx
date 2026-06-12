@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,7 @@ import { pickPhotos, reportRejections } from '../../utils/pickPhotos';
 import { pickAndCropAvatar } from '../../utils/imageCrop';
 import { geocodeAddress } from '../../utils/geocode';
 import { clampToEffectiveLength } from '../../utils/textLength';
+import { transformedImageUrl } from '../../utils/imageTransform';
 import {
   SHORT_TEXT_MAX_LENGTH,
   DESCRIPTION_MAX_LENGTH,
@@ -93,6 +94,10 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
   // Step 4 — Photos for the first branch (deferred URIs until finish)
   const [pendingBranchPhotoUris, setPendingBranchPhotoUris] = useState<string[]>([]);
+  // Tracks existing-branch photo URLs marked for deletion. Applied to the
+  // server on handleFinish; until then we just hide them from the gallery so
+  // the user can preview the result.
+  const [removedExistingPhotoUrls, setRemovedExistingPhotoUrls] = useState<string[]>([]);
 
   const steps = STEP_KEYS.map(k => t(`businessSetup.steps.${k}`));
 
@@ -205,9 +210,19 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [pendingBranchPhotoUris.length, t]);
 
-  const handleRemoveBranchPhoto = useCallback((_url: string, index: number) => {
-    setPendingBranchPhotoUris(prev => prev.filter((_, i) => i !== index));
-  }, []);
+  const handleRemoveBranchPhoto = useCallback(
+    (url: string, _index: number) => {
+      // The gallery shows (existing − removed) ++ pending, so the same handler
+      // sees URIs of both flavours. Route to the right state by membership.
+      const existingPhotos = existingFirstBranch?.photos ?? [];
+      if (existingPhotos.includes(url)) {
+        setRemovedExistingPhotoUrls(prev => (prev.includes(url) ? prev : [...prev, url]));
+      } else {
+        setPendingBranchPhotoUris(prev => prev.filter(u => u !== url));
+      }
+    },
+    [existingFirstBranch?.photos]
+  );
 
   const toggleEquipment = useCallback((equipment: Equipment) => {
     setBranchEquipment(prev =>
@@ -342,8 +357,24 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
             equipment: branchEquipment,
           });
 
-      // 4) Upload pending branch photos (limit to PHOTO_LIMIT minus what's already there)
-      const remaining = Math.max(PHOTO_LIMIT - branch.photos.length, 0);
+      // 4a) Delete existing photos the user removed in this edit session.
+      // Run before upload so freed slots count toward the PHOTO_LIMIT budget.
+      let currentPhotoCount = branch.photos.length;
+      let failedRemovals = 0;
+      for (const url of removedExistingPhotoUrls) {
+        try {
+          await BusinessService.removeBranchPhoto(branch.id, url);
+          currentPhotoCount -= 1;
+        } catch (error) {
+          console.warn('Branch photo removal failed (non-fatal):', error);
+          failedRemovals += 1;
+        }
+      }
+      if (failedRemovals > 0) softFailures.push(`photoRemove:${failedRemovals}`);
+
+      // 4b) Upload pending branch photos (limit to PHOTO_LIMIT minus what's
+      // currently there after 4a).
+      const remaining = Math.max(PHOTO_LIMIT - currentPhotoCount, 0);
       const toUpload = pendingBranchPhotoUris.slice(0, remaining);
       let failedPhotos = 0;
       for (const uri of toUpload) {
@@ -396,6 +427,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
     branchEquipment,
     addressCoords,
     pendingBranchPhotoUris,
+    removedExistingPhotoUrls,
     navigation,
     t,
   ]);
@@ -415,9 +447,15 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   }
 
   const displayLogo = pendingLogoUri ?? logoUrl;
-  const photosForGallery = pendingBranchPhotoUris.length
-    ? pendingBranchPhotoUris
-    : (existingFirstBranch?.photos ?? []);
+  // Merge existing (minus removed) with newly-picked URIs so the user sees the
+  // final state at a glance and can both delete persisted photos and add new
+  // ones in the same edit session.
+  const photosForGallery = useMemo(() => {
+    const existing = (existingFirstBranch?.photos ?? []).filter(
+      url => !removedExistingPhotoUrls.includes(url)
+    );
+    return [...existing, ...pendingBranchPhotoUris];
+  }, [existingFirstBranch?.photos, removedExistingPhotoUrls, pendingBranchPhotoUris]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -554,7 +592,10 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               <View style={styles.logoRow}>
                 <View style={styles.logoPreview}>
                   {displayLogo ? (
-                    <FastImage source={{ uri: displayLogo }} style={styles.logoImage} />
+                    <FastImage
+                      source={{ uri: transformedImageUrl(displayLogo, 80) ?? displayLogo }}
+                      style={styles.logoImage}
+                    />
                   ) : (
                     <Text style={styles.logoPlaceholder}>{t('businessSetup.brand.noLogo')}</Text>
                   )}
