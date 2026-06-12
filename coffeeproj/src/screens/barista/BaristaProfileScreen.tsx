@@ -248,15 +248,16 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     setViewerVisible(true);
   }, []);
 
+  // Location permission is one-shot — runs on mount only.
   useEffect(() => {
-    loadProfile();
-    loadAggregate();
     initializeLocation();
   }, []);
 
   // Re-fetch on every focus so a profile that was just created in
   // BaristaProfileSetup (same session, no app restart) is picked up even if the
-  // screen never unmounted.
+  // screen never unmounted. useFocusEffect ALSO fires on first focus (= mount),
+  // so a separate useEffect for loadProfile/loadAggregate would double every
+  // request on cold-mount.
   useFocusEffect(
     useCallback(() => {
       loadProfile();

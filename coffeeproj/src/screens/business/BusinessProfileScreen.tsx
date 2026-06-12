@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -113,10 +113,10 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [userId]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
-
+  // useFocusEffect fires on first focus (= mount) AND on every refocus, so
+  // a separate useEffect would double every request on cold-mount. Verified
+  // via [NET] instrumentation: branches/aggregate/reliability were firing
+  // twice on every screen open. One subscription is enough.
   useFocusEffect(
     useCallback(() => {
       load();

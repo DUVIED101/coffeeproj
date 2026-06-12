@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { COLORS, RADII } from '../config/constants';
 import { PHOTO_LIMIT } from '../utils/storage';
+import { transformedImageUrl } from '../utils/imageTransform';
 
 type BranchPhotoGalleryProps = {
   photos: string[];
@@ -44,7 +45,11 @@ const Thumbnail = memo(function Thumbnail({
 
   const content = (
     <>
-      <Image source={{ uri }} style={styles.thumbnail} resizeMode="cover" />
+      <Image
+        source={{ uri: transformedImageUrl(uri, THUMB_SIZE) ?? uri }}
+        style={styles.thumbnail}
+        resizeMode="cover"
+      />
       {index === 0 && (
         <View style={styles.coverBadge}>
           <Text style={styles.coverBadgeText}>★</Text>

@@ -257,7 +257,24 @@ async function backgroundFetchProfile(userId: string): Promise<void> {
   }
 }
 
+// In-flight dedupe: on cold-start both `initialize()` and the
+// `onAuthStateChange(SIGNED_IN)` listener kick off a profile fetch in
+// parallel. Without dedupe that's two identical round-trips on the wire
+// (measured: ~3.8s × 2 on a congested proxy). Sharing the promise collapses
+// them into one network call; both callers resolve from the same response.
+const inflightProfileFetches = new Map<string, Promise<User | null>>();
+
 async function fetchUserProfile(userId: string): Promise<User | null> {
+  const existing = inflightProfileFetches.get(userId);
+  if (existing) return existing;
+  const promise = doFetchUserProfile(userId).finally(() => {
+    inflightProfileFetches.delete(userId);
+  });
+  inflightProfileFetches.set(userId, promise);
+  return promise;
+}
+
+async function doFetchUserProfile(userId: string): Promise<User | null> {
   const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
   if (error || !data) {
     // PGRST116 = "no rows returned" — expected during signup before the

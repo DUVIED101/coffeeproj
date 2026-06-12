@@ -10,6 +10,18 @@ import type {
 } from '../types/job';
 import type { GeoPoint } from '../types/business';
 
+// Explicit column list — `select=*` would also pull the PostGIS `geopoint`
+// column (binary, hex-encoded by PostgREST, ~25-150 bytes/row, unused on the
+// client). At list endpoints fetching 100 rows that's ~2-15 KB and a parse
+// hit per page. Listed columns match what mapJob() reads.
+const JOB_COLUMNS =
+  'id,business_id,business_owner_id,branch_id,job_type,title,description,' +
+  'requirements,required_equipment_experience,location,shift_details,' +
+  'compensation,payment,payment_status,status,tags,application_count,views,' +
+  'posted_at,expires_at,created_at,updated_at';
+
+const JOB_COLUMNS_WITH_JOINS = `${JOB_COLUMNS},businesses(name,logo_url),branches(name,metro_station,photos)`;
+
 // shift_details is JSONB without a runtime schema. Legacy rows pre-date `kind`,
 // so we fall back to job_type and field shape. Permanent rows that still hold
 // date-based shift_details (no hoursPerWeek) keep working by rendering as
@@ -164,13 +176,7 @@ export class JobService {
     try {
       const { data, error } = await supabase
         .from('jobs')
-        .select(
-          `
-          *,
-          businesses (name, logo_url),
-          branches (name, metro_station, photos)
-        `
-        )
+        .select(JOB_COLUMNS_WITH_JOINS)
         .eq('id', jobId)
         .single();
 
@@ -191,13 +197,7 @@ export class JobService {
     try {
       const { data, error } = await supabase
         .from('jobs')
-        .select(
-          `
-          *,
-          businesses (name, logo_url),
-          branches (name, metro_station, photos)
-        `
-        )
+        .select(JOB_COLUMNS_WITH_JOINS)
         .eq('business_id', businessId)
         .order('posted_at', { ascending: false })
         .limit(100);
@@ -219,13 +219,7 @@ export class JobService {
     try {
       let query = supabase
         .from('jobs')
-        .select(
-          `
-          *,
-          businesses (name, logo_url),
-          branches (name, metro_station, photos)
-        `
-        )
+        .select(JOB_COLUMNS_WITH_JOINS)
         .eq('business_owner_id', ownerUserId)
         .order('posted_at', { ascending: false });
 

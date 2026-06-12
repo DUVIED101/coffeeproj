@@ -38,6 +38,7 @@ import { JobOfferService } from './services/JobOfferService';
 import { pendingOfferActionsQueue } from './services/pendingOfferActionsQueue';
 import { useNotificationFeedStore } from './stores/notificationFeedStore';
 import { useDiagnosticsStore } from './stores/diagnosticsStore';
+import { warmSupabaseConnection } from './utils/warmConnection';
 import { JOB_OFFER_ACTION_ACCEPT, JOB_OFFER_ACTION_DECLINE } from './types/notification';
 import type { PushNotificationPayload } from './types/notification';
 import type { ApplicationId, JobOfferId } from './types/ids';
@@ -162,6 +163,10 @@ function App(): React.JSX.Element {
   const [bootstrapped, setBootstrapped] = useState(false);
 
   useEffect(() => {
+    // Fire TLS/HTTP-2 warmup IMMEDIATELY, before any storage I/O. This
+    // overlaps connection establishment with migrateSessionKey + initI18n
+    // so the first auth fetch lands on a warm socket.
+    warmSupabaseConnection();
     let mounted = true;
     const bootstrap = async (): Promise<void> => {
       // migrateSessionKey must finish before any supabase.auth call reads
@@ -192,7 +197,13 @@ function App(): React.JSX.Element {
       if (!mounted) return;
       setBootstrapped(true);
       void useDiagnosticsStore.getState().loadLastReport();
-      void useDiagnosticsStore.getState().runProbe();
+      // Defer the connectivity probe: its 3-4 parallel fetches otherwise
+      // race fetchUserProfile on the same channel, adding ~1.5s on RU proxy.
+      // 3s is enough for auth to land first; probe is diagnostics-only.
+      setTimeout(() => {
+        if (!mounted) return;
+        void useDiagnosticsStore.getState().runProbe();
+      }, 3000);
     });
     return () => {
       mounted = false;
