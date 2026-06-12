@@ -436,6 +436,17 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
     handleFinishRef.current = handleFinish;
   }, [handleFinish]);
 
+  // Merge existing (minus removed) with newly-picked URIs so the user sees the
+  // final state at a glance and can both delete persisted photos and add new
+  // ones in the same edit session. Must run BEFORE the isLoading early return,
+  // otherwise hook count differs between first and subsequent renders.
+  const photosForGallery = useMemo(() => {
+    const existing = (existingFirstBranch?.photos ?? []).filter(
+      url => !removedExistingPhotoUrls.includes(url)
+    );
+    return [...existing, ...pendingBranchPhotoUris];
+  }, [existingFirstBranch?.photos, removedExistingPhotoUrls, pendingBranchPhotoUris]);
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -447,15 +458,6 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   }
 
   const displayLogo = pendingLogoUri ?? logoUrl;
-  // Merge existing (minus removed) with newly-picked URIs so the user sees the
-  // final state at a glance and can both delete persisted photos and add new
-  // ones in the same edit session.
-  const photosForGallery = useMemo(() => {
-    const existing = (existingFirstBranch?.photos ?? []).filter(
-      url => !removedExistingPhotoUrls.includes(url)
-    );
-    return [...existing, ...pendingBranchPhotoUris];
-  }, [existingFirstBranch?.photos, removedExistingPhotoUrls, pendingBranchPhotoUris]);
 
   return (
     <SafeAreaView style={styles.container}>
