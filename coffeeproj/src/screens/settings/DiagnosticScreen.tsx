@@ -7,6 +7,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { COLORS } from '../../config/constants';
 import { ConnectivityReportPanel } from '../../components/ConnectivityReportPanel';
 import { APP_VERSION } from '../../config/version';
+import { SUPABASE_URL as ACTIVE_CLIENT_URL } from '../../config/supabase';
 import {
   DIRECT_URL,
   PROXY_URL,
@@ -56,6 +57,9 @@ export const DiagnosticScreen: React.FC = () => {
         `proxy-configured: ${PROXY_URL ? 'yes' : 'no'}`,
         `direct-url: ${DIRECT_URL}`,
         `proxy-url: ${PROXY_URL ?? '(unset)'}`,
+        // The URL the supabase client was actually created with at module
+        // load — this is what real network calls hit, not a re-pick.
+        `client-url: ${ACTIVE_CLIENT_URL}`,
         `picked-url: ${choice.url}`,
         `picked-reason: ${choice.reason}`,
       ].join('\n'),

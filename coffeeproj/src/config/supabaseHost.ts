@@ -77,11 +77,42 @@ function proxyChoice(reason: 'forced' | 'tz'): HostChoice {
 // isn't reachable. Honours device timezone only. The Force-proxy override is
 // applied through pickSupabaseHost (async) at app bootstrap, before the
 // client is created.
-export function pickSupabaseHostSync(opts?: { timezone?: string | null }): HostChoice {
+//
+// Production callers omit `opts` and get the first compute cached forever, so
+// the supabase client and DiagnosticScreen always report the same URL. Tests
+// pass `opts.timezone` explicitly and bypass the cache.
+let _cachedChoice: HostChoice | null = null;
+
+function computeSyncChoice(tz: string | null | undefined): HostChoice {
   if (!PROXY_URL) return directChoice();
-  const tz = opts && 'timezone' in opts ? opts.timezone : getDeviceTimezone();
   if (isRussianTimezone(tz)) return proxyChoice('tz');
+  // Hermes' Intl polyfill on iOS can return null/'UTC' if it hasn't finished
+  // initializing when supabase.ts evaluates at bundle time. Treat unreliable
+  // TZ as "probably Russian" — false-positive proxy costs ~100ms for non-RU
+  // users, false-negative direct means the app hangs entirely for RU users.
+  if (!tz || tz === 'UTC') return proxyChoice('tz');
+  // Offset-based fallback for devices that report a non-canonical TZ name
+  // (e.g. legacy aliases like 'W-SU', or 'GMT+3' on some Hermes builds) but
+  // sit in the Russian UTC offset band (Moscow UTC+3 → Kamchatka UTC+12).
+  // getTimezoneOffset returns minutes WEST of UTC, so RU offsets are negative.
+  // We allow false-positives in this band (Istanbul, Dubai, Tashkent) — the
+  // extra hop costs ~100ms vs the app failing entirely for RU users with
+  // garbled Intl output.
+  const offsetMinutes = new Date().getTimezoneOffset();
+  if (offsetMinutes <= -120 && offsetMinutes >= -720) return proxyChoice('tz');
   return directChoice();
+}
+
+export function pickSupabaseHostSync(opts?: { timezone?: string | null }): HostChoice {
+  if (opts && 'timezone' in opts) return computeSyncChoice(opts.timezone);
+  if (_cachedChoice) return _cachedChoice;
+  _cachedChoice = computeSyncChoice(getDeviceTimezone());
+  return _cachedChoice;
+}
+
+// Test-only: reset the cached choice so each test re-evaluates getDeviceTimezone.
+export function _resetSyncCacheForTests(): void {
+  _cachedChoice = null;
 }
 
 // Async host pick — reads the Force-proxy toggle from AsyncStorage. Used by

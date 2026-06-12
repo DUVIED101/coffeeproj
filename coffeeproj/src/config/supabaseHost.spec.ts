@@ -66,12 +66,52 @@ describe('pickSupabaseHostSync', () => {
     });
   });
 
-  it('falls back to direct URL when timezone is null (fail-safe — no false-positive proxy)', () => {
+  it('falls back to proxy URL when timezone is null (Hermes Intl race fail-safe)', () => {
+    // Hermes can return null TZ before its Intl polyfill is ready, which is
+    // exactly when supabase.ts evaluates at bundle time. Defaulting to proxy
+    // keeps RU users working at the cost of ~100ms latency for non-RU users
+    // whose Intl is also unready.
     expect(pickSupabaseHostSync({ timezone: null })).toEqual({
-      url: DIRECT,
-      useProxy: false,
-      reason: 'default',
+      url: PROXY,
+      useProxy: true,
+      reason: 'tz',
     });
+  });
+
+  it('falls back to proxy URL when timezone is "UTC" (Hermes default before Intl ready)', () => {
+    expect(pickSupabaseHostSync({ timezone: 'UTC' })).toEqual({
+      url: PROXY,
+      useProxy: true,
+      reason: 'tz',
+    });
+  });
+
+  it('falls back to proxy when TZ string is unrecognised but offset sits in Russian band', () => {
+    // Simulates an iOS device whose Hermes Intl returns a legacy alias like
+    // "W-SU" while the device's actual offset is Moscow (UTC+3, -180 min).
+    const spy = jest.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(-180);
+    try {
+      expect(pickSupabaseHostSync({ timezone: 'W-SU' })).toEqual({
+        url: PROXY,
+        useProxy: true,
+        reason: 'tz',
+      });
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('keeps direct URL when TZ is non-Russian and offset is outside the Russian band', () => {
+    const spy = jest.spyOn(Date.prototype, 'getTimezoneOffset').mockReturnValue(420); // America/Los_Angeles UTC-7
+    try {
+      expect(pickSupabaseHostSync({ timezone: 'America/Los_Angeles' })).toEqual({
+        url: DIRECT,
+        useProxy: false,
+        reason: 'default',
+      });
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
 
