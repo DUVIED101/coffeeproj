@@ -36,6 +36,7 @@ import {
 } from '../../utils/validation';
 import { clampToEffectiveLength } from '../../utils/textLength';
 import { jobMinDate, jobMaxDate, clampDate } from '../../utils/dateRanges';
+import { computeShiftHours } from '../../utils/shiftHours';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'CreateJob' | 'EditJob'>;
@@ -295,24 +296,29 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     return `${day}.${month}.${year}`;
   };
 
-  // Supports night shifts: if end <= start, assume next-day end.
-  // Equal times are treated as invalid (caller should validate).
-  const calculateTotalHours = (): number => {
-    const startMinutes = startTime.getHours() * 60 + startTime.getMinutes();
-    const endMinutes = endTime.getHours() * 60 + endTime.getMinutes();
-    if (startMinutes === endMinutes) return 0;
-    const diff = endMinutes - startMinutes;
-    return (diff > 0 ? diff : diff + 1440) / 60;
-  };
-
   const payment = useMemo(() => {
     const amount = parseFloat(compensationAmount) || 0;
 
     if (compensationType === 'hourly') {
-      // Permanent positions don't have a fixed per-shift duration, so hourly
-      // pay totals the weekly hours commitment instead of a single-shift span.
-      const totalHours =
-        jobType === 'permanent' ? parseFloat(hoursPerWeek) || 0 : calculateTotalHours();
+      let totalHours: number;
+      if (jobType === 'permanent') {
+        // Permanent positions don't have a fixed per-shift duration, so hourly
+        // pay totals the weekly hours commitment instead of a single-shift span.
+        totalHours = parseFloat(hoursPerWeek) || 0;
+      } else {
+        // Temporary jobs: accumulate hours across the whole date range,
+        // honouring recurringDays when set. Single-day shifts still resolve
+        // to one-day hours because computeShiftHours falls through.
+        totalHours = computeShiftHours({
+          kind: 'temporary',
+          startDate: startDate.toISOString(),
+          endDate: endDate ? endDate.toISOString() : undefined,
+          startTime: formatTime(startTime),
+          endTime: formatTime(endTime),
+          isRecurring,
+          recurringDays: isRecurring ? selectedDays.map(idx => DAY_NAMES[idx]) : undefined,
+        });
+      }
       const totalAmount = amount * totalHours;
       const platformFee = totalAmount * 0.15;
       const totalWithFee = totalAmount + platformFee;
@@ -325,7 +331,18 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
 
     return { totalHours: 0, totalAmount, platformFee, totalWithFee };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [compensationAmount, compensationType, startTime, endTime, jobType, hoursPerWeek]);
+  }, [
+    compensationAmount,
+    compensationType,
+    startTime,
+    endTime,
+    jobType,
+    hoursPerWeek,
+    startDate,
+    endDate,
+    isRecurring,
+    selectedDays,
+  ]);
 
   const validate = (): boolean => {
     const newErrors: { [key: string]: string } = {};

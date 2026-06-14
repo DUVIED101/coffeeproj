@@ -30,7 +30,7 @@ type Props = {
 
 export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { jobId } = route.params;
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const user = useAuthStore(s => s.user);
 
   const [job, setJob] = useState<Job | null>(null);
@@ -138,7 +138,27 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const formatRecurringDays = (days: string[]): string => {
-    return days.join(', ');
+    const dayMap: Record<string, string> =
+      i18n.language === 'ru'
+        ? {
+            monday: 'Пн',
+            tuesday: 'Вт',
+            wednesday: 'Ср',
+            thursday: 'Чт',
+            friday: 'Пт',
+            saturday: 'Сб',
+            sunday: 'Вс',
+          }
+        : {
+            monday: 'Mon',
+            tuesday: 'Tue',
+            wednesday: 'Wed',
+            thursday: 'Thu',
+            friday: 'Fri',
+            saturday: 'Sat',
+            sunday: 'Sun',
+          };
+    return days.map(day => dayMap[day] || day).join(', ');
   };
 
   if (isLoading) {
