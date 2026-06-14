@@ -765,12 +765,17 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        // iOS: leave it to the ScrollView's automatic keyboard insets so the
+        // focused TextInput is scrolled above the keyboard without us having
+        // to compute a vertical offset. Android still needs `height` because
+        // the system keyboard window resizes the layout differently.
+        behavior={Platform.OS === 'android' ? 'height' : undefined}>
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag">
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <View>{renderStepContent()}</View>
           </TouchableWithoutFeedback>
@@ -847,7 +852,9 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 100,
+    // Extra bottom slack so a focused multiline TextInput on step 5 can be
+    // scrolled clear of the keyboard inside the KeyboardAvoidingView.
+    paddingBottom: 240,
   },
   stepTitle: {
     fontSize: 24,
