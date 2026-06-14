@@ -73,7 +73,7 @@ const BODY_RU = `Дата вступления в силу: 12 июня 2026 г.
 — отправка функциональных push-уведомлений (новое сообщение, отклик, статус смены); рекламные уведомления не отправляются;
 — исполнение требований законодательства Российской Федерации.
 6.2. Состав обрабатываемых персональных данных:
-— адрес электронной почты, номер телефона, имя, выбранная роль (бариста / бизнес), пароль (хранится в зашифрованном виде);
+— адрес электронной почты, имя, выбранная роль (бариста / бизнес), пароль (хранится в зашифрованном виде);
 — сведения профиля: фотография, опыт работы, навыки, предпочтения по графику; для бизнеса — название заведения, адрес, фото, ИНН/ОГРН (при верификации);
 — содержание откликов, чатов, отзывов и жалоб, поданных в Приложении;
 — приблизительные координаты устройства (только во время использования Приложения и только с согласия Пользователя);
@@ -190,7 +190,7 @@ This Personal Data Processing Policy ("Policy") is drafted in accordance with Fe
 — delivery of functional push notifications (new message, application, shift status); promotional notifications are not sent;
 — compliance with the laws of the Russian Federation.
 6.2. Composition of processed personal data:
-— email address, phone number, name, selected role (barista / business), password (stored hashed);
+— email address, name, selected role (barista / business), password (stored hashed);
 — profile data: photo, work experience, skills, schedule preferences; for businesses — venue name, address, photos, tax IDs (during verification);
 — content of applications, chats, reviews, and complaints submitted in the App;
 — approximate device coordinates (only while the App is in use and only with the User's consent);

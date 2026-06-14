@@ -40,7 +40,7 @@ const BODY_RU = `Дата публикации: 12 июня 2026 г.
 
 Оператор может собирать следующие категории Персональной информации о Вас во время использования Вами Сервиса:
 
-(i) Персональная информация, предоставленная Вами при регистрации (создании учётной записи), такая как Ваше имя, адрес электронной почты, номер телефона, выбранная роль (бариста / бизнес), пароль (хранится в зашифрованном виде);
+(i) Персональная информация, предоставленная Вами при регистрации (создании учётной записи), такая как Ваше имя, адрес электронной почты, выбранная роль (бариста / бизнес), пароль (хранится в зашифрованном виде);
 (ii) данные профиля: фотография, опыт работы, навыки, предпочтения по графику; для бизнес-аккаунтов — название заведения, адрес, фотографии заведения, ИНН/ОГРН (при верификации);
 (iii) контент, создаваемый Вами при использовании Сервиса: вакансии, отклики, сообщения в чатах, отзывы, жалобы и связанные с ними материалы;
 (iv) приблизительные данные о геолокации (только во время использования Приложения и только при наличии Вашего отдельного согласия, предоставленного через системные настройки устройства);
@@ -208,7 +208,7 @@ You are not obligated to provide the Operator with Personal Information, except 
 
 The Operator may collect the following categories of Personal Information about You while You use the Service:
 
-(i) Personal Information provided by You upon registration (creation of an account), such as Your name, email address, phone number, selected role (barista / business), and password (stored hashed);
+(i) Personal Information provided by You upon registration (creation of an account), such as Your name, email address, selected role (barista / business), and password (stored hashed);
 (ii) profile data: photo, work experience, skills, schedule preferences; for business accounts — venue name, address, venue photos, tax IDs (during verification);
 (iii) content created by You while using the Service: vacancies, applications, chat messages, reviews, complaints, and related materials;
 (iv) approximate location data (only while the App is in use and only with Your separate consent given through the device's system settings);

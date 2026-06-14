@@ -18,7 +18,7 @@ const BODY_RU = `Дата вступления в силу: 12 июня 2026 г.
 Контактный адрес для запросов по обработке персональных данных: bystrobarista@gmail.com.
 
 3. ПЕРЕЧЕНЬ ПЕРСОНАЛЬНЫХ ДАННЫХ, НА ОБРАБОТКУ КОТОРЫХ ДАЁТСЯ СОГЛАСИЕ
-3.1. Регистрационные данные: адрес электронной почты, номер телефона, имя, выбранная роль (бариста / бизнес), пароль (хранится в зашифрованном виде).
+3.1. Регистрационные данные: адрес электронной почты, имя, выбранная роль (бариста / бизнес), пароль (хранится в зашифрованном виде).
 3.2. Данные профиля: фотография, опыт работы, навыки, предпочтения по графику; для бизнес-аккаунтов — название заведения, адрес, фотографии заведения, ИНН/ОГРН (при верификации).
 3.3. Контент, создаваемый при использовании Приложения: вакансии, отклики, сообщения в чатах, отзывы, жалобы и связанные с ними материалы.
 3.4. Данные о геопозиции: приблизительные координаты устройства (только во время использования Приложения и только при наличии отдельного согласия Пользователя в системных настройках устройства).
@@ -78,7 +78,7 @@ Operator: Daniil Davidovich Khait (natural person).
 Contact for personal data inquiries: bystrobarista@gmail.com.
 
 3. PERSONAL DATA COVERED BY THIS CONSENT
-3.1. Registration data: email address, phone number, name, selected role (barista / business), password (stored hashed).
+3.1. Registration data: email address, name, selected role (barista / business), password (stored hashed).
 3.2. Profile data: photo, work experience, skills, schedule preferences; for business accounts — venue name, address, venue photos, tax IDs (during verification).
 3.3. Content created while using the App: vacancies, applications, chat messages, reviews, complaints, and related materials.
 3.4. Location data: approximate device coordinates (only while the App is in use and only with the User's separate consent given through the device's system settings).
