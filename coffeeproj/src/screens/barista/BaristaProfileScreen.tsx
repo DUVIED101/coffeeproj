@@ -49,6 +49,7 @@ import {
 import { requestLocationPermission, getCurrentLocation } from '../../utils/geolocation';
 import { clampToEffectiveLength } from '../../utils/textLength';
 import { dobMinDate, dobMaxDate } from '../../utils/dateRanges';
+import { yearsBetween } from '../../utils/age';
 import {
   sanitizeNameInput,
   sanitizeYearsInput,
@@ -786,6 +787,14 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 {profile.firstName} {profile.lastName}
               </Text>
               <Text style={styles.city}>{CITY_LABELS_RU[toCityCode(profile.city)]}</Text>
+              {(() => {
+                const age = yearsBetween(profile.dateOfBirth);
+                return age !== null ? (
+                  <Text style={styles.city}>
+                    {t('baristaProfileScreen.yearsOld', { count: age })}
+                  </Text>
+                ) : null;
+              })()}
 
               <View style={styles.completenessContainer}>
                 <View style={styles.completenessBar}>
@@ -917,18 +926,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   </>
                 )}
               </>
-            ) : (
-              <>
-                {profile.dateOfBirth && (
-                  <Text style={styles.infoText}>
-                    {t('baristaProfileScreen.born', {
-                      date: profile.dateOfBirth,
-                      defaultValue: 'Дата рождения: {{date}}',
-                    })}
-                  </Text>
-                )}
-              </>
-            )}
+            ) : null}
           </View>
 
           <View style={styles.section}>
