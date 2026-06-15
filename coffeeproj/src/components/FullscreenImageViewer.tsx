@@ -19,6 +19,7 @@ import {
   type PanGestureHandlerStateChangeEvent,
 } from 'react-native-gesture-handler';
 import { useTranslation } from 'react-i18next';
+import { normaliseStorageUrl } from '../utils/imageTransform';
 
 type Props = {
   visible: boolean;
@@ -145,7 +146,7 @@ export const FullscreenImageViewer: React.FC<Props> = ({
                     scrollEventThrottle={32}
                     centerContent>
                     <FastImage
-                      source={{ uri: item }}
+                      source={{ uri: normaliseStorageUrl(item) ?? item }}
                       style={styles.image}
                       resizeMode={FastImage.resizeMode.contain}
                     />

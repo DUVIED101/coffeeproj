@@ -2,12 +2,12 @@ import React, { memo, useCallback } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { COLORS, RADII } from '../config/constants';
@@ -45,10 +45,13 @@ const Thumbnail = memo(function Thumbnail({
 
   const content = (
     <>
-      <Image
-        source={{ uri: transformedImageUrl(uri, THUMB_SIZE) ?? uri }}
+      <FastImage
+        source={{
+          uri: transformedImageUrl(uri, THUMB_SIZE) ?? uri,
+          priority: FastImage.priority.normal,
+        }}
         style={styles.thumbnail}
-        resizeMode="cover"
+        resizeMode={FastImage.resizeMode.cover}
       />
       {index === 0 && (
         <View style={styles.coverBadge}>
