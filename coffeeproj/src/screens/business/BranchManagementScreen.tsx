@@ -404,6 +404,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
       if (!shouldProceed) return;
 
       let uploadedCount = 0;
+      let lastError: unknown = null;
       for (const asset of picked.accepted) {
         if (!asset.uri) continue;
         try {
@@ -415,13 +416,19 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
             break;
           }
           console.error('Error adding branch photo:', error);
+          lastError = error;
         }
       }
 
       if (uploadedCount > 0) await loadBranches();
 
       if (uploadedCount < picked.accepted.length) {
-        Alert.alert(t('photoErrors.uploadFailedTitle'), t('photoErrors.uploadFailedBody'));
+        const detail =
+          (lastError as { message?: string } | null)?.message ?? String(lastError ?? '');
+        Alert.alert(
+          t('photoErrors.uploadFailedTitle'),
+          `${t('photoErrors.uploadFailedBody')}${detail ? `\n\n${detail}` : ''}`
+        );
       }
     },
     [ownerId, branches, loadBranches, t]

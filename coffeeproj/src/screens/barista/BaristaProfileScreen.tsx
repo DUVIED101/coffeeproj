@@ -490,6 +490,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     setIsSaving(true);
     let uploadedCount = 0;
     let hitLimit = false;
+    let lastError: unknown = null;
     try {
       for (const asset of picked.accepted) {
         if (!asset.uri) continue;
@@ -502,6 +503,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
             break;
           }
           console.error('Error uploading portfolio photo:', error);
+          lastError = error;
         }
       }
     } finally {
@@ -512,7 +514,11 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     if (hitLimit) {
       Alert.alert(t('common.warning'), t('portfolioPhotos.limitReached', { max: PHOTO_LIMIT }));
     } else if (uploadedCount < picked.accepted.length) {
-      Alert.alert(t('photoErrors.uploadFailedTitle'), t('photoErrors.uploadFailedBody'));
+      const detail = (lastError as { message?: string } | null)?.message ?? String(lastError ?? '');
+      Alert.alert(
+        t('photoErrors.uploadFailedTitle'),
+        `${t('photoErrors.uploadFailedBody')}${detail ? `\n\n${detail}` : ''}`
+      );
     }
   };
 

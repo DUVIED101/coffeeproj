@@ -19,6 +19,14 @@ export type UploadImageInput = {
   contentType?: string;
 };
 
+// ICP on iOS sometimes returns paths without the file:// prefix; XHR on RN
+// can usually handle both, but normalising up-front avoids edge cases where
+// the bare /private/var/... path is misread as a relative URL.
+const normaliseLocalUri = (uri: string): string => {
+  if (/^[a-z]+:\/\//i.test(uri)) return uri;
+  return uri.startsWith('/') ? `file://${uri}` : uri;
+};
+
 /**
  * React Native fetch() returns a Blob that Supabase Storage cannot upload directly;
  * XHR with arraybuffer responseType is the well-known workaround.
@@ -26,8 +34,28 @@ export type UploadImageInput = {
 const readFileAsArrayBuffer = (uri: string): Promise<ArrayBuffer> =>
   new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.onload = () => resolve(xhr.response);
-    xhr.onerror = () => reject(new Error('Failed to read file'));
+    xhr.onload = () => {
+      const status = xhr.status;
+      const buffer = xhr.response as ArrayBuffer | null;
+      if (!buffer || buffer.byteLength === 0) {
+        reject(
+          new Error(`Empty file (status=${status}, scheme=${uri.split(':')[0] ?? 'unknown'})`)
+        );
+        return;
+      }
+      resolve(buffer);
+    };
+    xhr.onerror = () => {
+      const scheme = uri.split(':')[0] ?? 'unknown';
+      reject(
+        new Error(
+          `Failed to read file (scheme=${scheme}). ` +
+            (scheme === 'ph'
+              ? 'iOS PhotoKit URI cannot be fetched directly — the picker should materialise to file://.'
+              : 'Underlying I/O error.')
+        )
+      );
+    };
     xhr.responseType = 'arraybuffer';
     xhr.open('GET', uri, true);
     xhr.send(null);
@@ -39,7 +67,8 @@ export const uploadImageToBucket = async ({
   uri,
   contentType = 'image/jpeg',
 }: UploadImageInput): Promise<string> => {
-  const arrayBuffer = await readFileAsArrayBuffer(uri);
+  const normalised = normaliseLocalUri(uri);
+  const arrayBuffer = await readFileAsArrayBuffer(normalised);
 
   // Paths are immutable (uuid + timestamp), so cache aggressively at the CDN
   // and on-device. 1 year matches typical "cache-forever for immutable URLs"

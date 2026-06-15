@@ -99,6 +99,15 @@ export const pickPhotos = async (options: PickPhotosOptions): Promise<PickResult
         fileName: asset.fileName,
       };
       const reason = validateImageAsset(validationInput);
+      // Surface basic asset info so a failed upload further down the pipeline
+      // can be traced back to whether ICP returned a proper file:// path,
+      // a ph:// asset, or an empty stub.
+      console.log('[pickPhotos] asset', {
+        uriScheme: asset.uri.split(':')[0],
+        size: asset.fileSize,
+        mime: asset.type,
+        rejection: reason,
+      });
       if (reason) rejections.push(reason);
       else accepted.push(asset);
     }

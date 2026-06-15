@@ -412,15 +412,21 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       const remaining = Math.max(PHOTO_LIMIT - currentPhotoCount, 0);
       const toUpload = pendingBranchPhotoUris.slice(0, remaining);
       let failedPhotos = 0;
+      let lastPhotoError: unknown = null;
       for (const uri of toUpload) {
         try {
           await BusinessService.addBranchPhoto(branch.id, user.id, uri);
         } catch (error) {
           console.warn('Branch photo upload failed (non-fatal):', error);
           failedPhotos += 1;
+          lastPhotoError = error;
         }
       }
-      if (failedPhotos > 0) softFailures.push(`photos:${failedPhotos}`);
+      if (failedPhotos > 0) {
+        const detail =
+          (lastPhotoError as { message?: string } | null)?.message ?? String(lastPhotoError ?? '');
+        softFailures.push(`photos:${failedPhotos}${detail ? ` (${detail})` : ''}`);
+      }
 
       if (softFailures.length > 0) {
         Alert.alert(
