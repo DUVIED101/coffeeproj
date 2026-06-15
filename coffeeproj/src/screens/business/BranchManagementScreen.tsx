@@ -250,22 +250,24 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
     const key = `${trimmedAddress}|${city}`;
     if (geocodedKeyRef.current === key) return;
 
+    // Input no longer matches the last confirmation — invalidate coords and
+    // show "searching" immediately so the Save button disables instantly
+    // (instead of staying enabled with stale coords for the debounce window).
+    setAddressCoords(null);
+    setAddressLookupStatus('searching');
+
     const controller = new AbortController();
     const timeoutId = setTimeout(async () => {
-      setAddressLookupStatus('searching');
       const result = await geocodeAddress(trimmedAddress, city, controller.signal);
       if (controller.signal.aborted) return;
       geocodedKeyRef.current = key;
       setAddressCoords(result);
       setAddressLookupStatus(result ? 'found' : 'notFound');
-      // Replace the typed address with the canonical form Nominatim returned so
-      // the user can see exactly what was matched. Update the ref to the new
-      // key before the state change to keep the effect from re-firing.
       if (result?.formattedAddress && result.formattedAddress !== trimmedAddress) {
         geocodedKeyRef.current = `${result.formattedAddress}|${city}`;
         setAddress(result.formattedAddress);
       }
-    }, 3000);
+    }, 1500);
 
     return () => {
       clearTimeout(timeoutId);
@@ -278,34 +280,35 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
       return;
     }
 
+    const trimmedAddress = address.trim();
+    const key = `${trimmedAddress}|${city}`;
+
+    // Coords MUST come from the debounced lookup (or unchanged edit). Refuse
+    // to fall back to a synchronous geocode here — Yandex may extract a valid
+    // address out of a string with trailing garbage, and we'd persist the
+    // garbage as the branch address.
+    let coordinates: GeoPoint | null = null;
+    if (addressCoords && geocodedKeyRef.current === key) {
+      coordinates = addressCoords;
+    } else if (
+      editingBranch &&
+      trimmedAddress === editingBranch.address &&
+      city === editingBranch.city
+    ) {
+      coordinates = editingBranch.coordinates;
+    }
+
+    if (!coordinates) {
+      Alert.alert(
+        t('branches.errors.addressNotFoundTitle'),
+        t('branches.errors.addressNotConfirmed')
+      );
+      return;
+    }
+
     setIsSaving(true);
 
     try {
-      const trimmedAddress = address.trim();
-      const key = `${trimmedAddress}|${city}`;
-
-      let coordinates: GeoPoint | null;
-      if (addressCoords && geocodedKeyRef.current === key) {
-        coordinates = addressCoords;
-      } else if (
-        editingBranch &&
-        trimmedAddress === editingBranch.address &&
-        city === editingBranch.city
-      ) {
-        coordinates = editingBranch.coordinates;
-      } else {
-        coordinates = await geocodeAddress(trimmedAddress, city);
-      }
-
-      if (!coordinates) {
-        Alert.alert(
-          t('branches.errors.addressNotFoundTitle'),
-          t('branches.errors.addressNotFound')
-        );
-        setIsSaving(false);
-        return;
-      }
-
       if (editingBranch) {
         await BusinessService.updateBranch(editingBranch.id, {
           name: name.trim(),
@@ -464,6 +467,20 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
   const formTitle = isEditing ? t('branches.form.editTitle') : t('branches.form.addTitle');
   const saveLabel = isEditing ? t('branches.form.update') : t('branches.form.save');
 
+  // Save is only allowed when the typed address is confirmed by the geocoder
+  // OR the user is editing without changing the address. Otherwise we'd risk
+  // persisting whatever extra text the user typed past the matched address.
+  const trimmedAddressForGate = address.trim();
+  const currentAddressKey = `${trimmedAddressForGate}|${city}`;
+  const isAddressConfirmed =
+    (addressLookupStatus === 'found' &&
+      addressCoords !== null &&
+      geocodedKeyRef.current === currentAddressKey) ||
+    (editingBranch !== null &&
+      trimmedAddressForGate === editingBranch.address &&
+      city === editingBranch.city);
+  const isSaveDisabled = isSaving || !isAddressConfirmed;
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
@@ -590,9 +607,9 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
               </View>
 
               <TouchableOpacity
-                style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+                style={[styles.saveButton, isSaveDisabled && styles.saveButtonDisabled]}
                 onPress={handleSaveBranch}
-                disabled={isSaving}>
+                disabled={isSaveDisabled}>
                 {isSaving ? (
                   <ActivityIndicator color="#fff" />
                 ) : (

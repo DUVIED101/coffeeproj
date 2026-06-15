@@ -781,6 +781,7 @@
       "deleteFailed": "Failed to delete branch",
       "addressNotFound": "Could not find coordinates for this address. Please check the address and city.",
       "addressNotFoundTitle": "Address not found",
+      "addressNotConfirmed": "Please wait for the address to be confirmed and remove any extra text after the recognised address.",
       "hasActiveJobs": "Close {{count}} active jobs before deleting this branch."
     },
     "delete": {

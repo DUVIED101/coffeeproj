@@ -153,9 +153,14 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
     const key = `${trimmedAddress}|${branchCity}`;
     if (geocodedKeyRef.current === key) return;
 
+    // Input no longer matches the last confirmation — invalidate coords and
+    // show "searching" immediately so the Continue button disables instantly
+    // (instead of staying enabled with stale coords for the debounce window).
+    setAddressCoords(null);
+    setAddressLookupStatus('searching');
+
     const controller = new AbortController();
     const timeoutId = setTimeout(async () => {
-      setAddressLookupStatus('searching');
       const result = await geocodeAddress(trimmedAddress, branchCity, controller.signal);
       if (controller.signal.aborted) return;
       geocodedKeyRef.current = key;
@@ -165,7 +170,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         geocodedKeyRef.current = `${result.formattedAddress}|${branchCity}`;
         setBranchAddress(result.formattedAddress);
       }
-    }, 3000);
+    }, 1500);
 
     return () => {
       clearTimeout(timeoutId);
@@ -246,9 +251,37 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         showErrorToast(t('branches.form.addressRequired'));
         return false;
       }
+      // Force the address to come back from the geocoder before letting the
+      // user move on — otherwise the typed string (potentially with trailing
+      // junk) would be persisted, and Yandex could match a valid prefix of it.
+      const trimmed = branchAddress.trim();
+      const key = `${trimmed}|${branchCity}`;
+      const editingSame =
+        existingFirstBranch !== null &&
+        trimmed === existingFirstBranch.address &&
+        branchCity === existingFirstBranch.city;
+      const confirmed =
+        (addressLookupStatus === 'found' &&
+          addressCoords !== null &&
+          geocodedKeyRef.current === key) ||
+        editingSame;
+      if (!confirmed) {
+        showErrorToast(t('branches.errors.addressNotConfirmed'));
+        return false;
+      }
     }
     return true;
-  }, [currentStep, name, branchName, branchAddress, t]);
+  }, [
+    currentStep,
+    name,
+    branchName,
+    branchAddress,
+    branchCity,
+    addressLookupStatus,
+    addressCoords,
+    existingFirstBranch,
+    t,
+  ]);
 
   // Ref-trampoline: handleNext must always invoke the latest handleFinish,
   // which closes over photo/branch state that changes after handleNext is memoised.
@@ -320,19 +353,21 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
       const trimmedAddress = branchAddress.trim();
       const cachedKey = `${trimmedAddress}|${branchCity}`;
-      const coordinates =
+      // Defensive: validateStep already gated this, but never run a sync
+      // geocode here — Yandex may extract a valid prefix out of trailing junk.
+      const coordinates: GeoPoint | null =
         addressCoords && geocodedKeyRef.current === cachedKey
           ? addressCoords
           : currentFirstBranch &&
               trimmedAddress === currentFirstBranch.address &&
               branchCity === currentFirstBranch.city
             ? currentFirstBranch.coordinates
-            : await geocodeAddress(trimmedAddress, branchCity);
+            : null;
 
       if (!coordinates) {
         Alert.alert(
           t('branches.errors.addressNotFoundTitle'),
-          t('branches.errors.addressNotFound')
+          t('branches.errors.addressNotConfirmed')
         );
         setIsSubmitting(false);
         return;
