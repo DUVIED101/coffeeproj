@@ -22,6 +22,7 @@ import { PasswordInput } from '../../components/PasswordInput';
 import { SocialAuthButtons } from '../../components/SocialAuthButtons';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 import { getEmailError, getPasswordError, MAX_PASSWORD_LENGTH } from '../../utils/validation';
+import { stashConsentAccepted } from '../../utils/consentStash';
 import type { AuthStackParamList } from '../../navigation/AuthStack';
 
 type Props = {
@@ -103,6 +104,10 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
 
     setIsLoading(true);
     try {
+      // Boxes are ticked at this point (validateForm enforced it). Stash so
+      // ProfileBootstrap can persist consent_accepted_at on the user row
+      // without re-prompting after the email-verification flow lands.
+      await stashConsentAccepted();
       await AuthService.signUpWithEmail(normalizedEmail, password, accountType);
       navigation.navigate('EmailVerification', {
         email: normalizedEmail,
@@ -227,6 +232,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation, route }) => {
               accountType={accountType}
               separatorLabel={t('auth.social.or')}
               disabled={!consentsValid}
+              consentAccepted={consentsValid}
             />
 
             {/* Consent checkboxes — apply to all sign-up methods above */}

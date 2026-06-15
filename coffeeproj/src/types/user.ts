@@ -13,6 +13,7 @@ export interface User {
   suspendedUntil: string | null;
   bannedAt: string | null;
   banReason: string | null;
+  consentAcceptedAt: string | null;
 }
 
 export interface CreateUserData {

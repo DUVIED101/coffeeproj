@@ -654,7 +654,10 @@
       "failedTitle": "Profile setup failed",
       "retry": "Retry",
       "signOut": "Sign out",
-      "differentRole": "This email is already registered with a different role. Sign in with the role you originally chose, or use a different email."
+      "differentRole": "This email is already registered with a different role. Sign in with the role you originally chose, or use a different email.",
+      "consentTitle": "Your consent is required",
+      "consentBody": "Before you continue, please confirm you accept our rules and the processing of personal data. This applies to every sign-in method.",
+      "consentAccept": "Accept and continue"
     },
     "errors": {
       "noOrgName": "Enter the legal entity name",

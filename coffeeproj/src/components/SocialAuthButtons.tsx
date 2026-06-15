@@ -9,6 +9,7 @@ import { GOOGLE_IOS_CLIENT_ID, YANDEX_CLIENT_ID } from '@env';
 import { COLORS } from '../config/constants';
 import { AuthService } from '../services/AuthService';
 import { stashPendingAccountType, clearPendingAccountType } from '../utils/socialAuthStash';
+import { stashConsentAccepted, clearStashedConsent } from '../utils/consentStash';
 import { getErrorMessage } from '../utils/getErrorMessage';
 import type { AccountType } from '../types';
 
@@ -18,6 +19,12 @@ type Props = {
   accountType?: AccountType;
   separatorLabel?: string;
   disabled?: boolean;
+  // When true (only set by SignupScreen, after the user has ticked both
+  // consent boxes), stash a flag so ProfileBootstrap persists
+  // consent_accepted_at without showing the in-bootstrap consent gate. When
+  // false/undefined (LoginScreen), no flag is stashed and the new user lands
+  // at the consent gate before being allowed into MainTabs.
+  consentAccepted?: boolean;
 };
 
 // Yandex iOS callback format used by their own Login SDK (and the only
@@ -59,14 +66,27 @@ export const SocialAuthButtons: React.FC<Props> = ({
   accountType,
   separatorLabel,
   disabled = false,
+  consentAccepted = false,
 }) => {
   const { t } = useTranslation();
   const [busy, setBusy] = useState<Provider | null>(null);
+
+  // Stash/clear consent before kicking off any provider. Stale stash from a
+  // previous cancelled signup must not leak into a later flow where the user
+  // never explicitly consented (e.g. login on a different device).
+  const syncConsentStash = useCallback(async () => {
+    if (consentAccepted) {
+      await stashConsentAccepted();
+    } else {
+      await clearStashedConsent();
+    }
+  }, [consentAccepted]);
 
   const handleApple = useCallback(async () => {
     if (busy) return;
     setBusy('apple');
     try {
+      await syncConsentStash();
       if (accountType) {
         await stashPendingAccountType(accountType);
       } else {
@@ -97,7 +117,7 @@ export const SocialAuthButtons: React.FC<Props> = ({
     } finally {
       setBusy(null);
     }
-  }, [accountType, busy, t]);
+  }, [accountType, busy, syncConsentStash, t]);
 
   const handleGoogle = useCallback(async () => {
     if (busy) return;
@@ -107,6 +127,7 @@ export const SocialAuthButtons: React.FC<Props> = ({
     }
     setBusy('google');
     try {
+      await syncConsentStash();
       if (accountType) {
         await stashPendingAccountType(accountType);
       } else {
@@ -140,7 +161,7 @@ export const SocialAuthButtons: React.FC<Props> = ({
     } finally {
       setBusy(null);
     }
-  }, [accountType, busy, t]);
+  }, [accountType, busy, syncConsentStash, t]);
 
   const handleYandex = useCallback(async () => {
     if (busy) return;
@@ -150,6 +171,7 @@ export const SocialAuthButtons: React.FC<Props> = ({
     }
     setBusy('yandex');
     try {
+      await syncConsentStash();
       if (accountType) {
         await stashPendingAccountType(accountType);
       } else {
@@ -200,7 +222,7 @@ export const SocialAuthButtons: React.FC<Props> = ({
     } finally {
       setBusy(null);
     }
-  }, [accountType, busy, t]);
+  }, [accountType, busy, syncConsentStash, t]);
 
   return (
     <View style={styles.container}>

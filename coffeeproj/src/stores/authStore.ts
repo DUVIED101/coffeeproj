@@ -296,6 +296,7 @@ async function doFetchUserProfile(userId: string): Promise<User | null> {
     suspendedUntil: data.suspended_until ?? null,
     bannedAt: data.banned_at ?? null,
     banReason: data.ban_reason ?? null,
+    consentAcceptedAt: data.consent_accepted_at ?? null,
   };
 }
 

@@ -5,7 +5,7 @@ import { useAuthStore } from '../stores/authStore';
 import { AuthStack } from './AuthStack';
 import { MainTabs } from './MainTabs';
 import { flushPendingPushPayload, navigationRef } from './navigationRef';
-import { ProfileBootstrapScreen } from '../screens/auth/ProfileBootstrapScreen';
+import { BootstrapStack } from './BootstrapStack';
 import { ConnectionErrorScreen } from '../screens/auth/ConnectionErrorScreen';
 import { COLORS } from '../config/constants';
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -38,7 +38,7 @@ export const AppNavigator: React.FC = () => {
       return <AuthStack key="unauthenticated" />;
     }
     if (!user) {
-      return <ProfileBootstrapScreen key="bootstrap" />;
+      return <BootstrapStack key="bootstrap" />;
     }
     return <MainTabs key="authenticated" />;
   };

@@ -18,6 +18,7 @@ export class UserService {
       suspendedUntil: dbUser.suspended_until ?? null,
       bannedAt: dbUser.banned_at ?? null,
       banReason: dbUser.ban_reason ?? null,
+      consentAcceptedAt: dbUser.consent_accepted_at ?? null,
     };
   }
 
