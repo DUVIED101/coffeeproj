@@ -69,6 +69,8 @@ const getStatusText = (status: ApplicationStatus, t: TFunction): string => {
       return t('applications.status.rejected');
     case 'withdrawn':
       return t('applications.status.withdrawn');
+    case 'completed':
+      return t('applications.status.completed');
     default:
       return status;
   }

@@ -37,7 +37,13 @@ export const AppNavigator: React.FC = () => {
     if (!isAuthenticated) {
       return <AuthStack key="unauthenticated" />;
     }
-    if (!user) {
+    // BootstrapStack is rendered whenever:
+    //  • we have a session but no public.users row yet (brand new user); OR
+    //  • the row exists but consent_accepted_at is still NULL.
+    // The latter catches the case where a first-time OAuth user signed out
+    // from the consent gate without accepting — on their next sign-in the
+    // gate must reappear, otherwise OAuth would bypass consent entirely.
+    if (!user || !user.consentAcceptedAt) {
       return <BootstrapStack key="bootstrap" />;
     }
     return <MainTabs key="authenticated" />;
