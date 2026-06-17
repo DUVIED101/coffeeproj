@@ -68,5 +68,13 @@ cd coffeeproj && npx tsc --noEmit  # type-check
 
 ## License
 
-Source-available, all rights reserved. Not licensed for redistribution
-or commercial reuse without prior written agreement.
+Copyright © 2026 David Enukashvili. All rights reserved.
+
+This source code is published for transparency only. You may read it,
+but you may not copy, fork, modify, redistribute, host, or use it (in
+whole or in part) to build any product or service without explicit
+prior written permission from the author.
+
+The absence of a `LICENSE` file in this repository is intentional:
+under default copyright law it means no rights are granted to third
+parties beyond what is explicitly stated here.
