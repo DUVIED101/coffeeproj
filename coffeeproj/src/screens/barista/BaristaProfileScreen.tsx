@@ -756,6 +756,18 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
             />
           }>
           <View style={styles.header}>
+            {!isEditing && (
+              <TouchableOpacity
+                style={styles.editPencilButton}
+                onPress={handleEdit}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel={t('baristaProfileScreen.edit', {
+                  defaultValue: 'Изменить',
+                })}>
+                <MaterialCommunityIcons name="pencil-outline" size={20} color={COLORS.primary} />
+              </TouchableOpacity>
+            )}
             <View style={styles.avatarContainer}>
               {profile.avatarUrl ? (
                 <TouchableOpacity
@@ -834,33 +846,27 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           <View style={styles.section} onLayout={handleSectionLayout('personal')}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>
-                {t('baristaProfileScreen.personalInfo', { defaultValue: 'Личная информация' })}
-              </Text>
-              {!isEditing ? (
-                <TouchableOpacity onPress={handleEdit}>
-                  <Text style={styles.editButton}>
-                    {t('baristaProfileScreen.edit', { defaultValue: 'Изменить' })}
+            {/* Edit mode keeps an inline Save/Cancel row at the top of the
+                form (previously this lived in the section header alongside
+                "Личная информация" — now removed for visual simplicity).
+                View mode shows no chrome here at all; the entry point is the
+                pencil icon on the avatar card above. */}
+            {isEditing && (
+              <View style={styles.editActionsRow}>
+                <TouchableOpacity onPress={handleCancel} hitSlop={8}>
+                  <Text style={styles.cancelButton}>
+                    {t('baristaProfileScreen.cancel', { defaultValue: 'Отмена' })}
                   </Text>
                 </TouchableOpacity>
-              ) : (
-                <View style={styles.editActions}>
-                  <TouchableOpacity onPress={handleCancel}>
-                    <Text style={styles.cancelButton}>
-                      {t('baristaProfileScreen.cancel', { defaultValue: 'Отмена' })}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={handleSave} disabled={isSaving}>
-                    <Text style={styles.saveButton}>
-                      {isSaving
-                        ? t('baristaProfileScreen.saving', { defaultValue: 'Сохранение…' })
-                        : t('baristaProfileScreen.save', { defaultValue: 'Сохранить' })}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
+                <TouchableOpacity onPress={handleSave} disabled={isSaving} hitSlop={8}>
+                  <Text style={styles.saveButton}>
+                    {isSaving
+                      ? t('baristaProfileScreen.saving', { defaultValue: 'Сохранение…' })
+                      : t('baristaProfileScreen.save', { defaultValue: 'Сохранить' })}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {isEditing ? (
               <>
@@ -1612,6 +1618,25 @@ const styles = StyleSheet.create({
   editActions: {
     flexDirection: 'row',
     gap: 16,
+  },
+  // Floating pencil button at the top-right of the profile header card.
+  // Replaces the old "Изменить" text link that lived next to a "Личная
+  // информация" heading — heading is gone, so the affordance moves up to the
+  // card it actually edits.
+  editPencilButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 1,
+    padding: 6,
+  },
+  // Sits at the top of the personal-info section when isEditing is true,
+  // hosting Cancel + Save side-by-side over the form fields.
+  editActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   cancelButton: {
     fontSize: 16,
