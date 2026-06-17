@@ -34,5 +34,15 @@ export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    // Force PKCE flow for the magic-link / password-reset / email
+    // confirmation handshakes. Without this, supabase-js defaults can fall
+    // back to the implicit flow on older versions — meaning the
+    // authorization code from the email deep link can be redeemed by anyone
+    // who intercepts it (rogue app handling the same URL scheme, MITM in a
+    // hostile network). PKCE adds a per-session verifier that only our app
+    // knows, so an intercepted code is useless. Native OAuth providers
+    // (Apple / Google / Yandex) bypass this since they hand us identity
+    // tokens directly via their SDKs.
+    flowType: 'pkce',
   },
 });
