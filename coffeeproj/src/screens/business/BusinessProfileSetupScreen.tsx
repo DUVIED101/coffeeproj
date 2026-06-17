@@ -318,13 +318,17 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         .map(link => ({ ...link, value: link.value.trim() }))
         .filter(link => link.value.length > 0);
 
+      // For UPDATE: trimmed-empty inputs must travel as `null` so the column
+      // is actively cleared. `undefined` would be skipped by updateBusiness's
+      // "if !== undefined" guard, leaving the old value in place — that's why
+      // emptying the website field didn't wipe it.
       const business = currentBusiness
         ? await BusinessService.updateBusiness(currentBusiness.id, {
             name: name.trim(),
-            description: description.trim() || undefined,
+            description: description.trim() === '' ? null : description.trim(),
             businessType,
             legalForm,
-            website: website.trim() || undefined,
+            website: website.trim() === '' ? null : website.trim(),
             socialLinks: sanitizedSocialLinks,
           })
         : await BusinessService.createBusiness({

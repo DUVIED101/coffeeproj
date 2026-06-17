@@ -76,12 +76,14 @@ export interface CreateBusinessData {
 
 export interface UpdateBusinessData {
   name?: string;
-  description?: string;
+  // null means "clear this column" — distinguished from undefined ("don't
+  // touch this field") so a save can both replace AND wipe optional text.
+  description?: string | null;
   businessType?: BusinessType;
   legalForm?: LegalForm;
   isAcceptingApplications?: boolean;
   logoUrl?: string;
-  website?: string;
+  website?: string | null;
   socialLinks?: SocialLink[];
 }
 
