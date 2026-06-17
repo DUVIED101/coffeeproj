@@ -932,62 +932,70 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   </>
                 )}
               </>
-            ) : null}
-          </View>
-
-          <View style={styles.section}>
-            <TouchableOpacity
-              style={styles.historyRow}
-              onPress={() => navigation.navigate('ShiftHistory')}>
-              <View style={styles.historyRowLeft}>
-                <Text style={styles.historyRowTitle}>
-                  {t('baristaProfileScreen.shiftHistory', { defaultValue: 'История смен' })}
-                </Text>
-              </View>
-              <Text style={styles.historyRowChevron}>›</Text>
-            </TouchableOpacity>
-
-            {user?.id && (
-              <TouchableOpacity
-                style={[styles.historyRow, styles.historyRowSecondary]}
-                onPress={() => navigation.navigate('UserReviews', { userId: user.id as string })}>
-                <View style={styles.historyRowLeft}>
-                  <Text style={styles.historyRowTitle}>
-                    {t('baristaProfileScreen.allReviews', { defaultValue: 'Все отзывы' })}
-                  </Text>
-                  {aggregate && aggregate.reviewCount > 0 ? (
-                    <StarRow
-                      rating={aggregate.averageRating}
-                      count={aggregate.reviewCount}
-                      showValue
-                      size={14}
-                    />
-                  ) : (
-                    <Text style={styles.historyRowSubtitle}>
-                      {t('reviews.noRatingsShort', { defaultValue: 'Без оценок' })}
+            ) : (
+              // View mode: navigation rows render directly under the heading,
+              // forming subsections of "Личная информация" instead of a
+              // separate framed block. This avoids the double-divider noise
+              // the standalone nav section was producing.
+              <View>
+                <TouchableOpacity
+                  style={styles.subsectionRow}
+                  onPress={() => navigation.navigate('ShiftHistory')}>
+                  <View style={styles.historyRowLeft}>
+                    <Text style={styles.historyRowTitle}>
+                      {t('baristaProfileScreen.shiftHistory', { defaultValue: 'История смен' })}
                     </Text>
-                  )}
-                </View>
-                <Text style={styles.historyRowChevron}>›</Text>
-              </TouchableOpacity>
-            )}
+                  </View>
+                  <Text style={styles.historyRowChevron}>›</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.historyRow, styles.historyRowSecondary]}
-              onPress={() => navigation.navigate('Settings', { screen: 'MyDisputes' })}>
-              <View style={styles.historyRowLeft}>
-                <Text style={styles.historyRowTitle}>{t('reliability.sectionTitle')}</Text>
-                {reliability ? (
-                  <Text style={styles.historyRowSubtitle}>
-                    {t('reliability.scoreOf', { score: reliability.reliabilityScore.toFixed(1) })}
-                    {reliability.incidents30d > 0
-                      ? ` · ${t('reliability.incidents', { count: reliability.incidents30d })}`
-                      : ` · ${t('reliability.noIncidents')}`}
-                  </Text>
-                ) : null}
+                {user?.id && (
+                  <TouchableOpacity
+                    style={styles.subsectionRow}
+                    onPress={() =>
+                      navigation.navigate('UserReviews', { userId: user.id as string })
+                    }>
+                    <View style={styles.historyRowLeft}>
+                      <Text style={styles.historyRowTitle}>
+                        {t('baristaProfileScreen.allReviews', { defaultValue: 'Все отзывы' })}
+                      </Text>
+                      {aggregate && aggregate.reviewCount > 0 ? (
+                        <StarRow
+                          rating={aggregate.averageRating}
+                          count={aggregate.reviewCount}
+                          showValue
+                          size={14}
+                        />
+                      ) : (
+                        <Text style={styles.historyRowSubtitle}>
+                          {t('reviews.noRatingsShort', { defaultValue: 'Без оценок' })}
+                        </Text>
+                      )}
+                    </View>
+                    <Text style={styles.historyRowChevron}>›</Text>
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity
+                  style={styles.subsectionRow}
+                  onPress={() => navigation.navigate('Settings', { screen: 'MyDisputes' })}>
+                  <View style={styles.historyRowLeft}>
+                    <Text style={styles.historyRowTitle}>{t('reliability.sectionTitle')}</Text>
+                    {reliability ? (
+                      <Text style={styles.historyRowSubtitle}>
+                        {t('reliability.scoreOf', {
+                          score: reliability.reliabilityScore.toFixed(1),
+                        })}
+                        {reliability.incidents30d > 0
+                          ? ` · ${t('reliability.incidents', { count: reliability.incidents30d })}`
+                          : ` · ${t('reliability.noIncidents')}`}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <Text style={styles.historyRowChevron}>›</Text>
+                </TouchableOpacity>
               </View>
-              <Text style={styles.historyRowChevron}>›</Text>
-            </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.section} onLayout={handleSectionLayout('professional')}>
@@ -1894,6 +1902,15 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
+  },
+  // Used by the "subsections of Личная информация" rows (Shift history,
+  // Reviews, Reliability). No internal divider — the rows are visually
+  // grouped under the section heading and spacing alone separates them.
+  subsectionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
   },
   historyRowLeft: {
     flex: 1,
