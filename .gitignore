@@ -72,3 +72,7 @@ docs/PHASE_8_REMAINING.md
 infra/README.md
 coffeeproj/scripts/seed-simulation.js
 coffeeproj/scripts/seed-test-jobs.js
+
+# Private content — kept local, not published
+admin/
+supabase/migrations/
