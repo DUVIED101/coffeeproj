@@ -166,7 +166,8 @@ export class ApplicationService {
         `
         )
         .eq('barista_id', baristaId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(200);
 
       if (error) throw error;
 
@@ -753,7 +754,8 @@ export class ApplicationService {
          applications!inner(jobs!inner(title, businesses!inner(name)))`
       )
       .eq('reporter_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(100);
     if (error) throw error;
     return (data ?? []).map((row: any) => this.mapDisputeRow(row, 'reporter'));
   }
@@ -767,7 +769,8 @@ export class ApplicationService {
          applications!inner(jobs!inner(title, businesses!inner(name)))`
       )
       .eq('reportee_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(100);
     if (error) throw error;
     return (data ?? []).map((row: any) => this.mapDisputeRow(row, 'reportee'));
   }

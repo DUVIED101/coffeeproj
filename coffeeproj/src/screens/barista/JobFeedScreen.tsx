@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 import {
   View,
@@ -7,10 +7,10 @@ import {
   SafeAreaView,
   FlatList,
   RefreshControl,
-  Alert,
   TouchableOpacity,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
@@ -24,6 +24,7 @@ import { Skeleton } from '../../components/Skeleton';
 import { useMasterDetail } from '../../components/MasterDetailContext';
 import { showErrorToast } from '../../stores/errorToastStore';
 import { mapAnyError } from '../../utils/errorHandler';
+import { queryKeys } from '../../lib/queryClient';
 import {
   requestLocationPermission,
   getCurrentLocation,
@@ -31,7 +32,6 @@ import {
 } from '../../utils/geolocation';
 import type { Job, JobFilters } from '../../types/job';
 import type { GeoPoint } from '../../types/business';
-import type { BaristaProfile } from '../../types/baristaProfile';
 import type { UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
 
@@ -76,79 +76,30 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
   const user = useAuthStore(s => s.user);
   const { t } = useTranslation();
   const masterDetail = useMasterDetail();
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const queryClient = useQueryClient();
   const [userLocation, setUserLocation] = useState<GeoPoint | undefined>(undefined);
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   const [filters, setFilters] = useState<JobFilters>({});
-  const [baristaProfile, setBaristaProfile] = useState<BaristaProfile | null>(null);
-  const [showProfileBanner, setShowProfileBanner] = useState(false);
-  const [ownerAggregates, setOwnerAggregates] = useState<Map<UserId, UserReviewAggregate>>(
-    new Map()
-  );
-  const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
 
   const isFocused = useIsFocused();
-
-  const loadBaristaProfile = useCallback(async () => {
-    if (!user?.id) return;
-
-    try {
-      const profile = await BaristaProfileService.getProfileByUserId(user.id);
-      setBaristaProfile(profile);
-
-      // Banner threshold matches the apply gate in JobDetailsScreen (20%).
-      // Once a barista's profile is complete enough to apply, we stop nagging.
-      setShowProfileBanner(!profile || profile.profileCompleteness < 20);
-    } catch (error) {
-      console.error('Error loading barista profile:', error);
-    }
-  }, [user?.id]);
-
-  const loadAppliedJobs = useCallback(async () => {
-    if (!user?.id) return;
-    try {
-      const ids = await ApplicationService.getActiveAppliedJobIds(user.id);
-      setAppliedJobIds(ids);
-    } catch (error) {
-      console.error('Error loading applied job ids:', error);
-    }
-  }, [user?.id]);
+  const userId = user?.id;
 
   useEffect(() => {
-    initializeLocation();
+    void initializeLocation();
   }, []);
 
-  // Reload profile whenever the tab regains focus (e.g. after the user
-  // finishes BaristaProfileSetup in the Profile tab and switches back). The
-  // previous useFocusEffect setup occasionally missed this trigger in the
-  // tab → stack nesting; useIsFocused is observably reliable.
-  useEffect(() => {
-    if (!isFocused) return;
-    loadBaristaProfile();
-    loadAppliedJobs();
-  }, [isFocused, loadBaristaProfile, loadAppliedJobs]);
-
-  useEffect(() => {
-    loadJobs();
-  }, [filters, userLocation]);
-
-  const initializeLocation = async () => {
+  const initializeLocation = async (): Promise<void> => {
     try {
-      // Hydrate from cache first so distance renders immediately on relaunches.
       const cached = await getLastKnownLocationFast();
       if (cached) {
         setUserLocation(cached);
         setLocationPermissionDenied(false);
       }
-
       const hasPermission = await requestLocationPermission();
       if (!hasPermission) {
         if (!cached) setLocationPermissionDenied(true);
         return;
       }
-
       const location = await getCurrentLocation();
       if (location) {
         setUserLocation(location);
@@ -162,35 +113,67 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const loadJobs = async () => {
-    try {
-      const jobsData = await JobService.searchJobs(filters, userLocation);
-      setJobs(jobsData);
+  const jobsQuery = useQuery({
+    queryKey: queryKeys.jobs.search(filters, userLocation ?? null),
+    queryFn: () => JobService.searchJobs(filters, userLocation),
+  });
 
-      const ownerIds = jobsData
+  const profileQuery = useQuery({
+    queryKey: queryKeys.baristaProfile.byUserId(userId ?? ''),
+    queryFn: () => BaristaProfileService.getProfileByUserId(userId as string),
+    enabled: Boolean(userId),
+  });
+
+  const appliedQuery = useQuery({
+    queryKey: queryKeys.applications.appliedJobIds(userId ?? ''),
+    queryFn: () => ApplicationService.getActiveAppliedJobIds(userId as string),
+    enabled: Boolean(userId),
+  });
+
+  const ownerIds = useMemo<ReadonlyArray<UserId>>(
+    () =>
+      (jobsQuery.data ?? [])
         .map(j => j.businessOwnerId as UserId | undefined)
-        .filter((id): id is UserId => Boolean(id));
-      if (ownerIds.length > 0) {
-        const aggMap = await ReviewService.getAggregatesForUsers(ownerIds);
-        setOwnerAggregates(aggMap);
-      } else {
-        setOwnerAggregates(new Map());
-      }
-    } catch (error) {
-      console.error('❌ Error loading jobs:', error);
-      showErrorToast(mapAnyError(error), () => {
-        loadJobs();
-      });
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
+        .filter((id): id is UserId => Boolean(id)),
+    [jobsQuery.data]
+  );
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await loadJobs();
-  };
+  const ownerAggregatesQuery = useQuery({
+    queryKey: queryKeys.reviews.aggregatesForUsers(ownerIds as ReadonlyArray<string>),
+    queryFn: () => ReviewService.getAggregatesForUsers([...ownerIds]),
+    enabled: ownerIds.length > 0,
+  });
+
+  // Surface fetch failures to the user with retry-via-toast, matching previous behaviour.
+  useEffect(() => {
+    if (jobsQuery.error) {
+      console.error('❌ Error loading jobs:', jobsQuery.error);
+      showErrorToast(mapAnyError(jobsQuery.error), () => {
+        void jobsQuery.refetch();
+      });
+    }
+  }, [jobsQuery.error, jobsQuery.refetch]);
+
+  // Re-fetch profile and applied job IDs whenever the tab regains focus, e.g.
+  // after the user finishes BaristaProfileSetup in the Profile tab. Filter
+  // results don't need a focus refetch — they're keyed on filters/location.
+  useEffect(() => {
+    if (!isFocused || !userId) return;
+    void queryClient.invalidateQueries({ queryKey: queryKeys.baristaProfile.byUserId(userId) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.applications.appliedJobIds(userId) });
+  }, [isFocused, userId, queryClient]);
+
+  const jobs = jobsQuery.data ?? [];
+  const appliedJobIds = appliedQuery.data ?? new Set<string>();
+  const ownerAggregates = ownerAggregatesQuery.data ?? new Map<UserId, UserReviewAggregate>();
+  const baristaProfile = profileQuery.data ?? null;
+  // Banner threshold matches the apply gate in JobDetailsScreen (20%).
+  const showProfileBanner =
+    profileQuery.isSuccess && (!baristaProfile || baristaProfile.profileCompleteness < 20);
+
+  const handleRefresh = useCallback(async (): Promise<void> => {
+    await jobsQuery.refetch();
+  }, [jobsQuery]);
 
   const handleFilterChange = useCallback((newFilters: JobFilters) => {
     setFilters(newFilters);
@@ -232,7 +215,7 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
     </View>
   );
 
-  if (isLoading) {
+  if (jobsQuery.isPending) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.listContent}>
@@ -288,7 +271,7 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
         ListEmptyComponent={renderEmpty}
         refreshControl={
           <RefreshControl
-            refreshing={isRefreshing}
+            refreshing={jobsQuery.isFetching && !jobsQuery.isPending}
             onRefresh={handleRefresh}
             tintColor={COLORS.primary}
           />

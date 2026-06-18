@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { COLORS } from '../../config/constants';
 import { ChatService } from '../../services/ChatService';
 import { useAuthStore } from '../../stores/authStore';
@@ -13,6 +14,7 @@ import { Avatar } from '../../components/Avatar';
 import { Skeleton } from '../../components/Skeleton';
 import { useMasterDetail } from '../../components/MasterDetailContext';
 import { useBlockedUsersStore } from '../../stores/blockedUsersStore';
+import { queryKeys } from '../../lib/queryClient';
 import type { Conversation } from '../../types/chat';
 import type { ApplicationStatus } from '../../types/application';
 
@@ -134,43 +136,41 @@ export function ConversationsListScreen({ navigation }: any) {
   const unreadCount = useNotificationFeedStore(state => state.unreadCount);
   const { t } = useTranslation();
   const masterDetail = useMasterDetail();
+  const queryClient = useQueryClient();
   const blockedUsers = useBlockedUsersStore(s => s.blocked);
   const hydrateBlocked = useBlockedUsersStore(s => s.hydrate);
   useEffect(() => {
     void hydrateBlocked();
   }, [hydrateBlocked]);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [archiveTab, setArchiveTab] = useState<'active' | 'archive'>('active');
 
-  const loadConversations = useCallback(async () => {
-    if (!user?.id || !user?.accountType) {
-      setIsLoading(false);
-      return;
-    }
+  const userId = user?.id;
+  const accountType = user?.accountType;
 
-    try {
-      const data = await ChatService.getConversations(user.id, user.accountType);
-      setConversations(data);
-    } catch (error) {
-      console.error('Error loading conversations:', error);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, [user?.id, user?.accountType]);
+  const conversationsQuery = useQuery({
+    queryKey: queryKeys.conversations.forUser(userId ?? '', accountType ?? ''),
+    queryFn: () =>
+      ChatService.getConversations(userId as string, accountType as 'barista' | 'business'),
+    enabled: Boolean(userId && accountType),
+  });
 
+  // Re-fetch whenever the tab regains focus so a new message landing while the
+  // user is on another tab still bumps the conversation to the top.
   useFocusEffect(
     useCallback(() => {
-      loadConversations();
-    }, [loadConversations])
+      if (!userId || !accountType) return;
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.conversations.forUser(userId, accountType),
+      });
+    }, [queryClient, userId, accountType])
   );
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await loadConversations();
-  };
+  const conversations = conversationsQuery.data ?? [];
+  const isLoading = conversationsQuery.isPending && Boolean(userId && accountType);
+
+  const handleRefresh = useCallback(async (): Promise<void> => {
+    await conversationsQuery.refetch();
+  }, [conversationsQuery]);
 
   const handleConversationPress = useCallback(
     (conversation: Conversation) => {
@@ -312,7 +312,7 @@ export function ConversationsListScreen({ navigation }: any) {
         ListEmptyComponent={renderEmpty}
         refreshControl={
           <RefreshControl
-            refreshing={isRefreshing}
+            refreshing={conversationsQuery.isFetching && !conversationsQuery.isPending}
             onRefresh={handleRefresh}
             tintColor={COLORS.primary}
           />

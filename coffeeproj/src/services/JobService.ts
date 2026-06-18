@@ -221,7 +221,8 @@ export class JobService {
         .from('jobs')
         .select(JOB_COLUMNS_WITH_JOINS)
         .eq('business_owner_id', ownerUserId)
-        .order('posted_at', { ascending: false });
+        .order('posted_at', { ascending: false })
+        .limit(200);
 
       if (activeOnly) {
         query = query.eq('status', 'open');

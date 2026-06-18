@@ -11,17 +11,21 @@ import {
   AppState,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { ShiftCountdownBanner } from '../../components/ShiftCountdownBanner';
+import { Skeleton } from '../../components/Skeleton';
 import { useStaleCallback } from '../../hooks/useStaleCallback';
 import { showErrorToast, showSuccessToast } from '../../stores/errorToastStore';
 import { handleApiError } from '../../utils/handleApiError';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ReviewService } from '../../services/ReviewService';
 import { ReviewModal } from '../../components/ReviewModal';
+import { useAuthStore } from '../../stores/authStore';
+import { queryKeys } from '../../lib/queryClient';
 import { getShiftEnd, canBaristaCancelShift, getShiftStart } from '../../utils/shiftLifecycle';
 import type { Application, DisputeSummary } from '../../types/application';
 import type { ApplicationId, UserId } from '../../types/ids';
@@ -45,6 +49,8 @@ type Props = {
 export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
+  const queryClient = useQueryClient();
+  const userId = useAuthStore(s => s.user?.id);
 
   const params = route.params;
   const initialApp = 'application' in params ? params.application : undefined;
@@ -52,7 +58,6 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
 
   const [application, setApplication] = useState<Application | undefined>(initialApp);
   const [isLoadingApp, setIsLoadingApp] = useState(initialApp === undefined);
-  const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [isCancellingShift, setIsCancellingShift] = useState(false);
   const [isMarkingComplete, setIsMarkingComplete] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(initialApp?.status ?? 'pending');
@@ -230,6 +235,41 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
     }
   };
 
+  const withdrawMutation = useMutation({
+    mutationFn: (applicationId: string) => ApplicationService.withdrawApplication(applicationId),
+    onMutate: async () => {
+      if (!application || !userId) return { previousApplied: undefined };
+      // Optimistic: drop this job from the barista's "applied" set so the
+      // JobFeed badge clears the moment they tap Withdraw, before the
+      // server round-trip finishes.
+      const key = queryKeys.applications.appliedJobIds(userId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previousApplied = queryClient.getQueryData<Set<string>>(key);
+      if (previousApplied) {
+        const next = new Set(previousApplied);
+        next.delete(application.jobId);
+        queryClient.setQueryData(key, next);
+      }
+      return { previousApplied };
+    },
+    onError: (error, _appId, context) => {
+      if (context?.previousApplied && userId) {
+        queryClient.setQueryData(
+          queryKeys.applications.appliedJobIds(userId),
+          context.previousApplied
+        );
+      }
+      console.error('Error withdrawing application:', error);
+      void handleApiError(error);
+    },
+    onSettled: () => {
+      if (!userId) return;
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.applications.appliedJobIds(userId),
+      });
+    },
+  });
+
   const handleWithdraw = () => {
     Alert.alert(
       t('applications.details.withdrawConfirmTitle'),
@@ -242,19 +282,15 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
         {
           text: t('applications.details.withdrawAction'),
           style: 'destructive',
-          onPress: async () => {
-            try {
-              setIsWithdrawing(true);
-              await ApplicationService.withdrawApplication(application!.id);
-              setCurrentStatus('withdrawn');
-              showSuccessToast(t('applications.details.withdrawSuccess'));
-              navigation.goBack();
-            } catch (error) {
-              console.error('Error withdrawing application:', error);
-              void handleApiError(error);
-            } finally {
-              setIsWithdrawing(false);
-            }
+          onPress: () => {
+            if (!application) return;
+            // Optimistic UI: flip status and exit the screen immediately. The
+            // mutation continues in the background; onError rolls back the
+            // applied-jobs cache if it fails.
+            setCurrentStatus('withdrawn');
+            showSuccessToast(t('applications.details.withdrawSuccess'));
+            withdrawMutation.mutate(application.id);
+            navigation.goBack();
           },
         },
       ]
@@ -378,7 +414,21 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
   if (isLoadingApp || !application) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" style={{ flex: 1 }} color={COLORS.primary} />
+        <View style={styles.skeletonStatus}>
+          <Skeleton width={120} height={14} />
+          <Skeleton width={140} height={32} borderRadius={999} style={styles.skeletonGap} />
+          <Skeleton width={180} height={13} style={styles.skeletonGap} />
+        </View>
+        <View style={styles.skeletonSection}>
+          <Skeleton width="40%" height={18} />
+          <Skeleton width="80%" height={20} style={styles.skeletonGap} />
+          <Skeleton width="55%" height={15} style={styles.skeletonGap} />
+        </View>
+        <View style={styles.skeletonSection}>
+          <Skeleton width="35%" height={18} />
+          <Skeleton width="90%" height={15} style={styles.skeletonGap} />
+          <Skeleton width="70%" height={15} style={styles.skeletonGap} />
+        </View>
       </SafeAreaView>
     );
   }
@@ -679,14 +729,10 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
             <TouchableOpacity
               style={[styles.withdrawButton, canMarkComplete && { marginTop: 12 }]}
               onPress={handleWithdraw}
-              disabled={isWithdrawing}>
-              {isWithdrawing ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.withdrawButtonText}>
-                  {t('applications.details.withdrawAction')}
-                </Text>
-              )}
+              disabled={withdrawMutation.isPending}>
+              <Text style={styles.withdrawButtonText}>
+                {t('applications.details.withdrawAction')}
+              </Text>
             </TouchableOpacity>
           )}
           {(currentStatus === 'completed' || currentStatus === 'accepted') &&
@@ -732,6 +778,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  skeletonStatus: {
+    backgroundColor: '#fff',
+    padding: 20,
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+  },
+  skeletonSection: {
+    backgroundColor: '#fff',
+    padding: 20,
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: COLORS.border,
+  },
+  skeletonGap: {
+    marginTop: 8,
   },
   scrollView: {
     flex: 1,
