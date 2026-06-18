@@ -132,6 +132,12 @@ export const SettingsScreen: React.FC = () => {
             onPress={() => navigation.navigate('Visibility')}
             showChevron
           />
+          <View style={styles.separator} />
+          <SettingsRow
+            label={t('settings.items.blockedUsers')}
+            onPress={() => navigation.navigate('BlockedUsers')}
+            showChevron
+          />
         </View>
 
         <Text style={styles.sectionHeader}>{t('settings.sections.about').toUpperCase()}</Text>

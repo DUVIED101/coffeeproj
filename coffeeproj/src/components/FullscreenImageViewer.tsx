@@ -1,7 +1,6 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
-  Dimensions,
   FlatList,
   Modal,
   ScrollView,
@@ -9,6 +8,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import {
@@ -28,8 +28,6 @@ type Props = {
   onClose: () => void;
 };
 
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
-const DISMISS_DISTANCE = SCREEN_H * 0.18;
 const DISMISS_VELOCITY = 900;
 
 export const FullscreenImageViewer: React.FC<Props> = ({
@@ -39,6 +37,22 @@ export const FullscreenImageViewer: React.FC<Props> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
+  const { width: SCREEN_W, height: SCREEN_H } = useWindowDimensions();
+  const DISMISS_DISTANCE = SCREEN_H * 0.18;
+  const pageStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        page: { width: SCREEN_W, height: SCREEN_H },
+        pageContent: {
+          width: SCREEN_W,
+          height: SCREEN_H,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        image: { width: SCREEN_W, height: SCREEN_H },
+      }),
+    [SCREEN_W, SCREEN_H]
+  );
   const listRef = useRef<FlatList<string>>(null);
   const panRef = useRef<PanGestureHandler>(null);
   const nativeListRef = useRef<NativeViewGestureHandler>(null);
@@ -83,7 +97,7 @@ export const FullscreenImageViewer: React.FC<Props> = ({
         }).start();
       }
     },
-    [translateY, onClose]
+    [translateY, onClose, DISMISS_DISTANCE, SCREEN_H]
   );
 
   if (photos.length === 0) return null;
@@ -133,8 +147,8 @@ export const FullscreenImageViewer: React.FC<Props> = ({
                 }}
                 renderItem={({ item }) => (
                   <ScrollView
-                    style={styles.page}
-                    contentContainerStyle={styles.pageContent}
+                    style={pageStyles.page}
+                    contentContainerStyle={pageStyles.pageContent}
                     maximumZoomScale={4}
                     minimumZoomScale={1}
                     scrollEnabled={isZoomed}
@@ -147,7 +161,7 @@ export const FullscreenImageViewer: React.FC<Props> = ({
                     centerContent>
                     <FastImage
                       source={{ uri: normaliseStorageUrl(item) ?? item }}
-                      style={styles.image}
+                      style={pageStyles.image}
                       resizeMode={FastImage.resizeMode.contain}
                     />
                   </ScrollView>
@@ -197,20 +211,6 @@ const styles = StyleSheet.create({
     fontSize: 28,
     lineHeight: 30,
     fontWeight: '300',
-  },
-  page: {
-    width: SCREEN_W,
-    height: SCREEN_H,
-  },
-  pageContent: {
-    width: SCREEN_W,
-    height: SCREEN_H,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  image: {
-    width: SCREEN_W,
-    height: SCREEN_H,
   },
   counterContainer: {
     position: 'absolute',

@@ -30,6 +30,7 @@ import { BusinessService } from '../../services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { COLORS, RADII } from '../../config/constants';
+import { ResponsiveContainer } from '../../components/ResponsiveContainer';
 import { classifyShiftLifecycle } from '../../utils/shiftLifecycle';
 import type { Job, JobStatus } from '../../types';
 import type { Application, ShiftLifecycleStatus } from '../../types/application';
@@ -552,26 +553,28 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Main Tab Bar */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'jobs' && styles.tabActive]}
-          onPress={() => setActiveTab('jobs')}>
-          <Text style={[styles.tabText, activeTab === 'jobs' && styles.tabTextActive]}>
-            {t('business.tabs.jobs')}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'shifts' && styles.tabActive]}
-          onPress={() => setActiveTab('shifts')}>
-          <Text style={[styles.tabText, activeTab === 'shifts' && styles.tabTextActive]}>
-            {t('business.tabs.shifts')}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <ResponsiveContainer maxWidth={720}>
+        {/* Main Tab Bar */}
+        <View style={styles.tabBar}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'jobs' && styles.tabActive]}
+            onPress={() => setActiveTab('jobs')}>
+            <Text style={[styles.tabText, activeTab === 'jobs' && styles.tabTextActive]}>
+              {t('business.tabs.jobs')}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'shifts' && styles.tabActive]}
+            onPress={() => setActiveTab('shifts')}>
+            <Text style={[styles.tabText, activeTab === 'shifts' && styles.tabTextActive]}>
+              {t('business.tabs.shifts')}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Tab Content */}
-      {activeTab === 'jobs' ? renderJobsTab() : renderShiftsTab()}
+        {/* Tab Content */}
+        {activeTab === 'jobs' ? renderJobsTab() : renderShiftsTab()}
+      </ResponsiveContainer>
     </SafeAreaView>
   );
 };

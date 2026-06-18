@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { FlatList } from 'react-native';
 import {
   ActionSheetIOS,
+  Alert,
   View,
   Text,
   StyleSheet,
@@ -32,6 +33,7 @@ import { formatDateHeader, isSameDay } from '../../utils/dateUtils';
 import { clampToEffectiveLength } from '../../utils/textLength';
 import { useReportSheet } from '../../hooks/useReportSheet';
 import { handleApiError } from '../../utils/handleApiError';
+import { useBlockedUsersStore } from '../../stores/blockedUsersStore';
 
 const MESSAGE_MAX_LENGTH = 500;
 
@@ -210,12 +212,43 @@ export function ChatScreen({ navigation, route }: any) {
     return () => sub.remove();
   }, []);
 
+  const blockUser = useBlockedUsersStore(s => s.block);
+
   useEffect(() => {
     const businessOwnerId = conversation?.businessId;
     const businessName = conversation?.businessName;
     const baristaId = conversation?.baristaId;
     let actions: HeaderAction[] | undefined;
     let onAvatarPress: (() => void) | undefined;
+    const otherUserId = user?.accountType === 'barista' ? businessOwnerId : baristaId;
+    const otherUserName =
+      user?.accountType === 'barista' ? businessName : conversation?.baristaName;
+
+    const promptBlock = () => {
+      if (!otherUserId) return;
+      const displayName = otherUserName || t('settings.blockedUsers.unknownUser');
+      Alert.alert(t('chat.blockTitle'), t('chat.blockBody', { name: displayName }), [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('chat.blockCta'),
+          style: 'destructive',
+          onPress: async () => {
+            await blockUser(otherUserId, displayName);
+            navigation.goBack();
+          },
+        },
+      ]);
+    };
+
+    const blockAction: HeaderAction | null = otherUserId
+      ? {
+          icon: 'account-cancel-outline',
+          accessibilityLabel: t('chat.blockCta'),
+          onPress: promptBlock,
+          testID: 'chat-block',
+        }
+      : null;
+
     if (user?.accountType === 'barista' && businessOwnerId) {
       onAvatarPress = () => navigation.navigate('BusinessPublicProfile', { businessOwnerId });
       actions = [
@@ -223,9 +256,11 @@ export function ChatScreen({ navigation, route }: any) {
           label: t('chat.headerJobsAction', { defaultValue: 'Вакансии' }),
           onPress: () => navigation.navigate('BusinessJobs', { businessOwnerId, businessName }),
         },
+        ...(blockAction ? [blockAction] : []),
       ];
     } else if (user?.accountType === 'business' && baristaId) {
       onAvatarPress = () => navigation.navigate('ViewBaristaProfile', { baristaId });
+      actions = blockAction ? [blockAction] : undefined;
     }
     const otherPartyName =
       user?.accountType === 'barista' ? businessName : conversation?.baristaName;
@@ -257,6 +292,7 @@ export function ChatScreen({ navigation, route }: any) {
     conversation?.baristaName,
     conversation?.baristaAvatarUrl,
     conversation?.jobTitle,
+    blockUser,
     t,
   ]);
 

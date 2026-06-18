@@ -19,6 +19,7 @@ import { COLORS } from '../../config/constants';
 import { AuthService } from '../../services/AuthService';
 import { PasswordInput } from '../../components/PasswordInput';
 import { SocialAuthButtons } from '../../components/SocialAuthButtons';
+import { ResponsiveContainer } from '../../components/ResponsiveContainer';
 import { getEmailError } from '../../utils/validation';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 
@@ -134,80 +135,82 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled">
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>{t('auth.login.title')}</Text>
-            <Text style={styles.subtitle}>{t('auth.login.subtitle')}</Text>
-          </View>
-
-          {/* Form */}
-          <View style={styles.form}>
-            {/* Email Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('auth.login.emailLabel')}</Text>
-              <TextInput
-                style={[styles.input, emailError ? styles.inputError : null]}
-                value={email}
-                onChangeText={text => {
-                  setEmail(text);
-                  setEmailError(null);
-                }}
-                placeholder={t('auth.login.emailPlaceholder')}
-                placeholderTextColor={COLORS.textSecondary}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              {emailError && <Text style={styles.errorText}>{emailError}</Text>}
+        <ResponsiveContainer maxWidth={480}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled">
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.title}>{t('auth.login.title')}</Text>
+              <Text style={styles.subtitle}>{t('auth.login.subtitle')}</Text>
             </View>
 
-            {/* Password Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('auth.login.passwordLabel')}</Text>
-              <PasswordInput
-                value={password}
-                onChangeText={text => {
-                  setPassword(text);
-                  setPasswordError(null);
-                }}
-                placeholder={t('auth.login.passwordPlaceholder')}
-                hasError={!!passwordError}
-              />
-              {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
+            {/* Form */}
+            <View style={styles.form}>
+              {/* Email Input */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('auth.login.emailLabel')}</Text>
+                <TextInput
+                  style={[styles.input, emailError ? styles.inputError : null]}
+                  value={email}
+                  onChangeText={text => {
+                    setEmail(text);
+                    setEmailError(null);
+                  }}
+                  placeholder={t('auth.login.emailPlaceholder')}
+                  placeholderTextColor={COLORS.textSecondary}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {emailError && <Text style={styles.errorText}>{emailError}</Text>}
+              </View>
+
+              {/* Password Input */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('auth.login.passwordLabel')}</Text>
+                <PasswordInput
+                  value={password}
+                  onChangeText={text => {
+                    setPassword(text);
+                    setPasswordError(null);
+                  }}
+                  placeholder={t('auth.login.passwordPlaceholder')}
+                  hasError={!!passwordError}
+                />
+                {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
+              </View>
+
+              {/* Forgot Password */}
+              <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPassword}>
+                <Text style={styles.forgotPasswordText}>{t('auth.login.forgotPassword')}</Text>
+              </TouchableOpacity>
+
+              {/* Login Button */}
+              <TouchableOpacity
+                style={[styles.button, isLoading && styles.buttonDisabled]}
+                onPress={handleLogin}
+                disabled={isLoading}
+                activeOpacity={0.8}>
+                {isLoading ? (
+                  <ActivityIndicator color={COLORS.background} />
+                ) : (
+                  <Text style={styles.buttonText}>{t('auth.login.cta')}</Text>
+                )}
+              </TouchableOpacity>
+
+              <SocialAuthButtons separatorLabel={t('auth.social.or')} />
             </View>
 
-            {/* Forgot Password */}
-            <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>{t('auth.login.forgotPassword')}</Text>
-            </TouchableOpacity>
-
-            {/* Login Button */}
-            <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
-              onPress={handleLogin}
-              disabled={isLoading}
-              activeOpacity={0.8}>
-              {isLoading ? (
-                <ActivityIndicator color={COLORS.background} />
-              ) : (
-                <Text style={styles.buttonText}>{t('auth.login.cta')}</Text>
-              )}
-            </TouchableOpacity>
-
-            <SocialAuthButtons separatorLabel={t('auth.social.or')} />
-          </View>
-
-          {/* Footer */}
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>{t('auth.login.noAccount')}</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('AccountType')}>
-              <Text style={styles.linkText}>{t('auth.login.signupLink')}</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+            {/* Footer */}
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>{t('auth.login.noAccount')}</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('AccountType')}>
+                <Text style={styles.linkText}>{t('auth.login.signupLink')}</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </ResponsiveContainer>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

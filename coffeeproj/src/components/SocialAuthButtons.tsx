@@ -241,7 +241,8 @@ export const SocialAuthButtons: React.FC<Props> = ({
           disabled={busy !== null || disabled}
           activeOpacity={0.8}
           accessibilityRole="button"
-          accessibilityLabel={t('auth.social.appleLabel')}>
+          accessibilityLabel={t('auth.social.appleLabel')}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           {busy === 'apple' ? (
             <ActivityIndicator color="#fff" />
           ) : (
@@ -255,7 +256,8 @@ export const SocialAuthButtons: React.FC<Props> = ({
           disabled={busy !== null || disabled}
           activeOpacity={0.8}
           accessibilityRole="button"
-          accessibilityLabel={t('auth.social.googleLabel')}>
+          accessibilityLabel={t('auth.social.googleLabel')}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           {busy === 'google' ? (
             <ActivityIndicator color={COLORS.text} />
           ) : (
@@ -269,7 +271,8 @@ export const SocialAuthButtons: React.FC<Props> = ({
           disabled={busy !== null || disabled}
           activeOpacity={0.8}
           accessibilityRole="button"
-          accessibilityLabel={t('auth.social.yandexLabel')}>
+          accessibilityLabel={t('auth.social.yandexLabel')}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           {busy === 'yandex' ? (
             <ActivityIndicator color="#fff" />
           ) : (

@@ -121,3 +121,14 @@ export const RADII = {
   input: 10, // text inputs, date buttons, segmented controls
   chipSmall: 8, // tiny status badges inside cards
 };
+
+// Spacing scale (pt). Adopted by new responsive code; existing literals stay.
+export const SPACING = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  xxl: 32,
+  xxxl: 48,
+} as const;

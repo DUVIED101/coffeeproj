@@ -20,6 +20,7 @@ import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { BaristaCard } from '../../components/BaristaCard';
 import { BaristaFilterBar } from '../../components/BaristaFilterBar';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
+import { ResponsiveContainer } from '../../components/ResponsiveContainer';
 import type { BaristaProfile, BaristaFilters } from '../../types/baristaProfile';
 import type { UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
@@ -142,38 +143,40 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
-      <ScreenHeaderWithActions
-        title={t('baristaFeed.title')}
-        actions={[
-          {
-            icon: 'bell-outline',
-            badgeCount: unreadCount,
-            onPress: () => navigation.navigate('NotificationFeed'),
-            testID: 'bell',
-          },
-        ]}
-      />
+      <ResponsiveContainer maxWidth={720}>
+        <ScreenHeaderWithActions
+          title={t('baristaFeed.title')}
+          actions={[
+            {
+              icon: 'bell-outline',
+              badgeCount: unreadCount,
+              onPress: () => navigation.navigate('NotificationFeed'),
+              testID: 'bell',
+            },
+          ]}
+        />
 
-      <BaristaFilterBar
-        onFilterChange={handleFilterChange}
-        currentFilters={filters}
-        branchMetroStations={branchMetroStations}
-      />
+        <BaristaFilterBar
+          onFilterChange={handleFilterChange}
+          currentFilters={filters}
+          branchMetroStations={branchMetroStations}
+        />
 
-      <FlatList
-        data={baristas}
-        renderItem={renderBarista}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={renderEmpty}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor={COLORS.primary}
-          />
-        }
-      />
+        <FlatList
+          data={baristas}
+          renderItem={renderBarista}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={renderEmpty}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor={COLORS.primary}
+            />
+          }
+        />
+      </ResponsiveContainer>
     </SafeAreaView>
   );
 };

@@ -21,6 +21,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { FilterBar } from '../../components/FilterBar';
 import { JobCard } from '../../components/JobCard';
 import { Skeleton } from '../../components/Skeleton';
+import { useMasterDetail } from '../../components/MasterDetailContext';
 import { showErrorToast } from '../../stores/errorToastStore';
 import { mapAnyError } from '../../utils/errorHandler';
 import {
@@ -74,6 +75,7 @@ const JobCardWithDistance = React.memo<{
 export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
   const user = useAuthStore(s => s.user);
   const { t } = useTranslation();
+  const masterDetail = useMasterDetail();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -196,9 +198,13 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleJobPress = useCallback(
     (jobId: string) => {
+      if (masterDetail) {
+        masterDetail.select(jobId);
+        return;
+      }
       navigation.navigate('JobDetails', { jobId });
     },
-    [navigation]
+    [navigation, masterDetail]
   );
 
   const renderJob = useCallback(

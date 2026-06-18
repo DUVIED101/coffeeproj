@@ -16,6 +16,7 @@ import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ChatService } from '../../services/ChatService';
 import { Skeleton } from '../../components/Skeleton';
+import { useMasterDetail } from '../../components/MasterDetailContext';
 import { useAuthStore } from '../../stores/authStore';
 import type { Application, ApplicationStatus } from '../../types/application';
 import type { ConversationId } from '../../types/chat';
@@ -145,6 +146,7 @@ const ApplicationItem = React.memo<{
 export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
   const { t } = useTranslation();
   const user = useAuthStore(state => state.user);
+  const masterDetail = useMasterDetail();
 
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -200,9 +202,13 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleApplicationPress = useCallback(
     (application: Application) => {
+      if (masterDetail) {
+        masterDetail.select(application.id);
+        return;
+      }
       navigation.navigate('ApplicationDetails', { application });
     },
-    [navigation]
+    [navigation, masterDetail]
   );
 
   const handleChatPress = useCallback(

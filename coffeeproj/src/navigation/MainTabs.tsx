@@ -27,21 +27,28 @@ const wrapWithBoundary = (Comp: React.ComponentType<any>): React.ComponentType<a
 
 const ProfileStackBoundary = wrapWithBoundary(ProfileStack);
 const BusinessProfileStackBoundary = wrapWithBoundary(BusinessProfileStack);
-const BaristaStackBoundary = wrapWithBoundary(BaristaStack);
-const ApplicationsStackBoundary = wrapWithBoundary(ApplicationsStack);
+const BaristaStackPhoneBoundary = wrapWithBoundary(BaristaStack);
+const BaristaStackTabletBoundary = wrapWithBoundary(BaristaStackTablet);
+const ApplicationsStackPhoneBoundary = wrapWithBoundary(ApplicationsStack);
+const ApplicationsStackTabletBoundary = wrapWithBoundary(ApplicationsStackTablet);
 const BusinessStackBoundary = wrapWithBoundary(BusinessStack);
 const BusinessSearchStackBoundary = wrapWithBoundary(BusinessSearchStack);
-const ChatsStackBoundary = wrapWithBoundary(ChatsStack);
+const ChatsStackPhoneBoundary = wrapWithBoundary(ChatsStack);
+const ChatsStackTabletBoundary = wrapWithBoundary(ChatsStackTablet);
 import { COLORS } from '../config/constants';
 import { BusinessStack } from './BusinessStack';
 import { BusinessProfileStack } from './BusinessProfileStack';
 import type { BusinessProfileStackParamList } from './BusinessProfileStack';
 import { BusinessSearchStack } from './BusinessSearchStack';
 import { BaristaStack } from './BaristaStack';
+import { BaristaStackTablet } from './BaristaStack.tablet';
 import { ProfileStack } from './ProfileStack';
 import { ChatsStack } from './ChatsStack';
+import { ChatsStackTablet } from './ChatsStack.tablet';
 import { ApplicationsStack } from './ApplicationsStack';
+import { ApplicationsStackTablet } from './ApplicationsStack.tablet';
 import type { ChatsStackParamList } from './ChatsStack';
+import { useIsTablet } from '../hooks/useResponsiveLayout';
 
 export type MainTabsParamList = {
   Profile: NavigatorScreenParams<BusinessProfileStackParamList> | undefined;
@@ -60,6 +67,12 @@ export const MainTabs: React.FC = () => {
   const { t } = useTranslation();
   const chatUnreadCount = useChatUnreadStore(s => s.unreadCount);
   const refreshChatUnread = useChatUnreadStore(s => s.refresh);
+  const isTablet = useIsTablet();
+  const BaristaStackBoundary = isTablet ? BaristaStackTabletBoundary : BaristaStackPhoneBoundary;
+  const ApplicationsStackBoundary = isTablet
+    ? ApplicationsStackTabletBoundary
+    : ApplicationsStackPhoneBoundary;
+  const ChatsStackBoundary = isTablet ? ChatsStackTabletBoundary : ChatsStackPhoneBoundary;
 
   useEffect(() => {
     if (!user?.id || !user.accountType) return;
@@ -86,9 +99,16 @@ export const MainTabs: React.FC = () => {
       screenOptions={{
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.textSecondary,
-        tabBarStyle: {
-          borderTopColor: COLORS.border,
-        },
+        tabBarStyle: isTablet
+          ? {
+              borderTopColor: COLORS.border,
+              maxWidth: 720,
+              alignSelf: 'center',
+              width: '100%',
+            }
+          : {
+              borderTopColor: COLORS.border,
+            },
         headerShown: true,
         headerStyle: {
           backgroundColor: COLORS.background,

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../config/constants';
+import { ResponsiveContainer } from '../../components/ResponsiveContainer';
 import type { AccountType } from '../../types';
 
 type AuthStackParamList = {
@@ -28,49 +29,53 @@ export const AccountTypeScreen: React.FC<Props> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
 
-      <View style={styles.content}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            activeOpacity={1}
-            delayLongPress={1500}
-            onLongPress={() => navigation.navigate('Diagnostic')}>
-            <Text style={styles.title}>{t('auth.accountType.welcome')}</Text>
-          </TouchableOpacity>
-          <Text style={styles.subtitle}>{t('auth.accountType.subtitle')}</Text>
-        </View>
+      <ResponsiveContainer maxWidth={520}>
+        <View style={styles.content}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              activeOpacity={1}
+              delayLongPress={1500}
+              onLongPress={() => navigation.navigate('Diagnostic')}>
+              <Text style={styles.title}>{t('auth.accountType.welcome')}</Text>
+            </TouchableOpacity>
+            <Text style={styles.subtitle}>{t('auth.accountType.subtitle')}</Text>
+          </View>
 
-        {/* Account Type Selection */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, styles.baristaButton]}
-            onPress={() => handleSelectType('barista')}
-            activeOpacity={0.8}>
-            <MaterialCommunityIcons name="coffee" size={48} color={COLORS.primary} />
-            <Text style={styles.buttonTitle}>{t('auth.accountType.baristaTitle')}</Text>
-            <Text style={styles.buttonDescription}>{t('auth.accountType.baristaDescription')}</Text>
-          </TouchableOpacity>
+          {/* Account Type Selection */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[styles.button, styles.baristaButton]}
+              onPress={() => handleSelectType('barista')}
+              activeOpacity={0.8}>
+              <MaterialCommunityIcons name="coffee" size={48} color={COLORS.primary} />
+              <Text style={styles.buttonTitle}>{t('auth.accountType.baristaTitle')}</Text>
+              <Text style={styles.buttonDescription}>
+                {t('auth.accountType.baristaDescription')}
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.button, styles.businessButton]}
-            onPress={() => handleSelectType('business')}
-            activeOpacity={0.8}>
-            <MaterialCommunityIcons name="storefront" size={48} color={COLORS.secondary} />
-            <Text style={styles.buttonTitle}>{t('auth.accountType.businessTitle')}</Text>
-            <Text style={styles.buttonDescription}>
-              {t('auth.accountType.businessDescription')}
-            </Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={[styles.button, styles.businessButton]}
+              onPress={() => handleSelectType('business')}
+              activeOpacity={0.8}>
+              <MaterialCommunityIcons name="storefront" size={48} color={COLORS.secondary} />
+              <Text style={styles.buttonTitle}>{t('auth.accountType.businessTitle')}</Text>
+              <Text style={styles.buttonDescription}>
+                {t('auth.accountType.businessDescription')}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Login Link */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>{t('auth.accountType.haveAccount')}</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.linkText}>{t('auth.accountType.loginLink')}</Text>
-          </TouchableOpacity>
+          {/* Login Link */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>{t('auth.accountType.haveAccount')}</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.linkText}>{t('auth.accountType.loginLink')}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </ResponsiveContainer>
     </SafeAreaView>
   );
 };

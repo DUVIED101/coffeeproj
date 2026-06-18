@@ -20,10 +20,10 @@ const BODY_RU = `Дата вступления в силу: 7 июня 2026 г.
 2.3. Вы несёте ответственность за сохранность пароля и за все действия, совершённые с вашего аккаунта.
 2.4. Один аккаунт принадлежит одному пользователю. Передача аккаунта запрещена.
 
-3. ПРАВИЛА ПОВЕДЕНИЯ
-Запрещается:
+3. ПРАВИЛА ПОВЕДЕНИЯ И НЕДОПУСТИМЫЙ КОНТЕНТ
+Сервис применяет политику нулевой терпимости к недопустимому контенту и оскорбительному поведению. Запрещается:
 — размещать ложные, мошеннические или вводящие в заблуждение вакансии или профили;
-— использовать Сервис для оскорблений, домогательств, угроз или дискриминации;
+— использовать Сервис для оскорблений, домогательств, угроз, дискриминации, языка вражды, контента сексуального характера или иного недопустимого контента;
 — публиковать контент, нарушающий законы РФ или права третьих лиц;
 — пытаться обойти проверки безопасности, использовать ботов или автоматизированный сбор данных;
 — использовать Сервис для деятельности, не связанной с подбором персонала в кофейной индустрии;
@@ -32,8 +32,9 @@ const BODY_RU = `Дата вступления в силу: 7 июня 2026 г.
 4. ПОЛЬЗОВАТЕЛЬСКИЙ КОНТЕНТ И МОДЕРАЦИЯ
 4.1. Вы остаётесь правообладателем контента, который размещаете (фото, текст вакансии, сообщения), но предоставляете Сервису неисключительную лицензию на его хранение и показ в рамках работы Сервиса.
 4.2. Сервис модерирует контент на основании жалоб пользователей и проактивных проверок. Любой пользователь может пожаловаться на контент или другого пользователя через кнопку «Пожаловаться».
-4.3. Модератор рассматривает жалобы в разумные сроки и вправе скрыть контент, ограничить функциональность, приостановить или удалить аккаунт нарушителя.
-4.4. Возможна функция блокировки пользователя на уровне аккаунта.
+4.3. Модератор рассматривает жалобы и принимает меры в течение 24 часов с момента поступления жалобы: скрывает контент, ограничивает функциональность, приостанавливает или удаляет аккаунт нарушителя.
+4.4. Любой пользователь может заблокировать другого пользователя через раздел «Настройки → Заблокированные пользователи» или кнопку «Заблокировать» в чате. После блокировки заблокированный пользователь не сможет писать вам сообщения, а его контент будет скрыт.
+4.5. Свой контент вы можете удалить в любое время через интерфейс Приложения. По вопросам удаления чужого контента, нарушающего эти Условия, обращайтесь по адресу bystrobarista@gmail.com.
 
 5. ПРИОСТАНОВКА И ПРЕКРАЩЕНИЕ ДОСТУПА
 Мы вправе приостановить или прекратить доступ к Сервису, если вы нарушаете эти Условия, по требованию закона или для защиты других пользователей. Вы можете удалить аккаунт самостоятельно в любой момент: Настройки → Удалить аккаунт.
@@ -70,10 +71,10 @@ Service operator: Khait Daniil Davidovich (individual / physical person). Contac
 2.3. You are responsible for safeguarding your password and for all activity performed under your account.
 2.4. One account belongs to one person. Account transfer is prohibited.
 
-3. RULES OF CONDUCT
-You may not:
+3. RULES OF CONDUCT AND OBJECTIONABLE CONTENT
+The Service has a zero-tolerance policy for objectionable content and abusive behavior. You may not:
 — post false, fraudulent, or misleading vacancies or profiles;
-— use the Service for insults, harassment, threats, or discrimination;
+— use the Service for insults, harassment, threats, discrimination, hate speech, sexually explicit content, or other objectionable material;
 — post content that violates the laws of the Russian Federation or third-party rights;
 — attempt to bypass security checks, use bots, or scrape data;
 — use the Service for activity unrelated to coffee-industry staffing;
@@ -82,8 +83,9 @@ You may not:
 4. USER CONTENT AND MODERATION
 4.1. You retain ownership of content you submit (photos, vacancy text, messages), but you grant the Service a non-exclusive license to store and display it as needed to operate the Service.
 4.2. The Service moderates content based on user reports and proactive checks. Any user can report content or another user via the "Report" button.
-4.3. Moderators review reports within a reasonable time and may hide content, restrict functionality, suspend, or delete the offender's account.
-4.4. Account-level user blocking may be available.
+4.3. Moderators review reports and take action within 24 hours of receipt of the report: hiding content, restricting functionality, suspending, or deleting the offender's account.
+4.4. Any user may block another user via "Settings → Blocked users" or the "Block" action in the chat. Once blocked, the blocked user cannot message you and their content is hidden from your view.
+4.5. You may delete your own content at any time through the App interface. For requests to remove third-party content that violates these Terms, write to bystrobarista@gmail.com.
 
 5. SUSPENSION AND TERMINATION
 We may suspend or terminate your access if you violate these Terms, as required by law, or to protect other users. You can delete your account at any time: Settings → Delete account.

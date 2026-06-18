@@ -692,6 +692,9 @@
     "fallbackTitle": "Chat",
     "headerJobsAction": "Jobs",
     "headerProfileAction": "Profile",
+    "blockTitle": "Block user",
+    "blockBody": "You won't receive messages from {{name}} and their content will be hidden. You can undo this in Settings.",
+    "blockCta": "Block",
     "loadFailed": "Conversation not found",
     "emptyTitle": "No messages yet",
     "emptySubtitle": "Send a message to start the conversation",
@@ -1326,6 +1329,7 @@
       "language": "Language",
       "notifications": "Notifications",
       "visibility": "Profile Visibility",
+      "blockedUsers": "Blocked Users",
       "myDisputes": "My Complaints",
       "documents": "Documents",
       "terms": "Terms of Service",
@@ -1383,6 +1387,15 @@
       "baristaHint": "When off, you won't appear in business searches",
       "businessToggle": "Accepting applications",
       "businessHint": "When off, your jobs are hidden from the barista feed"
+    },
+    "blockedUsers": {
+      "title": "Blocked Users",
+      "emptyTitle": "No blocked users",
+      "emptyBody": "You can block a user from the chat \u2014 their messages and content will be hidden.",
+      "unblockCta": "Unblock",
+      "unblockTitle": "Unblock user",
+      "unblockBody": "{{name}} will be able to message you again and reappear in your chats.",
+      "unknownUser": "User"
     },
     "delete": {
       "title": "Delete Account",

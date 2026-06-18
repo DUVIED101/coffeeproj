@@ -116,7 +116,8 @@ export const ScreenHeaderWithActions = React.memo<ScreenHeaderWithActionsProps>(
                     onPress={action.onPress}
                     activeOpacity={0.7}
                     accessibilityRole="button"
-                    accessibilityLabel={action.accessibilityLabel ?? action.label}>
+                    accessibilityLabel={action.accessibilityLabel ?? action.label}
+                    hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}>
                     <Text style={styles.pillButtonText}>{action.label}</Text>
                   </TouchableOpacity>
                 );
@@ -176,6 +177,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.backgroundSecondary,
     borderWidth: 1,
     borderColor: COLORS.border,
+    minHeight: 36,
+    justifyContent: 'center',
   },
   pillButtonText: {
     color: COLORS.primary,

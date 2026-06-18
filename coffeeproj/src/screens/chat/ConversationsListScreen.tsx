@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -11,6 +11,8 @@ import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { Avatar } from '../../components/Avatar';
 import { Skeleton } from '../../components/Skeleton';
+import { useMasterDetail } from '../../components/MasterDetailContext';
+import { useBlockedUsersStore } from '../../stores/blockedUsersStore';
 import type { Conversation } from '../../types/chat';
 import type { ApplicationStatus } from '../../types/application';
 
@@ -131,6 +133,12 @@ export function ConversationsListScreen({ navigation }: any) {
   const user = useAuthStore(state => state.user);
   const unreadCount = useNotificationFeedStore(state => state.unreadCount);
   const { t } = useTranslation();
+  const masterDetail = useMasterDetail();
+  const blockedUsers = useBlockedUsersStore(s => s.blocked);
+  const hydrateBlocked = useBlockedUsersStore(s => s.hydrate);
+  useEffect(() => {
+    void hydrateBlocked();
+  }, [hydrateBlocked]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -166,24 +174,35 @@ export function ConversationsListScreen({ navigation }: any) {
 
   const handleConversationPress = useCallback(
     (conversation: Conversation) => {
+      if (masterDetail) {
+        masterDetail.select(conversation.id);
+        return;
+      }
       navigation.navigate('Chat', {
         applicationId: conversation.applicationId,
         conversationId: conversation.id,
       });
     },
-    [navigation]
+    [navigation, masterDetail]
   );
 
   const fallbackTitle = t('chat.fallbackTitle', { defaultValue: 'Chat' });
 
+  const blockedIds = useMemo(() => new Set(blockedUsers.map(b => b.userId)), [blockedUsers]);
+  const isBarista = user?.accountType === 'barista';
   const visibleConversations = useMemo(
     () =>
-      conversations.filter(c =>
-        archiveTab === 'archive'
-          ? isArchived(c.applicationStatus)
-          : !isArchived(c.applicationStatus)
-      ),
-    [conversations, archiveTab]
+      conversations
+        .filter(c => {
+          const otherPartyId = isBarista ? c.businessId : c.baristaId;
+          return !blockedIds.has(otherPartyId);
+        })
+        .filter(c =>
+          archiveTab === 'archive'
+            ? isArchived(c.applicationStatus)
+            : !isArchived(c.applicationStatus)
+        ),
+    [conversations, archiveTab, blockedIds, isBarista]
   );
 
   const archiveCount = useMemo(
