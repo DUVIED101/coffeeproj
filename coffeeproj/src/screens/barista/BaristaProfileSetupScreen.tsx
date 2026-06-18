@@ -42,11 +42,9 @@ import { clampToEffectiveLength, effectiveTextLength } from '../../utils/textLen
 import { dobMinDate, dobMaxDate } from '../../utils/dateRanges';
 import type { GeoPoint } from '../../types/business';
 import type { ShiftTime, BaristaProfile } from '../../types/baristaProfile';
-import type { CityCode } from '../../types/city';
-import { DEFAULT_CITY, toCityCode } from '../../types/city';
+import { DEFAULT_CITY, toCityCode, type CityCode } from "../../types/city";
 import type { BaristaProfileId } from '../../types/ids';
-import type { WorkExperienceDraft, WorkExperienceFieldError } from '../../types/workExperience';
-import { findDraftErrors } from '../../types/workExperience';
+import { findDraftErrors, type WorkExperienceDraft, type WorkExperienceFieldError } from "../../types/workExperience";
 
 type BaristaStackParamList = {
   JobFeed: undefined;

@@ -1,7 +1,6 @@
 import { YANDEX_GEOCODER_API_KEY } from '@env';
 import type { GeoPoint } from '../types/business';
-import type { CityBounds, CityCode } from '../types/city';
-import { CITY_BOUNDS, CITY_LABELS_RU, isInsideBounds } from '../types/city';
+import { CITY_BOUNDS, CITY_LABELS_RU, isInsideBounds, type CityBounds, type CityCode } from "../types/city";
 
 // Yandex Geocoder API — https://yandex.ru/dev/maps/geocoder/
 // Apply for a key at https://developer.tech.yandex.ru/ (free tier:

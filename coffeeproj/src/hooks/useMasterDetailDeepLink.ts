@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigation } from '@react-navigation/native';
-import type { NavigationProp, NavigationState, Route } from '@react-navigation/native';
+import { useNavigation, type NavigationProp, type NavigationState, type Route } from "@react-navigation/native";
 
 type IdExtractor = (route: Route<string>) => string | null;
 

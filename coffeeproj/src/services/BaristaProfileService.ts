@@ -376,10 +376,6 @@ export class BaristaProfileService {
     return publicUrl;
   }
 
-  /**
-   * Upload a certificate AND persist it on an existing barista_profiles row.
-   * Used by the profile-edit flow where the row already exists.
-   */
   static async uploadCertificate(userId: string, photoUri: string): Promise<string> {
     try {
       const publicUrl = await this.uploadCertificateFile(userId, photoUri);

@@ -11,8 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { JobFilters, JobType } from '../types/job';
 import type { GeoPoint } from '../types/business';
-import type { CityCode } from '../types/city';
-import { DEFAULT_CITY } from '../types/city';
+import { DEFAULT_CITY, type CityCode } from "../types/city";
 import { COLORS } from '../config/constants';
 import { MetroSelector, METRO_ANY } from './MetroSelector';
 

@@ -21,12 +21,6 @@ type Props = {
   children: React.ReactNode;
 };
 
-/**
- * Wraps the app: when users.suspended_until > now(), renders a top banner that
- * consumes the device's top safe-area, then overrides SafeAreaInsetsContext for
- * children so screen headers below don't double-pad. Re-checks every minute so
- * it clears itself when the suspension expires.
- */
 export const SuspendedUserBanner: React.FC<Props> = memo(({ children }) => {
   const { t, i18n } = useTranslation();
   const user = useAuthStore(s => s.user);

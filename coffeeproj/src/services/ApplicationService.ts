@@ -359,7 +359,6 @@ export class ApplicationService {
       if (appsError) throw appsError;
       if (!applications || applications.length === 0) return [];
 
-      // Get unique barista IDs
       const baristaIds = [...new Set(applications.map(app => app.barista_id))];
 
       // Fetch barista data separately (bypasses RLS issues with JOINs)
@@ -488,10 +487,6 @@ export class ApplicationService {
     }
   }
 
-  /**
-   * Return the set of job ids the barista has applied to (excluding withdrawn).
-   * Lightweight projection used by the JobFeed to badge cards inline.
-   */
   static async getActiveAppliedJobIds(baristaId: string): Promise<Set<string>> {
     const { data, error } = await supabase
       .from('applications')
@@ -600,10 +595,6 @@ export class ApplicationService {
     }
   }
 
-  /**
-   * Returns the oldest pending shift confirmation for a barista, if any.
-   * Used by the root-level gate so the prompt persists across navigation.
-   */
   static async getPendingShiftConfirmation(
     baristaId: string
   ): Promise<{ applicationId: ApplicationId; jobTitle: string } | null> {

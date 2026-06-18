@@ -11,8 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { BaristaFilters, ShiftTime } from '../types/baristaProfile';
 import type { Equipment } from '../types/business';
-import type { CityCode } from '../types/city';
-import { DEFAULT_CITY, CITY_CODES } from '../types/city';
+import { DEFAULT_CITY, CITY_CODES, type CityCode } from "../types/city";
 import { COLORS, EQUIPMENT_TYPES } from '../config/constants';
 import { MetroSelector, METRO_ANY } from './MetroSelector';
 

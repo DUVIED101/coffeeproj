@@ -11,9 +11,6 @@ export type ApplicationStatus =
 
 export type ShiftConfirmationStatus = 'pending' | 'confirmed' | 'declined' | 'no_response';
 
-// Lifecycle status used by the Business "Смены" dashboard.
-// Combines job + application + clock-time into a single state focused
-// on what the business needs to do next for the shift.
 export type ShiftLifecycleStatus =
   | 'open'
   | 'under_review'

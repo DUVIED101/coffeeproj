@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,9 +10,8 @@ import {
   Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { JobService } from '../../services/JobService';
 import { ApplicationService } from '../../services/ApplicationService';

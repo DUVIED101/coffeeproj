@@ -9,8 +9,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Alert,
-} from 'react-native';
+} from "react-native";
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../config/constants';
 import { ReviewService } from '../services/ReviewService';

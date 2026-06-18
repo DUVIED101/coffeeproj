@@ -1,5 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 type Brand<T, B> = T & { readonly __brand: B };
 type UserId = Brand<string, "UserId">;

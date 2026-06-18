@@ -21,8 +21,6 @@ export class NotificationService {
     return __DEV__ ? 'sandbox' : 'production';
   }
 
-  // Token registered in the current session — used by unregisterDevice so a
-  // sign-out on one device doesn't wipe tokens for the user's other devices.
   private static lastRegisteredToken: DeviceToken | null = null;
 
   private static mapNotification(notification: PushNotification): PushNotificationPayload {

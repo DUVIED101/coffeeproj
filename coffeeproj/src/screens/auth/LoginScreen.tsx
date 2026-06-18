@@ -70,8 +70,6 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     try {
       const { user } = await AuthService.signInWithEmail(email.trim().toLowerCase(), password);
 
-      console.log('Login successful:', user.id);
-
       // Auth state will be updated automatically by authStore listener
     } catch (error: unknown) {
       console.error('Login error:', error);

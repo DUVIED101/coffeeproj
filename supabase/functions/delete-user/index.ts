@@ -1,5 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createRemoteJWKSet, jwtVerify } from "https://esm.sh/jose@5.9.6";
 
 type Brand<T, B> = T & { readonly __brand: B };

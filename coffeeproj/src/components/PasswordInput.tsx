@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, Pressable, StyleSheet } from 'react-native';
-import type { TextInputProps, StyleProp, ViewStyle } from 'react-native';
+import { View, TextInput, Pressable, StyleSheet, type TextInputProps, type StyleProp, type ViewStyle } from "react-native";
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../config/constants';

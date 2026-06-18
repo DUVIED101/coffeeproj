@@ -15,8 +15,7 @@ import { MetroSelector, METRO_ANY } from './MetroSelector';
 import { CityToggle } from './CityToggle';
 import type { JobType } from '../types/job';
 import type { Equipment } from '../types/business';
-import type { CityCode } from '../types/city';
-import { DEFAULT_CITY } from '../types/city';
+import { DEFAULT_CITY, type CityCode } from "../types/city";
 
 export type ShiftFilters = {
   jobType?: JobType;

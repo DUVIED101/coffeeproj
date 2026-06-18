@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, type RouteProp } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -15,7 +15,6 @@ import { useTranslation } from 'react-i18next';
 import FastImage from 'react-native-fast-image';
 import { transformedImageUrl } from '../../utils/imageTransform';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ChatService } from '../../services/ChatService';

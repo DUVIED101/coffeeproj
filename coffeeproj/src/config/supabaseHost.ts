@@ -115,9 +115,6 @@ export function _resetSyncCacheForTests(): void {
   _cachedChoice = null;
 }
 
-// Async host pick — reads the Force-proxy toggle from AsyncStorage. Used by
-// App.tsx bootstrap (after migrateSessionKey, before initSupabase) and by
-// DiagnosticScreen to render the effective choice.
 export async function pickSupabaseHost(opts?: { timezone?: string | null }): Promise<HostChoice> {
   if (!PROXY_URL) return directChoice();
   try {

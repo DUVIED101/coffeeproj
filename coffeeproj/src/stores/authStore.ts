@@ -309,7 +309,6 @@ async function doFetchUserProfile(userId: string): Promise<User | null> {
 // onAuthStateChange — it deadlocks the auth SDK lock. Defer work via setTimeout(0).
 export function registerAuthListener(): void {
   supabase.auth.onAuthStateChange((event, session) => {
-    console.log('Auth state changed:', event);
 
     const store = useAuthStore.getState();
 
@@ -326,7 +325,6 @@ export function registerAuthListener(): void {
             if (!user) {
               // Normal on signup — ProfileBootstrap will create the row and call
               // setUser itself. console.log only so this doesn't surface in LogBox.
-              console.log('Profile not yet present after SIGNED_IN; waiting for bootstrap');
               return;
             }
             if (!user.isActive) {

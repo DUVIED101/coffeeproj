@@ -20,10 +20,9 @@ import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import { JobCard } from '../../components/JobCard';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { ShiftCard } from '../../components/ShiftCard';
-import { ShiftFilterSheet } from '../../components/ShiftFilterSheet';
+import { ShiftFilterSheet, type ShiftFilters } from "../../components/ShiftFilterSheet";
 import { Skeleton } from '../../components/Skeleton';
 import { AddFab } from '../../components/AddFab';
-import type { ShiftFilters } from '../../components/ShiftFilterSheet';
 import { JobService } from '../../services/JobService';
 import { ApplicationService } from '../../services/ApplicationService';
 import { BusinessService } from '../../services/BusinessService';
@@ -99,7 +98,6 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     }, [user?.id])
   );
 
-  // Shared jobs state — used by both jobs tab and shifts tab
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
   const [isRefreshingJobs, setIsRefreshingJobs] = useState(false);

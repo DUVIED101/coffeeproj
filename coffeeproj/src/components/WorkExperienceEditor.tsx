@@ -3,8 +3,7 @@ import { Alert, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } fr
 import { useTranslation } from 'react-i18next';
 import { COLORS, RADII } from '../config/constants';
 import { MonthYearPicker } from './MonthYearPicker';
-import { MAX_WORK_EXPERIENCES, computeDuration, makeEmptyDraft } from '../types/workExperience';
-import type { WorkExperienceDraft, WorkExperienceFieldError } from '../types/workExperience';
+import { MAX_WORK_EXPERIENCES, computeDuration, makeEmptyDraft, type WorkExperienceDraft, type WorkExperienceFieldError } from "../types/workExperience";
 import { clampToEffectiveLength } from '../utils/textLength';
 
 type Props = {

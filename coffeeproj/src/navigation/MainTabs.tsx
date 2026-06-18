@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Pressable } from "react-native";
 import { createBottomTabNavigator, BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
-import { Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NavigatorScreenParams } from '@react-navigation/native';
@@ -37,17 +36,15 @@ const ChatsStackPhoneBoundary = wrapWithBoundary(ChatsStack);
 const ChatsStackTabletBoundary = wrapWithBoundary(ChatsStackTablet);
 import { COLORS } from '../config/constants';
 import { BusinessStack } from './BusinessStack';
-import { BusinessProfileStack } from './BusinessProfileStack';
-import type { BusinessProfileStackParamList } from './BusinessProfileStack';
+import { BusinessProfileStack, type BusinessProfileStackParamList } from "./BusinessProfileStack";
 import { BusinessSearchStack } from './BusinessSearchStack';
 import { BaristaStack } from './BaristaStack';
 import { BaristaStackTablet } from './BaristaStack.tablet';
 import { ProfileStack } from './ProfileStack';
-import { ChatsStack } from './ChatsStack';
+import { ChatsStack, type ChatsStackParamList } from "./ChatsStack";
 import { ChatsStackTablet } from './ChatsStack.tablet';
 import { ApplicationsStack } from './ApplicationsStack';
 import { ApplicationsStackTablet } from './ApplicationsStack.tablet';
-import type { ChatsStackParamList } from './ChatsStack';
 import { useIsTablet } from '../hooks/useResponsiveLayout';
 
 export type MainTabsParamList = {

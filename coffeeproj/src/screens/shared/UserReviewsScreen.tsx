@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useRoute, type RouteProp } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -10,8 +10,6 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useRoute } from '@react-navigation/native';
-import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { ReviewService } from '../../services/ReviewService';
 import { StarRow } from '../../components/StarRow';

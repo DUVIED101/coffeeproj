@@ -13,13 +13,12 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RouteProp } from '@react-navigation/native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, type RouteProp } from "@react-navigation/native";
 import { COLORS } from '../../config/constants';
 import { ShiftCountdownBanner } from '../../components/ShiftCountdownBanner';
 import { Skeleton } from '../../components/Skeleton';
 import { useStaleCallback } from '../../hooks/useStaleCallback';
-import { showErrorToast, showSuccessToast } from '../../stores/errorToastStore';
+import { showSuccessToast } from "../../stores/errorToastStore";
 import { handleApiError } from '../../utils/handleApiError';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ReviewService } from '../../services/ReviewService';
@@ -75,9 +74,6 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
   const [disputeSummary, setDisputeSummary] = useState<DisputeSummary | null>(null);
   const hasPromptedThisSession = useRef(false);
 
-  // Stable id captured once from route params — used by refresh on focus and
-  // foreground so the latest shift_confirmation_status is pulled even when the
-  // screen instance is reused (notification re-tap, app resumed from background).
   const persistentApplicationId = useMemo<ApplicationId | undefined>(
     () => (initialApp?.id ?? idParam) as ApplicationId | undefined,
     [initialApp, idParam]

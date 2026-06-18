@@ -188,7 +188,6 @@ export class ChatService {
       const baristaId = application.barista_id;
       const businessId = application.jobs.business_owner_id;
 
-      // Create the conversation
       const { data: conversation, error: convError } = await supabase
         .from('conversations')
         .insert({
@@ -202,7 +201,6 @@ export class ChatService {
       if (convError) throw convError;
       if (!conversation) throw new Error('Failed to create conversation');
 
-      // Fetch the full conversation with joined data
       const fullConversation = await this.getConversationByApplication(applicationId);
       if (!fullConversation) throw new Error('Failed to fetch created conversation');
 

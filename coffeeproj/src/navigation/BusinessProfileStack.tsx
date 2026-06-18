@@ -8,8 +8,7 @@ import { BusinessReviewsScreen } from '../screens/business/BusinessReviewsScreen
 import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
 import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
 import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
-import { SettingsStack } from './SettingsStack';
-import type { SettingsStackParamList } from './SettingsStack';
+import { SettingsStack, type SettingsStackParamList } from "./SettingsStack";
 import { COLORS } from '../config/constants';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 

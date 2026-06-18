@@ -26,8 +26,7 @@ import { EquipmentChips } from '../../components/EquipmentChips';
 import { useAuthStore } from '../../stores/authStore';
 import type { Business, Branch, BusinessType, Equipment, GeoPoint, LegalForm } from '../../types';
 import type { SocialLink } from '../../types/business';
-import type { CityCode } from '../../types/city';
-import { DEFAULT_CITY, toCityCode } from '../../types/city';
+import { DEFAULT_CITY, toCityCode, type CityCode } from "../../types/city";
 import { PHOTO_LIMIT } from '../../utils/storage';
 import { pickPhotos, reportRejections } from '../../utils/pickPhotos';
 import { pickAndCropAvatar } from '../../utils/imageCrop';
@@ -94,9 +93,6 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
   // Step 4 — Photos for the first branch (deferred URIs until finish)
   const [pendingBranchPhotoUris, setPendingBranchPhotoUris] = useState<string[]>([]);
-  // Tracks existing-branch photo URLs marked for deletion. Applied to the
-  // server on handleFinish; until then we just hide them from the gallery so
-  // the user can preview the result.
   const [removedExistingPhotoUrls, setRemovedExistingPhotoUrls] = useState<string[]>([]);
 
   const steps = STEP_KEYS.map(k => t(`businessSetup.steps.${k}`));

@@ -7,12 +7,11 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
-} from 'react-native';
+} from "react-native";
 import FastImage from 'react-native-fast-image';
 import { transformedImageUrl } from '../../utils/imageTransform';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -60,8 +59,7 @@ import {
 } from '../../utils/validation';
 import type { GeoPoint } from '../../types/business';
 import type { BaristaProfile, ReliabilityScore, ShiftTime } from '../../types/baristaProfile';
-import type { CityCode } from '../../types/city';
-import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU } from '../../types/city';
+import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU, type CityCode } from "../../types/city";
 import type { BaristaProfileId, UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
 import type { ProfileStackParamList } from '../../navigation/ProfileStack';
@@ -1619,10 +1617,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 16,
   },
-  // Floating pencil button at the top-right of the profile header card.
-  // Replaces the old "Изменить" text link that lived next to a "Личная
-  // информация" heading — heading is gone, so the affordance moves up to the
-  // card it actually edits.
   editPencilButton: {
     position: 'absolute',
     top: 12,
@@ -1928,9 +1922,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
   },
-  // Used by the "subsections of Личная информация" rows (Shift history,
-  // Reviews, Reliability). No internal divider — the rows are visually
-  // grouped under the section heading and spacing alone separates them.
   subsectionRow: {
     flexDirection: 'row',
     alignItems: 'center',

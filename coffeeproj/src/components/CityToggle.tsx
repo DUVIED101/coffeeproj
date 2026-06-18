@@ -2,8 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../config/constants';
-import { CITY_CODES } from '../types/city';
-import type { CityCode } from '../types/city';
+import { CITY_CODES, type CityCode } from "../types/city";
 
 type CityToggleProps = {
   value: CityCode;

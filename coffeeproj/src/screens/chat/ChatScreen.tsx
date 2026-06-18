@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import type { FlatList } from 'react-native';
+import { FlatList as FlatListComponent, type FlatList } from "react-native";
 import {
   ActionSheetIOS,
   Alert,
@@ -14,7 +14,6 @@ import {
   Linking,
   Platform,
 } from 'react-native';
-import { FlatList as FlatListComponent } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
@@ -22,8 +21,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../config/constants';
 import { ChatService } from '../../services/ChatService';
-import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
-import type { HeaderAction } from '../../components/ScreenHeaderWithActions';
+import { ScreenHeaderWithActions, type HeaderAction } from "../../components/ScreenHeaderWithActions";
 import { useAuthStore } from '../../stores/authStore';
 import { useChatUnreadStore } from '../../stores/chatUnreadStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
@@ -37,9 +35,6 @@ import { useBlockedUsersStore } from '../../stores/blockedUsersStore';
 
 const MESSAGE_MAX_LENGTH = 500;
 
-// Matches http(s)://… and bare www.… so users typing either get tappable links.
-// Trailing punctuation that's typically sentence-final (.,!?;:) is intentionally
-// excluded from the URL so "see https://foo.com." doesn't include the period.
 const URL_REGEX = /(https?:\/\/[^\s]+[^\s.,!?;:]|www\.[^\s]+[^\s.,!?;:])/gi;
 
 const openUrl = async (raw: string): Promise<void> => {
@@ -162,7 +157,7 @@ export function ChatScreen({ navigation, route }: any) {
         conv = await ChatService.getConversationByApplication(applicationId);
 
         if (!conv) {
-          console.log('Conversation not found, creating one for application:', applicationId);
+          console.error('Conversation not found, creating one for application:', applicationId);
           conv = await ChatService.createConversation(applicationId);
         }
       }

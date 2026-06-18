@@ -10,10 +10,8 @@ import {
   Pressable,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { MetroService } from '../utils/metro';
-import type { MetroStation } from '../utils/metro';
-import type { CityCode } from '../types/city';
-import { CITY_CODES } from '../types/city';
+import { MetroService, type MetroStation } from "../utils/metro";
+import { CITY_CODES, type CityCode } from "../types/city";
 import type { GeoPoint } from '../types/business';
 import { COLORS } from '../config/constants';
 

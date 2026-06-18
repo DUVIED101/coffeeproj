@@ -6,8 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
-} from 'react-native';
+} from "react-native";
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../config/constants';
 import { ApplicationService } from '../services/ApplicationService';

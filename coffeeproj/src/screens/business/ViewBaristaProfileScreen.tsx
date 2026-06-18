@@ -33,8 +33,7 @@ import type { BaristaProfile, ReliabilityScore, ShiftTime } from '../../types/ba
 import type { BaristaProfileId, UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
-import type { WorkExperience } from '../../types/workExperience';
-import { computeDuration, computeTotalDuration } from '../../types/workExperience';
+import { computeDuration, computeTotalDuration, type WorkExperience } from "../../types/workExperience";
 import { isCityCode } from '../../types/city';
 
 type Props = {

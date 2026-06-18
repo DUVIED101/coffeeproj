@@ -41,8 +41,7 @@ import { pendingOfferActionsQueue } from './services/pendingOfferActionsQueue';
 import { useNotificationFeedStore } from './stores/notificationFeedStore';
 import { useDiagnosticsStore } from './stores/diagnosticsStore';
 import { warmSupabaseConnection } from './utils/warmConnection';
-import { JOB_OFFER_ACTION_ACCEPT, JOB_OFFER_ACTION_DECLINE } from './types/notification';
-import type { PushNotificationPayload } from './types/notification';
+import { JOB_OFFER_ACTION_ACCEPT, JOB_OFFER_ACTION_DECLINE, type PushNotificationPayload } from "./types/notification";
 import type { ApplicationId, JobOfferId } from './types/ids';
 import 'react-native-gesture-handler';
 

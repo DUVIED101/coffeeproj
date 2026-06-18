@@ -7,20 +7,6 @@ if (!SUPABASE_ANON_KEY) {
   throw new Error('Missing SUPABASE_ANON_KEY. Please check your .env file.');
 }
 
-// Single client, created synchronously at module load. URL is picked by
-// pickSupabaseHostSync (TZ-based — RU timezones go to the proxy, everyone
-// else goes direct). The Force-proxy diagnostic toggle requires a cold
-// restart to take effect; it cannot influence this sync init because
-// AsyncStorage is async-only.
-//
-// Phase 8.6 Phase 2 history: we previously wrapped the client in a Proxy
-// with lazy init so the bootstrap could pick the URL after reading the
-// async Force-proxy flag. That broke `supabase.auth.onAuthStateChange(...)`
-// when registered at module load — the listener attached to a lazy-init
-// client, then the bootstrap replaced the underlying client, and events
-// fired on the new client never reached the listener. UI stayed stuck on
-// "creating profile" / "sign in" spinners forever. Removing the Proxy and
-// committing to a single sync URL fixed it.
 export const SUPABASE_URL: string = pickSupabaseHostSync().url;
 
 export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
