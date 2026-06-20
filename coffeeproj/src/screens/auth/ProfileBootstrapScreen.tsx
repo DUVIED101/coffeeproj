@@ -17,8 +17,14 @@ import { useAuthStore } from '../../stores/authStore';
 import { COLORS } from '../../config/constants';
 import { readPendingAccountType, clearPendingAccountType } from '../../utils/socialAuthStash';
 import { consumeStashedConsent } from '../../utils/consentStash';
+import {
+  getOutstandingLegalAcceptances,
+  recordCurrentLegalAcceptances,
+} from '../../services/LegalAcceptanceService';
+import type { LegalDocumentKind } from '../../config/legalVersions';
 import type { BootstrapStackParamList } from '../../navigation/BootstrapStack';
 import type { AccountType, User } from '../../types';
+import type { UserId } from '../../types/ids';
 
 type SignupMetadata = {
   account_type?: string;
@@ -167,7 +173,30 @@ export const ProfileBootstrapScreen: React.FC = () => {
 
       const profile = toUser(data);
 
-      if (!profile.consentAcceptedAt) {
+      // If the user just walked through the in-app consent UI (stashed flag),
+      // append the per-document audit log immediately. Best-effort — we don't
+      // want a transient network error here to block sign-in, the gate below
+      // will catch a missing acceptance on the next session.
+      if (stashedConsent) {
+        try {
+          await recordCurrentLegalAcceptances(profile.id as UserId);
+        } catch (logErr) {
+          console.warn('recordCurrentLegalAcceptances failed during bootstrap:', logErr);
+        }
+      }
+
+      // Two gates on top of consent_accepted_at:
+      //   1. No consent ever recorded → first-time consent screen.
+      //   2. Consent recorded, but at least one document has a newer version
+      //      than what the user previously accepted → re-consent screen.
+      let outstanding: LegalDocumentKind[] = [];
+      try {
+        outstanding = await getOutstandingLegalAcceptances(profile.id as UserId);
+      } catch (outstandingErr) {
+        console.warn('getOutstandingLegalAcceptances failed:', outstandingErr);
+      }
+
+      if (!profile.consentAcceptedAt || outstanding.length > 0) {
         // Stash everything to the consent gate; we'll setUser only once the
         // gate writes consent_accepted_at and we re-fetch.
         setPendingProfile(profile);
@@ -216,6 +245,10 @@ export const ProfileBootstrapScreen: React.FC = () => {
         .update({ consent_accepted_at: new Date().toISOString() })
         .eq('id', pendingProfile.id);
       if (updErr) throw new Error(updErr.message);
+
+      // Per-document audit trail — failure here means we'd re-prompt the user
+      // on next session, which is preferable to losing the (now-set) flag.
+      await recordCurrentLegalAcceptances(pendingProfile.id as UserId);
 
       const { data, error: selErr } = await supabase
         .from('users')
