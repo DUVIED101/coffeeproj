@@ -41,8 +41,12 @@
     "metroStation": "Метро",
     "distance": "Расстояние",
     "distanceKm": "{{km}} км",
+    "fromDate": "С даты",
+    "fromDateFormat": "с {{date}}",
     "chooseEquipment": "Выберите оборудование",
     "chooseDistance": "Выберите расстояние",
+    "chooseFromDate": "Показывать смены с даты",
+    "apply": "Применить",
     "clear": "Очистить",
     "reset": "Сбросить фильтр"
   },
@@ -281,6 +285,7 @@
     "hoursPerWeek": "Часов в неделю:",
     "preferredDays": "Предпочтительные дни:",
     "anyDay": "Любые дни",
+    "customSchedule": "Варианты графика:",
     "hoursPerWeekShort": "{{hours}} ч/нед",
     "compensation": "Оплата",
     "perHour": "за час",
@@ -370,7 +375,11 @@
     "fieldMetro": "Предпочитаемые станции метро (опционально)",
     "fieldShiftTimes": "Предпочитаемые смены (опционально)",
     "fieldHourlyRateMin": "Минимальная ставка в час (RUB, опционально)",
-    "minPlaceholder": "Мин"
+    "minPlaceholder": "Мин",
+    "fieldAvailableFrom": "Когда готов выйти",
+    "fieldAvailableFromPlaceholder": "Выберите дату",
+    "fieldWorkloadTypes": "Формат работы",
+    "fieldAvailableDays": "Дни недели"
   },
   "baristaProfileScreen": {
     "title": "Профиль",
@@ -894,6 +903,9 @@
       "hoursPerWeekPlaceholder": "Напр., 40",
       "preferredDays": "Предпочтительные дни",
       "preferredDaysHint": "Опционально. Оставьте пустым, если день недели не важен.",
+      "customSchedule": "Свои варианты графика",
+      "customScheduleHint": "Введите две цифры: сколько дней работы / сколько выходных. Например, 5/2 или 4/3.",
+      "addCustomSchedule": "+ Добавить вариант графика",
       "compensationType": "Тип оплаты",
       "amountRub": "Сумма (₽)",
       "amountPlaceholder": "0",
@@ -976,6 +988,7 @@
     "hoursPerWeek": "Часов в неделю:",
     "preferredDays": "Предпочтительные дни:",
     "anyDay": "Любые дни",
+    "customSchedule": "Варианты графика:",
     "compensation": "Оплата",
     "perHour": "за час",
     "perDay": "за день",
@@ -1219,7 +1232,7 @@
     "removeBody": "Удалить \"{{name}}\"?"
   },
   "baristaFilterBar": {
-    "branchPreset": "Рядом с моими точками",
+    "branchPreset": "У моих точек",
     "equipment": "Оборудование",
     "metroPlaceholder": "Метро",
     "shift": "Смена",
@@ -1234,9 +1247,33 @@
     "chooseShift": "Выберите смену",
     "chooseExperience": "Минимальный опыт",
     "chooseHourlyCap": "Максимальная ставка",
+    "availableFrom": "Готов с даты",
+    "availableFromFormat": "с {{date}}",
+    "chooseAvailableFrom": "Готов выйти к дате",
+    "workload": "Формат работы",
+    "chooseWorkload": "Выберите формат работы",
+    "days": "Дни недели",
+    "chooseDays": "Выберите дни недели",
+    "apply": "Применить",
     "clear": "Очистить",
     "done": "Готово",
     "reset": "Сбросить"
+  },
+  "workloadType": {
+    "full_time": "Полный день",
+    "part_time": "Неполный день",
+    "freelance": "Подработка",
+    "weekends_only": "Только выходные",
+    "flexible": "Гибкий график"
+  },
+  "dayOfWeek": {
+    "mon": "Пн",
+    "tue": "Вт",
+    "wed": "Ср",
+    "thu": "Чт",
+    "fri": "Пт",
+    "sat": "Сб",
+    "sun": "Вс"
   },
   "branchPhotoGallery": {
     "removeA11y": "Удалить фото",

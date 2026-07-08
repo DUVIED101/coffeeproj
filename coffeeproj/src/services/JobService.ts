@@ -36,6 +36,7 @@ function normalizeShiftDetails(raw: any, jobType: JobType): ShiftDetails {
       startDate: r.startDate,
       hoursPerWeek: Number(r.hoursPerWeek),
       preferredDays: r.preferredDays,
+      customSchedulePatterns: r.customSchedulePatterns,
     };
   }
   return {
@@ -46,6 +47,7 @@ function normalizeShiftDetails(raw: any, jobType: JobType): ShiftDetails {
     endTime: r.endTime,
     isRecurring: r.isRecurring ?? false,
     recurringDays: r.recurringDays,
+    customSchedulePatterns: r.customSchedulePatterns,
   };
 }
 
@@ -257,6 +259,7 @@ export class JobService {
         job_type_filter: filters.jobType ?? null,
         equipment_filter: filters.equipment ?? null,
         city_filter: filters.city ?? null,
+        start_date_minimum: filters.startDateMinimum ?? null,
         limit_count: limit,
         offset_count: offset,
       };

@@ -18,6 +18,8 @@ type FilterRow = {
   hourly_rate_min: number | null;
   hourly_rate_max: number | null;
   available_from_date: string | null;
+  available_days: string[] | null;
+  workload_types: string[] | null;
   portfolio_photos: string[] | null;
   is_actively_looking: boolean;
   profile_completeness: number | null;
@@ -28,6 +30,7 @@ type FilterRow = {
 type QueryBuilderMock = {
   select: jest.Mock;
   eq: jest.Mock;
+  in: jest.Mock;
   overlaps: jest.Mock;
   gte: jest.Mock;
   lte: jest.Mock;
@@ -58,6 +61,8 @@ const SAMPLE_ROW: FilterRow = {
   hourly_rate_min: 500,
   hourly_rate_max: 1200,
   available_from_date: '2026-05-01',
+  available_days: ['mon', 'tue', 'wed'],
+  workload_types: ['part_time', 'flexible'],
   portfolio_photos: ['https://cdn.example/photo-1.jpg'],
   is_actively_looking: true,
   profile_completeness: 85,
@@ -83,6 +88,8 @@ const EXPECTED_MAPPED_ROW: BaristaProfile = {
   hourlyRateMin: 500,
   hourlyRateMax: 1200,
   availableFromDate: '2026-05-01',
+  availableDays: ['mon', 'tue', 'wed'] as BaristaProfile['availableDays'],
+  workloadTypes: ['part_time', 'flexible'] as BaristaProfile['workloadTypes'],
   portfolioPhotos: ['https://cdn.example/photo-1.jpg'],
   isActivelyLooking: true,
   profileCompleteness: 85,
@@ -96,6 +103,7 @@ const createQueryBuilderMock = (rows: FilterRow[]): QueryBuilderMock => {
 
   builder.select = jest.fn(chain);
   builder.eq = jest.fn(chain);
+  builder.in = jest.fn(chain);
   builder.overlaps = jest.fn(chain);
   builder.gte = jest.fn(chain);
   builder.lte = jest.fn(chain);
@@ -202,5 +210,60 @@ describe('searchBaristas', () => {
     const result = await BaristaSearchService.searchBaristas(filters);
 
     expect(result).toEqual([EXPECTED_MAPPED_ROW]);
+  });
+
+  it('applies available_from_date <= filter when availableFromDateMax is set', async () => {
+    const cutoff = '2026-06-01';
+    const filters: BaristaFilters = { availableFromDateMax: cutoff };
+
+    await BaristaSearchService.searchBaristas(filters);
+
+    expect(builder.lte).toHaveBeenCalledWith('available_from_date', cutoff);
+  });
+
+  it('applies available_days overlaps filter when availableDaysAny is set', async () => {
+    const days: BaristaFilters['availableDaysAny'] = ['mon', 'wed', 'fri'];
+    const filters: BaristaFilters = { availableDaysAny: days };
+
+    await BaristaSearchService.searchBaristas(filters);
+
+    expect(builder.overlaps).toHaveBeenCalledWith('available_days', days);
+  });
+
+  it('applies workload_types overlaps filter when workloadTypesAny is set', async () => {
+    const workloads: BaristaFilters['workloadTypesAny'] = ['part_time', 'flexible'];
+    const filters: BaristaFilters = { workloadTypesAny: workloads };
+
+    await BaristaSearchService.searchBaristas(filters);
+
+    expect(builder.overlaps).toHaveBeenCalledWith('workload_types', workloads);
+  });
+
+  it('constrains city and excludes METRO_ANY when branchCitiesAny is set (branch preset)', async () => {
+    const cities: BaristaFilters['branchCitiesAny'] = [MOSCOW];
+    const stations = ['Tverskaya', 'Arbatskaya'];
+    const filters: BaristaFilters = {
+      branchCitiesAny: cities,
+      metroStations: stations,
+    };
+
+    await BaristaSearchService.searchBaristas(filters);
+
+    expect(builder.in).toHaveBeenCalledWith('city', cities);
+    // Preset must be strict: no METRO_ANY fallback appended.
+    expect(builder.overlaps).toHaveBeenCalledWith('preferred_metro_stations', stations);
+  });
+
+  it('still appends METRO_ANY when metroStations is set without branchCitiesAny', async () => {
+    const stations = ['Tverskaya'];
+    const filters: BaristaFilters = { metroStations: stations };
+
+    await BaristaSearchService.searchBaristas(filters);
+
+    expect(builder.overlaps).toHaveBeenCalledWith('preferred_metro_stations', [
+      ...stations,
+      '__any__',
+    ]);
+    expect(builder.in).not.toHaveBeenCalled();
   });
 });

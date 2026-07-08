@@ -15,6 +15,7 @@ import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithAction
 import { ResponsiveContainer } from '../../components/ResponsiveContainer';
 import { Skeleton } from '../../components/Skeleton';
 import type { BaristaProfile, BaristaFilters } from '../../types/baristaProfile';
+import type { CityCode } from '../../types/city';
 import type { UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
 import type { BusinessSearchStackParamList } from '../../navigation/BusinessSearchStack';
@@ -41,6 +42,7 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [filters, setFilters] = useState<BaristaFilters>({});
   const [branchMetroStations, setBranchMetroStations] = useState<string[]>([]);
+  const [branchCities, setBranchCities] = useState<CityCode[]>([]);
 
   useEffect(() => {
     loadBranchMetroStations();
@@ -65,6 +67,8 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
         .map(b => b.metroStation)
         .filter((s): s is string => typeof s === 'string' && s.length > 0);
       setBranchMetroStations(Array.from(new Set(stations)));
+      const cities = branches.map(b => b.city).filter((c): c is CityCode => !!c);
+      setBranchCities(Array.from(new Set(cities)));
     } catch (error) {
       console.error('Error loading branch metro stations:', error);
     }
@@ -166,6 +170,7 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
           onFilterChange={handleFilterChange}
           currentFilters={filters}
           branchMetroStations={branchMetroStations}
+          branchCities={branchCities}
         />
 
         <FlatList

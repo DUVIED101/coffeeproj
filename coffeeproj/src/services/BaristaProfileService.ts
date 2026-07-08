@@ -38,6 +38,9 @@ export class BaristaProfileService {
         preferred_shift_times: data.preferredShiftTimes || [],
         hourly_rate_min: data.hourlyRateMin,
         hourly_rate_max: data.hourlyRateMax,
+        available_from_date: data.availableFromDate,
+        available_days: data.availableDays ?? [],
+        workload_types: data.workloadTypes ?? [],
       };
       if (data.medicalBookExpiresOn !== undefined) {
         baseRow.medical_book_expires_on = data.medicalBookExpiresOn;
@@ -153,6 +156,12 @@ export class BaristaProfileService {
       }
       if (updates.availableFromDate !== undefined) {
         dbUpdates.available_from_date = updates.availableFromDate;
+      }
+      if (updates.availableDays !== undefined) {
+        dbUpdates.available_days = updates.availableDays;
+      }
+      if (updates.workloadTypes !== undefined) {
+        dbUpdates.workload_types = updates.workloadTypes;
       }
       if (updates.isActivelyLooking !== undefined) {
         dbUpdates.is_actively_looking = updates.isActivelyLooking;
@@ -447,6 +456,8 @@ export class BaristaProfileService {
       hourlyRateMin: db.hourly_rate_min,
       hourlyRateMax: db.hourly_rate_max,
       availableFromDate: db.available_from_date,
+      availableDays: db.available_days || [],
+      workloadTypes: db.workload_types || [],
       portfolioPhotos: db.portfolio_photos || [],
       medicalBookExpiresOn: db.medical_book_expires_on ?? undefined,
       isActivelyLooking: db.is_actively_looking,

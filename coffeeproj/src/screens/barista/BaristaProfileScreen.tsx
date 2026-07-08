@@ -11,7 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
-} from "react-native";
+} from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { transformedImageUrl } from '../../utils/imageTransform';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -58,8 +58,15 @@ import {
   COMPENSATION_MAX_DIGITS,
 } from '../../utils/validation';
 import type { GeoPoint } from '../../types/business';
-import type { BaristaProfile, ReliabilityScore, ShiftTime } from '../../types/baristaProfile';
-import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU, type CityCode } from "../../types/city";
+import type {
+  BaristaProfile,
+  ReliabilityScore,
+  ShiftTime,
+  DayOfWeek,
+  WorkloadType,
+} from '../../types/baristaProfile';
+import { DAYS_OF_WEEK, WORKLOAD_TYPES } from '../../types/baristaProfile';
+import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU, type CityCode } from '../../types/city';
 import type { BaristaProfileId, UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
 import type { ProfileStackParamList } from '../../navigation/ProfileStack';
@@ -214,6 +221,10 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [selectedShiftTimes, setSelectedShiftTimes] = useState<ShiftTime[]>([]);
   const [hourlyRateMin, setHourlyRateMin] = useState('');
   const [isActivelyLooking, setIsActivelyLooking] = useState(true);
+  const [availableFromDate, setAvailableFromDate] = useState<string>('');
+  const [showAvailableFromPicker, setShowAvailableFromPicker] = useState(false);
+  const [availableDays, setAvailableDays] = useState<DayOfWeek[]>([]);
+  const [workloadTypes, setWorkloadTypes] = useState<WorkloadType[]>([]);
   const [workExperienceDrafts, setWorkExperienceDrafts] = useState<WorkExperienceDraft[]>([]);
   const [workExperienceErrors, setWorkExperienceErrors] = useState<
     ReadonlyArray<ReadonlyArray<WorkExperienceFieldError>>
@@ -346,6 +357,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     setPreferredMetroStations(profileData.preferredMetroStations);
     setSelectedShiftTimes(profileData.preferredShiftTimes);
     setHourlyRateMin(profileData.hourlyRateMin != null ? String(profileData.hourlyRateMin) : '');
+    setAvailableFromDate(profileData.availableFromDate ?? '');
+    setAvailableDays(profileData.availableDays ?? []);
+    setWorkloadTypes(profileData.workloadTypes ?? []);
     setMedicalBookExpiresOn(profileData.medicalBookExpiresOn ?? '');
     setIsActivelyLooking(profileData.isActivelyLooking);
     setWorkExperienceDrafts(
@@ -372,6 +386,16 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const toggleShiftTime = useCallback((shift: ShiftTime) => {
     setSelectedShiftTimes(prev =>
       prev.includes(shift) ? prev.filter(s => s !== shift) : [...prev, shift]
+    );
+  }, []);
+
+  const toggleAvailableDay = useCallback((day: DayOfWeek) => {
+    setAvailableDays(prev => (prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]));
+  }, []);
+
+  const toggleWorkloadType = useCallback((workload: WorkloadType) => {
+    setWorkloadTypes(prev =>
+      prev.includes(workload) ? prev.filter(w => w !== workload) : [...prev, workload]
     );
   }, []);
 
@@ -630,6 +654,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
         preferredShiftTimes: selectedShiftTimes,
         hourlyRateMin: hourlyRateMin ? parseInt(hourlyRateMin, 10) : undefined,
         medicalBookExpiresOn: medicalBookExpiresOn || undefined,
+        availableFromDate: availableFromDate || undefined,
+        availableDays,
+        workloadTypes,
         isActivelyLooking,
       });
 
@@ -1278,13 +1305,101 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                   editable={isEditing}
                   returnKeyType="done"
                 />
+
+                <Text style={styles.label}>{t('baristaSetup.fieldAvailableFrom')}</Text>
+                <TouchableOpacity
+                  style={styles.input}
+                  onPress={() => setShowAvailableFromPicker(true)}>
+                  <Text
+                    style={{
+                      color: availableFromDate ? COLORS.text : COLORS.textSecondary,
+                      paddingVertical: 4,
+                    }}>
+                    {availableFromDate
+                      ? new Date(availableFromDate).toLocaleDateString(
+                          i18n.language === 'ru' ? 'ru-RU' : 'en-US',
+                          { year: 'numeric', month: 'long', day: 'numeric' }
+                        )
+                      : t('baristaSetup.fieldAvailableFromPlaceholder')}
+                  </Text>
+                </TouchableOpacity>
+                {availableFromDate ? (
+                  <TouchableOpacity onPress={() => setAvailableFromDate('')}>
+                    <Text style={{ color: COLORS.textSecondary, marginTop: 4 }}>
+                      {t('common.clear', { defaultValue: 'Очистить' })}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+                {showAvailableFromPicker && (
+                  <DateTimePicker
+                    value={availableFromDate ? new Date(availableFromDate) : new Date()}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                    themeVariant="light"
+                    textColor="#000000"
+                    minimumDate={new Date()}
+                    onChange={(_, date) => {
+                      setShowAvailableFromPicker(false);
+                      if (date) setAvailableFromDate(formatLocalDate(date));
+                    }}
+                  />
+                )}
+
+                <Text style={styles.label}>{t('baristaSetup.fieldWorkloadTypes')}</Text>
+                <View style={styles.chipsContainer}>
+                  {WORKLOAD_TYPES.map(workload => (
+                    <TouchableOpacity
+                      key={workload}
+                      style={[styles.chip, workloadTypes.includes(workload) && styles.chipSelected]}
+                      onPress={() => toggleWorkloadType(workload)}>
+                      <Text
+                        style={[
+                          styles.chipText,
+                          workloadTypes.includes(workload) && styles.chipTextSelected,
+                        ]}>
+                        {t(`workloadType.${workload}`)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={styles.label}>{t('baristaSetup.fieldAvailableDays')}</Text>
+                <View style={styles.dayRow}>
+                  {DAYS_OF_WEEK.map(day => (
+                    <TouchableOpacity
+                      key={day}
+                      style={[
+                        styles.dayChip,
+                        availableDays.includes(day) && styles.dayChipSelected,
+                      ]}
+                      onPress={() => toggleAvailableDay(day)}>
+                      <Text
+                        style={[
+                          styles.dayChipText,
+                          availableDays.includes(day) && styles.dayChipTextSelected,
+                        ]}>
+                        {t(`dayOfWeek.${day}`)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </>
             ) : (
               (() => {
                 const hasMetro = profile.preferredMetroStations.length > 0;
                 const hasShifts = profile.preferredShiftTimes.length > 0;
                 const hasRate = profile.hourlyRateMin != null;
-                if (!hasMetro && !hasShifts && !hasRate) {
+                const hasAvailableFrom = !!profile.availableFromDate;
+                const hasWorkload = profile.workloadTypes.length > 0;
+                const hasDays = profile.availableDays.length > 0;
+                if (
+                  !hasMetro &&
+                  !hasShifts &&
+                  !hasRate &&
+                  !hasAvailableFrom &&
+                  !hasWorkload &&
+                  !hasDays
+                ) {
                   return <Text style={styles.emptySection}>{t('common.notSpecified')}</Text>;
                 }
                 return (
@@ -1333,6 +1448,54 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                             min: profile.hourlyRateMin,
                           })}
                         </Text>
+                      </>
+                    )}
+                    {hasAvailableFrom && (
+                      <>
+                        <Text style={styles.label}>{t('baristaSetup.fieldAvailableFrom')}</Text>
+                        <Text style={styles.infoText}>
+                          {new Date(profile.availableFromDate as string).toLocaleDateString(
+                            i18n.language === 'ru' ? 'ru-RU' : 'en-US',
+                            { year: 'numeric', month: 'long', day: 'numeric' }
+                          )}
+                        </Text>
+                      </>
+                    )}
+                    {hasWorkload && (
+                      <>
+                        <Text style={styles.label}>{t('baristaSetup.fieldWorkloadTypes')}</Text>
+                        <View style={styles.chipsContainer}>
+                          {profile.workloadTypes.map(workload => (
+                            <View key={workload} style={[styles.chip, styles.chipSelected]}>
+                              <Text style={[styles.chipText, styles.chipTextSelected]}>
+                                {t(`workloadType.${workload}`)}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      </>
+                    )}
+                    {hasDays && (
+                      <>
+                        <Text style={styles.label}>{t('baristaSetup.fieldAvailableDays')}</Text>
+                        <View style={styles.dayRow}>
+                          {DAYS_OF_WEEK.map(day => {
+                            const selected = profile.availableDays.includes(day);
+                            return (
+                              <View
+                                key={day}
+                                style={[styles.dayChip, selected && styles.dayChipSelected]}>
+                                <Text
+                                  style={[
+                                    styles.dayChipText,
+                                    selected && styles.dayChipTextSelected,
+                                  ]}>
+                                  {t(`dayOfWeek.${day}`)}
+                                </Text>
+                              </View>
+                            );
+                          })}
+                        </View>
                       </>
                     )}
                   </>
@@ -1705,6 +1868,33 @@ const styles = StyleSheet.create({
     color: COLORS.text,
   },
   chipTextSelected: {
+    color: '#fff',
+  },
+  dayRow: {
+    flexDirection: 'row',
+    gap: 4,
+    marginTop: 8,
+  },
+  dayChip: {
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 2,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: COLORS.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+  },
+  dayChipSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  dayChipText: {
+    fontSize: 13,
+    color: COLORS.text,
+  },
+  dayChipTextSelected: {
     color: '#fff',
   },
   row: {

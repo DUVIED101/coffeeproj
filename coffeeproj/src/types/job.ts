@@ -57,6 +57,9 @@ export interface TemporaryShiftDetails {
   endTime: string; // HH:mm format
   isRecurring: boolean;
   recurringDays?: string[]; // ['monday', 'tuesday', ...]
+  // Free-form rotation patterns like "5/2" or "2/2" that can't be expressed as
+  // fixed weekdays. Kept separate from recurringDays so the two never conflict.
+  customSchedulePatterns?: string[];
 }
 
 export interface PermanentShiftDetails {
@@ -64,6 +67,7 @@ export interface PermanentShiftDetails {
   startDate: string; // ISO date — first day on the job
   hoursPerWeek: number; // 1.0-80.0, one decimal place
   preferredDays?: WeekdayKey[];
+  customSchedulePatterns?: string[];
 }
 
 export type ShiftDetails = TemporaryShiftDetails | PermanentShiftDetails;
@@ -117,6 +121,7 @@ export interface JobFilters {
   metroStations?: string[]; // Changed from metroStation (singular) to metroStations (plural array)
   maxDistance?: number; // meters, default 50000
   city?: CityCode;
+  startDateMinimum?: string; // ISO date; only jobs whose shift_details.startDate >= this
 }
 
 export interface JobSearchParams extends JobFilters {

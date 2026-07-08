@@ -45,6 +45,17 @@ type Props = {
 
 const DAY_NAMES = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
+// Custom schedule patterns are edited as two single-digit fields joined by
+// "/". We still store them as a plain string ("5/2") — this helper only
+// mediates the split UI, so persisted values stay simple and human-readable.
+const parseSchedulePattern = (raw: string): { on: string; off: string } => {
+  const [rawOn = '', rawOff = ''] = raw.split('/');
+  return {
+    on: rawOn.replace(/\D/g, '').slice(0, 1),
+    off: rawOff.replace(/\D/g, '').slice(0, 1),
+  };
+};
+
 const parseTimeString = (time: string): Date => {
   const [h, m] = time.split(':').map(Number);
   const d = new Date();
@@ -116,6 +127,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [hoursPerWeek, setHoursPerWeek] = useState('');
   const [preferredDayIdxs, setPreferredDayIdxs] = useState<number[]>([]);
+  const [customSchedulePatterns, setCustomSchedulePatterns] = useState<string[]>([]);
   const [compensationType, setCompensationType] = useState<CompensationType>('hourly');
   const [compensationAmount, setCompensationAmount] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -128,6 +140,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const isSubmittingRef = useRef(false);
+  const scheduleOffRefs = useRef<Map<number, TextInput | null>>(new Map());
 
   useEffect(() => {
     loadBranches();
@@ -178,6 +191,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
               .map(day => WEEKDAY_KEYS.indexOf(day))
               .filter(idx => idx >= 0)
           );
+          setCustomSchedulePatterns(job.shiftDetails.customSchedulePatterns ?? []);
         } else {
           setEndDate(
             job.shiftDetails.endDate
@@ -194,6 +208,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                 .filter(idx => idx >= 0)
             );
           }
+          setCustomSchedulePatterns(job.shiftDetails.customSchedulePatterns ?? []);
         }
         setCompensationType(job.jobType === 'permanent' ? 'hourly' : job.compensation.type);
         setCompensationAmount(String(job.compensation.amount));
@@ -281,6 +296,29 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     const newRequirements = [...requirements];
     newRequirements[index] = value;
     setRequirements(newRequirements);
+  };
+
+  const addSchedulePattern = () => {
+    setCustomSchedulePatterns([...customSchedulePatterns, '/']);
+  };
+
+  const removeSchedulePattern = (index: number) => {
+    setCustomSchedulePatterns(customSchedulePatterns.filter((_, i) => i !== index));
+  };
+
+  const setSchedulePart = (index: number, side: 'on' | 'off', raw: string) => {
+    const digits = raw.replace(/\D/g, '').slice(0, 1);
+    const current = parseSchedulePattern(customSchedulePatterns[index] ?? '');
+    const nextPattern = side === 'on' ? `${digits}/${current.off}` : `${current.on}/${digits}`;
+    const next = [...customSchedulePatterns];
+    next[index] = nextPattern;
+    setCustomSchedulePatterns(next);
+    // Auto-advance to the "days off" field once the user picks a "days on"
+    // digit — with maxLength=1 the field can't accept more input anyway, so
+    // holding focus there just wastes a tap.
+    if (side === 'on' && digits.length === 1) {
+      scheduleOffRefs.current.get(index)?.focus();
+    }
   };
 
   const formatTime = (date: Date): string => {
@@ -430,6 +468,14 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
       }
 
       const filteredRequirements = requirements.filter(r => r.trim() !== '');
+      // Drop half-filled patterns — an "N/" or "/N" isn't a meaningful rotation
+      // and would just confuse baristas reading the job.
+      const filteredSchedulePatterns = customSchedulePatterns
+        .map(p => parseSchedulePattern(p))
+        .filter(p => p.on.length > 0 && p.off.length > 0)
+        .map(p => `${p.on}/${p.off}`);
+      const customSchedule =
+        filteredSchedulePatterns.length > 0 ? filteredSchedulePatterns : undefined;
 
       const shiftDetails: ShiftDetails =
         jobType === 'permanent'
@@ -441,6 +487,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                 preferredDayIdxs.length > 0
                   ? preferredDayIdxs.map(idx => WEEKDAY_KEYS[idx])
                   : undefined,
+              customSchedulePatterns: customSchedule,
             }
           : {
               kind: 'temporary',
@@ -450,6 +497,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
               endTime: formatTime(endTime),
               isRecurring,
               recurringDays: isRecurring ? selectedDays.map(index => DAY_NAMES[index]) : undefined,
+              customSchedulePatterns: customSchedule,
             };
 
       const jobData = {
@@ -944,6 +992,50 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
               )}
             </>
           )}
+
+          <Text style={styles.label}>{t('createJob.fields.customSchedule')}</Text>
+          <Text style={styles.helperText}>{t('createJob.fields.customScheduleHint')}</Text>
+          {customSchedulePatterns.map((pattern, index) => {
+            const parts = parseSchedulePattern(pattern);
+            return (
+              <View key={index} style={styles.schedulePatternRow}>
+                <TextInput
+                  style={[styles.input, styles.schedulePatternInput]}
+                  keyboardType="number-pad"
+                  maxLength={1}
+                  value={parts.on}
+                  placeholder="5"
+                  onChangeText={text => setSchedulePart(index, 'on', text)}
+                  returnKeyType="next"
+                />
+                <Text style={styles.schedulePatternSlash}>/</Text>
+                <TextInput
+                  ref={ref => {
+                    if (ref) scheduleOffRefs.current.set(index, ref);
+                    else scheduleOffRefs.current.delete(index);
+                  }}
+                  style={[styles.input, styles.schedulePatternInput]}
+                  keyboardType="number-pad"
+                  maxLength={1}
+                  value={parts.off}
+                  placeholder="2"
+                  onChangeText={text => setSchedulePart(index, 'off', text)}
+                  returnKeyType="done"
+                />
+                <View style={styles.schedulePatternSpacer} />
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => removeSchedulePattern(index)}>
+                  <Text style={styles.removeButtonText}>
+                    {t('createJob.fields.removeRequirement')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+          <TouchableOpacity style={styles.addButton} onPress={addSchedulePattern}>
+            <Text style={styles.addButtonText}>{t('createJob.fields.addCustomSchedule')}</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
@@ -1207,6 +1299,26 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: 0,
   },
+  schedulePatternRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  schedulePatternInput: {
+    width: 60,
+    marginBottom: 0,
+    textAlign: 'center',
+    fontVariant: ['tabular-nums'],
+  },
+  schedulePatternSlash: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  schedulePatternSpacer: {
+    flex: 1,
+  },
   removeButton: {
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -1288,23 +1400,25 @@ const styles = StyleSheet.create({
   },
   daysGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+    gap: 4,
   },
   dayChip: {
-    paddingHorizontal: 16,
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 2,
     paddingVertical: 8,
     borderRadius: RADII.pill,
     borderWidth: 1,
     borderColor: COLORS.border,
     backgroundColor: '#fff',
+    alignItems: 'center',
   },
   dayChipSelected: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
   dayChipText: {
-    fontSize: 14,
+    fontSize: 13,
     color: COLORS.text,
   },
   dayChipTextSelected: {

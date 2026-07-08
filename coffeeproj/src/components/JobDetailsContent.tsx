@@ -126,6 +126,20 @@ export const JobDetailsContent: React.FC<Props> = ({
                 : ''}
             </Text>
           )}
+          {job.tags && job.tags.length > 0 && (
+            <View style={styles.tagBadgeRow}>
+              {job.tags.map(tag => {
+                const isUrgent = tag === 'urgent';
+                return (
+                  <View key={tag} style={[styles.tagBadge, isUrgent && styles.tagBadgeUrgent]}>
+                    <Text style={[styles.tagBadgeText, isUrgent && styles.tagBadgeTextUrgent]}>
+                      {t(`createJob.tags.${tag}`, { defaultValue: tag })}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
         </View>
       </View>
 
@@ -217,6 +231,21 @@ export const JobDetailsContent: React.FC<Props> = ({
             )}
           </>
         )}
+        {job.shiftDetails.customSchedulePatterns &&
+          job.shiftDetails.customSchedulePatterns.length > 0 && (
+            <View style={styles.scheduleChipsBlock}>
+              <Text style={styles.detailLabel}>
+                {t('jobDetails.customSchedule', { defaultValue: 'Варианты графика:' })}
+              </Text>
+              <View style={styles.scheduleChipsRow}>
+                {job.shiftDetails.customSchedulePatterns.map((pattern, idx) => (
+                  <View key={`${pattern}-${idx}`} style={styles.scheduleChip}>
+                    <Text style={styles.scheduleChipText}>{pattern}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
       </View>
 
       <View style={styles.section}>
@@ -425,5 +454,53 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginBottom: 8,
     lineHeight: 24,
+  },
+  tagBadgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 8,
+  },
+  tagBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: COLORS.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  tagBadgeUrgent: {
+    backgroundColor: COLORS.error,
+    borderColor: COLORS.error,
+  },
+  tagBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  tagBadgeTextUrgent: {
+    color: '#fff',
+  },
+  scheduleChipsBlock: {
+    marginTop: 8,
+  },
+  scheduleChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  scheduleChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: COLORS.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  scheduleChipText: {
+    fontSize: 14,
+    color: COLORS.text,
+    fontWeight: '500',
   },
 });

@@ -41,8 +41,12 @@
     "metroStation": "Metro Station",
     "distance": "Distance",
     "distanceKm": "{{km}} km",
+    "fromDate": "From date",
+    "fromDateFormat": "from {{date}}",
     "chooseEquipment": "Choose equipment",
     "chooseDistance": "Choose distance",
+    "chooseFromDate": "Show shifts from date",
+    "apply": "Apply",
     "clear": "Clear",
     "reset": "Reset filter"
   },
@@ -274,6 +278,7 @@
     "hoursPerWeek": "Hours per week:",
     "preferredDays": "Preferred days:",
     "anyDay": "Any day",
+    "customSchedule": "Schedule variants:",
     "hoursPerWeekShort": "{{hours}} h/week",
     "endDate": "End Date:",
     "time": "Time:",
@@ -366,7 +371,11 @@
     "fieldMetro": "Preferred Metro Stations (optional)",
     "fieldShiftTimes": "Preferred Shift Times (optional)",
     "fieldHourlyRateMin": "Minimum Hourly Rate (RUB, optional)",
-    "minPlaceholder": "Min"
+    "minPlaceholder": "Min",
+    "fieldAvailableFrom": "Ready to start from",
+    "fieldAvailableFromPlaceholder": "Pick a date",
+    "fieldWorkloadTypes": "Workload",
+    "fieldAvailableDays": "Available days"
   },
   "baristaProfileScreen": {
     "title": "Profile",
@@ -885,6 +894,9 @@
       "hoursPerWeekPlaceholder": "e.g. 40",
       "preferredDays": "Preferred days",
       "preferredDaysHint": "Optional. Leave blank if any weekday works.",
+      "customSchedule": "Custom schedule variants",
+      "customScheduleHint": "Enter two digits: working days / days off. e.g. 5/2 or 4/3.",
+      "addCustomSchedule": "+ Add schedule variant",
       "compensationType": "Type",
       "amountRub": "Amount (RUB)",
       "amountPlaceholder": "0",
@@ -965,6 +977,7 @@
     "hoursPerWeek": "Hours per week:",
     "preferredDays": "Preferred days:",
     "anyDay": "Any day",
+    "customSchedule": "Schedule variants:",
     "compensation": "Compensation",
     "perHour": "per hour",
     "perDay": "per day",
@@ -1202,7 +1215,7 @@
     "removeBody": "Remove \"{{name}}\"?"
   },
   "baristaFilterBar": {
-    "branchPreset": "Near my branches",
+    "branchPreset": "At my branches",
     "equipment": "Equipment",
     "metroPlaceholder": "Metro",
     "shift": "Shift",
@@ -1217,9 +1230,33 @@
     "chooseShift": "Choose shift",
     "chooseExperience": "Minimum experience",
     "chooseHourlyCap": "Maximum hourly rate",
+    "availableFrom": "Ready from",
+    "availableFromFormat": "from {{date}}",
+    "chooseAvailableFrom": "Ready to start by",
+    "workload": "Workload",
+    "chooseWorkload": "Choose workload",
+    "days": "Days",
+    "chooseDays": "Choose days",
+    "apply": "Apply",
     "clear": "Clear",
     "done": "Done",
     "reset": "Reset"
+  },
+  "workloadType": {
+    "full_time": "Full time",
+    "part_time": "Part time",
+    "freelance": "Freelance",
+    "weekends_only": "Weekends only",
+    "flexible": "Flexible"
+  },
+  "dayOfWeek": {
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun"
   },
   "branchPhotoGallery": {
     "removeA11y": "Remove photo",

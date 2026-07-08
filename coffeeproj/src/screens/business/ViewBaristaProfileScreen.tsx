@@ -29,11 +29,20 @@ import { ReportButton } from '../../components/ReportButton';
 import { EquipmentChipsDisplay } from '../../components/EquipmentChips';
 import { isMetroAnySelection } from '../../components/MetroSelector';
 import { computeMedicalBookStatus, type MedicalBookStatus } from '../../utils/medicalBook';
-import type { BaristaProfile, ReliabilityScore, ShiftTime } from '../../types/baristaProfile';
+import {
+  DAYS_OF_WEEK,
+  type BaristaProfile,
+  type ReliabilityScore,
+  type ShiftTime,
+} from '../../types/baristaProfile';
 import type { BaristaProfileId, UserId } from '../../types/ids';
 import type { UserReviewAggregate } from '../../types/review';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
-import { computeDuration, computeTotalDuration, type WorkExperience } from "../../types/workExperience";
+import {
+  computeDuration,
+  computeTotalDuration,
+  type WorkExperience,
+} from '../../types/workExperience';
 import { isCityCode } from '../../types/city';
 
 type Props = {
@@ -422,6 +431,49 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
           </View>
         )}
 
+        {profile.availableFromDate && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('baristaSetup.fieldAvailableFrom')}</Text>
+            <Text style={styles.infoText}>
+              {new Date(profile.availableFromDate).toLocaleDateString(
+                i18n.language === 'ru' ? 'ru-RU' : 'en-US',
+                { year: 'numeric', month: 'long', day: 'numeric' }
+              )}
+            </Text>
+          </View>
+        )}
+
+        {profile.workloadTypes.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('baristaSetup.fieldWorkloadTypes')}</Text>
+            <View style={styles.chipsContainer}>
+              {profile.workloadTypes.map(workload => (
+                <View key={workload} style={styles.chip}>
+                  <Text style={styles.chipText}>{t(`workloadType.${workload}`)}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {profile.availableDays.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('baristaSetup.fieldAvailableDays')}</Text>
+            <View style={styles.dayRow}>
+              {DAYS_OF_WEEK.map(day => {
+                const selected = profile.availableDays.includes(day);
+                return (
+                  <View key={day} style={[styles.dayChip, selected && styles.dayChipSelected]}>
+                    <Text style={[styles.dayChipText, selected && styles.dayChipTextSelected]}>
+                      {t(`dayOfWeek.${day}`)}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
         {profile.portfolioPhotos.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('viewBarista.portfolio')}</Text>
@@ -603,6 +655,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#fff',
     fontWeight: '500',
+  },
+  dayRow: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  dayChip: {
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 2,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: COLORS.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+  },
+  dayChipSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  dayChipText: {
+    fontSize: 13,
+    color: COLORS.text,
+  },
+  dayChipTextSelected: {
+    color: '#fff',
+    fontWeight: '600',
   },
   certificationItem: {
     fontSize: 15,

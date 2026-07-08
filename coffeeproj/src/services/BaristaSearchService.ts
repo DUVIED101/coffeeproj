@@ -13,15 +13,26 @@ export class BaristaSearchService {
       if (filters.city) {
         query = query.eq('city', filters.city);
       }
+      if (filters.branchCitiesAny?.length) {
+        // "У моих точек" preset — scope by the set of cities where this business
+        // has branches. Combined with the strict metro overlap below, it stops
+        // baristas from other cities matching just because their preferred
+        // station name happens to collide with one of ours.
+        query = query.in('city', filters.branchCitiesAny);
+      }
       if (filters.equipment?.length) {
         query = query.overlaps('equipment_experience', filters.equipment);
       }
       if (filters.metroStations?.length) {
-        // Include METRO_ANY in the overlap so baristas who said "any station"
-        // still match a specific-station filter — saying "any" means "I'm
-        // willing to work near any metro" and shouldn't exclude them from
-        // recruiter searches.
-        query = query.overlaps('preferred_metro_stations', [...filters.metroStations, METRO_ANY]);
+        // With the branch preset, keep the overlap strict — a barista who
+        // selected "any station" (METRO_ANY) should NOT auto-match, because the
+        // recruiter's intent is "someone who actually named my area". Without
+        // the preset, include METRO_ANY: a general metro filter should still
+        // pick up baristas who said "any" as a broader signal of availability.
+        const metroTargets = filters.branchCitiesAny?.length
+          ? filters.metroStations
+          : [...filters.metroStations, METRO_ANY];
+        query = query.overlaps('preferred_metro_stations', metroTargets);
       }
       if (filters.shiftTimes?.length) {
         query = query.overlaps('preferred_shift_times', filters.shiftTimes);
@@ -40,6 +51,18 @@ export class BaristaSearchService {
         // a cap should match when EITHER bound is within the cap.
         const cap = filters.hourlyRateMax;
         query = query.or(`hourly_rate_max.lte.${cap},hourly_rate_min.lte.${cap}`);
+      }
+      if (filters.availableFromDateMax) {
+        // Barista's ready-date must be on or before the recruiter's target date.
+        // Profiles with no available_from_date are excluded — recruiter is
+        // explicitly asking "who can start by X".
+        query = query.lte('available_from_date', filters.availableFromDateMax);
+      }
+      if (filters.availableDaysAny?.length) {
+        query = query.overlaps('available_days', filters.availableDaysAny);
+      }
+      if (filters.workloadTypesAny?.length) {
+        query = query.overlaps('workload_types', filters.workloadTypesAny);
       }
 
       query = query.gte(
@@ -83,6 +106,8 @@ export class BaristaSearchService {
       hourlyRateMin: db.hourly_rate_min,
       hourlyRateMax: db.hourly_rate_max,
       availableFromDate: db.available_from_date,
+      availableDays: db.available_days || [],
+      workloadTypes: db.workload_types || [],
       portfolioPhotos: db.portfolio_photos || [],
       isActivelyLooking: db.is_actively_looking,
       profileCompleteness: db.profile_completeness || 0,

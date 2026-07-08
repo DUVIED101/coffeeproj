@@ -106,6 +106,8 @@ export const JobCard = React.memo<JobCardProps>(
     const remainingEquipmentCount = job.requiredEquipmentExperience.length - 3;
 
     const hasUrgentTag = job.tags.includes('urgent');
+    const hasFlexibleTag = job.tags.includes('flexible');
+    const hasTrainingTag = job.tags.includes('training-provided');
     const branchThumbUri = job.branchPhotos?.[0];
 
     const accessibilityLabel = [
@@ -166,6 +168,20 @@ export const JobCard = React.memo<JobCardProps>(
               {hasUrgentTag && (
                 <View style={[styles.badge, styles.urgentBadge]}>
                   <Text style={[styles.badgeText, styles.urgentText]}>{t('jobs.urgent')}</Text>
+                </View>
+              )}
+              {hasFlexibleTag && (
+                <View style={[styles.badge, styles.flexibleBadge]}>
+                  <Text style={[styles.badgeText, styles.flexibleText]}>
+                    {t('createJob.tags.flexible')}
+                  </Text>
+                </View>
+              )}
+              {hasTrainingTag && (
+                <View style={[styles.badge, styles.trainingBadge]}>
+                  <Text style={[styles.badgeText, styles.trainingText]}>
+                    {t('createJob.tags.training-provided')}
+                  </Text>
                 </View>
               )}
             </View>
@@ -324,6 +340,18 @@ const styles = StyleSheet.create({
   },
   urgentText: {
     color: COLORS.background,
+  },
+  flexibleBadge: {
+    backgroundColor: 'rgba(52, 152, 219, 0.14)',
+  },
+  flexibleText: {
+    color: '#2c7fb8',
+  },
+  trainingBadge: {
+    backgroundColor: 'rgba(39, 174, 96, 0.14)',
+  },
+  trainingText: {
+    color: COLORS.success,
   },
   shiftInfo: {
     marginBottom: 8,

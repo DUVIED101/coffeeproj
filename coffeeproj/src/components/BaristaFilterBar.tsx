@@ -6,19 +6,36 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
+  Platform,
   Pressable,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
-import type { BaristaFilters, ShiftTime } from '../types/baristaProfile';
+import type { BaristaFilters, ShiftTime, DayOfWeek, WorkloadType } from '../types/baristaProfile';
+import { DAYS_OF_WEEK, WORKLOAD_TYPES } from '../types/baristaProfile';
 import type { Equipment } from '../types/business';
-import { DEFAULT_CITY, CITY_CODES, type CityCode } from "../types/city";
+import { DEFAULT_CITY, CITY_CODES, type CityCode } from '../types/city';
 import { COLORS, EQUIPMENT_TYPES } from '../config/constants';
 import { MetroSelector, METRO_ANY } from './MetroSelector';
+
+function toIsoDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function parseIsoDate(s: string | undefined): Date {
+  if (!s) return new Date();
+  const parsed = new Date(s);
+  return isNaN(parsed.getTime()) ? new Date() : parsed;
+}
 
 type BaristaFilterBarProps = {
   onFilterChange: (filters: BaristaFilters) => void;
   currentFilters: BaristaFilters;
   branchMetroStations?: string[];
+  branchCities?: CityCode[];
 };
 
 const EQUIPMENT_OPTIONS: readonly Equipment[] = EQUIPMENT_TYPES;
@@ -56,13 +73,19 @@ const arraysEqualAsSet = (a?: string[], b?: string[]): boolean => {
 const dedupe = (values: string[]): string[] => Array.from(new Set(values));
 
 export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
-  ({ onFilterChange, currentFilters, branchMetroStations }) => {
+  ({ onFilterChange, currentFilters, branchMetroStations, branchCities }) => {
     const { t } = useTranslation();
     const [showEquipmentModal, setShowEquipmentModal] = useState(false);
     const [showShiftModal, setShowShiftModal] = useState(false);
     const [showExperienceModal, setShowExperienceModal] = useState(false);
     const [showHourlyCapModal, setShowHourlyCapModal] = useState(false);
     const [showCityModal, setShowCityModal] = useState(false);
+    const [showAvailableFromModal, setShowAvailableFromModal] = useState(false);
+    const [showWorkloadModal, setShowWorkloadModal] = useState(false);
+    const [showDaysModal, setShowDaysModal] = useState(false);
+    const [pendingAvailableFrom, setPendingAvailableFrom] = useState<Date>(() =>
+      parseIsoDate(currentFilters.availableFromDateMax)
+    );
 
     const branchPresetActive = useMemo(
       () =>
@@ -75,11 +98,20 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
     const handleBranchPresetToggle = useCallback(() => {
       if (!branchMetroStations || branchMetroStations.length === 0) return;
       if (branchPresetActive) {
-        onFilterChange({ ...currentFilters, metroStations: undefined });
+        onFilterChange({
+          ...currentFilters,
+          metroStations: undefined,
+          branchCitiesAny: undefined,
+        });
       } else {
-        onFilterChange({ ...currentFilters, metroStations: dedupe(branchMetroStations) });
+        onFilterChange({
+          ...currentFilters,
+          metroStations: dedupe(branchMetroStations),
+          branchCitiesAny:
+            branchCities && branchCities.length > 0 ? Array.from(new Set(branchCities)) : undefined,
+        });
       }
-    }, [branchMetroStations, branchPresetActive, currentFilters, onFilterChange]);
+    }, [branchMetroStations, branchCities, branchPresetActive, currentFilters, onFilterChange]);
 
     const handleEquipmentToggle = useCallback(
       (equipment: Equipment) => {
@@ -164,6 +196,55 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
       [currentFilters, onFilterChange]
     );
 
+    const handleAvailableFromApply = useCallback(() => {
+      onFilterChange({
+        ...currentFilters,
+        availableFromDateMax: toIsoDate(pendingAvailableFrom),
+      });
+      setShowAvailableFromModal(false);
+    }, [currentFilters, onFilterChange, pendingAvailableFrom]);
+
+    const handleAvailableFromReset = useCallback(() => {
+      onFilterChange({ ...currentFilters, availableFromDateMax: undefined });
+      setShowAvailableFromModal(false);
+    }, [currentFilters, onFilterChange]);
+
+    const handleWorkloadToggle = useCallback(
+      (workload: WorkloadType) => {
+        const current = currentFilters.workloadTypesAny || [];
+        const next = current.includes(workload)
+          ? current.filter(w => w !== workload)
+          : [...current, workload];
+        onFilterChange({
+          ...currentFilters,
+          workloadTypesAny: next.length > 0 ? next : undefined,
+        });
+      },
+      [currentFilters, onFilterChange]
+    );
+
+    const handleClearWorkload = useCallback(() => {
+      onFilterChange({ ...currentFilters, workloadTypesAny: undefined });
+      setShowWorkloadModal(false);
+    }, [currentFilters, onFilterChange]);
+
+    const handleDayToggle = useCallback(
+      (day: DayOfWeek) => {
+        const current = currentFilters.availableDaysAny || [];
+        const next = current.includes(day) ? current.filter(d => d !== day) : [...current, day];
+        onFilterChange({
+          ...currentFilters,
+          availableDaysAny: next.length > 0 ? next : undefined,
+        });
+      },
+      [currentFilters, onFilterChange]
+    );
+
+    const handleClearDays = useCallback(() => {
+      onFilterChange({ ...currentFilters, availableDaysAny: undefined });
+      setShowDaysModal(false);
+    }, [currentFilters, onFilterChange]);
+
     const selectedEquipmentCount = currentFilters.equipment?.length || 0;
     const selectedShiftCount = currentFilters.shiftTimes?.length || 0;
     const hasMinExperience = currentFilters.minYearsExperience !== undefined;
@@ -204,7 +285,7 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
               onPress={handleBranchPresetToggle}>
               <Text
                 style={[styles.filterChipText, branchPresetActive && styles.filterChipTextActive]}>
-                {t('baristaFilterBar.branchPreset', { defaultValue: 'Рядом с моими точками' })}
+                {t('baristaFilterBar.branchPreset', { defaultValue: 'У моих точек' })}
               </Text>
             </TouchableOpacity>
           )}
@@ -267,6 +348,72 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
             onPress={() => setShowCityModal(true)}>
             <Text style={[styles.filterChipText, hasCity && styles.filterChipTextActive]}>
               {cityLabel}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.filterChip,
+              currentFilters.availableFromDateMax ? styles.filterChipActiveRow : null,
+              currentFilters.availableFromDateMax ? styles.filterChipActive : null,
+            ]}
+            onPress={() => {
+              setPendingAvailableFrom(parseIsoDate(currentFilters.availableFromDateMax));
+              setShowAvailableFromModal(true);
+            }}>
+            <Text
+              style={[
+                styles.filterChipText,
+                currentFilters.availableFromDateMax ? styles.filterChipTextActive : null,
+              ]}>
+              {currentFilters.availableFromDateMax
+                ? t('baristaFilterBar.availableFromFormat', {
+                    date: new Date(currentFilters.availableFromDateMax).toLocaleDateString('ru-RU'),
+                  })
+                : t('baristaFilterBar.availableFrom')}
+            </Text>
+            {currentFilters.availableFromDateMax && (
+              <TouchableOpacity
+                style={styles.filterChipClear}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityLabel={t('baristaFilterBar.reset')}
+                onPress={handleAvailableFromReset}>
+                <Text style={styles.filterChipClearText}>✕</Text>
+              </TouchableOpacity>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.filterChip,
+              (currentFilters.workloadTypesAny?.length ?? 0) > 0 && styles.filterChipActive,
+            ]}
+            onPress={() => setShowWorkloadModal(true)}>
+            <Text
+              style={[
+                styles.filterChipText,
+                (currentFilters.workloadTypesAny?.length ?? 0) > 0 && styles.filterChipTextActive,
+              ]}>
+              {t('baristaFilterBar.workload')}
+              {(currentFilters.workloadTypesAny?.length ?? 0) > 0 &&
+                ` (${currentFilters.workloadTypesAny?.length})`}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.filterChip,
+              (currentFilters.availableDaysAny?.length ?? 0) > 0 && styles.filterChipActive,
+            ]}
+            onPress={() => setShowDaysModal(true)}>
+            <Text
+              style={[
+                styles.filterChipText,
+                (currentFilters.availableDaysAny?.length ?? 0) > 0 && styles.filterChipTextActive,
+              ]}>
+              {t('baristaFilterBar.days')}
+              {(currentFilters.availableDaysAny?.length ?? 0) > 0 &&
+                ` (${currentFilters.availableDaysAny?.length})`}
             </Text>
           </TouchableOpacity>
         </ScrollView>
@@ -539,6 +686,170 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
             </View>
           </Pressable>
         </Modal>
+
+        <Modal
+          visible={showAvailableFromModal}
+          animationType="slide"
+          transparent
+          onRequestClose={() => setShowAvailableFromModal(false)}>
+          <Pressable style={styles.modalOverlay} onPress={() => setShowAvailableFromModal(false)}>
+            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{t('baristaFilterBar.chooseAvailableFrom')}</Text>
+                <TouchableOpacity onPress={() => setShowAvailableFromModal(false)}>
+                  <Text style={styles.closeButton}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.datePickerWrap}>
+                <DateTimePicker
+                  value={pendingAvailableFrom}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                  themeVariant="light"
+                  textColor="#000000"
+                  minimumDate={new Date()}
+                  onChange={(_event, selected) => {
+                    if (selected) setPendingAvailableFrom(selected);
+                  }}
+                />
+              </View>
+
+              <TouchableOpacity style={styles.doneButton} onPress={handleAvailableFromApply}>
+                <Text style={styles.doneButtonText}>
+                  {t('baristaFilterBar.apply', { defaultValue: 'Применить' })}
+                </Text>
+              </TouchableOpacity>
+              {currentFilters.availableFromDateMax && (
+                <TouchableOpacity style={styles.resetButton} onPress={handleAvailableFromReset}>
+                  <Text style={styles.resetButtonText}>
+                    {t('baristaFilterBar.reset', { defaultValue: 'Сбросить' })}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </Pressable>
+        </Modal>
+
+        <Modal
+          visible={showWorkloadModal}
+          animationType="slide"
+          transparent
+          onRequestClose={() => setShowWorkloadModal(false)}>
+          <Pressable style={styles.modalOverlay} onPress={() => setShowWorkloadModal(false)}>
+            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{t('baristaFilterBar.chooseWorkload')}</Text>
+                <TouchableOpacity onPress={() => setShowWorkloadModal(false)}>
+                  <Text style={styles.closeButton}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.optionList}>
+                {WORKLOAD_TYPES.map(workload => {
+                  const isSelected = currentFilters.workloadTypesAny?.includes(workload) || false;
+                  return (
+                    <TouchableOpacity
+                      key={workload}
+                      style={[styles.optionItem, isSelected && styles.optionItemSelected]}
+                      onPress={() => handleWorkloadToggle(workload)}>
+                      <Text
+                        style={[
+                          styles.optionItemText,
+                          isSelected && styles.optionItemTextSelected,
+                        ]}>
+                        {t(`workloadType.${workload}`)}
+                      </Text>
+                      {isSelected && <Text style={styles.checkmark}>✓</Text>}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={styles.modalButtonsRow}>
+                {(currentFilters.workloadTypesAny?.length ?? 0) > 0 && (
+                  <TouchableOpacity
+                    style={[styles.doneButton, styles.clearButton]}
+                    onPress={handleClearWorkload}>
+                    <Text style={[styles.doneButtonText, styles.clearButtonText]}>
+                      {t('baristaFilterBar.clear', { defaultValue: 'Очистить' })}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={[
+                    styles.doneButton,
+                    (currentFilters.workloadTypesAny?.length ?? 0) > 0 && styles.doneButtonHalf,
+                  ]}
+                  onPress={() => setShowWorkloadModal(false)}>
+                  <Text style={styles.doneButtonText}>
+                    {t('baristaFilterBar.done', { defaultValue: 'Готово' })}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Pressable>
+        </Modal>
+
+        <Modal
+          visible={showDaysModal}
+          animationType="slide"
+          transparent
+          onRequestClose={() => setShowDaysModal(false)}>
+          <Pressable style={styles.modalOverlay} onPress={() => setShowDaysModal(false)}>
+            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{t('baristaFilterBar.chooseDays')}</Text>
+                <TouchableOpacity onPress={() => setShowDaysModal(false)}>
+                  <Text style={styles.closeButton}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.optionList}>
+                {DAYS_OF_WEEK.map(day => {
+                  const isSelected = currentFilters.availableDaysAny?.includes(day) || false;
+                  return (
+                    <TouchableOpacity
+                      key={day}
+                      style={[styles.optionItem, isSelected && styles.optionItemSelected]}
+                      onPress={() => handleDayToggle(day)}>
+                      <Text
+                        style={[
+                          styles.optionItemText,
+                          isSelected && styles.optionItemTextSelected,
+                        ]}>
+                        {t(`dayOfWeek.${day}`)}
+                      </Text>
+                      {isSelected && <Text style={styles.checkmark}>✓</Text>}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={styles.modalButtonsRow}>
+                {(currentFilters.availableDaysAny?.length ?? 0) > 0 && (
+                  <TouchableOpacity
+                    style={[styles.doneButton, styles.clearButton]}
+                    onPress={handleClearDays}>
+                    <Text style={[styles.doneButtonText, styles.clearButtonText]}>
+                      {t('baristaFilterBar.clear', { defaultValue: 'Очистить' })}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={[
+                    styles.doneButton,
+                    (currentFilters.availableDaysAny?.length ?? 0) > 0 && styles.doneButtonHalf,
+                  ]}
+                  onPress={() => setShowDaysModal(false)}>
+                  <Text style={styles.doneButtonText}>
+                    {t('baristaFilterBar.done', { defaultValue: 'Готово' })}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Pressable>
+        </Modal>
       </View>
     );
   }
@@ -566,6 +877,25 @@ const styles = StyleSheet.create({
   filterChipActive: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
+  },
+  filterChipActiveRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  filterChipClear: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterChipClearText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.background,
+    lineHeight: 12,
   },
   filterChipText: {
     fontSize: 14,
@@ -682,5 +1012,9 @@ const styles = StyleSheet.create({
   },
   metroSelectorContainer: {
     minWidth: 120,
+  },
+  datePickerWrap: {
+    padding: 16,
+    alignItems: 'center',
   },
 });
