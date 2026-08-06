@@ -6,6 +6,7 @@ declare module '@env' {
   export const GOOGLE_IOS_CLIENT_ID: string | undefined;
   export const YANDEX_CLIENT_ID: string | undefined;
   export const YANDEX_GEOCODER_API_KEY: string | undefined;
+  export const SENTRY_DSN: string | undefined;
 }
 
 declare module 'react-native-vector-icons/MaterialCommunityIcons' {

@@ -1144,6 +1144,12 @@ PODS:
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
     - React-RCTImage
+  - RNSentry (8.22.0):
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2022.05.16.00)
+    - React-Core
+    - React-hermes
   - RNVectorIcons (10.3.0):
     - glog
     - RCT-Folly (= 2022.05.16.00)
@@ -1224,6 +1230,7 @@ DEPENDENCIES:
   - "RNGoogleSignin (from `../node_modules/@react-native-google-signin/google-signin`)"
   - RNImageCropPicker (from `../node_modules/react-native-image-crop-picker`)
   - RNScreens (from `../node_modules/react-native-screens`)
+  - "RNSentry (from `../node_modules/@sentry/react-native`)"
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
@@ -1370,6 +1377,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-image-crop-picker"
   RNScreens:
     :path: "../node_modules/react-native-screens"
+  RNSentry:
+    :path: "../node_modules/@sentry/react-native"
   RNVectorIcons:
     :path: "../node_modules/react-native-vector-icons"
   Yoga:
@@ -1448,6 +1457,7 @@ SPEC CHECKSUMS:
   RNGoogleSignin: b11289afb825c32c250272e4d92446f71091814e
   RNImageCropPicker: b0afedeefd8655254a15c34103718455fde6ce59
   RNScreens: 3ce54903891fd6281865ad3e7cfe4c2bb438c70c
+  RNSentry: 09057ff0276d6a035e3253fec760c0ad4729871e
   RNVectorIcons: 24c506ef3aab67787a85607b8d4a312ce8f6f3b0
   SDWebImage: a7f831e1a65eb5e285e3fb046a23fcfbf08e696d
   SDWebImageWebPCoder: 908b83b6adda48effe7667cd2b7f78c897e5111d

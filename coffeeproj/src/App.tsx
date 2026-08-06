@@ -1,3 +1,12 @@
+import * as Sentry from '@sentry/react-native';
+import { SENTRY_DSN } from '@env';
+
+Sentry.init({
+  dsn: SENTRY_DSN,
+  enabled: !!SENTRY_DSN,
+  tracesSampleRate: 0.1,
+});
+
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, LogBox, Text, TextInput } from 'react-native';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
@@ -41,7 +50,11 @@ import { pendingOfferActionsQueue } from './services/pendingOfferActionsQueue';
 import { useNotificationFeedStore } from './stores/notificationFeedStore';
 import { useDiagnosticsStore } from './stores/diagnosticsStore';
 import { warmSupabaseConnection } from './utils/warmConnection';
-import { JOB_OFFER_ACTION_ACCEPT, JOB_OFFER_ACTION_DECLINE, type PushNotificationPayload } from "./types/notification";
+import {
+  JOB_OFFER_ACTION_ACCEPT,
+  JOB_OFFER_ACTION_DECLINE,
+  type PushNotificationPayload,
+} from './types/notification';
 import type { ApplicationId, JobOfferId } from './types/ids';
 import 'react-native-gesture-handler';
 
@@ -220,4 +233,4 @@ function App(): React.JSX.Element {
   return <AppContent />;
 }
 
-export default App;
+export default Sentry.wrap(App);
