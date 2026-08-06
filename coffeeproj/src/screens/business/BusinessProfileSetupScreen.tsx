@@ -26,7 +26,7 @@ import { EquipmentChips } from '../../components/EquipmentChips';
 import { useAuthStore } from '../../stores/authStore';
 import type { Business, Branch, BusinessType, Equipment, GeoPoint, LegalForm } from '../../types';
 import type { SocialLink } from '../../types/business';
-import { DEFAULT_CITY, toCityCode, type CityCode } from "../../types/city";
+import { DEFAULT_CITY, toCityCode, type CityCode } from '../../types/city';
 import { PHOTO_LIMIT } from '../../utils/storage';
 import { pickPhotos, reportRejections } from '../../utils/pickPhotos';
 import { pickAndCropAvatar } from '../../utils/imageCrop';
@@ -87,7 +87,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const [branchEquipment, setBranchEquipment] = useState<Equipment[]>([]);
   const [addressCoords, setAddressCoords] = useState<GeoPoint | null>(null);
   const [addressLookupStatus, setAddressLookupStatus] = useState<
-    'idle' | 'searching' | 'found' | 'notFound'
+    'idle' | 'searching' | 'found' | 'notFound' | 'rateLimited'
   >('idle');
   const geocodedKeyRef = useRef<string | null>(null);
 
@@ -157,14 +157,18 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
     const controller = new AbortController();
     const timeoutId = setTimeout(async () => {
-      const result = await geocodeAddress(trimmedAddress, branchCity, controller.signal);
+      const outcome = await geocodeAddress(trimmedAddress, branchCity, controller.signal);
       if (controller.signal.aborted) return;
+      if (outcome === 'rate_limited') {
+        setAddressLookupStatus('rateLimited');
+        return;
+      }
       geocodedKeyRef.current = key;
-      setAddressCoords(result);
-      setAddressLookupStatus(result ? 'found' : 'notFound');
-      if (result?.formattedAddress && result.formattedAddress !== trimmedAddress) {
-        geocodedKeyRef.current = `${result.formattedAddress}|${branchCity}`;
-        setBranchAddress(result.formattedAddress);
+      setAddressCoords(outcome);
+      setAddressLookupStatus(outcome ? 'found' : 'notFound');
+      if (outcome?.formattedAddress && outcome.formattedAddress !== trimmedAddress) {
+        geocodedKeyRef.current = `${outcome.formattedAddress}|${branchCity}`;
+        setBranchAddress(outcome.formattedAddress);
       }
     }, 1500);
 
@@ -713,6 +717,13 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.addressHintNotFound}>
                   {t('branches.form.addressLookup.notFound', {
                     defaultValue: 'Адрес не найден — уточните формулировку',
+                  })}
+                </Text>
+              )}
+              {addressLookupStatus === 'rateLimited' && (
+                <Text style={styles.addressHintNotFound}>
+                  {t('branches.form.addressLookup.rateLimited', {
+                    defaultValue: 'Геокодер перегружен — попробуйте через несколько секунд',
                   })}
                 </Text>
               )}

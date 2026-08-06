@@ -1,6 +1,13 @@
+import * as Sentry from '@sentry/react-native';
 import { YANDEX_GEOCODER_API_KEY } from '@env';
 import type { GeoPoint } from '../types/business';
-import { CITY_BOUNDS, CITY_LABELS_RU, isInsideBounds, type CityBounds, type CityCode } from "../types/city";
+import {
+  CITY_BOUNDS,
+  CITY_LABELS_RU,
+  isInsideBounds,
+  type CityBounds,
+  type CityCode,
+} from '../types/city';
 
 // Yandex Geocoder API — https://yandex.ru/dev/maps/geocoder/
 // Apply for a key at https://developer.tech.yandex.ru/ (free tier:
@@ -9,6 +16,7 @@ const YANDEX_GEOCODER_URL = 'https://geocode-maps.yandex.ru/1.x/';
 const REQUEST_TIMEOUT_MS = 10_000;
 
 export type GeocodeResult = GeoPoint & { formattedAddress: string };
+export type GeocodeOutcome = GeocodeResult | 'rate_limited' | null;
 
 type YandexGeoObject = {
   Point?: { pos?: string };
@@ -129,11 +137,16 @@ export const parseFirstValidHit = (
 const buildBbox = (bounds: CityBounds): string =>
   `${bounds.minLon},${bounds.minLat}~${bounds.maxLon},${bounds.maxLat}`;
 
+// Session-scoped cache — avoids re-requesting the same address while the user
+// is still on the form (e.g. city toggle back-and-forth, or closing/reopening
+// the modal without changing input). Cleared when the JS runtime restarts.
+const geocodeCache = new Map<string, GeocodeResult>();
+
 export const geocodeAddress = async (
   addressLine: string,
   city: CityCode,
   signal?: AbortSignal
-): Promise<GeocodeResult | null> => {
+): Promise<GeocodeOutcome> => {
   if (!YANDEX_GEOCODER_API_KEY) {
     console.error('Geocoding error: YANDEX_GEOCODER_API_KEY is not set in .env');
     return null;
@@ -142,6 +155,10 @@ export const geocodeAddress = async (
   const bounds = CITY_BOUNDS[city];
   const cityLine = CITY_LABELS_RU[city];
   const bbox = buildBbox(bounds);
+
+  const cacheKey = `${city}|${addressLine.trim().toLowerCase()}`;
+  const cached = geocodeCache.get(cacheKey);
+  if (cached) return cached;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -164,13 +181,24 @@ export const geocodeAddress = async (
       fetchOpts
     );
     if (!res.ok) {
-      console.error('Yandex Geocoder HTTP', res.status, await res.text().catch(() => ''));
-      return null;
+      const body = await res.text().catch(() => '');
+      const isRateLimit = res.status === 429;
+      console.error('Yandex Geocoder HTTP', res.status, body);
+      if (!isRateLimit) {
+        Sentry.captureMessage(`Yandex Geocoder HTTP ${res.status}`, {
+          level: 'error',
+          extra: { city, status: res.status, body: body.slice(0, 200) },
+        });
+      }
+      return isRateLimit ? 'rate_limited' : null;
     }
-    return parseFirstValidHit(await res.json(), bounds, cityLine);
+    const result = parseFirstValidHit(await res.json(), bounds, cityLine);
+    if (result) geocodeCache.set(cacheKey, result);
+    return result;
   } catch (error) {
     if ((error as Error).name === 'AbortError') return null;
     console.error('Geocoding error:', error);
+    Sentry.captureException(error, { extra: { city } });
     return null;
   } finally {
     clearTimeout(timeoutId);

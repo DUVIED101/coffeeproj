@@ -783,7 +783,8 @@
       "addressLookup": {
         "searching": "Looking up address…",
         "found": "Address found — see nearby metro below",
-        "notFound": "Address not found — please refine"
+        "notFound": "Address not found — please refine",
+        "rateLimited": "Geocoder is busy — please try again in a few seconds"
       },
       "city": "City",
       "metro": "Metro Station",

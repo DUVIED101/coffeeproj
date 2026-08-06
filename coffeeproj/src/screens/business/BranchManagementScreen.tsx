@@ -131,7 +131,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
 
   const [addressCoords, setAddressCoords] = useState<GeoPoint | null>(null);
   const [addressLookupStatus, setAddressLookupStatus] = useState<
-    'idle' | 'searching' | 'found' | 'notFound'
+    'idle' | 'searching' | 'found' | 'notFound' | 'rateLimited'
   >('idle');
   const geocodedKeyRef = useRef<string | null>(null);
 
@@ -258,14 +258,18 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
 
     const controller = new AbortController();
     const timeoutId = setTimeout(async () => {
-      const result = await geocodeAddress(trimmedAddress, city, controller.signal);
+      const outcome = await geocodeAddress(trimmedAddress, city, controller.signal);
       if (controller.signal.aborted) return;
+      if (outcome === 'rate_limited') {
+        setAddressLookupStatus('rateLimited');
+        return;
+      }
       geocodedKeyRef.current = key;
-      setAddressCoords(result);
-      setAddressLookupStatus(result ? 'found' : 'notFound');
-      if (result?.formattedAddress && result.formattedAddress !== trimmedAddress) {
-        geocodedKeyRef.current = `${result.formattedAddress}|${city}`;
-        setAddress(result.formattedAddress);
+      setAddressCoords(outcome);
+      setAddressLookupStatus(outcome ? 'found' : 'notFound');
+      if (outcome?.formattedAddress && outcome.formattedAddress !== trimmedAddress) {
+        geocodedKeyRef.current = `${outcome.formattedAddress}|${city}`;
+        setAddress(outcome.formattedAddress);
       }
     }, 1500);
 
@@ -565,6 +569,13 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
                   <Text style={styles.addressHintNotFound}>
                     {t('branches.form.addressLookup.notFound', {
                       defaultValue: 'Адрес не найден — уточните формулировку',
+                    })}
+                  </Text>
+                )}
+                {addressLookupStatus === 'rateLimited' && (
+                  <Text style={styles.addressHintNotFound}>
+                    {t('branches.form.addressLookup.rateLimited', {
+                      defaultValue: 'Геокодер перегружен — попробуйте через несколько секунд',
                     })}
                   </Text>
                 )}
