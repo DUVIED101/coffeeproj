@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { AppState } from 'react-native';
 import { useAuthStore } from '../stores/authStore';
 import { useNotificationFeedStore } from '../stores/notificationFeedStore';
 import { NotificationService } from '../services/NotificationService';
@@ -52,9 +53,22 @@ export const useNotificationSetup = (opts?: Options): void => {
       }
     })();
 
+    // iOS kills the WebSocket connection ~5-10 seconds after backgrounding.
+    // On foreground, stopRealtime+startRealtime ensures a fresh channel.
+    const appStateSub = AppState.addEventListener('change', nextState => {
+      if (nextState === 'active') {
+        const feed = useNotificationFeedStore.getState();
+        feed.stopRealtime();
+        feed.startRealtime(userId);
+      } else if (nextState === 'background') {
+        useNotificationFeedStore.getState().stopRealtime();
+      }
+    });
+
     return () => {
       controller.abort();
       cleanupHandler?.();
+      appStateSub.remove();
       useNotificationFeedStore.getState().stopRealtime();
     };
   }, [user?.id, onNotification]);

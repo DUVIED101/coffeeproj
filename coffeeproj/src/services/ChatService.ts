@@ -579,10 +579,13 @@ export class ChatService {
   }
 
   /**
-   * Unsubscribe from messages
+   * Unsubscribe from messages and remove the channel from Supabase's registry.
+   * Both calls are required: unsubscribe() stops the Phoenix topic, removeChannel()
+   * frees the client-side socket slot so it doesn't count against the concurrent
+   * channel limit.
    */
   static unsubscribeFromMessages(channel: RealtimeChannel): void {
-    channel.unsubscribe();
+    supabase.removeChannel(channel);
   }
 
   /**

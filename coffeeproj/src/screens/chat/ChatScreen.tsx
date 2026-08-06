@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { FlatList as FlatListComponent, type FlatList } from "react-native";
+import { FlatList as FlatListComponent, type FlatList } from 'react-native';
 import {
   ActionSheetIOS,
   Alert,
+  AppState,
   View,
   Text,
   StyleSheet,
@@ -21,7 +22,10 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '../../config/constants';
 import { ChatService } from '../../services/ChatService';
-import { ScreenHeaderWithActions, type HeaderAction } from "../../components/ScreenHeaderWithActions";
+import {
+  ScreenHeaderWithActions,
+  type HeaderAction,
+} from '../../components/ScreenHeaderWithActions';
 import { useAuthStore } from '../../stores/authStore';
 import { useChatUnreadStore } from '../../stores/chatUnreadStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
@@ -141,6 +145,20 @@ export function ChatScreen({ navigation, route }: any) {
   const flatListRef = useRef<FlatList<Message>>(null);
   const realtimeChannelRef = useRef<RealtimeChannel | null>(null);
   const textInputRef = useRef<TextInput>(null);
+  const [reconnectVersion, setReconnectVersion] = useState(0);
+
+  // Reconnect Realtime channel when app returns to foreground — iOS kills
+  // WebSocket connections after ~5-10 seconds in background, leaving the
+  // channel in a dead state. Incrementing reconnectVersion forces the
+  // subscription useEffect below to tear down and recreate the channel.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', nextState => {
+      if (nextState === 'active') {
+        setReconnectVersion(v => v + 1);
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   const loadConversationAndMessages = useCallback(async () => {
     if (!user?.id) {
@@ -338,6 +356,7 @@ export function ChatScreen({ navigation, route }: any) {
     user?.accountType,
     refreshChatUnread,
     markConversationNotificationsRead,
+    reconnectVersion,
   ]);
 
   const handleSendMessage = useCallback(async () => {
