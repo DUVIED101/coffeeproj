@@ -42,6 +42,16 @@ certbot certonly --nginx \
   -d "$SUPABASE_DOMAIN" \
   -m "$EMAIL" --agree-tos --non-interactive --keep-until-expiring
 
+log "Tuning nginx worker + rate-limit settings…"
+# worker_processes auto uses one worker per CPU core.
+sed -i 's/^worker_processes .*/worker_processes auto;/' /etc/nginx/nginx.conf
+# Raise per-worker connection limit (default 768) and file descriptors for
+# Realtime WebSocket connections that each hold a persistent socket.
+sed -i 's/worker_connections [0-9]*/worker_connections 8192/' /etc/nginx/nginx.conf
+echo 'worker_rlimit_nofile 65535;' >> /etc/nginx/nginx.conf 2>/dev/null || true
+install -m 0644 "${SCRIPT_DIR}/nginx-bystrobarista-tuning.conf" \
+  /etc/nginx/conf.d/00-bystrobarista-tuning.conf
+
 log "Installing nginx server block at /etc/nginx/sites-available/supabase-proxy…"
 install -m 0644 "$SUPABASE_CONF" /etc/nginx/sites-available/supabase-proxy
 [[ -L /etc/nginx/sites-enabled/supabase-proxy ]] || \
