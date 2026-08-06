@@ -310,6 +310,10 @@ export function ConversationsListScreen({ navigation }: any) {
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={renderEmpty}
+        initialNumToRender={10}
+        maxToRenderPerBatch={15}
+        updateCellsBatchingPeriod={50}
+        removeClippedSubviews
         refreshControl={
           <RefreshControl
             refreshing={conversationsQuery.isFetching && !conversationsQuery.isPending}

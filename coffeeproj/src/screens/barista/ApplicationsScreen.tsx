@@ -280,6 +280,10 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={renderEmpty}
+        initialNumToRender={8}
+        maxToRenderPerBatch={15}
+        updateCellsBatchingPeriod={50}
+        removeClippedSubviews
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}

@@ -270,68 +270,47 @@ export class ApplicationService {
             *,
             businesses (name),
             branches (name, metro_station)
+          ),
+          users!barista_id (
+            id,
+            email,
+            barista_profiles (
+              first_name,
+              last_name,
+              avatar_url,
+              bio,
+              equipment_experience,
+              years_of_experience
+            )
           )
         `
         )
         .eq('jobs.business_id', businessId)
         .order('created_at', { ascending: false })
-        .limit(200);
+        .limit(100);
 
       if (error) throw error;
       if (!applications || applications.length === 0) return [];
 
-      const baristaIds = [...new Set(applications.map(app => app.barista_id))];
-
-      const { data: users, error: usersError } = await supabase
-        .from('users')
-        .select(
-          `
-          id,
-          email,
-          barista_profiles(
-            first_name,
-            last_name,
-            avatar_url,
-            bio,
-            equipment_experience,
-            years_of_experience
-          )
-        `
-        )
-        .in('id', baristaIds)
-        .limit(200);
-
-      if (usersError) throw usersError;
-
-      const usersMap = new Map(
-        (users || []).map(user => {
-          const profileRow = Array.isArray(user.barista_profiles)
-            ? user.barista_profiles[0]
-            : user.barista_profiles;
-          return [
-            user.id,
-            {
-              email: user.email,
-              profile: profileRow,
-            },
-          ];
-        })
-      );
-
       return applications.map(app => {
-        const userData = usersMap.get(app.barista_id);
         const mapped = this.mapApplicationWithJob(app);
+        const userRow = Array.isArray((app as any).users)
+          ? (app as any).users[0]
+          : (app as any).users;
+        const profileRow = Array.isArray(userRow?.barista_profiles)
+          ? userRow.barista_profiles[0]
+          : userRow?.barista_profiles;
         return {
           ...mapped,
-          baristaEmail: userData?.email,
-          baristaProfile: userData?.profile
+          baristaEmail: userRow?.email,
+          baristaProfile: profileRow
             ? {
-                firstName: userData.profile.first_name,
-                lastName: userData.profile.last_name,
-                avatarUrl: userData.profile.avatar_url,
-                bio: userData.profile.bio,
-                equipmentExperience: userData.profile.equipment_experience || [],
-                yearsOfExperience: userData.profile.years_of_experience,
+                firstName: profileRow.first_name,
+                lastName: profileRow.last_name,
+                avatarUrl: profileRow.avatar_url,
+                bio: profileRow.bio,
+                equipmentExperience: profileRow.equipment_experience || [],
+                yearsOfExperience: profileRow.years_of_experience,
               }
             : undefined,
         };
