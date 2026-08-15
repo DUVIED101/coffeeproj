@@ -28,15 +28,16 @@ const JOB_COLUMNS_WITH_JOINS = `${JOB_COLUMNS},businesses(name,logo_url),branche
 // temporary until the owner edits and saves them under the new form.
 function normalizeShiftDetails(raw: any, jobType: JobType): ShiftDetails {
   const r = (raw ?? {}) as Record<string, any>;
-  const isPermanent =
-    r.kind === 'permanent' || (jobType === 'permanent' && typeof r.hoursPerWeek === 'number');
+  const isPermanent = r.kind === 'permanent' || jobType === 'permanent';
   if (isPermanent) {
     return {
       kind: 'permanent',
       startDate: r.startDate,
-      hoursPerWeek: Number(r.hoursPerWeek),
+      hoursPerWeek: typeof r.hoursPerWeek === 'number' ? r.hoursPerWeek : undefined,
       preferredDays: r.preferredDays,
       customSchedulePatterns: r.customSchedulePatterns,
+      scheduleStartTime: r.scheduleStartTime,
+      scheduleEndTime: r.scheduleEndTime,
     };
   }
   return {

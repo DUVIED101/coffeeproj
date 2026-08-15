@@ -13,12 +13,12 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useFocusEffect, type RouteProp } from "@react-navigation/native";
+import { useFocusEffect, type RouteProp } from '@react-navigation/native';
 import { COLORS } from '../../config/constants';
 import { ShiftCountdownBanner } from '../../components/ShiftCountdownBanner';
 import { Skeleton } from '../../components/Skeleton';
 import { useStaleCallback } from '../../hooks/useStaleCallback';
-import { showSuccessToast } from "../../stores/errorToastStore";
+import { showSuccessToast } from '../../stores/errorToastStore';
 import { handleApiError } from '../../utils/handleApiError';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ReviewService } from '../../services/ReviewService';
@@ -497,15 +497,19 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
                     {t('applications.details.shiftStartDatePermanent')}
                   </Text>
                   <Text style={styles.detailValue}>
-                    {formatJobDate(job.shiftDetails.startDate)}
+                    {job.shiftDetails.startDate
+                      ? formatJobDate(job.shiftDetails.startDate)
+                      : t('jobDetails.startDateUnspecified')}
                   </Text>
                 </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>
-                    {t('applications.details.shiftHoursPerWeek')}
-                  </Text>
-                  <Text style={styles.detailValue}>{job.shiftDetails.hoursPerWeek}</Text>
-                </View>
+                {typeof job.shiftDetails.hoursPerWeek === 'number' && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>
+                      {t('applications.details.shiftHoursPerWeek')}
+                    </Text>
+                    <Text style={styles.detailValue}>{job.shiftDetails.hoursPerWeek}</Text>
+                  </View>
+                )}
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>
                     {t('applications.details.shiftPreferredDays')}
@@ -518,13 +522,21 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
                       : t('applications.details.shiftAnyDay')}
                   </Text>
                 </View>
+                {job.shiftDetails.scheduleStartTime && job.shiftDetails.scheduleEndTime && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>{t('jobDetails.scheduleTimes')}</Text>
+                    <Text style={styles.detailValue}>
+                      {job.shiftDetails.scheduleStartTime} — {job.shiftDetails.scheduleEndTime}
+                    </Text>
+                  </View>
+                )}
               </>
             ) : (
               <>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>{t('applications.details.shiftDate')}</Text>
                   <Text style={styles.detailValue}>
-                    {formatJobDate(job.shiftDetails.startDate)}
+                    {job.shiftDetails.startDate ? formatJobDate(job.shiftDetails.startDate) : '—'}
                   </Text>
                 </View>
                 {job.shiftDetails.endDate && (

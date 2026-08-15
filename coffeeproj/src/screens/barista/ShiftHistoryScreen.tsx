@@ -28,11 +28,16 @@ type Props = {
   navigation: NativeStackNavigationProp<ShiftHistoryStackParamList, 'ShiftHistory'>;
 };
 
-const formatRange = (startIso: string, endIso: string | undefined, locale: string): string => {
+const formatRange = (
+  startIso: string | undefined,
+  endIso: string | undefined,
+  locale: string
+): string => {
   const fmt = (iso: string) => {
     const d = new Date(iso);
     return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: '2-digit' });
   };
+  if (!startIso) return '';
   if (!endIso || endIso === startIso) return fmt(startIso);
   return `${fmt(startIso)} → ${fmt(endIso)}`;
 };

@@ -64,10 +64,12 @@ export interface TemporaryShiftDetails {
 
 export interface PermanentShiftDetails {
   kind: 'permanent';
-  startDate: string; // ISO date — first day on the job
-  hoursPerWeek: number; // 1.0-80.0, one decimal place
+  startDate?: string; // ISO date — first day on the job; optional ("по договорённости")
+  hoursPerWeek?: number; // 1.0-80.0, one decimal place
   preferredDays?: WeekdayKey[];
   customSchedulePatterns?: string[];
+  scheduleStartTime?: string; // HH:mm
+  scheduleEndTime?: string; // HH:mm
 }
 
 export type ShiftDetails = TemporaryShiftDetails | PermanentShiftDetails;
@@ -76,6 +78,8 @@ export interface Compensation {
   type: CompensationType;
   amount: number;
   currency: string; // 'RUB'
+  // Informational only for permanent jobs. Excluded from totalAmount / platformFee.
+  salesBonusPercent?: number;
 }
 
 export interface Payment {

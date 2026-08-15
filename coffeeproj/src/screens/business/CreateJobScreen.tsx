@@ -97,6 +97,14 @@ const sanitizeHoursPerWeekInput = (input: string): string => {
   return `${intPart}.${fracPart}`;
 };
 
+const sanitizePercentInput = (input: string): string => {
+  const digits = input.replace(/\D/g, '').slice(0, 3);
+  if (digits === '') return '';
+  const n = Number(digits);
+  if (n > 100) return '100';
+  return String(n);
+};
+
 export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
   const { t } = useTranslation();
   const user = useAuthStore(s => s.user);
@@ -119,7 +127,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
   const [description, setDescription] = useState('');
   const [requirements, setRequirements] = useState<string[]>(['']);
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment[]>([]);
-  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [startTime, setStartTime] = useState<Date>(new Date());
   const [endTime, setEndTime] = useState<Date>(new Date());
@@ -128,14 +136,19 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
   const [hoursPerWeek, setHoursPerWeek] = useState('');
   const [preferredDayIdxs, setPreferredDayIdxs] = useState<number[]>([]);
   const [customSchedulePatterns, setCustomSchedulePatterns] = useState<string[]>([]);
+  const [scheduleStartTime, setScheduleStartTime] = useState<Date | undefined>(undefined);
+  const [scheduleEndTime, setScheduleEndTime] = useState<Date | undefined>(undefined);
   const [compensationType, setCompensationType] = useState<CompensationType>('hourly');
   const [compensationAmount, setCompensationAmount] = useState('');
+  const [salesBonusPercent, setSalesBonusPercent] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [showScheduleStartTimePicker, setShowScheduleStartTimePicker] = useState(false);
+  const [showScheduleEndTimePicker, setShowScheduleEndTimePicker] = useState(false);
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -178,23 +191,35 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
         setSelectedEquipment(job.requiredEquipmentExperience);
         // Defensive clamp: legacy rows may carry dates outside [today, 2050]
         // which break the native picker. Stay within the supported window.
-        const loadedStart = clampDate(
-          new Date(job.shiftDetails.startDate),
-          jobMinDate(),
-          jobMaxDate()
-        );
+        const loadedStart = job.shiftDetails.startDate
+          ? clampDate(new Date(job.shiftDetails.startDate), jobMinDate(), jobMaxDate())
+          : undefined;
         setStartDate(loadedStart);
         if (job.shiftDetails.kind === 'permanent') {
-          setHoursPerWeek(String(job.shiftDetails.hoursPerWeek));
+          setHoursPerWeek(
+            typeof job.shiftDetails.hoursPerWeek === 'number'
+              ? String(job.shiftDetails.hoursPerWeek)
+              : ''
+          );
           setPreferredDayIdxs(
             (job.shiftDetails.preferredDays ?? [])
               .map(day => WEEKDAY_KEYS.indexOf(day))
               .filter(idx => idx >= 0)
           );
           setCustomSchedulePatterns(job.shiftDetails.customSchedulePatterns ?? []);
+          setScheduleStartTime(
+            job.shiftDetails.scheduleStartTime
+              ? parseTimeString(job.shiftDetails.scheduleStartTime)
+              : undefined
+          );
+          setScheduleEndTime(
+            job.shiftDetails.scheduleEndTime
+              ? parseTimeString(job.shiftDetails.scheduleEndTime)
+              : undefined
+          );
         } else {
           setEndDate(
-            job.shiftDetails.endDate
+            job.shiftDetails.endDate && loadedStart
               ? clampDate(new Date(job.shiftDetails.endDate), loadedStart, jobMaxDate())
               : undefined
           );
@@ -210,8 +235,13 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           }
           setCustomSchedulePatterns(job.shiftDetails.customSchedulePatterns ?? []);
         }
-        setCompensationType(job.jobType === 'permanent' ? 'hourly' : job.compensation.type);
+        setCompensationType(job.compensation.type);
         setCompensationAmount(String(job.compensation.amount));
+        setSalesBonusPercent(
+          typeof job.compensation.salesBonusPercent === 'number'
+            ? String(job.compensation.salesBonusPercent)
+            : ''
+        );
         setSelectedTags(job.tags ?? []);
       } catch (err) {
         console.error('Error loading job for edit:', err);
@@ -337,26 +367,29 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
   const payment = useMemo(() => {
     const amount = parseFloat(compensationAmount) || 0;
 
+    // Permanent jobs store the raw amount as-is; there's no per-week
+    // multiplication because the employer sees no total. Commission is still
+    // 15% of that raw amount for parity with temporary shifts.
+    if (jobType === 'permanent') {
+      const totalAmount = amount;
+      const platformFee = totalAmount * 0.15;
+      const totalWithFee = totalAmount + platformFee;
+      return { totalHours: 0, totalAmount, platformFee, totalWithFee };
+    }
+
     if (compensationType === 'hourly') {
-      let totalHours: number;
-      if (jobType === 'permanent') {
-        // Permanent positions don't have a fixed per-shift duration, so hourly
-        // pay totals the weekly hours commitment instead of a single-shift span.
-        totalHours = parseFloat(hoursPerWeek) || 0;
-      } else {
-        // Temporary jobs: accumulate hours across the whole date range,
-        // honouring recurringDays when set. Single-day shifts still resolve
-        // to one-day hours because computeShiftHours falls through.
-        totalHours = computeShiftHours({
-          kind: 'temporary',
-          startDate: startDate.toISOString(),
-          endDate: endDate ? endDate.toISOString() : undefined,
-          startTime: formatTime(startTime),
-          endTime: formatTime(endTime),
-          isRecurring,
-          recurringDays: isRecurring ? selectedDays.map(idx => DAY_NAMES[idx]) : undefined,
-        });
-      }
+      // Temporary jobs: accumulate hours across the whole date range,
+      // honouring recurringDays when set. Single-day shifts still resolve
+      // to one-day hours because computeShiftHours falls through.
+      const totalHours = computeShiftHours({
+        kind: 'temporary',
+        startDate: (startDate ?? new Date()).toISOString(),
+        endDate: endDate ? endDate.toISOString() : undefined,
+        startTime: formatTime(startTime),
+        endTime: formatTime(endTime),
+        isRecurring,
+        recurringDays: isRecurring ? selectedDays.map(idx => DAY_NAMES[idx]) : undefined,
+      });
       const totalAmount = amount * totalHours;
       const platformFee = totalAmount * 0.15;
       const totalWithFee = totalAmount + platformFee;
@@ -375,7 +408,6 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     startTime,
     endTime,
     jobType,
-    hoursPerWeek,
     startDate,
     endDate,
     isRecurring,
@@ -396,26 +428,60 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
     }
     const minStart = jobMinDate();
     const maxEnd = jobMaxDate();
-    if (startDate.getTime() < minStart.getTime()) {
-      newErrors.startDate = t('createJob.errors.startDateInPast');
-    } else if (startDate.getTime() > maxEnd.getTime()) {
-      newErrors.startDate = t('createJob.errors.startDateTooFar');
+    if (startDate) {
+      if (startDate.getTime() < minStart.getTime()) {
+        newErrors.startDate = t('createJob.errors.startDateInPast');
+      } else if (startDate.getTime() > maxEnd.getTime()) {
+        newErrors.startDate = t('createJob.errors.startDateTooFar');
+      }
     }
 
     if (jobType === 'permanent') {
+      const hoursProvided = hoursPerWeek.trim().length > 0;
       const hours = parseFloat(hoursPerWeek);
-      if (
-        !hoursPerWeek ||
-        Number.isNaN(hours) ||
-        hours < HOURS_PER_WEEK_MIN ||
-        hours > HOURS_PER_WEEK_MAX
-      ) {
-        newErrors.hoursPerWeek = t('createJob.errors.hoursPerWeekInvalid', {
-          min: HOURS_PER_WEEK_MIN,
-          max: HOURS_PER_WEEK_MAX,
-        });
+      if (hoursProvided) {
+        if (Number.isNaN(hours) || hours < HOURS_PER_WEEK_MIN || hours > HOURS_PER_WEEK_MAX) {
+          newErrors.hoursPerWeek = t('createJob.errors.hoursPerWeekInvalid', {
+            min: HOURS_PER_WEEK_MIN,
+            max: HOURS_PER_WEEK_MAX,
+          });
+        }
+      }
+      // Schedule times: both or neither. If both, end must be strictly after start.
+      const hasStartTime = !!scheduleStartTime;
+      const hasEndTime = !!scheduleEndTime;
+      if (hasStartTime !== hasEndTime) {
+        newErrors.scheduleTimes = t('createJob.errors.scheduleTimesIncomplete');
+      } else if (hasStartTime && hasEndTime) {
+        const s = scheduleStartTime!.getHours() * 60 + scheduleStartTime!.getMinutes();
+        const e = scheduleEndTime!.getHours() * 60 + scheduleEndTime!.getMinutes();
+        if (e <= s) {
+          newErrors.scheduleTimes = t('createJob.errors.scheduleTimesInvalid');
+        }
+      }
+      // At least one schedule signal must be provided so baristas know what to expect.
+      const filteredPatterns = customSchedulePatterns
+        .map(p => parseSchedulePattern(p))
+        .filter(p => p.on.length > 0 && p.off.length > 0);
+      const hasAnySchedule =
+        (hoursProvided && !Number.isNaN(hours)) ||
+        preferredDayIdxs.length > 0 ||
+        filteredPatterns.length > 0 ||
+        (hasStartTime && hasEndTime);
+      if (!hasAnySchedule) {
+        newErrors.permanentSchedule = t('createJob.errors.permanentScheduleRequired');
+      }
+      // Sales bonus percent: optional, integer 0-100.
+      if (salesBonusPercent.trim().length > 0) {
+        const bonus = Number(salesBonusPercent);
+        if (!Number.isInteger(bonus) || bonus < 0 || bonus > 100) {
+          newErrors.salesBonusPercent = t('createJob.errors.salesBonusPercentInvalid');
+        }
       }
     } else {
+      if (!startDate) {
+        newErrors.startDate = t('createJob.errors.startDateInPast');
+      }
       if (isRecurring && selectedDays.length === 0) {
         newErrors.recurringDays = t('createJob.errors.recurringDaysRequired');
       }
@@ -429,7 +495,8 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
       // the end falls on the next calendar day.
       const isSingleDay =
         !endDate ||
-        (endDate.getFullYear() === startDate.getFullYear() &&
+        (startDate &&
+          endDate.getFullYear() === startDate.getFullYear() &&
           endDate.getMonth() === startDate.getMonth() &&
           endDate.getDate() === startDate.getDate());
       if (isSingleDay && endMinutes <= startMinutes) {
@@ -477,21 +544,26 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
       const customSchedule =
         filteredSchedulePatterns.length > 0 ? filteredSchedulePatterns : undefined;
 
+      const parsedHoursPerWeek = parseFloat(hoursPerWeek);
       const shiftDetails: ShiftDetails =
         jobType === 'permanent'
           ? {
               kind: 'permanent',
-              startDate: startDate.toISOString(),
-              hoursPerWeek: parseFloat(hoursPerWeek),
+              startDate: startDate ? startDate.toISOString() : undefined,
+              hoursPerWeek: Number.isNaN(parsedHoursPerWeek) ? undefined : parsedHoursPerWeek,
               preferredDays:
                 preferredDayIdxs.length > 0
                   ? preferredDayIdxs.map(idx => WEEKDAY_KEYS[idx])
                   : undefined,
               customSchedulePatterns: customSchedule,
+              scheduleStartTime:
+                scheduleStartTime && scheduleEndTime ? formatTime(scheduleStartTime) : undefined,
+              scheduleEndTime:
+                scheduleStartTime && scheduleEndTime ? formatTime(scheduleEndTime) : undefined,
             }
           : {
               kind: 'temporary',
-              startDate: startDate.toISOString(),
+              startDate: (startDate ?? new Date()).toISOString(),
               endDate: endDate ? endDate.toISOString() : undefined,
               startTime: formatTime(startTime),
               endTime: formatTime(endTime),
@@ -520,10 +592,20 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           type: compensationType,
           amount: parseFloat(compensationAmount),
           currency: 'RUB',
+          salesBonusPercent:
+            jobType === 'permanent' && salesBonusPercent.trim().length > 0
+              ? Number(salesBonusPercent)
+              : undefined,
         },
         payment: {
-          hourlyRate: compensationType === 'hourly' ? parseFloat(compensationAmount) : undefined,
-          totalHours: compensationType === 'hourly' ? payment.totalHours : undefined,
+          hourlyRate:
+            jobType === 'temporary' && compensationType === 'hourly'
+              ? parseFloat(compensationAmount)
+              : undefined,
+          totalHours:
+            jobType === 'temporary' && compensationType === 'hourly'
+              ? payment.totalHours
+              : undefined,
           totalAmount: payment.totalAmount,
           platformFee: payment.platformFee,
           totalWithFee: payment.totalWithFee,
@@ -595,7 +677,10 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           <View style={styles.segmentedControl}>
             <TouchableOpacity
               style={[styles.segmentButton, jobType === 'temporary' && styles.segmentButtonActive]}
-              onPress={() => setJobType('temporary')}>
+              onPress={() => {
+                setJobType('temporary');
+                if (!startDate) setStartDate(new Date());
+              }}>
               <Text
                 style={[
                   styles.segmentButtonText,
@@ -608,7 +693,8 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
               style={[styles.segmentButton, jobType === 'permanent' && styles.segmentButtonActive]}
               onPress={() => {
                 setJobType('permanent');
-                setCompensationType('hourly');
+                // Ensure temporary has a valid startDate when user flips back later.
+                // Permanent allows startDate to be undefined by design.
               }}>
               <Text
                 style={[
@@ -738,15 +824,29 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
             {jobType === 'permanent'
               ? t('createJob.fields.permanentStartDate')
               : t('createJob.fields.startDate')}{' '}
-            <Text style={styles.required}>*</Text>
+            {jobType === 'temporary' && <Text style={styles.required}>*</Text>}
           </Text>
-          <TouchableOpacity style={styles.dateButton} onPress={() => setShowStartDatePicker(true)}>
-            <Text style={styles.dateButtonText}>{formatDate(startDate)}</Text>
-          </TouchableOpacity>
+          <View style={styles.startDateRow}>
+            <TouchableOpacity
+              style={[styles.dateButton, styles.startDateButton]}
+              onPress={() => setShowStartDatePicker(true)}>
+              <Text style={styles.dateButtonText}>
+                {startDate ? formatDate(startDate) : t('createJob.fields.notSpecified')}
+              </Text>
+            </TouchableOpacity>
+            {jobType === 'permanent' && startDate && (
+              <TouchableOpacity
+                style={styles.clearDateButton}
+                accessibilityLabel={t('createJob.fields.clearDate')}
+                onPress={() => setStartDate(undefined)}>
+                <Text style={styles.clearDateButtonText}>×</Text>
+              </TouchableOpacity>
+            )}
+          </View>
           {showStartDatePicker && (
             <>
               <DateTimePicker
-                value={clampDate(startDate, jobMinDate(), jobMaxDate())}
+                value={clampDate(startDate ?? new Date(), jobMinDate(), jobMaxDate())}
                 mode="date"
                 display={Platform.OS === 'ios' ? 'inline' : 'default'}
                 themeVariant="light"
@@ -776,9 +876,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
 
           {jobType === 'permanent' ? (
             <>
-              <Text style={styles.label}>
-                {t('createJob.fields.hoursPerWeek')} <Text style={styles.required}>*</Text>
-              </Text>
+              <Text style={styles.label}>{t('createJob.fields.hoursPerWeek')}</Text>
               <TextInput
                 style={[styles.input, errors.hoursPerWeek ? styles.inputError : null]}
                 placeholder={t('createJob.fields.hoursPerWeekPlaceholder')}
@@ -814,6 +912,105 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                   </TouchableOpacity>
                 ))}
               </View>
+
+              <View style={styles.timeRow}>
+                <View style={styles.timeInput}>
+                  <Text style={styles.label}>{t('createJob.fields.scheduleStartTime')}</Text>
+                  <View style={styles.startDateRow}>
+                    <TouchableOpacity
+                      style={[styles.dateButton, styles.startDateButton]}
+                      onPress={() => setShowScheduleStartTimePicker(true)}>
+                      <Text style={styles.dateButtonText}>
+                        {scheduleStartTime
+                          ? formatTime(scheduleStartTime)
+                          : t('createJob.fields.notSpecified')}
+                      </Text>
+                    </TouchableOpacity>
+                    {scheduleStartTime && (
+                      <TouchableOpacity
+                        style={styles.clearDateButton}
+                        accessibilityLabel={t('createJob.fields.clearDate')}
+                        onPress={() => setScheduleStartTime(undefined)}>
+                        <Text style={styles.clearDateButtonText}>×</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  {showScheduleStartTimePicker && (
+                    <>
+                      <DateTimePicker
+                        value={scheduleStartTime ?? new Date()}
+                        mode="time"
+                        is24Hour={true}
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        themeVariant="light"
+                        textColor="#000000"
+                        onChange={(_event, selectedTime) => {
+                          if (!selectedTime) return;
+                          setScheduleStartTime(selectedTime);
+                          const { scheduleTimes: _, ...rest } = errors;
+                          setErrors(rest);
+                        }}
+                      />
+                      <TouchableOpacity
+                        style={styles.pickerDoneButton}
+                        onPress={() => setShowScheduleStartTimePicker(false)}>
+                        <Text style={styles.pickerDoneText}>{t('createJob.done')}</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+
+                <View style={styles.timeInput}>
+                  <Text style={styles.label}>{t('createJob.fields.scheduleEndTime')}</Text>
+                  <View style={styles.startDateRow}>
+                    <TouchableOpacity
+                      style={[styles.dateButton, styles.startDateButton]}
+                      onPress={() => setShowScheduleEndTimePicker(true)}>
+                      <Text style={styles.dateButtonText}>
+                        {scheduleEndTime
+                          ? formatTime(scheduleEndTime)
+                          : t('createJob.fields.notSpecified')}
+                      </Text>
+                    </TouchableOpacity>
+                    {scheduleEndTime && (
+                      <TouchableOpacity
+                        style={styles.clearDateButton}
+                        accessibilityLabel={t('createJob.fields.clearDate')}
+                        onPress={() => setScheduleEndTime(undefined)}>
+                        <Text style={styles.clearDateButtonText}>×</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  {showScheduleEndTimePicker && (
+                    <>
+                      <DateTimePicker
+                        value={scheduleEndTime ?? scheduleStartTime ?? new Date()}
+                        mode="time"
+                        is24Hour={true}
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        themeVariant="light"
+                        textColor="#000000"
+                        onChange={(_event, selectedTime) => {
+                          if (!selectedTime) return;
+                          setScheduleEndTime(selectedTime);
+                          const { scheduleTimes: _, ...rest } = errors;
+                          setErrors(rest);
+                        }}
+                      />
+                      <TouchableOpacity
+                        style={styles.pickerDoneButton}
+                        onPress={() => setShowScheduleEndTimePicker(false)}>
+                        <Text style={styles.pickerDoneText}>{t('createJob.done')}</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+              </View>
+              <Text style={styles.helperText}>{t('createJob.fields.scheduleTimesHint')}</Text>
+              {errors.scheduleTimes && <Text style={styles.errorText}>{errors.scheduleTimes}</Text>}
+              {errors.permanentSchedule && (
+                <Text style={styles.errorText}>{errors.permanentSchedule}</Text>
+              )}
             </>
           ) : (
             <>
@@ -828,16 +1025,20 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
               {showEndDatePicker && (
                 <>
                   <DateTimePicker
-                    value={clampDate(endDate ?? startDate, startDate, jobMaxDate())}
+                    value={clampDate(
+                      endDate ?? startDate ?? new Date(),
+                      startDate ?? new Date(),
+                      jobMaxDate()
+                    )}
                     mode="date"
                     display={Platform.OS === 'ios' ? 'inline' : 'default'}
                     themeVariant="light"
                     textColor="#000000"
-                    minimumDate={startDate}
+                    minimumDate={startDate ?? new Date()}
                     maximumDate={jobMaxDate()}
                     onChange={(_event, selectedDate) => {
                       if (selectedDate) {
-                        setEndDate(clampDate(selectedDate, startDate, jobMaxDate()));
+                        setEndDate(clampDate(selectedDate, startDate ?? new Date(), jobMaxDate()));
                       }
                     }}
                   />
@@ -873,6 +1074,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                           setStartTime(selectedTime);
                           const isSingleDay =
                             !endDate ||
+                            !startDate ||
                             (endDate.getFullYear() === startDate.getFullYear() &&
                               endDate.getMonth() === startDate.getMonth() &&
                               endDate.getDate() === startDate.getDate());
@@ -923,6 +1125,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                           if (!selectedTime) return;
                           const isSingleDay =
                             !endDate ||
+                            !startDate ||
                             (endDate.getFullYear() === startDate.getFullYear() &&
                               endDate.getMonth() === startDate.getMonth() &&
                               endDate.getDate() === startDate.getDate());
@@ -1045,10 +1248,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
             {t('createJob.fields.compensationType')} <Text style={styles.required}>*</Text>
           </Text>
           <View style={styles.compensationTypes}>
-            {(jobType === 'permanent'
-              ? (['hourly'] as CompensationType[])
-              : (['hourly', 'daily', 'fixed'] as CompensationType[])
-            ).map(type => (
+            {(['hourly', 'daily', 'fixed'] as CompensationType[]).map(type => (
               <TouchableOpacity
                 key={type}
                 style={[
@@ -1085,33 +1285,60 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           />
           {errors.compensation && <Text style={styles.errorText}>{errors.compensation}</Text>}
 
-          <View style={styles.paymentSummary}>
-            <Text style={styles.sectionTitle}>{t('createJob.sections.paymentSummary')}</Text>
-            {compensationType === 'hourly' && (
-              <Text style={styles.paymentLine}>
-                {t('createJob.paymentSummary.totalHours', { hours: payment.totalHours.toFixed(2) })}
-              </Text>
-            )}
-            <Text style={styles.paymentLine}>
-              {t('createJob.paymentSummary.totalAmount', {
-                amount: payment.totalAmount.toFixed(2),
-              })}
-            </Text>
-            {SHOW_PLATFORM_FEE && (
-              <>
+          {jobType === 'permanent' && (
+            <>
+              <Text style={styles.label}>{t('createJob.fields.salesBonusPercent')}</Text>
+              <TextInput
+                style={[styles.input, errors.salesBonusPercent ? styles.inputError : null]}
+                placeholder={t('createJob.fields.salesBonusPlaceholder')}
+                keyboardType="number-pad"
+                value={salesBonusPercent}
+                onChangeText={text => {
+                  setSalesBonusPercent(sanitizePercentInput(text));
+                  const { salesBonusPercent: _, ...rest } = errors;
+                  setErrors(rest);
+                }}
+                maxLength={3}
+                returnKeyType="done"
+              />
+              <Text style={styles.helperText}>{t('createJob.fields.salesBonusHint')}</Text>
+              {errors.salesBonusPercent && (
+                <Text style={styles.errorText}>{errors.salesBonusPercent}</Text>
+              )}
+            </>
+          )}
+
+          {jobType === 'temporary' && (
+            <View style={styles.paymentSummary}>
+              <Text style={styles.sectionTitle}>{t('createJob.sections.paymentSummary')}</Text>
+              {compensationType === 'hourly' && (
                 <Text style={styles.paymentLine}>
-                  {t('createJob.paymentSummary.platformFee', {
-                    amount: payment.platformFee.toFixed(2),
+                  {t('createJob.paymentSummary.totalHours', {
+                    hours: payment.totalHours.toFixed(2),
                   })}
                 </Text>
-                <Text style={styles.paymentLineTotal}>
-                  {t('createJob.paymentSummary.totalWithFee', {
-                    amount: payment.totalWithFee.toFixed(2),
-                  })}
-                </Text>
-              </>
-            )}
-          </View>
+              )}
+              <Text style={styles.paymentLine}>
+                {t('createJob.paymentSummary.totalAmount', {
+                  amount: payment.totalAmount.toFixed(2),
+                })}
+              </Text>
+              {SHOW_PLATFORM_FEE && (
+                <>
+                  <Text style={styles.paymentLine}>
+                    {t('createJob.paymentSummary.platformFee', {
+                      amount: payment.platformFee.toFixed(2),
+                    })}
+                  </Text>
+                  <Text style={styles.paymentLineTotal}>
+                    {t('createJob.paymentSummary.totalWithFee', {
+                      amount: payment.totalWithFee.toFixed(2),
+                    })}
+                  </Text>
+                </>
+              )}
+            </View>
+          )}
         </View>
 
         <View style={styles.section}>
@@ -1376,6 +1603,30 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: '#fff',
     marginBottom: 8,
+  },
+  startDateRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: 8,
+    marginBottom: 8,
+  },
+  startDateButton: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  clearDateButton: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: RADII.input,
+    paddingHorizontal: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  clearDateButtonText: {
+    fontSize: 20,
+    color: COLORS.textSecondary,
+    lineHeight: 20,
   },
   dateButtonText: {
     fontSize: 16,

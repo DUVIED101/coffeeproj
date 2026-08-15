@@ -32,7 +32,9 @@ const FAR_FUTURE_MS = MS_PER_DAY * 365 * 100;
 
 const shiftBoundary = (shift: ShiftDetails): { start: Date; end: Date } => {
   if (shift.kind === 'permanent') {
-    const start = dateAtMidnight(shift.startDate);
+    // Permanent with no explicit startDate is "по договорённости" — treat as
+    // starting now so cancel windows and lifecycle checks stay meaningful.
+    const start = shift.startDate ? dateAtMidnight(shift.startDate) : new Date();
     return { start, end: new Date(start.getTime() + FAR_FUTURE_MS) };
   }
   const start = dateAtTime(shift.startDate, shift.startTime);

@@ -73,10 +73,16 @@ export const ShiftCard = React.memo<ShiftCardProps>(
       if (acceptedApp) onPressAcceptedChat(acceptedApp);
     }, [acceptedApp, onPressAcceptedChat]);
 
-    const shiftDate = formatShiftDate(job.shiftDetails.startDate, locale);
+    const shiftDate = job.shiftDetails.startDate
+      ? formatShiftDate(job.shiftDetails.startDate, locale)
+      : t('jobDetails.startDateUnspecified');
     const shiftSubtitle =
       job.shiftDetails.kind === 'permanent'
-        ? t('jobDetails.hoursPerWeekShort', { hours: job.shiftDetails.hoursPerWeek })
+        ? typeof job.shiftDetails.hoursPerWeek === 'number'
+          ? t('jobDetails.hoursPerWeekShort', { hours: job.shiftDetails.hoursPerWeek })
+          : job.shiftDetails.scheduleStartTime && job.shiftDetails.scheduleEndTime
+            ? `${job.shiftDetails.scheduleStartTime}–${job.shiftDetails.scheduleEndTime}`
+            : ''
         : `${job.shiftDetails.startTime}–${job.shiftDetails.endTime}`;
     const cityLabel = isCityCode(job.location.city)
       ? t(`city.codes.${job.location.city}`)

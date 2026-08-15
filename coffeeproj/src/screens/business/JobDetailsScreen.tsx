@@ -261,12 +261,18 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             <>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>{t('businessJobDetails.startDatePermanent')}</Text>
-                <Text style={styles.detailValue}>{formatDate(job.shiftDetails.startDate)}</Text>
+                <Text style={styles.detailValue}>
+                  {job.shiftDetails.startDate
+                    ? formatDate(job.shiftDetails.startDate)
+                    : t('businessJobDetails.startDateUnspecified')}
+                </Text>
               </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>{t('businessJobDetails.hoursPerWeek')}</Text>
-                <Text style={styles.detailValue}>{job.shiftDetails.hoursPerWeek}</Text>
-              </View>
+              {typeof job.shiftDetails.hoursPerWeek === 'number' && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>{t('businessJobDetails.hoursPerWeek')}</Text>
+                  <Text style={styles.detailValue}>{job.shiftDetails.hoursPerWeek}</Text>
+                </View>
+              )}
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>{t('businessJobDetails.preferredDays')}</Text>
                 <Text style={styles.detailValue}>
@@ -277,13 +283,21 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
                     : t('businessJobDetails.anyDay')}
                 </Text>
               </View>
+              {job.shiftDetails.scheduleStartTime && job.shiftDetails.scheduleEndTime && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>{t('businessJobDetails.scheduleTimes')}</Text>
+                  <Text style={styles.detailValue}>
+                    {job.shiftDetails.scheduleStartTime} — {job.shiftDetails.scheduleEndTime}
+                  </Text>
+                </View>
+              )}
             </>
           ) : (
             <>
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>{t('businessJobDetails.date')}</Text>
                 <Text style={styles.detailValue}>
-                  {formatDate(job.shiftDetails.startDate)}
+                  {job.shiftDetails.startDate ? formatDate(job.shiftDetails.startDate) : '—'}
                   {job.shiftDetails.endDate && ` - ${formatDate(job.shiftDetails.endDate)}`}
                 </Text>
               </View>
@@ -333,6 +347,16 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
                 ? t('businessJobDetails.perDay')
                 : t('businessJobDetails.fixed')}
           </Text>
+          {typeof job.compensation.salesBonusPercent === 'number' && (
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>{t('businessJobDetails.salesBonus')}</Text>
+              <Text style={styles.detailValue}>
+                {t('businessJobDetails.salesBonusValue', {
+                  percent: job.compensation.salesBonusPercent,
+                })}
+              </Text>
+            </View>
+          )}
           {SHOW_PLATFORM_FEE && job.payment && (
             <View style={styles.paymentDetails}>
               <View style={styles.detailRow}>
