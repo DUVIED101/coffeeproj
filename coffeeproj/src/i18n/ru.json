@@ -919,7 +919,7 @@
       "notSpecified": "Не указана",
       "clearDate": "Очистить",
       "salesBonusPercent": "+ % с продаж",
-      "salesBonusHint": "Опционально. Не входит в сумму оплаты или комиссию.",
+      "salesBonusHint": "Опционально.",
       "salesBonusPlaceholder": "0",
       "scheduleStartTime": "Время начала смены",
       "scheduleEndTime": "Время окончания смены",

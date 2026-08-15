@@ -910,7 +910,7 @@
       "notSpecified": "Not specified",
       "clearDate": "Clear",
       "salesBonusPercent": "+ % of sales",
-      "salesBonusHint": "Optional. Not included in the amount or platform fee.",
+      "salesBonusHint": "Optional.",
       "salesBonusPlaceholder": "0",
       "scheduleStartTime": "Shift start time",
       "scheduleEndTime": "Shift end time",
