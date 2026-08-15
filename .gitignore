@@ -76,3 +76,4 @@ coffeeproj/scripts/seed-test-jobs.js
 # Private content — kept local, not published
 admin/
 supabase/migrations/
+AUDIT_REPORT.md
