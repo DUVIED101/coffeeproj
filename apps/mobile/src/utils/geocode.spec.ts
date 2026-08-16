@@ -1,5 +1,5 @@
 import { parseFirstValidHit } from './geocode';
-import { CITY_BOUNDS, CITY_LABELS_RU } from '../types/city';
+import { CITY_BOUNDS, CITY_LABELS_RU } from '@bystrobarista/core/types/city';
 
 const SPB = CITY_LABELS_RU.spb;
 const MOSCOW = CITY_LABELS_RU.moscow;

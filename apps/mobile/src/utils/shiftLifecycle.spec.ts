@@ -2,8 +2,8 @@ import type {
   ApplicationStatus,
   ShiftConfirmationStatus,
   ShiftLifecycleStatus,
-} from '../types/application';
-import type { JobStatus, ShiftDetails, TemporaryShiftDetails } from '../types/job';
+} from '@bystrobarista/core/types/application';
+import type { JobStatus, ShiftDetails, TemporaryShiftDetails } from '@bystrobarista/core/types/job';
 import { canBaristaCancelShift, classifyShiftLifecycle } from './shiftLifecycle';
 
 const baseShift = (overrides: Partial<TemporaryShiftDetails> = {}): TemporaryShiftDetails => ({

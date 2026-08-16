@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
-import { COLORS, RADII } from '../config/constants';
+import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import { Avatar } from './Avatar';
 
 export type HeaderAction = {

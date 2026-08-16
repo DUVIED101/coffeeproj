@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { useBlockedUsersStore } from '../../stores/blockedUsersStore';
 
 export const BlockedUsersScreen: React.FC = () => {

@@ -1,6 +1,6 @@
 import { createNavigationContainerRef, CommonActions } from '@react-navigation/native';
 import { useAuthStore } from '../stores/authStore';
-import type { PushNotificationPayload } from '../types/notification';
+import type { PushNotificationPayload } from '@bystrobarista/core/types/notification';
 
 export const navigationRef = createNavigationContainerRef();
 

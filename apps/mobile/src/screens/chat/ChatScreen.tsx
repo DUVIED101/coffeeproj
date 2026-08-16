@@ -20,7 +20,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { useTranslation } from 'react-i18next';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { ChatService } from '../../services/ChatService';
 import {
   ScreenHeaderWithActions,
@@ -29,8 +29,8 @@ import {
 import { useAuthStore } from '../../stores/authStore';
 import { useChatUnreadStore } from '../../stores/chatUnreadStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
-import type { UserId } from '../../types/ids';
-import type { Message, ConversationId, Conversation } from '../../types/chat';
+import type { UserId } from '@bystrobarista/core/types/ids';
+import type { Message, ConversationId, Conversation } from '@bystrobarista/core/types/chat';
 import { formatDateHeader, isSameDay } from '../../utils/dateUtils';
 import { clampToEffectiveLength } from '../../utils/textLength';
 import { useReportSheet } from '../../hooks/useReportSheet';

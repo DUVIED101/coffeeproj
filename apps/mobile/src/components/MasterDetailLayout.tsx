@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
 import { MasterDetailContext, type MasterDetailContextValue } from './MasterDetailContext';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 
 type RenderArg = { selectedId: string | null; select: (id: string | null) => void };
 

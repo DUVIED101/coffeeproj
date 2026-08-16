@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { StarRow } from './StarRow';
-import type { ApplicationReview } from '../types/review';
+import type { ApplicationReview } from '@bystrobarista/core/types/review';
 
 type ReviewListRowProps = {
   review: ApplicationReview;

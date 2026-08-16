@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { transformedImageUrl } from '../utils/imageTransform';
 
 type AvatarProps = {

@@ -1,4 +1,4 @@
-import type { ShiftDetails, TemporaryShiftDetails } from '../types/job';
+import type { ShiftDetails, TemporaryShiftDetails } from '@bystrobarista/core/types/job';
 import { computeShiftHours } from './shiftHours';
 
 const baseShift = (overrides: Partial<TemporaryShiftDetails>): TemporaryShiftDetails => ({

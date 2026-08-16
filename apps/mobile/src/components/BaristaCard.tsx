@@ -4,11 +4,11 @@ import FastImage from 'react-native-fast-image';
 import { useTranslation } from 'react-i18next';
 import { transformedImageUrl } from '../utils/imageTransform';
 import type { TFunction } from 'i18next';
-import type { BaristaProfile } from '../types/baristaProfile';
-import type { UserReviewAggregate } from '../types/review';
-import { COLORS } from '../config/constants';
+import type { BaristaProfile } from '@bystrobarista/core/types/baristaProfile';
+import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { getInitials } from '../utils/getInitials';
-import { isCityCode } from '../types/city';
+import { isCityCode } from '@bystrobarista/core/types/city';
 import { StarRow } from './StarRow';
 
 type BaristaCardProps = {

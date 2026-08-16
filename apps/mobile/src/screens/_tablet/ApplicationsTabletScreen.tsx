@@ -6,7 +6,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { MasterDetailLayout } from '../../components/MasterDetailLayout';
 import { ApplicationsScreen } from '../barista/ApplicationsScreen';
 import { ApplicationDetailsScreen } from '../barista/ApplicationDetailsScreen';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import type { ApplicationsStackParamList } from '../../navigation/ApplicationsStack';
 
 type Props = {

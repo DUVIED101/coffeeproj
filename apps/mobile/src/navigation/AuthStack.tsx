@@ -9,8 +9,8 @@ import { DiagnosticScreen } from '../screens/settings/DiagnosticScreen';
 import { TermsScreen } from '../screens/settings/TermsScreen';
 import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
 import { DataConsentScreen } from '../screens/settings/DataConsentScreen';
-import { COLORS } from '../config/constants';
-import type { AccountType } from '../types';
+import { COLORS } from '@bystrobarista/core/config/constants';
+import type { AccountType } from '@bystrobarista/core/types';
 
 export type AuthStackParamList = {
   AccountType: undefined;

@@ -12,7 +12,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { JobService } from '../../services/JobService';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
 import { ReviewService } from '../../services/ReviewService';
@@ -30,10 +30,10 @@ import {
   getCurrentLocation,
   getLastKnownLocationFast,
 } from '../../utils/geolocation';
-import type { Job, JobFilters } from '../../types/job';
-import type { GeoPoint } from '../../types/business';
-import type { UserId } from '../../types/ids';
-import type { UserReviewAggregate } from '../../types/review';
+import type { Job, JobFilters } from '@bystrobarista/core/types/job';
+import type { GeoPoint } from '@bystrobarista/core/types/business';
+import type { UserId } from '@bystrobarista/core/types/ids';
+import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
 
 type BaristaStackParamList = {
   JobFeed: undefined;

@@ -18,7 +18,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { EquipmentChips } from '../../components/EquipmentChips';
 import {
   BusinessService,
@@ -30,8 +30,8 @@ import { CityToggle } from '../../components/CityToggle';
 import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
 import { AddFab } from '../../components/AddFab';
 import { useAuthStore } from '../../stores/authStore';
-import type { Branch, Equipment, GeoPoint, CityCode } from '../../types';
-import { DEFAULT_CITY, toCityCode } from '../../types/city';
+import type { Branch, Equipment, GeoPoint, CityCode } from '@bystrobarista/core/types';
+import { DEFAULT_CITY, toCityCode } from '@bystrobarista/core/types/city';
 import { PHOTO_LIMIT } from '../../utils/storage';
 import { pickPhotos, reportRejections } from '../../utils/pickPhotos';
 import { geocodeAddress } from '../../utils/geocode';

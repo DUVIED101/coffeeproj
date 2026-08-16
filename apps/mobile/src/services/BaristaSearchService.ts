@@ -1,5 +1,5 @@
 import { supabase } from '../config/supabase';
-import type { BaristaProfile, BaristaFilters } from '../types/baristaProfile';
+import type { BaristaProfile, BaristaFilters } from '@bystrobarista/core/types/baristaProfile';
 import { METRO_ANY } from '../components/MetroSelector';
 
 const PAGE_SIZE = 20;

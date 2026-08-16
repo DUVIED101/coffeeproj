@@ -1,8 +1,8 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../config/supabase';
-import type { ConversationId } from '../types/chat';
-import type { JobOfferId, NotificationId, UserId } from '../types/ids';
-import type { Notification, NotificationData, NotificationKind } from '../types/notification';
+import type { ConversationId } from '@bystrobarista/core/types/chat';
+import type { JobOfferId, NotificationId, UserId } from '@bystrobarista/core/types/ids';
+import type { Notification, NotificationData, NotificationKind } from '@bystrobarista/core/types/notification';
 
 type NotificationRow = {
   id: string;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 
 type Props = {
   certificates: string[];

@@ -1,4 +1,4 @@
-import type { NotificationId, UserId } from '../types/ids';
+import type { NotificationId, UserId } from '@bystrobarista/core/types/ids';
 
 jest.mock('../config/supabase', () => ({
   supabase: {

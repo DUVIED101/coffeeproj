@@ -34,7 +34,7 @@ const BusinessStackBoundary = wrapWithBoundary(BusinessStack);
 const BusinessSearchStackBoundary = wrapWithBoundary(BusinessSearchStack);
 const ChatsStackPhoneBoundary = wrapWithBoundary(ChatsStack);
 const ChatsStackTabletBoundary = wrapWithBoundary(ChatsStackTablet);
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { BusinessStack } from './BusinessStack';
 import { BusinessProfileStack, type BusinessProfileStackParamList } from "./BusinessProfileStack";
 import { BusinessSearchStack } from './BusinessSearchStack';

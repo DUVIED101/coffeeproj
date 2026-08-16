@@ -11,9 +11,9 @@ import {
   View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { ReportService } from '../services/ReportService';
-import type { ReportReasonCode, ReportTargetType } from '../types';
+import type { ReportReasonCode, ReportTargetType } from '@bystrobarista/core/types';
 import { showSuccessToast } from '../stores/errorToastStore';
 import { handleApiError } from '../utils/handleApiError';
 import { useAuthStore } from '../stores/authStore';

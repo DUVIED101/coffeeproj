@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { JobOfferId } from '../types/ids';
+import type { JobOfferId } from '@bystrobarista/core/types/ids';
 
 const STORAGE_KEY = 'pendingOfferActionsQueue:v1';
 const MAX_ATTEMPTS = 5;

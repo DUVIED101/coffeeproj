@@ -4,7 +4,7 @@ jest.mock('react-native', () => ({
 }));
 
 import { calculateDistance } from './geolocation';
-import type { GeoPoint } from '../types';
+import type { GeoPoint } from '@bystrobarista/core/types';
 
 describe('calculateDistance', () => {
   it('returns zero meters when both points are identical', () => {

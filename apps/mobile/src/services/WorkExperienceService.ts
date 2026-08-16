@@ -1,12 +1,12 @@
 import { supabase } from '../config/supabase';
-import type { BaristaProfileId, WorkExperienceId } from '../types/ids';
+import type { BaristaProfileId, WorkExperienceId } from '@bystrobarista/core/types/ids';
 import type {
   CreateWorkExperienceData,
   UpdateWorkExperienceData,
   WorkExperience,
   WorkExperienceDraft,
-} from '../types/workExperience';
-import { isDraftValid } from '../types/workExperience';
+} from '@bystrobarista/core/types/workExperience';
+import { isDraftValid } from '@bystrobarista/core/types/workExperience';
 
 type DbWorkExperience = {
   id: string;

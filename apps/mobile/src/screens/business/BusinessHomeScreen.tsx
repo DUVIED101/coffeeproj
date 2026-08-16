@@ -28,11 +28,11 @@ import { ApplicationService } from '../../services/ApplicationService';
 import { BusinessService } from '../../services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
-import { COLORS, RADII } from '../../config/constants';
+import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import { ResponsiveContainer } from '../../components/ResponsiveContainer';
 import { classifyShiftLifecycle } from '../../utils/shiftLifecycle';
-import type { Job, JobStatus } from '../../types';
-import type { Application, ShiftLifecycleStatus } from '../../types/application';
+import type { Job, JobStatus } from '@bystrobarista/core/types';
+import type { Application, ShiftLifecycleStatus } from '@bystrobarista/core/types/application';
 
 const SHOW_ARCHIVED_KEY = 'business.showArchivedJobs';
 const ARCHIVED_STATUSES: JobStatus[] = ['filled', 'expired', 'cancelled'];

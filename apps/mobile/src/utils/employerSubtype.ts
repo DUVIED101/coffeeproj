@@ -1,4 +1,4 @@
-import type { LegalForm, SocialPlatform } from '../types';
+import type { LegalForm, SocialPlatform } from '@bystrobarista/core/types';
 
 export interface EmployerDetailsInput {
   legalForm: LegalForm;

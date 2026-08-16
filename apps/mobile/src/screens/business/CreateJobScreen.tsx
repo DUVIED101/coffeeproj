@@ -17,14 +17,14 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { RouteProp } from '@react-navigation/native';
-import { COLORS, EQUIPMENT_TYPES, RADII, SHOW_PLATFORM_FEE } from '../../config/constants';
+import { COLORS, EQUIPMENT_TYPES, RADII, SHOW_PLATFORM_FEE } from '@bystrobarista/core/config/constants';
 import { JobService } from '../../services/JobService';
 import { BusinessService } from '../../services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
 import { showErrorToast } from '../../stores/errorToastStore';
 import { handleApiError } from '../../utils/handleApiError';
-import type { Branch, Equipment } from '../../types/business';
-import type { JobType, CompensationType, ShiftDetails, WeekdayKey } from '../../types/job';
+import type { Branch, Equipment } from '@bystrobarista/core/types/business';
+import type { JobType, CompensationType, ShiftDetails, WeekdayKey } from '@bystrobarista/core/types/job';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import type { MainTabsParamList } from '../../navigation/MainTabs';
 import {

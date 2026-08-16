@@ -4,9 +4,9 @@ import FastImage from 'react-native-fast-image';
 import { useTranslation } from 'react-i18next';
 import { transformedImageUrl } from '../utils/imageTransform';
 import type { TFunction } from 'i18next';
-import type { Job } from '../types/job';
-import type { UserReviewAggregate } from '../types/review';
-import { COLORS } from '../config/constants';
+import type { Job } from '@bystrobarista/core/types/job';
+import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { StarRow } from './StarRow';
 
 interface JobCardProps {

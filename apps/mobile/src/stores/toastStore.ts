@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Notification } from '../types/notification';
+import type { Notification } from '@bystrobarista/core/types/notification';
 
 type ToastState = {
   current: Notification | null;

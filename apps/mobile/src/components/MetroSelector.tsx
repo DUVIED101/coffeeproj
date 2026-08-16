@@ -11,9 +11,9 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { MetroService, type MetroStation } from "../utils/metro";
-import { CITY_CODES, type CityCode } from "../types/city";
-import type { GeoPoint } from '../types/business';
-import { COLORS } from '../config/constants';
+import { CITY_CODES, type CityCode } from "@bystrobarista/core/types/city";
+import type { GeoPoint } from '@bystrobarista/core/types/business';
+import { COLORS } from '@bystrobarista/core/config/constants';
 
 const NEARBY_LIMIT = 5;
 

@@ -18,7 +18,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
 import { WorkExperienceService } from '../../services/WorkExperienceService';
 import { MetroSelector } from '../../components/MetroSelector';
@@ -40,21 +40,21 @@ import {
 import { requestLocationPermission, getCurrentLocation } from '../../utils/geolocation';
 import { clampToEffectiveLength, effectiveTextLength } from '../../utils/textLength';
 import { dobMinDate, dobMaxDate } from '../../utils/dateRanges';
-import type { GeoPoint } from '../../types/business';
+import type { GeoPoint } from '@bystrobarista/core/types/business';
 import type {
   ShiftTime,
   BaristaProfile,
   DayOfWeek,
   WorkloadType,
-} from '../../types/baristaProfile';
-import { DAYS_OF_WEEK, WORKLOAD_TYPES } from '../../types/baristaProfile';
-import { DEFAULT_CITY, toCityCode, type CityCode } from '../../types/city';
-import type { BaristaProfileId } from '../../types/ids';
+} from '@bystrobarista/core/types/baristaProfile';
+import { DAYS_OF_WEEK, WORKLOAD_TYPES } from '@bystrobarista/core/types/baristaProfile';
+import { DEFAULT_CITY, toCityCode, type CityCode } from '@bystrobarista/core/types/city';
+import type { BaristaProfileId } from '@bystrobarista/core/types/ids';
 import {
   findDraftErrors,
   type WorkExperienceDraft,
   type WorkExperienceFieldError,
-} from '../../types/workExperience';
+} from '@bystrobarista/core/types/workExperience';
 
 type BaristaStackParamList = {
   JobFeed: undefined;

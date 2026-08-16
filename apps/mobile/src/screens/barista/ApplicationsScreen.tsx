@@ -12,14 +12,14 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import { ChatService } from '../../services/ChatService';
 import { Skeleton } from '../../components/Skeleton';
 import { useMasterDetail } from '../../components/MasterDetailContext';
 import { useAuthStore } from '../../stores/authStore';
-import type { Application, ApplicationStatus } from '../../types/application';
-import type { ConversationId } from '../../types/chat';
+import type { Application, ApplicationStatus } from '@bystrobarista/core/types/application';
+import type { ConversationId } from '@bystrobarista/core/types/chat';
 
 type BaristaStackParamList = {
   JobFeed: undefined;

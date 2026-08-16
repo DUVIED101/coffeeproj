@@ -4,8 +4,8 @@ import type {
   CreateBaristaProfileData,
   ReliabilityScore,
   UpdateBaristaProfileData,
-} from '../types/baristaProfile';
-import type { UserId } from '../types/ids';
+} from '@bystrobarista/core/types/baristaProfile';
+import type { UserId } from '@bystrobarista/core/types/ids';
 import { canAddPhoto, PHOTO_LIMIT } from '../utils/storage';
 
 // Detect "column not found in schema cache" so we can degrade gracefully when

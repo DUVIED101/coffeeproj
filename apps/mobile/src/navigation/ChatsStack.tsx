@@ -8,7 +8,7 @@ import { ViewBaristaProfileScreen } from '../screens/business/ViewBaristaProfile
 import { BusinessPublicProfileScreen } from '../screens/barista/BusinessPublicProfileScreen';
 import { BusinessJobsScreen } from '../screens/barista/BusinessJobsScreen';
 import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 
 export type ChatsStackParamList = {
   ConversationsList: undefined;

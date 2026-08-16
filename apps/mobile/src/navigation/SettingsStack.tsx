@@ -16,7 +16,7 @@ import { SupportScreen } from '../screens/settings/SupportScreen';
 import { MyDisputesScreen } from '../screens/shared/MyDisputesScreen';
 import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
 import { DiagnosticScreen } from '../screens/settings/DiagnosticScreen';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { useTranslation } from 'react-i18next';
 
 export type SettingsStackParamList = {

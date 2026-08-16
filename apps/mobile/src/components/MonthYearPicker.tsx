@@ -3,7 +3,7 @@ import { Modal, Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } 
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { useTranslation } from 'react-i18next';
-import { COLORS, RADII } from '../config/constants';
+import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 
 type Props = {
   value: { year: number; month: number } | null;

@@ -12,7 +12,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { JobDetailsContent } from '../../components/JobDetailsContent';
 import {
   JobOfferJobUnavailableError,
@@ -21,9 +21,9 @@ import {
 } from '../../services/JobOfferService';
 import { ReviewService } from '../../services/ReviewService';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
-import type { JobOffer } from '../../types/jobOffer';
-import type { JobOfferId, UserId } from '../../types/ids';
-import type { UserReviewAggregate } from '../../types/review';
+import type { JobOffer } from '@bystrobarista/core/types/jobOffer';
+import type { JobOfferId, UserId } from '@bystrobarista/core/types/ids';
+import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
 import type { BaristaStackParamList } from '../../navigation/BaristaStack';
 import { showErrorToast } from '../../stores/errorToastStore';
 

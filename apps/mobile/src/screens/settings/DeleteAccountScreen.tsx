@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { appleAuth } from '@invertase/react-native-apple-authentication';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { useAuthStore } from '../../stores/authStore';
 import { AuthService } from '../../services/AuthService';
 import { BusinessService } from '../../services/BusinessService';

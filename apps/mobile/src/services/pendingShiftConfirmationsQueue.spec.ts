@@ -3,7 +3,7 @@ import {
   pendingShiftConfirmationsQueue,
   type PendingShiftConfirmation,
 } from './pendingShiftConfirmationsQueue';
-import type { ApplicationId } from '../types/ids';
+import type { ApplicationId } from '@bystrobarista/core/types/ids';
 
 const APP_A = 'app-a' as ApplicationId;
 const APP_B = 'app-b' as ApplicationId;

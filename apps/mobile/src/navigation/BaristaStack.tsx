@@ -17,8 +17,8 @@ import { JobOfferScreen } from '../screens/barista/JobOfferScreen';
 import { DisputeFormScreen } from '../screens/shared/DisputeFormScreen';
 import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
 import { useNotificationFeedStore } from '../stores/notificationFeedStore';
-import type { Job } from '../types';
-import type { Application } from '../types/application';
+import type { Job } from '@bystrobarista/core/types';
+import type { Application } from '@bystrobarista/core/types/application';
 
 export type BaristaStackParamList = {
   JobFeed: undefined;

@@ -1,4 +1,4 @@
-import type { BaristaFilters, BaristaProfile } from '../types/baristaProfile';
+import type { BaristaFilters, BaristaProfile } from '@bystrobarista/core/types/baristaProfile';
 
 type FilterRow = {
   id: string;

@@ -54,8 +54,8 @@ import {
   JOB_OFFER_ACTION_ACCEPT,
   JOB_OFFER_ACTION_DECLINE,
   type PushNotificationPayload,
-} from './types/notification';
-import type { ApplicationId, JobOfferId } from './types/ids';
+} from '@bystrobarista/core/types/notification';
+import type { ApplicationId, JobOfferId } from '@bystrobarista/core/types/ids';
 import 'react-native-gesture-handler';
 
 const navigateToChatForApplication = (applicationId: ApplicationId): void => {

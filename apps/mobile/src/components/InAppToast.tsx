@@ -9,10 +9,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { COLORS, RADII } from '../config/constants';
+import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import { useToastStore } from '../stores/toastStore';
 import { dispatchPayload } from '../navigation/navigationRef';
-import type { Notification, NotificationKind } from '../types/notification';
+import type { Notification, NotificationKind } from '@bystrobarista/core/types/notification';
 
 const AUTO_DISMISS_MS = 4000;
 const SLIDE_IN_MS = 220;

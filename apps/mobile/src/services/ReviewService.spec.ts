@@ -1,5 +1,5 @@
-import type { ApplicationId, ReviewId, UserId } from '../types/ids';
-import type { CreateReviewData, RaterRole, StarRating } from '../types/review';
+import type { ApplicationId, ReviewId, UserId } from '@bystrobarista/core/types/ids';
+import type { CreateReviewData, RaterRole, StarRating } from '@bystrobarista/core/types/review';
 
 type ReviewRow = {
   id: string;

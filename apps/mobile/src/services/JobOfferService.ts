@@ -5,9 +5,9 @@ import type {
   JobOffer,
   JobOfferStatus,
   RespondToJobOfferResult,
-} from '../types/jobOffer';
-import type { Job } from '../types/job';
-import type { ApplicationId, JobId, JobOfferId, UserId } from '../types/ids';
+} from '@bystrobarista/core/types/jobOffer';
+import type { Job } from '@bystrobarista/core/types/job';
+import type { ApplicationId, JobId, JobOfferId, UserId } from '@bystrobarista/core/types/ids';
 
 export class JobOfferAlreadyAppliedError extends Error {
   constructor() {

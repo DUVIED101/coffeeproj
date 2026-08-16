@@ -12,14 +12,14 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect, type RouteProp } from '@react-navigation/native';
-import { COLORS, SHOW_PLATFORM_FEE } from '../../config/constants';
+import { COLORS, SHOW_PLATFORM_FEE } from '@bystrobarista/core/config/constants';
 import { JobService } from '../../services/JobService';
 import { JobOfferService } from '../../services/JobOfferService';
 import { useAuthStore } from '../../stores/authStore';
 import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
-import type { Job, JobStatus } from '../../types/job';
-import type { JobId } from '../../types/ids';
+import type { Job, JobStatus } from '@bystrobarista/core/types/job';
+import type { JobId } from '@bystrobarista/core/types/ids';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import { showErrorToast } from '../../stores/errorToastStore';
 

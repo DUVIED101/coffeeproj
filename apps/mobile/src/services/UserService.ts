@@ -1,5 +1,5 @@
 import { supabase } from '../config/supabase';
-import type { User, UpdateUserData } from '../types';
+import type { User, UpdateUserData } from '@bystrobarista/core/types';
 
 export class UserService {
   /**

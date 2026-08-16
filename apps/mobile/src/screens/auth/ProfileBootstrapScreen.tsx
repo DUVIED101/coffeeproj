@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { supabase } from '../../config/supabase';
 import { useAuthStore } from '../../stores/authStore';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { readPendingAccountType, clearPendingAccountType } from '../../utils/socialAuthStash';
 import { consumeStashedConsent } from '../../utils/consentStash';
 import {
@@ -23,8 +23,8 @@ import {
 } from '../../services/LegalAcceptanceService';
 import type { LegalDocumentKind } from '../../config/legalVersions';
 import type { BootstrapStackParamList } from '../../navigation/BootstrapStack';
-import type { AccountType, User } from '../../types';
-import type { UserId } from '../../types/ids';
+import type { AccountType, User } from '@bystrobarista/core/types';
+import type { UserId } from '@bystrobarista/core/types/ids';
 
 type SignupMetadata = {
   account_type?: string;

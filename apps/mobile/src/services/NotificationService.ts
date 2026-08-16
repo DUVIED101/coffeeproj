@@ -9,9 +9,9 @@ import type {
   DeviceToken,
   NotificationKind,
   PushNotificationPayload,
-} from '../types/notification';
-import type { ApplicationId, JobId, JobOfferId, UserId } from '../types/ids';
-import type { ConversationId } from '../types/chat';
+} from '@bystrobarista/core/types/notification';
+import type { ApplicationId, JobId, JobOfferId, UserId } from '@bystrobarista/core/types/ids';
+import type { ConversationId } from '@bystrobarista/core/types/chat';
 
 const REGISTRATION_TIMEOUT_MS = 30_000;
 

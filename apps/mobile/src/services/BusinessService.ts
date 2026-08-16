@@ -6,7 +6,7 @@ import type {
   UpdateBusinessData,
   CreateBranchData,
   UpdateBranchData,
-} from '../types';
+} from '@bystrobarista/core/types';
 import {
   uploadImageToBucket,
   PHOTO_LIMIT,

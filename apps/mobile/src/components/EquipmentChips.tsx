@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { COLORS, EQUIPMENT_CATEGORIES } from '../config/constants';
+import { COLORS, EQUIPMENT_CATEGORIES } from '@bystrobarista/core/config/constants';
 
 type Props = {
   selected: ReadonlyArray<string>;

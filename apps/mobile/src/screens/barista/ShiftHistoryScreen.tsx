@@ -11,13 +11,13 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { ApplicationService, type CompletedShiftEntry } from '../../services/ApplicationService';
 import { useAuthStore } from '../../stores/authStore';
 import { StarRow } from '../../components/StarRow';
 import { ReviewModal } from '../../components/ReviewModal';
 import { Skeleton } from '../../components/Skeleton';
-import type { ApplicationId, UserId } from '../../types/ids';
+import type { ApplicationId, UserId } from '@bystrobarista/core/types/ids';
 
 type ShiftHistoryStackParamList = {
   ShiftHistory: undefined;

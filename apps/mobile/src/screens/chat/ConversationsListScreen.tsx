@@ -5,7 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { ChatService } from '../../services/ChatService';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
@@ -15,8 +15,8 @@ import { Skeleton } from '../../components/Skeleton';
 import { useMasterDetail } from '../../components/MasterDetailContext';
 import { useBlockedUsersStore } from '../../stores/blockedUsersStore';
 import { queryKeys } from '../../lib/queryClient';
-import type { Conversation } from '../../types/chat';
-import type { ApplicationStatus } from '../../types/application';
+import type { Conversation } from '@bystrobarista/core/types/chat';
+import type { ApplicationStatus } from '@bystrobarista/core/types/application';
 
 const ARCHIVED_STATUSES: ReadonlyArray<ApplicationStatus> = ['rejected', 'withdrawn', 'completed'];
 const isArchived = (status?: ApplicationStatus): boolean =>

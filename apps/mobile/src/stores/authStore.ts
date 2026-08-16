@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { Session } from '@supabase/supabase-js';
-import type { User } from '../types';
-import type { UserId } from '../types/ids';
+import type { User } from '@bystrobarista/core/types';
+import type { UserId } from '@bystrobarista/core/types/ids';
 import { supabase } from '../config/supabase';
 import { AuthService } from '../services/AuthService';
 import { NotificationService } from '../services/NotificationService';

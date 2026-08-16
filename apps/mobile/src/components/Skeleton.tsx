@@ -8,7 +8,7 @@ import {
   type ViewStyle,
   AccessibilityInfo,
 } from 'react-native';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 
 type Props = {
   width?: number | `${number}%`;

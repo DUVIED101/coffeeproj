@@ -16,12 +16,12 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
 import { useAuthStore } from '../../stores/authStore';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 import { clampToEffectiveLength, effectiveTextLength } from '../../utils/textLength';
-import type { Job } from '../../types/job';
+import type { Job } from '@bystrobarista/core/types/job';
 
 type BaristaStackParamList = {
   JobFeed: undefined;

@@ -6,7 +6,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { MasterDetailLayout } from '../../components/MasterDetailLayout';
 import { ConversationsListScreen } from '../chat/ConversationsListScreen';
 import { ChatScreen } from '../chat/ChatScreen';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import type { ChatsStackParamList } from '../../navigation/ChatsStack';
 
 type Props = {

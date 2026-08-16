@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ApplicationId } from '../types/ids';
+import type { ApplicationId } from '@bystrobarista/core/types/ids';
 
 export type PendingShiftConfirmation = {
   applicationId: ApplicationId;

@@ -3,7 +3,7 @@ import { Animated, PanResponder, StyleSheet, Text, TouchableOpacity, View } from
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
-import { COLORS, RADII } from '../config/constants';
+import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import { useErrorToastStore, type ErrorToast as ErrorToastModel } from '../stores/errorToastStore';
 
 const AUTO_DISMISS_MS = 4000;

@@ -10,7 +10,7 @@ import {
 import FastImage from 'react-native-fast-image';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { COLORS, RADII } from '../config/constants';
+import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import { PHOTO_LIMIT } from '../utils/storage';
 import { transformedImageUrl } from '../utils/imageTransform';
 

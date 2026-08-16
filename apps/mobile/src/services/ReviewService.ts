@@ -1,12 +1,12 @@
 import { supabase } from '../config/supabase';
-import type { ApplicationId, UserId } from '../types/ids';
+import type { ApplicationId, UserId } from '@bystrobarista/core/types/ids';
 import type {
   ApplicationReview,
   CreateReviewData,
   RaterRole,
   StarRating,
   UserReviewAggregate,
-} from '../types/review';
+} from '@bystrobarista/core/types/review';
 
 const REVIEW_COLUMNS = 'id, application_id, rater_role, ratee_id, rating, comment, created_at';
 

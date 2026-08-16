@@ -1,6 +1,6 @@
 import { useToastStore } from './toastStore';
-import type { Notification } from '../types/notification';
-import type { NotificationId, UserId } from '../types/ids';
+import type { Notification } from '@bystrobarista/core/types/notification';
+import type { NotificationId, UserId } from '@bystrobarista/core/types/ids';
 
 const makeNotification = (id: string): Notification => ({
   id: id as NotificationId,

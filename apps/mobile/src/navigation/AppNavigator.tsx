@@ -7,7 +7,7 @@ import { MainTabs } from './MainTabs';
 import { flushPendingPushPayload, navigationRef } from './navigationRef';
 import { BootstrapStack } from './BootstrapStack';
 import { ConnectionErrorScreen } from '../screens/auth/ConnectionErrorScreen';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { ErrorToast } from '../components/ErrorToast';
 

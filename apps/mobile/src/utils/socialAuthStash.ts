@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { AccountType } from '../types';
+import type { AccountType } from '@bystrobarista/core/types';
 
 const KEY = '@quickbarista/pending-account-type';
 

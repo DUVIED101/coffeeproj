@@ -1,4 +1,4 @@
-import type { ShiftDetails } from '../types/job';
+import type { ShiftDetails } from '@bystrobarista/core/types/job';
 
 const HOURS_PER_DAY = 24;
 const MS_PER_HOUR = 1000 * 60 * 60;

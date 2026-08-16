@@ -5,7 +5,7 @@ import { TermsScreen } from '../screens/settings/TermsScreen';
 import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
 import { PersonalDataPolicyScreen } from '../screens/settings/PersonalDataPolicyScreen';
 import { DataConsentScreen } from '../screens/settings/DataConsentScreen';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 
 export type BootstrapStackParamList = {
   Bootstrap: undefined;

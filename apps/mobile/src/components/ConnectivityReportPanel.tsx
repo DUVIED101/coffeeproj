@@ -11,7 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SUPABASE_URL } from '@env';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { useDiagnosticsStore } from '../stores/diagnosticsStore';
 import type { ConnectivityReport, ProbeTargetId } from '../utils/connectivityProbe';
 import { APP_VERSION } from '../config/version';

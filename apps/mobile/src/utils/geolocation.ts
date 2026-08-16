@@ -1,7 +1,7 @@
 import Geolocation from 'react-native-geolocation-service';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { GeoPoint } from '../types';
+import type { GeoPoint } from '@bystrobarista/core/types';
 
 export async function requestLocationPermission(): Promise<boolean> {
   if (Platform.OS !== 'ios') {

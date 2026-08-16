@@ -16,17 +16,17 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { COLORS, RADII } from '../../config/constants';
+import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import { BusinessService } from '../../services/BusinessService';
 import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
-import type { Business } from '../../types';
-import type { SocialLink, SocialPlatform } from '../../types/business';
-import type { UserId } from '../../types/ids';
-import type { UserReviewAggregate } from '../../types/review';
+import type { Business } from '@bystrobarista/core/types';
+import type { SocialLink, SocialPlatform } from '@bystrobarista/core/types/business';
+import type { UserId } from '@bystrobarista/core/types/ids';
+import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
 import type { BusinessProfileStackParamList } from '../../navigation/BusinessProfileStack';
 import type { TFunction } from 'i18next';
 

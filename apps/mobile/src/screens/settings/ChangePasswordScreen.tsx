@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { AuthService } from '../../services/AuthService';
 import { PasswordInput } from '../../components/PasswordInput';
 import type { SettingsStackParamList } from '../../navigation/SettingsStack';

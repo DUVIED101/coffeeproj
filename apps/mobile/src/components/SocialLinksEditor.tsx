@@ -1,8 +1,8 @@
 import React from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { COLORS } from '../config/constants';
-import type { SocialLink, SocialPlatform } from '../types/business';
+import { COLORS } from '@bystrobarista/core/config/constants';
+import type { SocialLink, SocialPlatform } from '@bystrobarista/core/types/business';
 
 type Props = {
   links: SocialLink[];

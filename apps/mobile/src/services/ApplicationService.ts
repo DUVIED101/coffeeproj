@@ -7,9 +7,9 @@ import type {
   DisputeSummary,
   MyDisputeItem,
   ShiftConfirmationStatus,
-} from '../types/application';
-import type { ApplicationId, DisputeId, UserId } from '../types/ids';
-import type { ApplicationReview, RaterRole, StarRating } from '../types/review';
+} from '@bystrobarista/core/types/application';
+import type { ApplicationId, DisputeId, UserId } from '@bystrobarista/core/types/ids';
+import type { ApplicationReview, RaterRole, StarRating } from '@bystrobarista/core/types/review';
 import { computeShiftHours } from '../utils/shiftHours';
 
 export type CompletedShiftEntry = Application & {

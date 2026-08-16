@@ -11,10 +11,10 @@ import {
   Platform,
 } from "react-native";
 import { useTranslation } from 'react-i18next';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { ReviewService } from '../services/ReviewService';
-import type { ApplicationId, UserId } from '../types/ids';
-import type { ApplicationReview, RaterRole, StarRating } from '../types/review';
+import type { ApplicationId, UserId } from '@bystrobarista/core/types/ids';
+import type { ApplicationReview, RaterRole, StarRating } from '@bystrobarista/core/types/review';
 import { clampToEffectiveLength, effectiveTextLength } from '../utils/textLength';
 import { handleApiError } from '../utils/handleApiError';
 import { isAccountBlocked } from '../utils/errorHandler';

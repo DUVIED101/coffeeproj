@@ -12,8 +12,8 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/authStore';
 import { ApplicationService } from '../../services/ApplicationService';
-import { COLORS } from '../../config/constants';
-import type { ApplicationId } from '../../types/ids';
+import { COLORS } from '@bystrobarista/core/config/constants';
+import type { ApplicationId } from '@bystrobarista/core/types/ids';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import { showErrorToast } from '../../stores/errorToastStore';

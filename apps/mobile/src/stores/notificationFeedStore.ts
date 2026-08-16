@@ -4,9 +4,9 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { NotificationFeedService } from '../services/NotificationFeedService';
 import { useToastStore } from './toastStore';
 import { navigationRef } from '../navigation/navigationRef';
-import type { Notification } from '../types/notification';
-import type { ConversationId } from '../types/chat';
-import type { JobOfferId, NotificationId, UserId } from '../types/ids';
+import type { Notification } from '@bystrobarista/core/types/notification';
+import type { ConversationId } from '@bystrobarista/core/types/chat';
+import type { JobOfferId, NotificationId, UserId } from '@bystrobarista/core/types/ids';
 
 /**
  * Skip the in-app toast when the user is already viewing the destination screen

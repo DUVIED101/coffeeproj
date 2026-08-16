@@ -19,7 +19,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS, RADII } from '../../config/constants';
+import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import { EquipmentChips, EquipmentChipsDisplay } from '../../components/EquipmentChips';
 import {
   BaristaProfileService,
@@ -57,25 +57,25 @@ import {
   YEARS_MAX_LENGTH,
   COMPENSATION_MAX_DIGITS,
 } from '../../utils/validation';
-import type { GeoPoint } from '../../types/business';
+import type { GeoPoint } from '@bystrobarista/core/types/business';
 import type {
   BaristaProfile,
   ReliabilityScore,
   ShiftTime,
   DayOfWeek,
   WorkloadType,
-} from '../../types/baristaProfile';
-import { DAYS_OF_WEEK, WORKLOAD_TYPES } from '../../types/baristaProfile';
-import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU, type CityCode } from '../../types/city';
-import type { BaristaProfileId, UserId } from '../../types/ids';
-import type { UserReviewAggregate } from '../../types/review';
+} from '@bystrobarista/core/types/baristaProfile';
+import { DAYS_OF_WEEK, WORKLOAD_TYPES } from '@bystrobarista/core/types/baristaProfile';
+import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU, type CityCode } from '@bystrobarista/core/types/city';
+import type { BaristaProfileId, UserId } from '@bystrobarista/core/types/ids';
+import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
 import type { ProfileStackParamList } from '../../navigation/ProfileStack';
 import type {
   WorkExperience,
   WorkExperienceDraft,
   WorkExperienceFieldError,
-} from '../../types/workExperience';
-import { computeDuration, computeTotalDuration, findDraftErrors } from '../../types/workExperience';
+} from '@bystrobarista/core/types/workExperience';
+import { computeDuration, computeTotalDuration, findDraftErrors } from '@bystrobarista/core/types/workExperience';
 import { computeMedicalBookStatus, type MedicalBookStatus } from '../../utils/medicalBook';
 import { showErrorToast } from '../../stores/errorToastStore';
 

@@ -1,4 +1,4 @@
-import type { JobId, JobOfferId, UserId } from '../types/ids';
+import type { JobId, JobOfferId, UserId } from '@bystrobarista/core/types/ids';
 
 const mockCheckApplicationExists = jest.fn();
 const mockInsertSingle = jest.fn();

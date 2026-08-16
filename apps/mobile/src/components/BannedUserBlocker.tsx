@@ -1,7 +1,7 @@
 import React, { memo, useCallback } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { useAuthStore } from '../stores/authStore';
 
 /**

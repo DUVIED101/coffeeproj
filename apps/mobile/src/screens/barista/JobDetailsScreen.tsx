@@ -12,7 +12,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { JobService } from '../../services/JobService';
 import { ApplicationService } from '../../services/ApplicationService';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
@@ -21,10 +21,10 @@ import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { JobDetailsContent } from '../../components/JobDetailsContent';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
-import type { Job } from '../../types/job';
-import type { Application } from '../../types/application';
-import type { UserId } from '../../types/ids';
-import type { UserReviewAggregate } from '../../types/review';
+import type { Job } from '@bystrobarista/core/types/job';
+import type { Application } from '@bystrobarista/core/types/application';
+import type { UserId } from '@bystrobarista/core/types/ids';
+import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
 
 type BaristaStackParamList = {
   JobFeed: undefined;

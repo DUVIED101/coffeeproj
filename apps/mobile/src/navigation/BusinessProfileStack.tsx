@@ -9,7 +9,7 @@ import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
 import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
 import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
 import { SettingsStack, type SettingsStackParamList } from "./SettingsStack";
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
 export type BusinessProfileStackParamList = {

@@ -12,15 +12,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { Skeleton } from '../../components/Skeleton';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { dispatchPayload } from '../../navigation/navigationRef';
-import type { Notification, NotificationKind } from '../../types/notification';
-import type { UserId } from '../../types/ids';
-import type { ConversationId } from '../../types/chat';
+import type { Notification, NotificationKind } from '@bystrobarista/core/types/notification';
+import type { UserId } from '@bystrobarista/core/types/ids';
+import type { ConversationId } from '@bystrobarista/core/types/chat';
 
 type FeedItem =
   | { type: 'single'; notification: Notification }

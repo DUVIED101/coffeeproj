@@ -15,13 +15,13 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { JobService } from '../../services/JobService';
 import { BusinessService } from '../../services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
 import { JobCard } from '../../components/JobCard';
 import { AddFab } from '../../components/AddFab';
-import type { Job, JobStatus } from '../../types/job';
+import type { Job, JobStatus } from '@bystrobarista/core/types/job';
 import { showErrorToast } from '../../stores/errorToastStore';
 
 type BusinessStackParamList = {

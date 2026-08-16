@@ -6,12 +6,12 @@ import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-si
 import { authorize, type AuthConfiguration } from 'react-native-app-auth';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { GOOGLE_IOS_CLIENT_ID, YANDEX_CLIENT_ID } from '@env';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { AuthService } from '../services/AuthService';
 import { stashPendingAccountType, clearPendingAccountType } from '../utils/socialAuthStash';
 import { stashConsentAccepted, clearStashedConsent } from '../utils/consentStash';
 import { getErrorMessage } from '../utils/getErrorMessage';
-import type { AccountType } from '../types';
+import type { AccountType } from '@bystrobarista/core/types';
 
 type Provider = 'apple' | 'google' | 'yandex';
 

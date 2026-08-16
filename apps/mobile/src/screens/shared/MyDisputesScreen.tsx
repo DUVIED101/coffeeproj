@@ -11,9 +11,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { ApplicationService } from '../../services/ApplicationService';
-import type { MyDisputeItem, DisputeStatus } from '../../types/application';
+import type { MyDisputeItem, DisputeStatus } from '@bystrobarista/core/types/application';
 import type { SettingsStackParamList } from '../../navigation/SettingsStack';
 
 type Props = {

@@ -1,6 +1,6 @@
 import { supabase } from '../config/supabase';
 import { getCurrentLanguage } from '../i18n';
-import type { AccountType, LegalForm, SocialPlatform } from '../types';
+import type { AccountType, LegalForm, SocialPlatform } from '@bystrobarista/core/types';
 
 export interface BusinessSignupData {
   legalForm: LegalForm;

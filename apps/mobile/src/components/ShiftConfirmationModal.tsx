@@ -8,9 +8,9 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useTranslation } from 'react-i18next';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { ApplicationService } from '../services/ApplicationService';
-import type { ApplicationId } from '../types/ids';
+import type { ApplicationId } from '@bystrobarista/core/types/ids';
 import { showErrorToast } from '../stores/errorToastStore';
 
 type Props = {

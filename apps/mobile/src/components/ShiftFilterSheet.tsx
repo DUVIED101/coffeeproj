@@ -10,12 +10,12 @@ import {
   Pressable,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { COLORS, RADII, EQUIPMENT_TYPES } from '../config/constants';
+import { COLORS, RADII, EQUIPMENT_TYPES } from '@bystrobarista/core/config/constants';
 import { MetroSelector, METRO_ANY } from './MetroSelector';
 import { CityToggle } from './CityToggle';
-import type { JobType } from '../types/job';
-import type { Equipment } from '../types/business';
-import { DEFAULT_CITY, type CityCode } from "../types/city";
+import type { JobType } from '@bystrobarista/core/types/job';
+import type { Equipment } from '@bystrobarista/core/types/business';
+import { DEFAULT_CITY, type CityCode } from "@bystrobarista/core/types/city";
 
 export type ShiftFilters = {
   jobType?: JobType;

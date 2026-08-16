@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, RefreshControl, Alert } from 'react-n
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { BaristaSearchService } from '../../services/BaristaSearchService';
 import { BusinessService } from '../../services/BusinessService';
 import { ReviewService } from '../../services/ReviewService';
@@ -14,10 +14,10 @@ import { BaristaFilterBar } from '../../components/BaristaFilterBar';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { ResponsiveContainer } from '../../components/ResponsiveContainer';
 import { Skeleton } from '../../components/Skeleton';
-import type { BaristaProfile, BaristaFilters } from '../../types/baristaProfile';
-import type { CityCode } from '../../types/city';
-import type { UserId } from '../../types/ids';
-import type { UserReviewAggregate } from '../../types/review';
+import type { BaristaProfile, BaristaFilters } from '@bystrobarista/core/types/baristaProfile';
+import type { CityCode } from '@bystrobarista/core/types/city';
+import type { UserId } from '@bystrobarista/core/types/ids';
+import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
 import type { BusinessSearchStackParamList } from '../../navigation/BusinessSearchStack';
 
 type Props = {

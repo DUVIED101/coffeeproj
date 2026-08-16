@@ -1,9 +1,9 @@
 import React from 'react';
 import { Alert, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { COLORS, RADII } from '../config/constants';
+import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import { MonthYearPicker } from './MonthYearPicker';
-import { MAX_WORK_EXPERIENCES, computeDuration, makeEmptyDraft, type WorkExperienceDraft, type WorkExperienceFieldError } from "../types/workExperience";
+import { MAX_WORK_EXPERIENCES, computeDuration, makeEmptyDraft, type WorkExperienceDraft, type WorkExperienceFieldError } from "@bystrobarista/core/types/workExperience";
 import { clampToEffectiveLength } from '../utils/textLength';
 
 type Props = {

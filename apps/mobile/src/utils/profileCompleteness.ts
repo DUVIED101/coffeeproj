@@ -1,4 +1,4 @@
-import type { BaristaProfile } from '../types/baristaProfile';
+import type { BaristaProfile } from '@bystrobarista/core/types/baristaProfile';
 import { computeMedicalBookStatus } from './medicalBook';
 
 // Keys map to i18n labels under `barista.completeness.items.*` so the UI can

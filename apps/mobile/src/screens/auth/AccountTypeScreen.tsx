@@ -3,9 +3,9 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar } fro
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { ResponsiveContainer } from '../../components/ResponsiveContainer';
-import type { AccountType } from '../../types';
+import type { AccountType } from '@bystrobarista/core/types';
 
 type AuthStackParamList = {
   AccountType: undefined;

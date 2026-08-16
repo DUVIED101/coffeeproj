@@ -11,13 +11,13 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { ReviewService } from '../../services/ReviewService';
 import { useAuthStore } from '../../stores/authStore';
 import { StarRow } from '../../components/StarRow';
 import { ReviewListRow } from '../../components/ReviewListRow';
-import type { ApplicationReview, UserReviewAggregate } from '../../types/review';
-import type { UserId } from '../../types/ids';
+import type { ApplicationReview, UserReviewAggregate } from '@bystrobarista/core/types/review';
+import type { UserId } from '@bystrobarista/core/types/ids';
 import type { BusinessProfileStackParamList } from '../../navigation/BusinessProfileStack';
 
 type Props = {

@@ -15,7 +15,7 @@ import FastImage from 'react-native-fast-image';
 import { transformedImageUrl } from '../../utils/imageTransform';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { BaristaProfileService } from '../../services/BaristaProfileService';
 import { JobService } from '../../services/JobService';
 import { JobOfferService } from '../../services/JobOfferService';
@@ -34,16 +34,16 @@ import {
   type BaristaProfile,
   type ReliabilityScore,
   type ShiftTime,
-} from '../../types/baristaProfile';
-import type { BaristaProfileId, UserId } from '../../types/ids';
-import type { UserReviewAggregate } from '../../types/review';
+} from '@bystrobarista/core/types/baristaProfile';
+import type { BaristaProfileId, UserId } from '@bystrobarista/core/types/ids';
+import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import {
   computeDuration,
   computeTotalDuration,
   type WorkExperience,
-} from '../../types/workExperience';
-import { isCityCode } from '../../types/city';
+} from '@bystrobarista/core/types/workExperience';
+import { isCityCode } from '@bystrobarista/core/types/city';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'ViewBaristaProfile'>;

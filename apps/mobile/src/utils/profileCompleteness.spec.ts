@@ -1,7 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
 import { computeProfileCompleteness } from './profileCompleteness';
-import type { BaristaProfile } from '../types/baristaProfile';
-import type { BaristaProfileId, WorkExperienceId } from '../types/ids';
+import type { BaristaProfile } from '@bystrobarista/core/types/baristaProfile';
+import type { BaristaProfileId, WorkExperienceId } from '@bystrobarista/core/types/ids';
 
 // Future date well within the 50-year sanity-check constraint.
 const FUTURE_MEDICAL_BOOK_EXPIRY = '2099-12-31';

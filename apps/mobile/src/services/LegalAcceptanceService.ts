@@ -6,7 +6,7 @@ import {
   LEGAL_DOCUMENT_VERSIONS,
   type LegalDocumentKind,
 } from '../config/legalVersions';
-import type { UserId } from '../types/ids';
+import type { UserId } from '@bystrobarista/core/types/ids';
 
 type AcceptanceRow = {
   document_kind: LegalDocumentKind;

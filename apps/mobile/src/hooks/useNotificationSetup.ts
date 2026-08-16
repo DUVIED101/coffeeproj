@@ -3,8 +3,8 @@ import { AppState } from 'react-native';
 import { useAuthStore } from '../stores/authStore';
 import { useNotificationFeedStore } from '../stores/notificationFeedStore';
 import { NotificationService } from '../services/NotificationService';
-import type { PushNotificationPayload } from '../types/notification';
-import type { UserId } from '../types/ids';
+import type { PushNotificationPayload } from '@bystrobarista/core/types/notification';
+import type { UserId } from '@bystrobarista/core/types/ids';
 
 type Options = {
   onNotification?: (payload: PushNotificationPayload) => void;

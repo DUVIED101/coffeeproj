@@ -1,5 +1,5 @@
 import { supabase } from '../config/supabase';
-import type { SubmitReportInput, UserReport, UserReportId } from '../types';
+import type { SubmitReportInput, UserReport, UserReportId } from '@bystrobarista/core/types';
 
 export class ReportService {
   private static mapDatabaseReport(row: any): UserReport {

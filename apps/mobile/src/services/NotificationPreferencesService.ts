@@ -1,9 +1,9 @@
 import { supabase } from '../config/supabase';
-import type { UserId } from '../types/ids';
+import type { UserId } from '@bystrobarista/core/types/ids';
 import type {
   NotificationPreferences,
   UpdateNotificationPreferences,
-} from '../types/notificationPreferences';
+} from '@bystrobarista/core/types/notificationPreferences';
 
 type PrefsRow = {
   user_id: string;

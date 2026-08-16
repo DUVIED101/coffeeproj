@@ -5,10 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { transformedImageUrl } from '../utils/imageTransform';
 import type { TFunction } from 'i18next';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { COLORS, RADII } from '../config/constants';
-import type { Application, ShiftLifecycleStatus } from '../types/application';
-import type { Job } from '../types/job';
-import { isCityCode } from '../types/city';
+import { COLORS, RADII } from '@bystrobarista/core/config/constants';
+import type { Application, ShiftLifecycleStatus } from '@bystrobarista/core/types/application';
+import type { Job } from '@bystrobarista/core/types/job';
+import { isCityCode } from '@bystrobarista/core/types/city';
 
 type ShiftCardProps = {
   job: Job;

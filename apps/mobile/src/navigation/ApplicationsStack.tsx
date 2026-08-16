@@ -6,7 +6,7 @@ import { ApplicationDetailsScreen } from '../screens/barista/ApplicationDetailsS
 import { JobDetailsScreen } from '../screens/barista/JobDetailsScreen';
 import { BusinessPublicProfileScreen } from '../screens/barista/BusinessPublicProfileScreen';
 import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
-import type { Application } from '../types/application';
+import type { Application } from '@bystrobarista/core/types/application';
 
 export type ApplicationsStackParamList = {
   ApplicationsList: undefined;

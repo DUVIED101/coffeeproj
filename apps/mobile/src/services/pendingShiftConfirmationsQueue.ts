@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { ApplicationId } from '../types/ids';
+import type { ApplicationId } from '@bystrobarista/core/types/ids';
 
 const STORAGE_KEY = 'pendingShiftConfirmationsQueue:v1';
 const MAX_ATTEMPTS = 5;

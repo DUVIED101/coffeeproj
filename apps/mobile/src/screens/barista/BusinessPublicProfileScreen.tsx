@@ -15,16 +15,16 @@ import { transformedImageUrl } from '../../utils/imageTransform';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { TFunction } from 'i18next';
-import { COLORS, RADII } from '../../config/constants';
+import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import { BusinessService } from '../../services/BusinessService';
 import { ReviewService } from '../../services/ReviewService';
 import { StarRow } from '../../components/StarRow';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import { ReportButton } from '../../components/ReportButton';
 import type { BaristaStackParamList } from '../../navigation/BaristaStack';
-import type { Business, Branch, SocialLink, SocialPlatform } from '../../types/business';
-import type { UserId } from '../../types/ids';
-import type { UserReviewAggregate } from '../../types/review';
+import type { Business, Branch, SocialLink, SocialPlatform } from '@bystrobarista/core/types/business';
+import type { UserId } from '@bystrobarista/core/types/ids';
+import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
 
 type Props = NativeStackScreenProps<BaristaStackParamList, 'BusinessPublicProfile'>;
 

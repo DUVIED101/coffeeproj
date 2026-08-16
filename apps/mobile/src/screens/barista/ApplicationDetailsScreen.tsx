@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect, type RouteProp } from '@react-navigation/native';
-import { COLORS } from '../../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { ShiftCountdownBanner } from '../../components/ShiftCountdownBanner';
 import { Skeleton } from '../../components/Skeleton';
 import { useStaleCallback } from '../../hooks/useStaleCallback';
@@ -26,9 +26,9 @@ import { ReviewModal } from '../../components/ReviewModal';
 import { useAuthStore } from '../../stores/authStore';
 import { queryKeys } from '../../lib/queryClient';
 import { getShiftEnd, canBaristaCancelShift, getShiftStart } from '../../utils/shiftLifecycle';
-import type { Application, DisputeSummary } from '../../types/application';
-import type { ApplicationId, UserId } from '../../types/ids';
-import type { ApplicationReview } from '../../types/review';
+import type { Application, DisputeSummary } from '@bystrobarista/core/types/application';
+import type { ApplicationId, UserId } from '@bystrobarista/core/types/ids';
+import type { ApplicationReview } from '@bystrobarista/core/types/review';
 
 type BaristaStackParamList = {
   JobFeed: undefined;

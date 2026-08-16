@@ -3,12 +3,12 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 import { StarRow } from './StarRow';
 import { BranchPhotoGallery } from './BranchPhotoGallery';
 import { ReportButton } from './ReportButton';
-import type { Job, WeekdayKey } from '../types/job';
-import type { UserReviewAggregate } from '../types/review';
+import type { Job, WeekdayKey } from '@bystrobarista/core/types/job';
+import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
 
 type Props = {
   job: Job;

@@ -7,8 +7,8 @@ import type {
   JobFilters,
   JobType,
   ShiftDetails,
-} from '../types/job';
-import type { GeoPoint } from '../types/business';
+} from '@bystrobarista/core/types/job';
+import type { GeoPoint } from '@bystrobarista/core/types/business';
 
 // Explicit column list — `select=*` would also pull the PostGIS `geopoint`
 // column (binary, hex-encoded by PostgREST, ~25-150 bytes/row, unused on the

@@ -6,7 +6,7 @@ import { ViewBaristaProfileScreen } from '../screens/business/ViewBaristaProfile
 import { OfferJobScreen } from '../screens/business/OfferJobScreen';
 import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
 import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
-import { COLORS } from '../config/constants';
+import { COLORS } from '@bystrobarista/core/config/constants';
 
 export type BusinessSearchStackParamList = {
   BaristaFeed: undefined;
