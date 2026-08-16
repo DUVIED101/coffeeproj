@@ -8,5 +8,12 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "TZ=UTC jest"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.23.7",
+    "@babel/preset-typescript": "^7.23.7",
+    "babel-jest": "^29.7.0",
+    "jest": "^29.7.0",
+    "typescript": "^5.3.3"
   }
 }
