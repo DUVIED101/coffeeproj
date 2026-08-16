@@ -3,7 +3,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@bystrobarista/core": ["../../packages/core/src"],
+      "@bystrobarista/core/*": ["../../packages/core/src/*"]
     }
   },
   "include": ["src/**/*", "index.js"],
