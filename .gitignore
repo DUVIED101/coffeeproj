@@ -1,6 +1,9 @@
 # macOS
 .DS_Store
 
+# Node
+node_modules/
+
 # Logs
 *.log
 
@@ -13,7 +16,7 @@
 # TypeScript incremental build cache
 *.tsbuildinfo
 
-# Environment / secrets (defense in depth — coffeeproj/.gitignore already covers that subdir)
+# Environment / secrets (defense in depth — apps/mobile/.gitignore already covers that subdir)
 .env
 .env.local
 .env.*.local
@@ -34,7 +37,7 @@ credentials/
 # Supabase CLI local state
 supabase/.temp/
 supabase/.branches/
-coffeeproj/supabase/
+apps/mobile/supabase/
 
 # Claude Code: ignore everything under .claude/
 .claude/
@@ -46,9 +49,9 @@ coverage/
 /check_jobs.sql
 /dev.sh
 /test-db-query.js
-coffeeproj/test-rls-check.js
-coffeeproj/test-search-jobs.js
-coffeeproj/test-search-detailed.js
+apps/mobile/test-rls-check.js
+apps/mobile/test-search-jobs.js
+apps/mobile/test-search-detailed.js
 
 # Internal docs and dev scripts — pending removal from history before making repo public.
 # Files remain locally but should not be tracked going forward.
@@ -70,8 +73,8 @@ docs/CHANGELOG.md
 docs/email-templates.md
 docs/PHASE_8_REMAINING.md
 infra/README.md
-coffeeproj/scripts/seed-simulation.js
-coffeeproj/scripts/seed-test-jobs.js
+apps/mobile/scripts/seed-simulation.js
+apps/mobile/scripts/seed-test-jobs.js
 
 # Private content — kept local, not published
 admin/
