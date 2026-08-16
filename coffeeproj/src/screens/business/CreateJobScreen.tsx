@@ -913,11 +913,9 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                 ))}
               </View>
 
-              <View style={styles.timeRow}>
+              <View style={[styles.timeRow, styles.scheduleTimesRow]}>
                 <View style={styles.timeInput}>
-                  <Text style={[styles.label, styles.timeInputLabel]} numberOfLines={2}>
-                    {t('createJob.fields.scheduleStartTime')}
-                  </Text>
+                  <Text style={styles.label}>{t('createJob.fields.scheduleStartTime')}</Text>
                   <View style={styles.startDateRow}>
                     <TouchableOpacity
                       style={[styles.dateButton, styles.startDateButton]}
@@ -963,9 +961,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
                 </View>
 
                 <View style={styles.timeInput}>
-                  <Text style={[styles.label, styles.timeInputLabel]} numberOfLines={2}>
-                    {t('createJob.fields.scheduleEndTime')}
-                  </Text>
+                  <Text style={styles.label}>{t('createJob.fields.scheduleEndTime')}</Text>
                   <View style={styles.startDateRow}>
                     <TouchableOpacity
                       style={[styles.dateButton, styles.startDateButton]}
@@ -1614,11 +1610,8 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 8,
   },
-  // Reserve 2 lines so side-by-side labels keep their inputs aligned even when
-  // one label wraps and the other doesn't.
-  timeInputLabel: {
-    lineHeight: 20,
-    minHeight: 40,
+  scheduleTimesRow: {
+    marginTop: 16,
   },
   startDateButton: {
     flex: 1,

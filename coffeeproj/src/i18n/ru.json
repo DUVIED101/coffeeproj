@@ -921,8 +921,8 @@
       "salesBonusPercent": "+ % с продаж",
       "salesBonusHint": "Опционально.",
       "salesBonusPlaceholder": "0",
-      "scheduleStartTime": "Время начала смены",
-      "scheduleEndTime": "Время окончания смены",
+      "scheduleStartTime": "Время начала",
+      "scheduleEndTime": "Время окончания",
       "scheduleTimesHint": "Опционально. Заполните оба поля, если график фиксирован."
     },
     "compensationOption": {

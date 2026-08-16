@@ -912,8 +912,8 @@
       "salesBonusPercent": "+ % of sales",
       "salesBonusHint": "Optional.",
       "salesBonusPlaceholder": "0",
-      "scheduleStartTime": "Shift start time",
-      "scheduleEndTime": "Shift end time",
+      "scheduleStartTime": "Start time",
+      "scheduleEndTime": "End time",
       "scheduleTimesHint": "Optional. Fill in both fields if the schedule is fixed."
     },
     "compensationOption": {
