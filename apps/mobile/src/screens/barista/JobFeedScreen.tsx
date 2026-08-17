@@ -13,17 +13,17 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { JobService } from '../../services/JobService';
-import { BaristaProfileService } from '../../services/BaristaProfileService';
-import { ReviewService } from '../../services/ReviewService';
-import { ApplicationService } from '../../services/ApplicationService';
+import { JobService } from '@bystrobarista/core/services/JobService';
+import { BaristaProfileService } from '@bystrobarista/core/services/BaristaProfileService';
+import { ReviewService } from '@bystrobarista/core/services/ReviewService';
+import { ApplicationService } from '@bystrobarista/core/services/ApplicationService';
 import { useAuthStore } from '../../stores/authStore';
 import { FilterBar } from '../../components/FilterBar';
 import { JobCard } from '../../components/JobCard';
 import { Skeleton } from '../../components/Skeleton';
 import { useMasterDetail } from '../../components/MasterDetailContext';
 import { showErrorToast } from '../../stores/errorToastStore';
-import { mapAnyError } from '../../utils/errorHandler';
+import { mapAnyError } from '@bystrobarista/core/utils/errorHandler';
 import { queryKeys } from '../../lib/queryClient';
 import {
   requestLocationPermission,

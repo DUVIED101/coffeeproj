@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { ChatService } from '../../services/ChatService';
+import { ChatService } from '@bystrobarista/core/services/ChatService';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';

@@ -18,8 +18,8 @@ import {
   JobOfferJobUnavailableError,
   JobOfferService,
   JobOfferTerminalError,
-} from '../../services/JobOfferService';
-import { ReviewService } from '../../services/ReviewService';
+} from '@bystrobarista/core/services/JobOfferService';
+import { ReviewService } from '@bystrobarista/core/services/ReviewService';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import type { JobOffer } from '@bystrobarista/core/types/jobOffer';
 import type { JobOfferId, UserId } from '@bystrobarista/core/types/ids';

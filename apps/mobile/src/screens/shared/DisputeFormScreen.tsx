@@ -15,11 +15,11 @@ import { useTranslation } from 'react-i18next';
 import { useHeaderHeight } from '@react-navigation/elements';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { ApplicationService } from '../../services/ApplicationService';
+import { ApplicationService } from '@bystrobarista/core/services/ApplicationService';
 import type { ApplicationId } from '@bystrobarista/core/types/ids';
 import { showErrorToast } from '../../stores/errorToastStore';
 import { handleApiError } from '../../utils/handleApiError';
-import { isAccountBlocked } from '../../utils/errorHandler';
+import { isAccountBlocked } from '@bystrobarista/core/utils/errorHandler';
 
 type DisputeCategory =
   | 'no_show'

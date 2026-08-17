@@ -57,6 +57,17 @@ export const getSupabase = (): SupabaseClient => {
   return _client;
 };
 
+// Lazy proxy so services can keep the ergonomic `import { supabase }`
+// pattern from the pre-monorepo mobile codebase. Every property lookup
+// resolves through getSupabase() at call-time, so the proxy stays inert
+// until the client has been initialised by initSupabase(). Trying to touch
+// it before init throws the same "not initialised" error as getSupabase().
+export const supabase: SupabaseClient = new Proxy({} as SupabaseClient, {
+  get(_target, prop, receiver) {
+    return Reflect.get(getSupabase(), prop, receiver);
+  },
+});
+
 // Test-only reset. Must not be called in production.
 export const _resetSupabaseForTests = (): void => {
   _client = null;

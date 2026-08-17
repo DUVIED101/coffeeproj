@@ -1,6 +1,6 @@
 import i18next from 'i18next';
 import { getPlatform } from '@bystrobarista/core/platform';
-import { isAccountBlocked, mapAnyError } from './errorHandler';
+import { isAccountBlocked, mapAnyError } from '@bystrobarista/core/utils/errorHandler';
 import { useAuthStore } from '../stores/authStore';
 import { showErrorToast } from '../stores/errorToastStore';
 

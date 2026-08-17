@@ -1,5 +1,5 @@
 import { supabase } from '../config/supabase';
-import { withRetry } from '../utils/withRetry';
+import { withRetry } from '@bystrobarista/core/utils/withRetry';
 import type {
   Job,
   CreateJobData,

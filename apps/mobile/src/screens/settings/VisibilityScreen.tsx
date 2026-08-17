@@ -5,8 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { useAuthStore } from '../../stores/authStore';
-import { BaristaProfileService } from '../../services/BaristaProfileService';
-import { BusinessService } from '../../services/BusinessService';
+import { BaristaProfileService } from '@bystrobarista/core/services/BaristaProfileService';
+import { BusinessService } from '@bystrobarista/core/services/BusinessService';
 import { showErrorToast } from '../../stores/errorToastStore';
 
 export const VisibilityScreen: React.FC = () => {

@@ -16,9 +16,9 @@ import { useTranslation } from 'react-i18next';
 import { appleAuth } from '@invertase/react-native-apple-authentication';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { useAuthStore } from '../../stores/authStore';
-import { AuthService } from '../../services/AuthService';
-import { BusinessService } from '../../services/BusinessService';
-import { JobService } from '../../services/JobService';
+import { AuthService } from '@bystrobarista/core/services/AuthService';
+import { BusinessService } from '@bystrobarista/core/services/BusinessService';
+import { JobService } from '@bystrobarista/core/services/JobService';
 import { hasPasswordAuth, isAppleOnlyUser } from '../../utils/authProvider';
 
 export const DeleteAccountScreen: React.FC = () => {

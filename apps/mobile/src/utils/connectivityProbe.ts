@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@env';
 import { PROXY_URL } from '../config/supabaseHost';
-import { withTimeout } from './withTimeout';
+import { withTimeout } from '@bystrobarista/core/utils/withTimeout';
 
 export const LAST_PROBE_STORAGE_KEY = 'diagnostics.lastProbe';
 

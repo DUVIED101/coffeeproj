@@ -21,7 +21,7 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { ChatService } from '../../services/ChatService';
+import { ChatService } from '@bystrobarista/core/services/ChatService';
 import {
   ScreenHeaderWithActions,
   type HeaderAction,

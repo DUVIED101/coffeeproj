@@ -12,12 +12,12 @@ import {
 } from "react-native";
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { ReviewService } from '../services/ReviewService';
+import { ReviewService } from '@bystrobarista/core/services/ReviewService';
 import type { ApplicationId, UserId } from '@bystrobarista/core/types/ids';
 import type { ApplicationReview, RaterRole, StarRating } from '@bystrobarista/core/types/review';
 import { clampToEffectiveLength, effectiveTextLength } from '../utils/textLength';
 import { handleApiError } from '../utils/handleApiError';
-import { isAccountBlocked } from '../utils/errorHandler';
+import { isAccountBlocked } from '@bystrobarista/core/utils/errorHandler';
 import { showErrorToast } from '../stores/errorToastStore';
 
 const MAX_COMMENT_LENGTH = 500;

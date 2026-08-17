@@ -16,7 +16,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { AuthService } from '../../services/AuthService';
+import { AuthService } from '@bystrobarista/core/services/AuthService';
 import { PasswordInput } from '../../components/PasswordInput';
 import { SocialAuthButtons } from '../../components/SocialAuthButtons';
 import { ResponsiveContainer } from '../../components/ResponsiveContainer';

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { ChatService } from '../services/ChatService';
+import { ChatService } from '@bystrobarista/core/services/ChatService';
 
 type ChatUnreadState = {
   unreadCount: number;

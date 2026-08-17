@@ -18,8 +18,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS, EQUIPMENT_TYPES, RADII, SHOW_PLATFORM_FEE } from '@bystrobarista/core/config/constants';
-import { JobService } from '../../services/JobService';
-import { BusinessService } from '../../services/BusinessService';
+import { JobService } from '@bystrobarista/core/services/JobService';
+import { BusinessService } from '@bystrobarista/core/services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
 import { showErrorToast } from '../../stores/errorToastStore';
 import { handleApiError } from '../../utils/handleApiError';
@@ -36,7 +36,7 @@ import {
 } from '../../utils/validation';
 import { clampToEffectiveLength } from '../../utils/textLength';
 import { jobMinDate, jobMaxDate, clampDate } from '../../utils/dateRanges';
-import { computeShiftHours } from '../../utils/shiftHours';
+import { computeShiftHours } from '@bystrobarista/core/utils/shiftHours';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'CreateJob' | 'EditJob'>;

@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { AuthService } from '../../services/AuthService';
+import { AuthService } from '@bystrobarista/core/services/AuthService';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 import type { AuthStackParamList } from '../../navigation/AuthStack';
 import { showErrorToast } from '../../stores/errorToastStore';

@@ -24,11 +24,11 @@ import { EquipmentChips, EquipmentChipsDisplay } from '../../components/Equipmen
 import {
   BaristaProfileService,
   PortfolioPhotoLimitError,
-} from '../../services/BaristaProfileService';
-import { WorkExperienceService } from '../../services/WorkExperienceService';
+} from '@bystrobarista/core/services/BaristaProfileService';
+import { WorkExperienceService } from '@bystrobarista/core/services/WorkExperienceService';
 import { PHOTO_LIMIT } from '@bystrobarista/core/utils/storage';
 import { pickPhotos, reportRejections } from '@bystrobarista/core/utils/pickPhotos';
-import { ReviewService } from '../../services/ReviewService';
+import { ReviewService } from '@bystrobarista/core/services/ReviewService';
 import { MetroSelector, isMetroAnySelection } from '../../components/MetroSelector';
 import { CityToggle } from '../../components/CityToggle';
 import { StarRow } from '../../components/StarRow';

@@ -3,10 +3,10 @@ import type { Session } from '@supabase/supabase-js';
 import type { User } from '@bystrobarista/core/types';
 import type { UserId } from '@bystrobarista/core/types/ids';
 import { supabase } from '../config/supabase';
-import { AuthService } from '../services/AuthService';
+import { AuthService } from '@bystrobarista/core/services/AuthService';
 import { NotificationService } from '@bystrobarista/core/services/NotificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { withTimeout, TimeoutError } from '../utils/withTimeout';
+import { withTimeout, TimeoutError } from '@bystrobarista/core/utils/withTimeout';
 import { readCachedSession } from '@bystrobarista/core/utils/cachedSession';
 
 // Cold-start network calls are wrapped in this timeout so the app cannot

@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next';
 import FastImage from 'react-native-fast-image';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { BusinessService } from '../../services/BusinessService';
+import { BusinessService } from '@bystrobarista/core/services/BusinessService';
 import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { CityToggle } from '../../components/CityToggle';
 import { MetroSelector } from '../../components/MetroSelector';
@@ -41,7 +41,7 @@ import {
 } from '../../utils/validation';
 import { showErrorToast } from '../../stores/errorToastStore';
 import { handleApiError } from '../../utils/handleApiError';
-import { isAccountBlocked } from '../../utils/errorHandler';
+import { isAccountBlocked } from '@bystrobarista/core/utils/errorHandler';
 
 type SetupStackParamList = {
   BusinessProfileSetup: undefined;

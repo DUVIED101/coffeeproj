@@ -10,7 +10,7 @@ import type {
 } from '@bystrobarista/core/types/application';
 import type { ApplicationId, DisputeId, UserId } from '@bystrobarista/core/types/ids';
 import type { ApplicationReview, RaterRole, StarRating } from '@bystrobarista/core/types/review';
-import { computeShiftHours } from '../utils/shiftHours';
+import { computeShiftHours } from '@bystrobarista/core/utils/shiftHours';
 
 export type CompletedShiftEntry = Application & {
   hoursWorked: number;

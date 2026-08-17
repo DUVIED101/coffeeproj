@@ -24,7 +24,7 @@ import {
   BusinessService,
   BranchHasActiveJobsError,
   BranchPhotoLimitError,
-} from '../../services/BusinessService';
+} from '@bystrobarista/core/services/BusinessService';
 import { MetroSelector } from '../../components/MetroSelector';
 import { CityToggle } from '../../components/CityToggle';
 import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
@@ -38,7 +38,7 @@ import { geocodeAddress } from '../../utils/geocode';
 import { SHORT_TEXT_MAX_LENGTH, ADDRESS_MAX_LENGTH } from '../../utils/validation';
 import { showErrorToast, showSuccessToast } from '../../stores/errorToastStore';
 import { handleApiError } from '../../utils/handleApiError';
-import { isAccountBlocked } from '../../utils/errorHandler';
+import { isAccountBlocked } from '@bystrobarista/core/utils/errorHandler';
 
 type BusinessStackParamList = {
   BusinessProfileSetup: undefined;

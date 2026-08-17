@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { ReportService } from '../services/ReportService';
+import { ReportService } from '@bystrobarista/core/services/ReportService';
 import type { ReportReasonCode, ReportTargetType } from '@bystrobarista/core/types';
 import { showSuccessToast } from '../stores/errorToastStore';
 import { handleApiError } from '../utils/handleApiError';

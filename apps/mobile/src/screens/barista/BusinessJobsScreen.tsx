@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BaristaStackParamList } from '../../navigation/BaristaStack';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { JobService } from '../../services/JobService';
+import { JobService } from '@bystrobarista/core/services/JobService';
 import { JobCard } from '../../components/JobCard';
 import type { Job } from '@bystrobarista/core/types/job';
 

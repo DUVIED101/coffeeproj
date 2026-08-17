@@ -17,12 +17,12 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { JobService } from '../../services/JobService';
+import { JobService } from '@bystrobarista/core/services/JobService';
 import {
   JobOfferAlreadyAppliedError,
   JobOfferDuplicatePendingError,
   JobOfferService,
-} from '../../services/JobOfferService';
+} from '@bystrobarista/core/services/JobOfferService';
 import { useAuthStore } from '../../stores/authStore';
 import type { Job } from '@bystrobarista/core/types/job';
 import type { JobId, UserId } from '@bystrobarista/core/types/ids';
@@ -30,7 +30,7 @@ import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import { clampToEffectiveLength, effectiveTextLength } from '../../utils/textLength';
 import { showErrorToast } from '../../stores/errorToastStore';
 import { handleApiError } from '../../utils/handleApiError';
-import { isAccountBlocked } from '../../utils/errorHandler';
+import { isAccountBlocked } from '@bystrobarista/core/utils/errorHandler';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'OfferJob'>;

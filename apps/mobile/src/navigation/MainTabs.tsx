@@ -6,7 +6,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import { useAuthStore } from '../stores/authStore';
 import { useChatUnreadStore } from '../stores/chatUnreadStore';
-import { ChatService } from '../services/ChatService';
+import { ChatService } from '@bystrobarista/core/services/ChatService';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
 // Tab-scoped ErrorBoundary wrappers so a crash in one tab cannot tear down

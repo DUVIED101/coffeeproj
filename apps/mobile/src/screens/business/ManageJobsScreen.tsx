@@ -16,8 +16,8 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { JobService } from '../../services/JobService';
-import { BusinessService } from '../../services/BusinessService';
+import { JobService } from '@bystrobarista/core/services/JobService';
+import { BusinessService } from '@bystrobarista/core/services/BusinessService';
 import { useAuthStore } from '../../stores/authStore';
 import { JobCard } from '../../components/JobCard';
 import { AddFab } from '../../components/AddFab';

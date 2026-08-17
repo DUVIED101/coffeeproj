@@ -17,7 +17,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { ApplicationService } from '../../services/ApplicationService';
+import { ApplicationService } from '@bystrobarista/core/services/ApplicationService';
 import { useAuthStore } from '../../stores/authStore';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 import { clampToEffectiveLength, effectiveTextLength } from '../../utils/textLength';

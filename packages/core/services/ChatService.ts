@@ -1,5 +1,5 @@
 import { supabase } from '../config/supabase';
-import { withRetry } from '../utils/withRetry';
+import { withRetry } from '@bystrobarista/core/utils/withRetry';
 import type { Conversation, Message, SendMessageData, ConversationId } from '@bystrobarista/core/types/chat';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 

@@ -12,7 +12,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { ApplicationService } from '../../services/ApplicationService';
+import { ApplicationService } from '@bystrobarista/core/services/ApplicationService';
 import type { MyDisputeItem, DisputeStatus } from '@bystrobarista/core/types/application';
 import type { SettingsStackParamList } from '../../navigation/SettingsStack';
 

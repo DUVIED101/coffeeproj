@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { ReviewService } from '../../services/ReviewService';
+import { ReviewService } from '@bystrobarista/core/services/ReviewService';
 import { StarRow } from '../../components/StarRow';
 import { ReviewListRow } from '../../components/ReviewListRow';
 import type { ApplicationReview, UserReviewAggregate } from '@bystrobarista/core/types/review';

@@ -16,8 +16,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { TFunction } from 'i18next';
 import { COLORS, RADII } from '@bystrobarista/core/config/constants';
-import { BusinessService } from '../../services/BusinessService';
-import { ReviewService } from '../../services/ReviewService';
+import { BusinessService } from '@bystrobarista/core/services/BusinessService';
+import { ReviewService } from '@bystrobarista/core/services/ReviewService';
 import { StarRow } from '../../components/StarRow';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import { ReportButton } from '../../components/ReportButton';

@@ -7,7 +7,7 @@ import { authorize, type AuthConfiguration } from 'react-native-app-auth';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { GOOGLE_IOS_CLIENT_ID, YANDEX_CLIENT_ID } from '@env';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { AuthService } from '../services/AuthService';
+import { AuthService } from '@bystrobarista/core/services/AuthService';
 import { stashPendingAccountType, clearPendingAccountType } from '@bystrobarista/core/utils/socialAuthStash';
 import { stashConsentAccepted, clearStashedConsent } from '@bystrobarista/core/utils/consentStash';
 import { getErrorMessage } from '../utils/getErrorMessage';

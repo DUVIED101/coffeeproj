@@ -2,7 +2,7 @@ import React, { useCallback, useEffect } from 'react';
 import { AppState } from 'react-native';
 import { useAuthStore } from '../stores/authStore';
 import { usePendingShiftConfirmationStore } from '../stores/pendingShiftConfirmationStore';
-import { ApplicationService } from '../services/ApplicationService';
+import { ApplicationService } from '@bystrobarista/core/services/ApplicationService';
 import { ShiftConfirmationModal } from './ShiftConfirmationModal';
 
 // Polls every 60s so an outgoing confirmation request flips the gate within

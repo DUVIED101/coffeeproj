@@ -26,7 +26,7 @@ jest.mock('@bystrobarista/core/services/NotificationService', () => ({
   NotificationService: { unregisterDevice: jest.fn() },
 }));
 
-jest.mock('../services/AuthService', () => ({
+jest.mock('@bystrobarista/core/services/AuthService', () => ({
   AuthService: { deleteAccount: jest.fn() },
 }));
 

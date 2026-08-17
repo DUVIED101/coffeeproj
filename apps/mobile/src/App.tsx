@@ -45,7 +45,7 @@ import { InAppToast } from './components/InAppToast';
 import { ShiftConfirmationGate } from './components/ShiftConfirmationGate';
 import { SuspendedUserBanner } from './components/SuspendedUserBanner';
 import { BannedUserBlocker } from './components/BannedUserBlocker';
-import { JobOfferService } from './services/JobOfferService';
+import { JobOfferService } from '@bystrobarista/core/services/JobOfferService';
 import { pendingOfferActionsQueue } from '@bystrobarista/core/services/pendingOfferActionsQueue';
 import { useNotificationFeedStore } from './stores/notificationFeedStore';
 import { useDiagnosticsStore } from './stores/diagnosticsStore';

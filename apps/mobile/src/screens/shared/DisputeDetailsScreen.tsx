@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { ApplicationService } from '../../services/ApplicationService';
+import { ApplicationService } from '@bystrobarista/core/services/ApplicationService';
 import type { DisputeSummary, DisputeStatus } from '@bystrobarista/core/types/application';
 import type { ApplicationId } from '@bystrobarista/core/types/ids';
 
