@@ -20,8 +20,8 @@ import { consumeStashedConsent } from '@bystrobarista/core/utils/consentStash';
 import {
   getOutstandingLegalAcceptances,
   recordCurrentLegalAcceptances,
-} from '../../services/LegalAcceptanceService';
-import type { LegalDocumentKind } from '../../config/legalVersions';
+} from '@bystrobarista/core/services/LegalAcceptanceService';
+import type { LegalDocumentKind } from '@bystrobarista/core/config/legalVersions';
 import type { BootstrapStackParamList } from '../../navigation/BootstrapStack';
 import type { AccountType, User } from '@bystrobarista/core/types';
 import type { UserId } from '@bystrobarista/core/types/ids';

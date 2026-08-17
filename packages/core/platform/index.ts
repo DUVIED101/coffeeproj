@@ -17,6 +17,10 @@ export type Platform = {
   // Free-form tag ("ios/17.4", "web/chrome") appended to user-agents,
   // legal-acceptance rows, and Sentry breadcrumbs.
   userAgentTag: string;
+  // Semver-ish string ("1.0.1"). Persisted per-row into audit tables
+  // (legal_acceptances.app_version, ...) so we can tell which client shipped
+  // the write. Different value per app (mobile vs web).
+  appVersion: string;
 };
 
 let _platform: Platform | null = null;

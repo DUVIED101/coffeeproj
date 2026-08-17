@@ -51,6 +51,7 @@ export const createTestPlatform = (
     },
     alert: { show: () => undefined },
     userAgentTag: 'test/0.0.0',
+    appVersion: '0.0.0',
     ...overrides,
   };
   return { platform, storageStore };

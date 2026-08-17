@@ -6,7 +6,7 @@ import type {
   UpdateBaristaProfileData,
 } from '@bystrobarista/core/types/baristaProfile';
 import type { UserId } from '@bystrobarista/core/types/ids';
-import { canAddPhoto, PHOTO_LIMIT } from '../utils/storage';
+import { canAddPhoto, PHOTO_LIMIT } from '@bystrobarista/core/utils/storage';
 
 // Detect "column not found in schema cache" so we can degrade gracefully when
 // migration 071 (medical_book_expires_on) hasn't been applied yet. PostgREST

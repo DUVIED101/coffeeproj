@@ -38,6 +38,7 @@ const fakePlatform: Platform = {
   },
   alert: { show: () => undefined },
   userAgentTag: 'test/0.0.0',
+  appVersion: '0.0.0',
 };
 
 describe('platform registry', () => {

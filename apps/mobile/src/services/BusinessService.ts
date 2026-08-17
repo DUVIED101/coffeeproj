@@ -13,7 +13,7 @@ import {
   buildBusinessLogoPath,
   buildBranchPhotoPath,
   canAddPhoto,
-} from '../utils/storage';
+} from '@bystrobarista/core/utils/storage';
 
 export class BranchHasActiveJobsError extends Error {
   public readonly count: number;

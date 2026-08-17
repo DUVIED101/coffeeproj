@@ -32,7 +32,7 @@ import { AddFab } from '../../components/AddFab';
 import { useAuthStore } from '../../stores/authStore';
 import type { Branch, Equipment, GeoPoint, CityCode } from '@bystrobarista/core/types';
 import { DEFAULT_CITY, toCityCode } from '@bystrobarista/core/types/city';
-import { PHOTO_LIMIT } from '../../utils/storage';
+import { PHOTO_LIMIT } from '@bystrobarista/core/utils/storage';
 import { pickPhotos, reportRejections } from '@bystrobarista/core/utils/pickPhotos';
 import { geocodeAddress } from '../../utils/geocode';
 import { SHORT_TEXT_MAX_LENGTH, ADDRESS_MAX_LENGTH } from '../../utils/validation';

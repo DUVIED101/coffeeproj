@@ -21,4 +21,5 @@ export const nativePlatform: Platform = {
   appState: nativeAppState,
   alert: nativeAlert,
   userAgentTag: buildUserAgentTag(),
+  appVersion: APP_VERSION,
 };

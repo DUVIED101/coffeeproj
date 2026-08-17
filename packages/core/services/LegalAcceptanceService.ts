@@ -1,20 +1,16 @@
-import { Platform } from 'react-native';
-import { supabase } from '../config/supabase';
-import { APP_VERSION } from '../config/version';
+import { getSupabase } from '../config/supabase';
+import { getPlatform } from '../platform';
 import {
   LEGAL_DOCUMENT_KINDS,
   LEGAL_DOCUMENT_VERSIONS,
   type LegalDocumentKind,
 } from '../config/legalVersions';
-import type { UserId } from '@bystrobarista/core/types/ids';
+import type { UserId } from '../types/ids';
 
 type AcceptanceRow = {
   document_kind: LegalDocumentKind;
   document_version: string;
 };
-
-const buildUserAgent = (): string =>
-  `BystroBarista/${APP_VERSION} ${Platform.OS}/${Platform.Version}`;
 
 const targetVersions = (): AcceptanceRow[] =>
   LEGAL_DOCUMENT_KINDS.map(kind => ({
@@ -32,16 +28,16 @@ const targetVersions = (): AcceptanceRow[] =>
  * `app_version` are best-effort; we send whatever the client knows.
  */
 export const recordCurrentLegalAcceptances = async (userId: UserId): Promise<void> => {
-  const userAgent = buildUserAgent();
+  const platform = getPlatform();
   const rows = targetVersions().map(row => ({
     user_id: userId,
     document_kind: row.document_kind,
     document_version: row.document_version,
-    user_agent: userAgent,
-    app_version: APP_VERSION,
+    user_agent: platform.userAgentTag,
+    app_version: platform.appVersion,
   }));
 
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('legal_acceptances')
     .upsert(rows, { onConflict: 'user_id,document_kind,document_version', ignoreDuplicates: true });
   if (error) throw new Error(error.message);
@@ -56,7 +52,7 @@ export const getOutstandingLegalAcceptances = async (
   userId: UserId
 ): Promise<LegalDocumentKind[]> => {
   const wanted = targetVersions();
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('legal_acceptances')
     .select('document_kind, document_version')
     .eq('user_id', userId)

@@ -11,7 +11,7 @@ import FastImage from 'react-native-fast-image';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { COLORS, RADII } from '@bystrobarista/core/config/constants';
-import { PHOTO_LIMIT } from '../utils/storage';
+import { PHOTO_LIMIT } from '@bystrobarista/core/utils/storage';
 import { transformedImageUrl } from '../utils/imageTransform';
 
 type BranchPhotoGalleryProps = {

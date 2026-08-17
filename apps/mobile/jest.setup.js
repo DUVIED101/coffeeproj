@@ -47,6 +47,7 @@ setPlatform({
   },
   alert: { show: () => undefined },
   userAgentTag: 'jest/0.0.0',
+  appVersion: '0.0.0',
 });
 
 // `@env` is provided by react-native-dotenv (babel-time only) and is invisible

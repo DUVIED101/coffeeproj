@@ -27,7 +27,7 @@ import { useAuthStore } from '../../stores/authStore';
 import type { Business, Branch, BusinessType, Equipment, GeoPoint, LegalForm } from '@bystrobarista/core/types';
 import type { SocialLink } from '@bystrobarista/core/types/business';
 import { DEFAULT_CITY, toCityCode, type CityCode } from '@bystrobarista/core/types/city';
-import { PHOTO_LIMIT } from '../../utils/storage';
+import { PHOTO_LIMIT } from '@bystrobarista/core/utils/storage';
 import { pickPhotos, reportRejections } from '@bystrobarista/core/utils/pickPhotos';
 import { pickAndCropAvatar } from '../../utils/imageCrop';
 import { geocodeAddress } from '../../utils/geocode';

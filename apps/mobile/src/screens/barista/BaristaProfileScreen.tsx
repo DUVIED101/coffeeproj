@@ -26,7 +26,7 @@ import {
   PortfolioPhotoLimitError,
 } from '../../services/BaristaProfileService';
 import { WorkExperienceService } from '../../services/WorkExperienceService';
-import { PHOTO_LIMIT } from '../../utils/storage';
+import { PHOTO_LIMIT } from '@bystrobarista/core/utils/storage';
 import { pickPhotos, reportRejections } from '@bystrobarista/core/utils/pickPhotos';
 import { ReviewService } from '../../services/ReviewService';
 import { MetroSelector, isMetroAnySelection } from '../../components/MetroSelector';
