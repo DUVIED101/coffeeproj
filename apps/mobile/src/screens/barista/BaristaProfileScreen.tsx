@@ -27,7 +27,7 @@ import {
 } from '../../services/BaristaProfileService';
 import { WorkExperienceService } from '../../services/WorkExperienceService';
 import { PHOTO_LIMIT } from '../../utils/storage';
-import { pickPhotos, reportRejections } from '../../utils/pickPhotos';
+import { pickPhotos, reportRejections } from '@bystrobarista/core/utils/pickPhotos';
 import { ReviewService } from '../../services/ReviewService';
 import { MetroSelector, isMetroAnySelection } from '../../components/MetroSelector';
 import { CityToggle } from '../../components/CityToggle';
@@ -501,7 +501,6 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     }
 
     const picked = await pickPhotos({
-      mediaType: 'photo',
       quality: 0.8,
       selectionLimit: remaining,
     });

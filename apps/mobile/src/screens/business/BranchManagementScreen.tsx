@@ -33,7 +33,7 @@ import { useAuthStore } from '../../stores/authStore';
 import type { Branch, Equipment, GeoPoint, CityCode } from '@bystrobarista/core/types';
 import { DEFAULT_CITY, toCityCode } from '@bystrobarista/core/types/city';
 import { PHOTO_LIMIT } from '../../utils/storage';
-import { pickPhotos, reportRejections } from '../../utils/pickPhotos';
+import { pickPhotos, reportRejections } from '@bystrobarista/core/utils/pickPhotos';
 import { geocodeAddress } from '../../utils/geocode';
 import { SHORT_TEXT_MAX_LENGTH, ADDRESS_MAX_LENGTH } from '../../utils/validation';
 import { showErrorToast, showSuccessToast } from '../../stores/errorToastStore';
@@ -399,7 +399,6 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
       }
 
       const picked = await pickPhotos({
-        mediaType: 'photo',
         quality: 0.8,
         selectionLimit: remaining,
       });

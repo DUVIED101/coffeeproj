@@ -1,5 +1,5 @@
-import { Alert } from 'react-native';
 import i18next from 'i18next';
+import { getPlatform } from '@bystrobarista/core/platform';
 import { isAccountBlocked, mapAnyError } from './errorHandler';
 import { useAuthStore } from '../stores/authStore';
 import { showErrorToast } from '../stores/errorToastStore';
@@ -37,8 +37,10 @@ export async function handleApiError(error: unknown): Promise<void> {
   const refreshed = await useAuthStore.getState().refreshUserProfile();
   const lang = i18next.language;
 
+  const alert = getPlatform().alert;
+
   if (refreshed?.bannedAt) {
-    Alert.alert(
+    alert.show(
       t('account.bannedTitle'),
       refreshed.banReason
         ? `${t('account.bannedBody')}\n\n${t('account.bannedReasonLabel')}: ${refreshed.banReason}`
@@ -48,7 +50,7 @@ export async function handleApiError(error: unknown): Promise<void> {
   }
 
   if (refreshed?.suspendedUntil) {
-    Alert.alert(
+    alert.show(
       t('account.blockedActionTitle'),
       t('account.blockedActionBody', {
         date: formatDate(refreshed.suspendedUntil, lang),
@@ -60,5 +62,5 @@ export async function handleApiError(error: unknown): Promise<void> {
   // Profile refresh didn't see the suspension yet (e.g. replication lag).
   // Fall back to a generic restricted message rather than the misleading
   // "insufficient privilege" toast.
-  Alert.alert(t('account.blockedActionTitle'), t('account.blockedActionGeneric'));
+  alert.show(t('account.blockedActionTitle'), t('account.blockedActionGeneric'));
 }

@@ -1,9 +1,9 @@
 import { create } from 'zustand';
-import { AppState } from 'react-native';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { NotificationFeedService } from '../services/NotificationFeedService';
 import { useToastStore } from './toastStore';
 import { navigationRef } from '../navigation/navigationRef';
+import { getPlatform } from '@bystrobarista/core/platform';
 import type { Notification } from '@bystrobarista/core/types/notification';
 import type { ConversationId } from '@bystrobarista/core/types/chat';
 import type { JobOfferId, NotificationId, UserId } from '@bystrobarista/core/types/ids';
@@ -176,7 +176,7 @@ export const useNotificationFeedStore = create<NotificationFeedState>((set, get)
       });
 
       if (isDuplicate || incoming.readAt) return;
-      if (AppState.currentState === 'background') return;
+      if (getPlatform().appState.getCurrentState() === 'background') return;
       if (shouldSuppressToast(incoming)) return;
       useToastStore.getState().show(incoming);
     });
