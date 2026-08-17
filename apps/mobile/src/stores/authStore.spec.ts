@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CACHED_SESSION_STORAGE_KEY } from '../utils/cachedSession';
+import { CACHED_SESSION_STORAGE_KEY } from '@bystrobarista/core/utils/cachedSession';
 
 // Phase 8.6 Phase 2: session is now persisted under a project-stable key
 // (decoupled from the supabase URL so direct ↔ proxy swaps don't log users

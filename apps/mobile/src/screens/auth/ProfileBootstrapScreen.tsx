@@ -15,8 +15,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { supabase } from '../../config/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { readPendingAccountType, clearPendingAccountType } from '../../utils/socialAuthStash';
-import { consumeStashedConsent } from '../../utils/consentStash';
+import { readPendingAccountType, clearPendingAccountType } from '@bystrobarista/core/utils/socialAuthStash';
+import { consumeStashedConsent } from '@bystrobarista/core/utils/consentStash';
 import {
   getOutstandingLegalAcceptances,
   recordCurrentLegalAcceptances,

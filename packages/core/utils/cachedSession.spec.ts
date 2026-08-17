@@ -1,6 +1,17 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import { CACHED_SESSION_STORAGE_KEY, readCachedSession } from './cachedSession';
-import { STABLE_STORAGE_KEY } from '../config/supabaseHost';
+import { STABLE_STORAGE_KEY } from '../config/authStorage';
+import { setPlatform, _resetPlatformForTests } from '../platform';
+import { createTestPlatform } from '../platform/testing';
+
+let storageStore: Map<string, string>;
+
+beforeEach(() => {
+  _resetPlatformForTests();
+  const { platform, storageStore: store } = createTestPlatform();
+  storageStore = store;
+  setPlatform(platform);
+});
 
 describe('CACHED_SESSION_STORAGE_KEY', () => {
   it('reuses the project-stable supabase storage key', () => {
@@ -9,21 +20,17 @@ describe('CACHED_SESSION_STORAGE_KEY', () => {
 });
 
 describe('readCachedSession', () => {
-  beforeEach(async () => {
-    await AsyncStorage.clear();
-  });
-
   it('returns null when no entry exists', async () => {
     expect(await readCachedSession()).toBeNull();
   });
 
   it('returns null when the entry is malformed JSON', async () => {
-    await AsyncStorage.setItem(CACHED_SESSION_STORAGE_KEY, '{not json');
+    storageStore.set(CACHED_SESSION_STORAGE_KEY, '{not json');
     expect(await readCachedSession()).toBeNull();
   });
 
   it('returns null when required fields are missing', async () => {
-    await AsyncStorage.setItem(
+    storageStore.set(
       CACHED_SESSION_STORAGE_KEY,
       JSON.stringify({ access_token: 'a' /* missing refresh_token and user */ })
     );
@@ -39,7 +46,7 @@ describe('readCachedSession', () => {
       expires_in: 3600,
       user: { id: 'user-1', email: 'u@example.com' },
     };
-    await AsyncStorage.setItem(CACHED_SESSION_STORAGE_KEY, JSON.stringify(payload));
+    storageStore.set(CACHED_SESSION_STORAGE_KEY, JSON.stringify(payload));
     const session = await readCachedSession();
     expect(session).toMatchObject({
       access_token: 'access',

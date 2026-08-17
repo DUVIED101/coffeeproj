@@ -9,8 +9,11 @@ export {
   validateImageAsset,
   buildBusinessLogoPath,
   buildBranchPhotoPath,
-} from './storagePaths';
-export type { PhotoRejection, AssetForValidation } from './storagePaths';
+} from '@bystrobarista/core/utils/storagePaths';
+export type {
+  PhotoRejection,
+  AssetForValidation,
+} from '@bystrobarista/core/utils/storagePaths';
 
 export type UploadImageInput = {
   bucket: string;

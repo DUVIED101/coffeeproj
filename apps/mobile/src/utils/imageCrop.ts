@@ -1,6 +1,6 @@
 import ImagePicker, { type Image as CroppedImage } from 'react-native-image-crop-picker';
 import { launchImageLibrary } from 'react-native-image-picker';
-import { MAX_PHOTO_BYTES, validateImageAsset } from './storagePaths';
+import { MAX_PHOTO_BYTES, validateImageAsset } from '@bystrobarista/core/utils/storagePaths';
 
 export type CropError =
   | 'cancelled'

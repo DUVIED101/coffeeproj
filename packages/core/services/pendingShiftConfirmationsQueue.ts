@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { ApplicationId } from '@bystrobarista/core/types/ids';
+import type { ApplicationId } from '../types/ids';
+import { getPlatform } from '../platform';
 
 const STORAGE_KEY = 'pendingShiftConfirmationsQueue:v1';
 const MAX_ATTEMPTS = 5;
@@ -12,7 +12,7 @@ export type PendingShiftConfirmation = {
 };
 
 async function readQueue(): Promise<PendingShiftConfirmation[]> {
-  const raw = await AsyncStorage.getItem(STORAGE_KEY);
+  const raw = await getPlatform().storage.getItem(STORAGE_KEY);
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
@@ -23,7 +23,7 @@ async function readQueue(): Promise<PendingShiftConfirmation[]> {
 }
 
 async function writeQueue(items: PendingShiftConfirmation[]): Promise<void> {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  await getPlatform().storage.setItem(STORAGE_KEY, JSON.stringify(items));
 }
 
 export const pendingShiftConfirmationsQueue = {
@@ -72,6 +72,6 @@ export const pendingShiftConfirmationsQueue = {
   },
 
   async clear(): Promise<void> {
-    await AsyncStorage.removeItem(STORAGE_KEY);
+    await getPlatform().storage.removeItem(STORAGE_KEY);
   },
 };

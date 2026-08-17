@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { STABLE_STORAGE_KEY } from '../config/supabaseHost';
+import { getPlatform } from '../platform';
+import { STABLE_STORAGE_KEY } from '../config/authStorage';
 
 export const LEGACY_SESSION_KEY = 'sb-zifvfsamfzepxxuxhyhg-auth-token';
 export const NEW_SESSION_KEY = STABLE_STORAGE_KEY;
@@ -9,15 +9,16 @@ export const NEW_SESSION_KEY = STABLE_STORAGE_KEY;
 // rollback safety net — supabase-js will only ever read the stable key after
 // we pass `storageKey` explicitly to createClient.
 export async function migrateSessionKey(): Promise<void> {
+  const storage = getPlatform().storage;
   try {
     const [legacy, current] = await Promise.all([
-      AsyncStorage.getItem(LEGACY_SESSION_KEY),
-      AsyncStorage.getItem(NEW_SESSION_KEY),
+      storage.getItem(LEGACY_SESSION_KEY),
+      storage.getItem(NEW_SESSION_KEY),
     ]);
     if (legacy && !current) {
-      await AsyncStorage.setItem(NEW_SESSION_KEY, legacy);
+      await storage.setItem(NEW_SESSION_KEY, legacy);
     }
   } catch {
-    // AsyncStorage failure here is non-fatal: worst case the user re-logs in.
+    // Storage failure here is non-fatal: worst case the user re-logs in.
   }
 }

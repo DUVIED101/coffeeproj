@@ -23,7 +23,7 @@ import { ResponsiveContainer } from '../../components/ResponsiveContainer';
 import { SocialAuthButtons } from '../../components/SocialAuthButtons';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 import { getEmailError, getPasswordError, MAX_PASSWORD_LENGTH } from '../../utils/validation';
-import { stashConsentAccepted } from '../../utils/consentStash';
+import { stashConsentAccepted } from '@bystrobarista/core/utils/consentStash';
 import type { AuthStackParamList } from '../../navigation/AuthStack';
 
 type Props = {

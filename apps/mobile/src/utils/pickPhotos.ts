@@ -6,7 +6,7 @@ import {
   validateImageAsset,
   type AssetForValidation,
   type PhotoRejection,
-} from './storagePaths';
+} from '@bystrobarista/core/utils/storagePaths';
 
 // Minimal asset shape consumed by call sites. Mirrors what they used to read
 // from react-native-image-picker's `Asset`, just constrained to what we

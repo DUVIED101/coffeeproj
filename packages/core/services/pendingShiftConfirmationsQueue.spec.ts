@@ -1,14 +1,22 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import {
   pendingShiftConfirmationsQueue,
   type PendingShiftConfirmation,
 } from './pendingShiftConfirmationsQueue';
-import type { ApplicationId } from '@bystrobarista/core/types/ids';
+import type { ApplicationId } from '../types/ids';
+import { setPlatform, _resetPlatformForTests } from '../platform';
+import { createTestPlatform } from '../platform/testing';
 
 const APP_A = 'app-a' as ApplicationId;
 const APP_B = 'app-b' as ApplicationId;
 
+let storageStore: Map<string, string>;
+
 beforeEach(async () => {
+  _resetPlatformForTests();
+  const { platform, storageStore: store } = createTestPlatform();
+  storageStore = store;
+  setPlatform(platform);
   await pendingShiftConfirmationsQueue.clear();
 });
 
@@ -60,7 +68,7 @@ describe('pendingShiftConfirmationsQueue', () => {
       });
       expect(result).toEqual({ processed: 0, dropped: 0, remaining: 1 });
 
-      const raw = await AsyncStorage.getItem('pendingShiftConfirmationsQueue:v1');
+      const raw = storageStore.get('pendingShiftConfirmationsQueue:v1');
       const queue = JSON.parse(raw!);
       expect(queue[0].attempts).toBe(1);
     });

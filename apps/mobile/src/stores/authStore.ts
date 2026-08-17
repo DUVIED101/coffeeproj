@@ -7,7 +7,7 @@ import { AuthService } from '../services/AuthService';
 import { NotificationService } from '../services/NotificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { withTimeout, TimeoutError } from '../utils/withTimeout';
-import { readCachedSession } from '../utils/cachedSession';
+import { readCachedSession } from '@bystrobarista/core/utils/cachedSession';
 
 // Cold-start network calls are wrapped in this timeout so the app cannot
 // hang on the spinner forever when Supabase is unreachable (Cloudflare-fronted,

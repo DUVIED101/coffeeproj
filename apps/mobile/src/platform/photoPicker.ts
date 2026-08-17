@@ -5,7 +5,7 @@ import type {
   PickResult,
   PhotoRejection,
 } from '@bystrobarista/core/platform/photoPicker';
-import { validateImageAsset, type AssetForValidation } from '../utils/storagePaths';
+import { validateImageAsset, type AssetForValidation } from '@bystrobarista/core/utils/storagePaths';
 
 // See rationale in NotificationService/pickPhotos history: iOS PhotoKit can
 // hand the RN picker `ph://` URIs (or iCloud placeholders that aren't

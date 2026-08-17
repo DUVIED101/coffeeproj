@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { JobOfferId } from '@bystrobarista/core/types/ids';
+import type { JobOfferId } from '../types/ids';
+import { getPlatform } from '../platform';
 
 const STORAGE_KEY = 'pendingOfferActionsQueue:v1';
 const MAX_ATTEMPTS = 5;
@@ -12,7 +12,7 @@ export type PendingOfferAction = {
 };
 
 async function readQueue(): Promise<PendingOfferAction[]> {
-  const raw = await AsyncStorage.getItem(STORAGE_KEY);
+  const raw = await getPlatform().storage.getItem(STORAGE_KEY);
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
@@ -23,7 +23,7 @@ async function readQueue(): Promise<PendingOfferAction[]> {
 }
 
 async function writeQueue(items: PendingOfferAction[]): Promise<void> {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  await getPlatform().storage.setItem(STORAGE_KEY, JSON.stringify(items));
 }
 
 export const pendingOfferActionsQueue = {
@@ -75,6 +75,6 @@ export const pendingOfferActionsQueue = {
   },
 
   async clear(): Promise<void> {
-    await AsyncStorage.removeItem(STORAGE_KEY);
+    await getPlatform().storage.removeItem(STORAGE_KEY);
   },
 };

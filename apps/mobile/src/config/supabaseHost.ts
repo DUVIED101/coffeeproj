@@ -1,14 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SUPABASE_URL, SUPABASE_PROXY_URL } from '@env';
+import { STABLE_STORAGE_KEY } from '@bystrobarista/core/config/authStorage';
 
 export const DIRECT_URL: string = SUPABASE_URL;
 export const PROXY_URL: string | undefined = SUPABASE_PROXY_URL || undefined;
 
-// Stable supabase-js auth storage key. supabase-js defaults to
-// `sb-<projectRef>-auth-token`, derived from supabaseUrl — which means
-// swapping the URL between direct and proxy hosts would log everyone out.
-// Pinning to a project-stable name decouples the session from the URL.
-export const STABLE_STORAGE_KEY = 'sb-bystrobarista-auth-token';
+// Re-exported for callers that still import STABLE_STORAGE_KEY from here —
+// the canonical definition lives in @bystrobarista/core/config/authStorage
+// so web/mobile agree on the string used to persist the Supabase session.
+export { STABLE_STORAGE_KEY };
 export const FORCE_PROXY_STORAGE_KEY = 'diagnostics.forceProxy';
 
 // IANA zone names for every Russian time band (Europe/* west of Urals,

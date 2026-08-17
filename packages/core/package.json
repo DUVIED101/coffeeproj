@@ -9,6 +9,9 @@
     "typecheck": "tsc --noEmit",
     "test": "TZ=UTC jest"
   },
+  "dependencies": {
+    "@supabase/supabase-js": "2.100.1"
+  },
   "devDependencies": {
     "@babel/preset-env": "^7.23.7",
     "@babel/preset-typescript": "^7.23.7",
