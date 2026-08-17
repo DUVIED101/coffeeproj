@@ -1,6 +1,19 @@
 // Jest setup file
 import 'react-native-gesture-handler/jestSetup';
 
+// @sentry/react-native ships pre-bundled ESM that jest+babel doesn't downlevel;
+// mocking spares every geocode/telemetry spec from needing its own per-file
+// stub. Real Sentry runs on device via native init in App.tsx, not in tests.
+jest.mock('@sentry/react-native', () => ({
+  init: jest.fn(),
+  captureException: jest.fn(),
+  captureMessage: jest.fn(),
+  addBreadcrumb: jest.fn(),
+  setContext: jest.fn(),
+  setTag: jest.fn(),
+  setUser: jest.fn(),
+}));
+
 jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock')
