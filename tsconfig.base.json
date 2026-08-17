@@ -16,8 +16,8 @@
     "isolatedModules": true,
     "baseUrl": ".",
     "paths": {
-      "@bystrobarista/core": ["packages/core/src"],
-      "@bystrobarista/core/*": ["packages/core/src/*"]
+      "@bystrobarista/core": ["packages/core"],
+      "@bystrobarista/core/*": ["packages/core/*"]
     }
   },
   "exclude": ["node_modules", "dist", "build"]

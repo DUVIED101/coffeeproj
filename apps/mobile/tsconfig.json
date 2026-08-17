@@ -4,8 +4,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@bystrobarista/core": ["../../packages/core/src"],
-      "@bystrobarista/core/*": ["../../packages/core/src/*"]
+      "@bystrobarista/core": ["../../packages/core"],
+      "@bystrobarista/core/*": ["../../packages/core/*"]
     }
   },
   "include": ["src/**/*", "index.js"],

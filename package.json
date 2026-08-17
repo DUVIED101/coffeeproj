@@ -3,15 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "workspaces": [
-    "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "ios": "npm run ios -w @bystrobarista/mobile",
-    "start": "npm run start -w @bystrobarista/mobile",
-    "test": "npm run test --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present"
+    "ios": "npm --prefix apps/mobile run ios",
+    "start": "npm --prefix apps/mobile start",
+    "test": "npm --prefix apps/mobile test && npm test --workspaces --if-present",
+    "typecheck": "npm --prefix apps/mobile run typecheck && npm run typecheck --workspaces --if-present",
+    "lint": "npm --prefix apps/mobile run lint && npm run lint --workspaces --if-present"
   },
   "engines": {
     "node": ">=18"

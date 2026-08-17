@@ -6,7 +6,7 @@ module.exports = {
     'node_modules/(?!(react-native|@react-native|@react-navigation|react-native-vector-icons)/)',
   ],
   moduleNameMapper: {
-    '^@bystrobarista/core$': '<rootDir>/../../packages/core/src/index.ts',
-    '^@bystrobarista/core/(.*)$': '<rootDir>/../../packages/core/src/$1',
+    '^@bystrobarista/core$': '<rootDir>/../../packages/core/index.ts',
+    '^@bystrobarista/core/(.*)$': '<rootDir>/../../packages/core/$1',
   },
 };

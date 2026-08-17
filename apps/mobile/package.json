@@ -1,5 +1,5 @@
 {
-  "name": "@bystrobarista/mobile",
+  "name": "coffeeproj",
   "version": "1.0.1",
   "private": true,
   "scripts": {
@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@bystrobarista/core": "file:../../packages/core",
     "@invertase/react-native-apple-authentication": "2.5.1",
     "@react-native-async-storage/async-storage": "1.24.0",
     "@react-native-community/datetimepicker": "9.1.0",
