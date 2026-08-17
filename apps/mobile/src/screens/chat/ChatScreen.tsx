@@ -35,7 +35,7 @@ import { formatDateHeader, isSameDay } from '../../utils/dateUtils';
 import { clampToEffectiveLength } from '../../utils/textLength';
 import { useReportSheet } from '../../hooks/useReportSheet';
 import { handleApiError } from '../../utils/handleApiError';
-import { useBlockedUsersStore } from '../../stores/blockedUsersStore';
+import { useBlockedUsersStore } from '@bystrobarista/core/stores/blockedUsersStore';
 
 const MESSAGE_MAX_LENGTH = 500;
 

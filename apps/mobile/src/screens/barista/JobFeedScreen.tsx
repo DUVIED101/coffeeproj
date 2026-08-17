@@ -29,7 +29,7 @@ import {
   requestLocationPermission,
   getCurrentLocation,
   getLastKnownLocationFast,
-} from '../../utils/geolocation';
+} from '@bystrobarista/core/utils/geolocation';
 import type { Job, JobFilters } from '@bystrobarista/core/types/job';
 import type { GeoPoint } from '@bystrobarista/core/types/business';
 import type { UserId } from '@bystrobarista/core/types/ids';

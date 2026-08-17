@@ -17,7 +17,7 @@ const config = {
       }
       if (moduleName.startsWith('@bystrobarista/core/')) {
         const sub = moduleName.slice('@bystrobarista/core/'.length);
-        for (const ext of ['.ts', '.tsx', '/index.ts']) {
+        for (const ext of ['.ts', '.tsx', '.json', '/index.ts']) {
           const candidate = path.join(coreRoot, sub + ext);
           if (fs.existsSync(candidate)) {
             return {filePath: candidate, type: 'sourceFile'};

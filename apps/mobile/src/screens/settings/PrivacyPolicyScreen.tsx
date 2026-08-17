@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { getCurrentLanguage } from '../../i18n';
+import { getCurrentLanguage } from '@bystrobarista/core/i18n';
 
 const BODY_RU = `Дата публикации: 12 июня 2026 г.
 

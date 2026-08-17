@@ -12,7 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { changeLanguage, getCurrentLanguage, type SupportedLanguage } from "../../i18n";
+import { changeLanguage, getCurrentLanguage, type SupportedLanguage } from '@bystrobarista/core/i18n';
 import type { SettingsStackParamList } from '../../navigation/SettingsStack';
 import { supabase } from '../../config/supabase';
 import { useAuthStore } from '../../stores/authStore';

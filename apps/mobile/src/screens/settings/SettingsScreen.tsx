@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { useAuthStore } from '../../stores/authStore';
-import { getCurrentLanguage } from '../../i18n';
+import { getCurrentLanguage } from '@bystrobarista/core/i18n';
 import type { SettingsStackParamList } from '../../navigation/SettingsStack';
 import { APP_VERSION } from '../../config/version';
 import { hasPasswordAuth } from '../../utils/authProvider';

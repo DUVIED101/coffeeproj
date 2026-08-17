@@ -13,7 +13,7 @@ import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithAction
 import { Avatar } from '../../components/Avatar';
 import { Skeleton } from '../../components/Skeleton';
 import { useMasterDetail } from '../../components/MasterDetailContext';
-import { useBlockedUsersStore } from '../../stores/blockedUsersStore';
+import { useBlockedUsersStore } from '@bystrobarista/core/stores/blockedUsersStore';
 import { queryKeys } from '../../lib/queryClient';
 import type { Conversation } from '@bystrobarista/core/types/chat';
 import type { ApplicationStatus } from '@bystrobarista/core/types/application';

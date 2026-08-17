@@ -38,7 +38,7 @@ import { AppNavigator } from './navigation/AppNavigator';
 import { useNotificationSetup } from './hooks/useNotificationSetup';
 import { routePushPayload, navigationRef } from './navigation/navigationRef';
 import { CommonActions } from '@react-navigation/native';
-import { initI18n } from './i18n';
+import { initI18n } from '@bystrobarista/core/i18n';
 import { registerAuthListener } from './stores/authStore';
 import { migrateSessionKey } from '@bystrobarista/core/utils/migrateSessionKey';
 import { InAppToast } from './components/InAppToast';

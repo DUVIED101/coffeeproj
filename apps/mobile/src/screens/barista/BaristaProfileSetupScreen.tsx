@@ -37,7 +37,7 @@ import {
   YEARS_MAX_LENGTH,
   COMPENSATION_MAX_DIGITS,
 } from '../../utils/validation';
-import { requestLocationPermission, getCurrentLocation } from '../../utils/geolocation';
+import { requestLocationPermission, getCurrentLocation } from '@bystrobarista/core/utils/geolocation';
 import { clampToEffectiveLength, effectiveTextLength } from '../../utils/textLength';
 import { dobMinDate, dobMaxDate } from '../../utils/dateRanges';
 import type { GeoPoint } from '@bystrobarista/core/types/business';

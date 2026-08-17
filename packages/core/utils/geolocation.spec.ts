@@ -1,10 +1,6 @@
-jest.mock('react-native-geolocation-service', () => ({}));
-jest.mock('react-native', () => ({
-  Platform: { OS: 'ios' },
-}));
-
+import { describe, it, expect } from '@jest/globals';
 import { calculateDistance } from './geolocation';
-import type { GeoPoint } from '@bystrobarista/core/types';
+import type { GeoPoint } from '../types';
 
 describe('calculateDistance', () => {
   it('returns zero meters when both points are identical', () => {

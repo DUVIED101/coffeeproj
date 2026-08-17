@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getPlatform } from '../platform';
 
 // Client-side block list. Backend-side blocking (Supabase RLS) is a follow-up;
 // for App Store Guideline 1.2 the user-visible behavior — hidden conversations
@@ -29,7 +29,7 @@ export const useBlockedUsersStore = create<BlockedUsersState>((set, get) => ({
   hydrate: async () => {
     if (get().hydrated) return;
     try {
-      const raw = await AsyncStorage.getItem(STORAGE_KEY);
+      const raw = await getPlatform().storage.getItem(STORAGE_KEY);
       const parsed: BlockedEntry[] = raw ? JSON.parse(raw) : [];
       set({ blocked: parsed, hydrated: true });
     } catch (err) {
@@ -45,7 +45,7 @@ export const useBlockedUsersStore = create<BlockedUsersState>((set, get) => ({
     ];
     set({ blocked: next });
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      await getPlatform().storage.setItem(STORAGE_KEY, JSON.stringify(next));
     } catch (err) {
       console.error('blockedUsersStore.block persist failed:', err);
     }
@@ -55,7 +55,7 @@ export const useBlockedUsersStore = create<BlockedUsersState>((set, get) => ({
     const next = get().blocked.filter(b => b.userId !== userId);
     set({ blocked: next });
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      await getPlatform().storage.setItem(STORAGE_KEY, JSON.stringify(next));
     } catch (err) {
       console.error('blockedUsersStore.unblock persist failed:', err);
     }
@@ -66,7 +66,7 @@ export const useBlockedUsersStore = create<BlockedUsersState>((set, get) => ({
   reset: async () => {
     set({ blocked: [], hydrated: true });
     try {
-      await AsyncStorage.removeItem(STORAGE_KEY);
+      await getPlatform().storage.removeItem(STORAGE_KEY);
     } catch (err) {
       console.error('blockedUsersStore.reset failed:', err);
     }

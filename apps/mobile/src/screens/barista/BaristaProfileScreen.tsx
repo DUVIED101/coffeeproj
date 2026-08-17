@@ -45,7 +45,7 @@ import {
   computeProfileCompleteness,
   type CompletenessItemKey,
 } from '../../utils/profileCompleteness';
-import { requestLocationPermission, getCurrentLocation } from '../../utils/geolocation';
+import { requestLocationPermission, getCurrentLocation } from '@bystrobarista/core/utils/geolocation';
 import { clampToEffectiveLength } from '../../utils/textLength';
 import { dobMinDate, dobMaxDate } from '../../utils/dateRanges';
 import { yearsBetween } from '../../utils/age';

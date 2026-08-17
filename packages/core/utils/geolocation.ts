@@ -1,44 +1,11 @@
-import Geolocation from 'react-native-geolocation-service';
-import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { GeoPoint } from '@bystrobarista/core/types';
+import type { GeoPoint } from '../types';
+import { getPlatform } from '../platform';
 
-export async function requestLocationPermission(): Promise<boolean> {
-  if (Platform.OS !== 'ios') {
-    return false;
-  }
-
-  try {
-    const authorization = await Geolocation.requestAuthorization('whenInUse');
-    return authorization === 'granted';
-  } catch {
-    return false;
-  }
-}
-
-type FixAttemptOptions = {
-  enableHighAccuracy: boolean;
-  timeout: number;
-};
-
-const fetchPosition = (opts: FixAttemptOptions): Promise<GeoPoint | null> =>
-  new Promise(resolve => {
-    Geolocation.getCurrentPosition(
-      position => {
-        resolve({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-      },
-      () => resolve(null),
-      { ...opts, maximumAge: 60_000 }
-    );
-  });
+export const requestLocationPermission = async (): Promise<boolean> =>
+  getPlatform().geolocation.requestPermission();
 
 const CACHE_KEY = 'lastKnownLocation:v1';
 const CACHE_TTL_MS = 10 * 60_000;
-const HIGH_ACCURACY_TIMEOUT_MS = 5_000;
-const LOW_ACCURACY_TIMEOUT_MS = 5_000;
 
 type CachedLocation = {
   location: GeoPoint;
@@ -47,7 +14,7 @@ type CachedLocation = {
 
 const readCache = async (): Promise<CachedLocation | null> => {
   try {
-    const raw = await AsyncStorage.getItem(CACHE_KEY);
+    const raw = await getPlatform().storage.getItem(CACHE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as CachedLocation;
     if (
@@ -67,23 +34,15 @@ const readCache = async (): Promise<CachedLocation | null> => {
 const writeCache = async (location: GeoPoint): Promise<void> => {
   try {
     const payload: CachedLocation = { location, timestamp: Date.now() };
-    await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+    await getPlatform().storage.setItem(CACHE_KEY, JSON.stringify(payload));
   } catch {
-    /* AsyncStorage errors are non-fatal for a cache */
+    /* storage errors are non-fatal for a cache */
   }
 };
 
-const fetchFreshLocation = async (): Promise<GeoPoint | null> => {
-  const high = await fetchPosition({
-    enableHighAccuracy: true,
-    timeout: HIGH_ACCURACY_TIMEOUT_MS,
-  });
-  if (high) return high;
-  return fetchPosition({ enableHighAccuracy: false, timeout: LOW_ACCURACY_TIMEOUT_MS });
-};
-
 const refreshInBackground = (): void => {
-  fetchFreshLocation()
+  getPlatform()
+    .geolocation.getCurrentPosition()
     .then(fresh => {
       if (fresh) writeCache(fresh);
     })
@@ -101,7 +60,7 @@ export async function getCurrentLocation(): Promise<GeoPoint | null> {
     refreshInBackground();
     return cached.location;
   }
-  const fresh = await fetchFreshLocation();
+  const fresh = await getPlatform().geolocation.getCurrentPosition();
   if (fresh) await writeCache(fresh);
   return fresh ?? cached?.location ?? null;
 }
