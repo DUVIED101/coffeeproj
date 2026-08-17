@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { AppState } from 'react-native';
 import { useAuthStore } from '../stores/authStore';
 import { useNotificationFeedStore } from '../stores/notificationFeedStore';
-import { NotificationService } from '../services/NotificationService';
+import { NotificationService } from '@bystrobarista/core/services/NotificationService';
 import type { PushNotificationPayload } from '@bystrobarista/core/types/notification';
 import type { UserId } from '@bystrobarista/core/types/ids';
 

@@ -22,7 +22,7 @@ const mockGetSession = supabase.auth.getSession as jest.Mock;
 const mockSignOut = supabase.auth.signOut as jest.Mock;
 const mockFrom = supabase.from as jest.Mock;
 
-jest.mock('../services/NotificationService', () => ({
+jest.mock('@bystrobarista/core/services/NotificationService', () => ({
   NotificationService: { unregisterDevice: jest.fn() },
 }));
 

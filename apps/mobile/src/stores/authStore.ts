@@ -4,7 +4,7 @@ import type { User } from '@bystrobarista/core/types';
 import type { UserId } from '@bystrobarista/core/types/ids';
 import { supabase } from '../config/supabase';
 import { AuthService } from '../services/AuthService';
-import { NotificationService } from '../services/NotificationService';
+import { NotificationService } from '@bystrobarista/core/services/NotificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { withTimeout, TimeoutError } from '../utils/withTimeout';
 import { readCachedSession } from '@bystrobarista/core/utils/cachedSession';
