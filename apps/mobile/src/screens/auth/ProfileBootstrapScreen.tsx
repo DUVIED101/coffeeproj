@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { supabase } from '../../config/supabase';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { readPendingAccountType, clearPendingAccountType } from '@bystrobarista/core/utils/socialAuthStash';
 import { consumeStashedConsent } from '@bystrobarista/core/utils/consentStash';

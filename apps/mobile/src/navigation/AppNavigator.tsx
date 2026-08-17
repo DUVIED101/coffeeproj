@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { AuthStack } from './AuthStack';
 import { MainTabs } from './MainTabs';
 import { flushPendingPushPayload, navigationRef } from './navigationRef';

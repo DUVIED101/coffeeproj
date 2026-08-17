@@ -38,7 +38,7 @@ import { CertificatesEditor } from '../../components/CertificatesEditor';
 import { WorkExperienceEditor } from '../../components/WorkExperienceEditor';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { Skeleton } from '../../components/Skeleton';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { formatLocalDate } from '../../utils/dateUtils';
 import {

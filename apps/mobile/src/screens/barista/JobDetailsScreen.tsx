@@ -18,7 +18,7 @@ import { ApplicationService } from '@bystrobarista/core/services/ApplicationServ
 import { BaristaProfileService } from '@bystrobarista/core/services/BaristaProfileService';
 import { BusinessService } from '@bystrobarista/core/services/BusinessService';
 import { ReviewService } from '@bystrobarista/core/services/ReviewService';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { JobDetailsContent } from '../../components/JobDetailsContent';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import type { Job } from '@bystrobarista/core/types/job';

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { RealtimeChannel } from '@supabase/supabase-js';
-import { NotificationFeedService } from '../services/NotificationFeedService';
+import { NotificationFeedService } from '@bystrobarista/core/services/NotificationFeedService';
 import { useToastStore } from './toastStore';
 import { navigationRef } from '../navigation/navigationRef';
 import { getPlatform } from '@bystrobarista/core/platform';

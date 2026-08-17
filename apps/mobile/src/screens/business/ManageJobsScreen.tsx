@@ -18,7 +18,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { JobService } from '@bystrobarista/core/services/JobService';
 import { BusinessService } from '@bystrobarista/core/services/BusinessService';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { JobCard } from '../../components/JobCard';
 import { AddFab } from '../../components/AddFab';
 import type { Job, JobStatus } from '@bystrobarista/core/types/job';

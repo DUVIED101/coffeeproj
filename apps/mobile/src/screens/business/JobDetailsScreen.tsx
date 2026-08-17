@@ -15,7 +15,7 @@ import { useFocusEffect, type RouteProp } from '@react-navigation/native';
 import { COLORS, SHOW_PLATFORM_FEE } from '@bystrobarista/core/config/constants';
 import { JobService } from '@bystrobarista/core/services/JobService';
 import { JobOfferService } from '@bystrobarista/core/services/JobOfferService';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import type { Job, JobStatus } from '@bystrobarista/core/types/job';

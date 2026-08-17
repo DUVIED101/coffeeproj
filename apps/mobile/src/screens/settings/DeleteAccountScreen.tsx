@@ -15,7 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { appleAuth } from '@invertase/react-native-apple-authentication';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { AuthService } from '@bystrobarista/core/services/AuthService';
 import { BusinessService } from '@bystrobarista/core/services/BusinessService';
 import { JobService } from '@bystrobarista/core/services/JobService';

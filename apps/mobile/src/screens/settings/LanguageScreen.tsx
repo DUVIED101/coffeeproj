@@ -15,7 +15,7 @@ import { COLORS } from '@bystrobarista/core/config/constants';
 import { changeLanguage, getCurrentLanguage, type SupportedLanguage } from '@bystrobarista/core/i18n';
 import type { SettingsStackParamList } from '../../navigation/SettingsStack';
 import { supabase } from '../../config/supabase';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 
 type Navigation = NativeStackNavigationProp<SettingsStackParamList, 'Language'>;
 

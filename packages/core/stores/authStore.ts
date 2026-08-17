@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 import type { Session } from '@supabase/supabase-js';
-import type { User } from '@bystrobarista/core/types';
-import type { UserId } from '@bystrobarista/core/types/ids';
+import type { User } from '../types';
+import type { UserId } from '../types/ids';
 import { supabase } from '../config/supabase';
-import { AuthService } from '@bystrobarista/core/services/AuthService';
-import { NotificationService } from '@bystrobarista/core/services/NotificationService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { withTimeout, TimeoutError } from '@bystrobarista/core/utils/withTimeout';
-import { readCachedSession } from '@bystrobarista/core/utils/cachedSession';
+import { AuthService } from '../services/AuthService';
+import { NotificationService } from '../services/NotificationService';
+import { getPlatform } from '../platform';
+import { withTimeout, TimeoutError } from '../utils/withTimeout';
+import { readCachedSession } from '../utils/cachedSession';
 
 // Cold-start network calls are wrapped in this timeout so the app cannot
 // hang on the spinner forever when Supabase is unreachable (Cloudflare-fronted,
@@ -192,7 +192,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Clear local state first so the UI responds immediately even if the
       // server-side /logout request times out (504 context deadline exceeded).
       get().clearAuth();
-      await AsyncStorage.removeItem('supabase.auth.token');
+      await getPlatform().storage.removeItem('supabase.auth.token');
 
       supabase.auth.signOut().catch(err => {
         console.warn('Server-side signOut failed (non-blocking):', err);
@@ -228,7 +228,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await AuthService.deleteAccount(params);
 
     get().clearAuth();
-    await AsyncStorage.removeItem('supabase.auth.token');
+    await getPlatform().storage.removeItem('supabase.auth.token');
   },
 
   // Clear auth state

@@ -17,7 +17,7 @@ import { ApplicationService } from '@bystrobarista/core/services/ApplicationServ
 import { ChatService } from '@bystrobarista/core/services/ChatService';
 import { Skeleton } from '../../components/Skeleton';
 import { useMasterDetail } from '../../components/MasterDetailContext';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import type { Application, ApplicationStatus } from '@bystrobarista/core/types/application';
 import type { ConversationId } from '@bystrobarista/core/types/chat';
 

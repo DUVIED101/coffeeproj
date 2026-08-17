@@ -29,7 +29,7 @@ import { MetroSelector } from '../../components/MetroSelector';
 import { CityToggle } from '../../components/CityToggle';
 import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
 import { AddFab } from '../../components/AddFab';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import type { Branch, Equipment, GeoPoint, CityCode } from '@bystrobarista/core/types';
 import { DEFAULT_CITY, toCityCode } from '@bystrobarista/core/types/city';
 import { PHOTO_LIMIT } from '@bystrobarista/core/utils/storage';

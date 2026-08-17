@@ -18,7 +18,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { ApplicationService } from '@bystrobarista/core/services/ApplicationService';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 import { clampToEffectiveLength, effectiveTextLength } from '../../utils/textLength';
 import type { Job } from '@bystrobarista/core/types/job';

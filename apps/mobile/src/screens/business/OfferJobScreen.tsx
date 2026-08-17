@@ -23,7 +23,7 @@ import {
   JobOfferDuplicatePendingError,
   JobOfferService,
 } from '@bystrobarista/core/services/JobOfferService';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import type { Job } from '@bystrobarista/core/types/job';
 import type { JobId, UserId } from '@bystrobarista/core/types/ids';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';

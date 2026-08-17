@@ -17,7 +17,7 @@ import { JobService } from '@bystrobarista/core/services/JobService';
 import { BaristaProfileService } from '@bystrobarista/core/services/BaristaProfileService';
 import { ReviewService } from '@bystrobarista/core/services/ReviewService';
 import { ApplicationService } from '@bystrobarista/core/services/ApplicationService';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { FilterBar } from '../../components/FilterBar';
 import { JobCard } from '../../components/JobCard';
 import { Skeleton } from '../../components/Skeleton';

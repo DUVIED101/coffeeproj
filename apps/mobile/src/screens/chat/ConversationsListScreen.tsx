@@ -7,7 +7,7 @@ import type { TFunction } from 'i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { ChatService } from '@bystrobarista/core/services/ChatService';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { Avatar } from '../../components/Avatar';

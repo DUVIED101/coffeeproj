@@ -23,7 +23,7 @@ import { MetroSelector } from '../../components/MetroSelector';
 import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
 import { SocialLinksEditor } from '../../components/SocialLinksEditor';
 import { EquipmentChips } from '../../components/EquipmentChips';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import type { Business, Branch, BusinessType, Equipment, GeoPoint, LegalForm } from '@bystrobarista/core/types';
 import type { SocialLink } from '@bystrobarista/core/types/business';
 import { DEFAULT_CITY, toCityCode, type CityCode } from '@bystrobarista/core/types/city';

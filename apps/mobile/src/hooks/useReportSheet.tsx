@@ -16,7 +16,7 @@ import { ReportService } from '@bystrobarista/core/services/ReportService';
 import type { ReportReasonCode, ReportTargetType } from '@bystrobarista/core/types';
 import { showSuccessToast } from '../stores/errorToastStore';
 import { handleApiError } from '../utils/handleApiError';
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 
 const REASONS_BY_TARGET: Record<ReportTargetType, ReportReasonCode[]> = {
   user: ['spam', 'fraud', 'harassment', 'noshow', 'offensive_photo', 'other'],

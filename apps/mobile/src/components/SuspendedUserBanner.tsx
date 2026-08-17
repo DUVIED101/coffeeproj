@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaInsetsContext, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 
 function formatSuspendedUntil(value: string, locale: string): string {
   try {

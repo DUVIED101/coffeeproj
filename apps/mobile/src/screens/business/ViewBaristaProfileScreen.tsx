@@ -21,7 +21,7 @@ import { JobService } from '@bystrobarista/core/services/JobService';
 import { JobOfferService } from '@bystrobarista/core/services/JobOfferService';
 import { WorkExperienceService } from '@bystrobarista/core/services/WorkExperienceService';
 import { ReviewService } from '@bystrobarista/core/services/ReviewService';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { getInitials } from '../../utils/getInitials';
 import { StarRow } from '../../components/StarRow';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';

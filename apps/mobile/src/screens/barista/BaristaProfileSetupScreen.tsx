@@ -27,7 +27,7 @@ import { CertificatesEditor } from '../../components/CertificatesEditor';
 import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { WorkExperienceEditor } from '../../components/WorkExperienceEditor';
 import { EquipmentChips } from '../../components/EquipmentChips';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { formatLocalDate } from '../../utils/dateUtils';
 import {
   sanitizeNameInput,

@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { NotificationPreferencesService } from '@bystrobarista/core/services/NotificationPreferencesService';
 import type { UserId } from '@bystrobarista/core/types/ids';
 import type { UpdateNotificationPreferences } from '@bystrobarista/core/types/notificationPreferences';

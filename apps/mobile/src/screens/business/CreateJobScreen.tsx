@@ -20,7 +20,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { COLORS, EQUIPMENT_TYPES, RADII, SHOW_PLATFORM_FEE } from '@bystrobarista/core/config/constants';
 import { JobService } from '@bystrobarista/core/services/JobService';
 import { BusinessService } from '@bystrobarista/core/services/BusinessService';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { showErrorToast } from '../../stores/errorToastStore';
 import { handleApiError } from '../../utils/handleApiError';
 import type { Branch, Equipment } from '@bystrobarista/core/types/business';

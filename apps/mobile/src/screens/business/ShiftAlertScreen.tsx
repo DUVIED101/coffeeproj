@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { ApplicationService } from '@bystrobarista/core/services/ApplicationService';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import type { ApplicationId } from '@bystrobarista/core/types/ids';

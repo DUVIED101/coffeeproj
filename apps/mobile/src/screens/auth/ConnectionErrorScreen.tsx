@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { ConnectivityReportPanel } from '../../components/ConnectivityReportPanel';
 import { useDiagnosticsStore } from '../../stores/diagnosticsStore';
 

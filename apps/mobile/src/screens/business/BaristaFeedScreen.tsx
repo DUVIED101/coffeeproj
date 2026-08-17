@@ -7,7 +7,7 @@ import { COLORS } from '@bystrobarista/core/config/constants';
 import { BaristaSearchService } from '@bystrobarista/core/services/BaristaSearchService';
 import { BusinessService } from '@bystrobarista/core/services/BusinessService';
 import { ReviewService } from '@bystrobarista/core/services/ReviewService';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { BaristaCard } from '../../components/BaristaCard';
 import { BaristaFilterBar } from '../../components/BaristaFilterBar';

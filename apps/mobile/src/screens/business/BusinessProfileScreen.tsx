@@ -19,7 +19,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import { BusinessService } from '@bystrobarista/core/services/BusinessService';
 import { ReviewService } from '@bystrobarista/core/services/ReviewService';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';

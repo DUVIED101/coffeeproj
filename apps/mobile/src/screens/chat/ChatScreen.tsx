@@ -26,7 +26,7 @@ import {
   ScreenHeaderWithActions,
   type HeaderAction,
 } from '../../components/ScreenHeaderWithActions';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { useChatUnreadStore } from '../../stores/chatUnreadStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import type { UserId } from '@bystrobarista/core/types/ids';

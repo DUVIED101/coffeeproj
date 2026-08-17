@@ -2,7 +2,7 @@ import React, { memo, useCallback } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 
 /**
  * Full-screen blocking modal shown while the user is banned. Sign-out is the

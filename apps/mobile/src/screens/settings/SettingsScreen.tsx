@@ -6,7 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { getCurrentLanguage } from '@bystrobarista/core/i18n';
 import type { SettingsStackParamList } from '../../navigation/SettingsStack';
 import { APP_VERSION } from '../../config/version';

@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { ReviewService } from '@bystrobarista/core/services/ReviewService';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { StarRow } from '../../components/StarRow';
 import { ReviewListRow } from '../../components/ReviewListRow';
 import type { ApplicationReview, UserReviewAggregate } from '@bystrobarista/core/types/review';

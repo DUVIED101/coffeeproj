@@ -1,7 +1,7 @@
 import i18next from 'i18next';
 import { getPlatform } from '@bystrobarista/core/platform';
 import { isAccountBlocked, mapAnyError } from '@bystrobarista/core/utils/errorHandler';
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { showErrorToast } from '../stores/errorToastStore';
 
 const t = (key: string, opts?: Record<string, unknown>): string => i18next.t(key, opts);

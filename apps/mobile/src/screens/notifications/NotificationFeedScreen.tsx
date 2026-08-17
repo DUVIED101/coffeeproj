@@ -15,7 +15,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { Skeleton } from '../../components/Skeleton';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { dispatchPayload } from '../../navigation/navigationRef';
 import type { Notification, NotificationKind } from '@bystrobarista/core/types/notification';

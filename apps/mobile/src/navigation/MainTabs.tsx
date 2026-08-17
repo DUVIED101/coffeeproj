@@ -4,7 +4,7 @@ import { createBottomTabNavigator, BottomTabBarButtonProps } from '@react-naviga
 import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NavigatorScreenParams } from '@react-navigation/native';
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { useChatUnreadStore } from '../stores/chatUnreadStore';
 import { ChatService } from '@bystrobarista/core/services/ChatService';
 import { ErrorBoundary } from '../components/ErrorBoundary';

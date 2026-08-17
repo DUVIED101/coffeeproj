@@ -21,7 +21,7 @@ import { ChatService } from '@bystrobarista/core/services/ChatService';
 import { JobService } from '@bystrobarista/core/services/JobService';
 import { JobOfferService } from '@bystrobarista/core/services/JobOfferService';
 import { ReviewService } from '@bystrobarista/core/services/ReviewService';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { ReviewModal } from '../../components/ReviewModal';
 import { ShiftCountdownBanner } from '../../components/ShiftCountdownBanner';
 import { Skeleton } from '../../components/Skeleton';

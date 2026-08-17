@@ -1,5 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CACHED_SESSION_STORAGE_KEY } from '@bystrobarista/core/utils/cachedSession';
+import { CACHED_SESSION_STORAGE_KEY } from '../utils/cachedSession';
+import { setPlatform, _resetPlatformForTests } from '../platform';
+import { createTestPlatform } from '../platform/testing';
 
 // Phase 8.6 Phase 2: session is now persisted under a project-stable key
 // (decoupled from the supabase URL so direct ↔ proxy swaps don't log users
@@ -22,11 +23,11 @@ const mockGetSession = supabase.auth.getSession as jest.Mock;
 const mockSignOut = supabase.auth.signOut as jest.Mock;
 const mockFrom = supabase.from as jest.Mock;
 
-jest.mock('@bystrobarista/core/services/NotificationService', () => ({
+jest.mock('../services/NotificationService', () => ({
   NotificationService: { unregisterDevice: jest.fn() },
 }));
 
-jest.mock('@bystrobarista/core/services/AuthService', () => ({
+jest.mock('../services/AuthService', () => ({
   AuthService: { deleteAccount: jest.fn() },
 }));
 
@@ -74,10 +75,15 @@ const resetStore = () =>
     sessionStaleFromCache: false,
   });
 
+let storageStore: Map<string, string>;
+
 describe('authStore.initialize', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
-    await AsyncStorage.clear();
+    _resetPlatformForTests();
+    const { platform, storageStore: store } = createTestPlatform();
+    storageStore = store;
+    setPlatform(platform);
     resetStore();
   });
 
@@ -107,7 +113,7 @@ describe('authStore.initialize', () => {
   }, 15000);
 
   it('on getSession timeout WITH cached session: hydrates from cache and proceeds', async () => {
-    await AsyncStorage.setItem(CACHED_KEY, JSON.stringify(validSession));
+    storageStore.set(CACHED_KEY, JSON.stringify(validSession));
     mockGetSession.mockImplementation(() => new Promise(() => {}));
     mockUserSelectReturning(validUserRow);
     await useAuthStore.getState().initialize();

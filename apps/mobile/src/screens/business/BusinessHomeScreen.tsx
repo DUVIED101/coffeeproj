@@ -26,7 +26,7 @@ import { AddFab } from '../../components/AddFab';
 import { JobService } from '@bystrobarista/core/services/JobService';
 import { ApplicationService } from '@bystrobarista/core/services/ApplicationService';
 import { BusinessService } from '@bystrobarista/core/services/BusinessService';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import { ResponsiveContainer } from '../../components/ResponsiveContainer';

@@ -23,7 +23,7 @@ import { handleApiError } from '../../utils/handleApiError';
 import { ApplicationService } from '@bystrobarista/core/services/ApplicationService';
 import { ReviewService } from '@bystrobarista/core/services/ReviewService';
 import { ReviewModal } from '../../components/ReviewModal';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { queryKeys } from '../../lib/queryClient';
 import { getShiftEnd, canBaristaCancelShift, getShiftStart } from '../../utils/shiftLifecycle';
 import type { Application, DisputeSummary } from '@bystrobarista/core/types/application';
