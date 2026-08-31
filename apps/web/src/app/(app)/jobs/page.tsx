@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -183,15 +184,14 @@ function BaristaJobFeed(): React.JSX.Element {
 
 export default function JobsPage(): React.JSX.Element {
   const accountType = useAuthStore((s) => s.user?.accountType);
+  const router = useRouter();
 
-  // Shared path: barista sees the feed; the business manage-jobs surface
-  // lands here in Phase 4.
-  if (accountType === "business") {
-    return (
-      <div className="py-16 text-center text-ink-secondary">
-        Управление вакансиями появится здесь в следующем обновлении.
-      </div>
-    );
-  }
+  // Shared path: barista sees the feed; business jobs live on /dashboard
+  // (mobile's BusinessHomeScreen), so business visitors are redirected.
+  useEffect(() => {
+    if (accountType === "business") router.replace("/dashboard");
+  }, [accountType, router]);
+
+  if (accountType === "business") return <></>;
   return <BaristaJobFeed />;
 }

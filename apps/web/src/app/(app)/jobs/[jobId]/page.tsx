@@ -16,6 +16,7 @@ import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import type { Job } from "@bystrobarista/core/types/job";
 import type { UserId } from "@bystrobarista/core/types/ids";
 import { StarRow } from "@/components/StarRow";
+import { BusinessJobDetails } from "@/components/BusinessJobDetails";
 import { transformedImageUrl } from "@/lib/imageTransform";
 
 // Same gate as mobile JobDetailsScreen.
@@ -58,7 +59,18 @@ const compensationLine = (job: Job, t: TFunction, locale: string): string => {
   }
 };
 
+// Shared route: barista sees the public job view with the apply flow,
+// business owners see their management view (status actions, applicants).
 export default function JobDetailsPage(): React.JSX.Element {
+  const accountType = useAuthStore((s) => s.user?.accountType);
+  const params = useParams<{ jobId: string }>();
+  if (accountType === "business") {
+    return <BusinessJobDetails jobId={params.jobId} />;
+  }
+  return <BaristaJobDetails />;
+}
+
+function BaristaJobDetails(): React.JSX.Element {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === "ru" ? "ru-RU" : "en-US";
   const params = useParams<{ jobId: string }>();
