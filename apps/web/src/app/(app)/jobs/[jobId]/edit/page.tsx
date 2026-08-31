@@ -1,13 +1,10 @@
 "use client";
 
+import { useParams } from "next/navigation";
 import React from "react";
+import { JobForm } from "@/components/JobForm";
 
-// Placeholder: edit mode of the CreateJobScreen port lands here in the next
-// Phase 4 wave.
 export default function EditJobPage(): React.JSX.Element {
-  return (
-    <p className="py-16 text-center text-sm text-ink-secondary">
-      Редактирование вакансий появится здесь в следующем обновлении.
-    </p>
-  );
+  const params = useParams<{ jobId: string }>();
+  return <JobForm editJobId={params.jobId} />;
 }
