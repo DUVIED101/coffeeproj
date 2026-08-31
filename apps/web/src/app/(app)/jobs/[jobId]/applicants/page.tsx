@@ -73,8 +73,7 @@ const displayName = (app: Application, t: TFunction): string => {
 // Web port of mobile's ApplicantsScreen: pending offers on top, then the
 // application cards with accept/reject, chat, profile link, completion
 // confirmation gated by shift end, cancel-shift within the 60-minute window,
-// review prompt after completion and read-only dispute status. Filing a new
-// dispute is Phase 5 (shared DisputeForm).
+// review prompt after completion, and dispute status / filing entry.
 export default function ApplicantsPage(): React.JSX.Element {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === "ru" ? "ru-RU" : "en-US";
@@ -551,12 +550,23 @@ export default function ApplicantsPage(): React.JSX.Element {
                 </button>
               )}
 
-              {dispute && (
-                <p className="mt-3 rounded-input bg-bg-secondary p-3 text-xs text-ink-secondary">
-                  {t("disputes.filedLabel")} ·{" "}
-                  {t(`disputes.status.${dispute.status}`)}
-                </p>
-              )}
+              {(app.status === "accepted" || app.status === "completed") &&
+                (dispute ? (
+                  <Link
+                    href={`/disputes/${dispute.id}`}
+                    className="mt-3 block rounded-input bg-bg-secondary p-3 text-xs text-ink-secondary hover:text-ink"
+                  >
+                    {t("disputes.filedLabel")} ·{" "}
+                    {t(`disputes.status.${dispute.status}`)}
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/disputes/new?applicationId=${app.id}`}
+                    className="mt-3 block rounded-input border border-error p-3 text-center text-xs font-semibold text-error"
+                  >
+                    {t("disputes.openAction")}
+                  </Link>
+                ))}
             </div>
           );
         })

@@ -12,6 +12,8 @@ export default function robots(): MetadataRoute.Robots {
         "/dashboard",
         "/chats",
         "/settings",
+        "/notifications",
+        "/disputes",
       ],
     },
     sitemap: "https://app.bystrobarista.com/sitemap.xml",

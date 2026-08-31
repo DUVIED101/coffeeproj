@@ -41,8 +41,8 @@ const statusLabel = (status: ApplicationStatus, t: TFunction): string => {
 };
 
 // Port of ApplicationDetailsScreen (barista side): status, job summary,
-// cover letter, completion banners, withdraw / mark-complete / review
-// actions. Dispute flow arrives with Phase 5.
+// cover letter, completion banners, withdraw / mark-complete / review /
+// dispute actions.
 export default function ApplicationDetailsPage(): React.JSX.Element {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === "ru" ? "ru-RU" : "en-US";
@@ -67,6 +67,13 @@ export default function ApplicationDetailsPage(): React.JSX.Element {
     queryFn: () =>
       ReviewService.getReviewByApplication(applicationId, "barista"),
     enabled: application?.status === "completed",
+  });
+
+  const disputeQuery = useQuery({
+    queryKey: ["disputes", "own", applicationId],
+    queryFn: () => ApplicationService.getOwnDispute(applicationId),
+    enabled:
+      application?.status === "accepted" || application?.status === "completed",
   });
 
   if (applicationQuery.isPending) {
@@ -279,6 +286,32 @@ export default function ApplicationDetailsPage(): React.JSX.Element {
               {t("reviews.banner.prompt")}
             </button>
           )}
+
+        {(application.status === "accepted" ||
+          application.status === "completed") &&
+          disputeQuery.isSuccess &&
+          (disputeQuery.data ? (
+            <Link
+              href={`/disputes/${disputeQuery.data.id}`}
+              className="rounded-card border border-line bg-bg-secondary px-4 py-3 text-center text-sm"
+            >
+              <span className="font-semibold">{t("disputes.filedLabel")}</span>
+              {" · "}
+              {t(`disputes.status.${disputeQuery.data.status}`)}
+              {disputeQuery.data.resolutionNote && (
+                <span className="mt-1 block text-xs text-ink-secondary">
+                  {disputeQuery.data.resolutionNote}
+                </span>
+              )}
+            </Link>
+          ) : (
+            <Link
+              href={`/disputes/new?applicationId=${applicationId}`}
+              className="rounded-card border border-error px-4 py-3 text-center text-sm font-semibold text-error"
+            >
+              {t("disputes.openAction")}
+            </Link>
+          ))}
       </div>
 
       {reviewOpen && job?.businessOwnerId && (
