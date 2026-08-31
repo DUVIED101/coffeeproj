@@ -63,12 +63,9 @@ export class ChatService {
         `
         )
         .eq('application_id', applicationId)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          return null;
-        }
         throw error;
       }
 
@@ -125,12 +122,9 @@ export class ChatService {
         `
         )
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          return null;
-        }
         throw error;
       }
 

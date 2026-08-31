@@ -161,17 +161,18 @@ export class BusinessService {
     }
     const inflight = (async () => {
       try {
+        // maybeSingle: a business account before profile setup has no row yet.
         const { data, error } = await supabase
           .from('businesses')
           .select('*')
           .eq('owner_id', ownerId)
-          .single();
+          .maybeSingle();
         if (error) {
-          if (error.code === 'PGRST116') {
-            businessByOwnerCache.set(ownerId, { value: null, timestamp: Date.now() });
-            return null;
-          }
           throw error;
+        }
+        if (!data) {
+          businessByOwnerCache.set(ownerId, { value: null, timestamp: Date.now() });
+          return null;
         }
         const mapped = data ? this.mapBusiness(data) : null;
         businessByOwnerCache.set(ownerId, { value: mapped, timestamp: Date.now() });

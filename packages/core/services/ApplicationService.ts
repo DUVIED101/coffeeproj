@@ -486,20 +486,16 @@ export class ApplicationService {
     baristaId: string
   ): Promise<Application | null> {
     try {
+      // maybeSingle, not single: zero rows is the normal "not applied yet"
+      // case and must not surface as a PGRST116/406 on the wire.
       const { data, error } = await supabase
         .from('applications')
         .select('*')
         .eq('job_id', jobId)
         .eq('barista_id', baristaId)
-        .single();
+        .maybeSingle();
 
-      if (error) {
-        // PGRST116 means no rows found, which is fine
-        if (error.code === 'PGRST116') {
-          return null;
-        }
-        throw error;
-      }
+      if (error) throw error;
 
       return data ? this.mapApplication(data) : null;
     } catch (error) {
@@ -523,12 +519,9 @@ export class ApplicationService {
         `
         )
         .eq('id', applicationId)
-        .single();
+        .maybeSingle();
 
-      if (error) {
-        if (error.code === 'PGRST116') return null;
-        throw error;
-      }
+      if (error) throw error;
       return data ? this.mapApplicationWithJob(data) : null;
     } catch (error) {
       console.error('Error in getApplicationById:', error);

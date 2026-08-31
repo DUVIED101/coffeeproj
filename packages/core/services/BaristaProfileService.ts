@@ -85,16 +85,15 @@ export class BaristaProfileService {
    */
   static async getProfileByUserId(userId: string): Promise<BaristaProfile | null> {
     try {
+      // maybeSingle: "no profile yet" is the normal pre-setup state and must
+      // not surface as a PGRST116/406 on the wire.
       const { data, error } = await supabase
         .from('barista_profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          return null;
-        }
         throw error;
       }
 
