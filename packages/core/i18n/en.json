@@ -1487,7 +1487,8 @@
       "appleConfirm": "Confirm with Apple",
       "appleConfirmed": "Confirmation received",
       "appleReauthFailed": "Apple confirmation failed. Please try again.",
-      "invalidAppleToken": "Apple confirmation is invalid. Please try again."
+      "invalidAppleToken": "Apple confirmation is invalid. Please try again.",
+      "appleUseMobile": "Deleting an account created with Apple is available in the iOS app."
     },
     "legal": {
       "termsTitle": "Terms of Service",

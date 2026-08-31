@@ -1508,7 +1508,8 @@
       "appleConfirm": "Подтвердить через Apple",
       "appleConfirmed": "Подтверждение получено",
       "appleReauthFailed": "Не удалось подтвердить через Apple. Попробуйте ещё раз.",
-      "invalidAppleToken": "Подтверждение Apple недействительно. Попробуйте ещё раз."
+      "invalidAppleToken": "Подтверждение Apple недействительно. Попробуйте ещё раз.",
+      "appleUseMobile": "Удаление аккаунта, созданного через Apple, доступно в приложении на iPhone."
     },
     "legal": {
       "termsTitle": "Условия использования",
