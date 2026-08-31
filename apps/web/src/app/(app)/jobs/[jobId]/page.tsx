@@ -296,7 +296,7 @@ export default function JobDetailsPage(): React.JSX.Element {
                 })}
               </p>
               <Link
-                href="/profile"
+                href="/profile/edit"
                 className="inline-block rounded-card bg-primary px-6 py-3 text-sm font-semibold text-white"
               >
                 {t("jobFeed.profileBannerTitle")}

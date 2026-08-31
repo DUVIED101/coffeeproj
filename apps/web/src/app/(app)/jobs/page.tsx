@@ -105,7 +105,7 @@ function BaristaJobFeed(): React.JSX.Element {
 
       {showProfileBanner && (
         <Link
-          href="/profile"
+          href="/profile/edit"
           className="mb-4 flex items-center justify-between rounded-card border border-[#FCD34D] bg-[#FEF3C7] px-4 py-3"
         >
           <span>
