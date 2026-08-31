@@ -37,13 +37,17 @@ export class NotificationService {
 
   static async unregisterDevice(userId: UserId): Promise<void> {
     try {
-      const query = getSupabase().from('apns_tokens').delete().eq('user_id', userId);
-      // Scope the delete to THIS device's token when we have one. Falling back
-      // to wiping every row would log the user out of push on all their other
-      // devices too.
-      const { error } = this.lastRegisteredToken
-        ? await query.eq('device_token', this.lastRegisteredToken)
-        : await query;
+      // Only delete the token THIS session registered. When we never
+      // registered (push denied, or a platform without push — web until
+      // Phase 6), deleting nothing is the only safe option: an unscoped
+      // delete would wipe the user's push tokens on every other device
+      // (e.g. web sign-out silently killing iPhone notifications).
+      if (!this.lastRegisteredToken) return;
+      const { error } = await getSupabase()
+        .from('apns_tokens')
+        .delete()
+        .eq('user_id', userId)
+        .eq('device_token', this.lastRegisteredToken);
       if (error) throw error;
       this.lastRegisteredToken = null;
       await getPlatform().push.unsubscribe();
