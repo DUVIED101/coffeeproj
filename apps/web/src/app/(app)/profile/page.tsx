@@ -162,8 +162,9 @@ export default function ProfilePage(): React.JSX.Element {
                   className="h-20 w-20 rounded-full object-cover"
                 />
               ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-bg-secondary text-2xl">
-                  ☕
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary text-2xl font-bold text-white">
+                  {profile.firstName[0]}
+                  {profile.lastName[0]}
                 </div>
               )}
               <div className="min-w-0 flex-1">
