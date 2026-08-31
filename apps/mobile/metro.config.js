@@ -8,6 +8,27 @@ const coreRoot = path.resolve(workspaceRoot, 'packages/core');
 
 const defaultConfig = getDefaultConfig(projectRoot);
 
+// Libraries that must resolve to apps/mobile/node_modules exactly once.
+// Metro's hierarchical lookup for files under packages/core walks up to the
+// MONOREPO-ROOT node_modules (where the workspace install of core's own deps
+// lives) — a second copy of react there crashes the app with "Invalid hook
+// call"; a second i18next means initI18n initialises an instance the screens
+// never read. Redirecting the origin to the app root forces the app's copy.
+const SHARED_SINGLETONS = new Set([
+  'react',
+  'react-native',
+  'i18next',
+  'react-i18next',
+  'zustand',
+  '@supabase/supabase-js',
+  '@babel/runtime',
+]);
+
+const packageBase = moduleName => {
+  const parts = moduleName.split('/');
+  return moduleName.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0];
+};
+
 const config = {
   watchFolders: [coreRoot],
   resolver: {
@@ -23,6 +44,17 @@ const config = {
             return {filePath: candidate, type: 'sourceFile'};
           }
         }
+      }
+      if (
+        context.originModulePath &&
+        context.originModulePath.startsWith(coreRoot) &&
+        SHARED_SINGLETONS.has(packageBase(moduleName))
+      ) {
+        return context.resolveRequest(
+          {...context, originModulePath: path.join(projectRoot, 'package.json')},
+          moduleName,
+          platform
+        );
       }
       return context.resolveRequest(context, moduleName, platform);
     },
