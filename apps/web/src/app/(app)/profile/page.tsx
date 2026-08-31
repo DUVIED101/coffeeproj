@@ -16,6 +16,7 @@ import {
 } from "@bystrobarista/core/utils/pickPhotos";
 import { transformedImageUrl } from "@/lib/imageTransform";
 import { StarRow } from "@/components/StarRow";
+import { BusinessProfileView } from "@/components/BusinessProfileView";
 import { ReviewService } from "@bystrobarista/core/services/ReviewService";
 import type { UserId } from "@bystrobarista/core/types/ids";
 
@@ -119,17 +120,10 @@ export default function ProfilePage(): React.JSX.Element {
   return (
     <div className="mx-auto max-w-2xl pb-16">
       <h1 className="mb-4 text-2xl font-bold">
-        {t("baristaProfileScreen.title")}
+        {t(isBarista ? "baristaProfileScreen.title" : "businessProfile.title")}
       </h1>
 
-      {!isBarista && (
-        <div className="rounded-card border border-line bg-white p-4">
-          <p className="text-sm text-ink-secondary">{user?.email}</p>
-          <p className="mt-2 text-sm text-ink-secondary">
-            Управление профилем бизнеса появится в следующем обновлении.
-          </p>
-        </div>
-      )}
+      {!isBarista && <BusinessProfileView />}
 
       {isBarista && profileQuery.isPending && (
         <div className="h-48 animate-pulse rounded-card bg-bg-secondary" />

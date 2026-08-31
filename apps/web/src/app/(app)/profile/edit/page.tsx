@@ -44,6 +44,7 @@ import {
 import { MetroFilterModal } from "@/components/MetroFilterModal";
 import { WorkExperienceEditor } from "@/components/WorkExperienceEditor";
 import { TextField } from "@/components/ui/TextField";
+import { BusinessProfileForm } from "@/components/BusinessProfileForm";
 
 const STEPS = [
   "stepBasicInfo",
@@ -79,7 +80,14 @@ const sectionLabel = "text-sm font-medium text-ink";
 // semantics — one createProfile/updateProfile call at the end plus
 // WorkExperienceService.replaceAll; certificates persist immediately only in
 // edit mode. profile_completeness is computed by a DB trigger.
+// Shared route: barista gets the 5-step wizard, business the profile form.
 export default function ProfileEditPage(): React.JSX.Element {
+  const accountType = useAuthStore((s) => s.user?.accountType);
+  if (accountType === "business") return <BusinessProfileForm />;
+  return <BaristaProfileEditWizard />;
+}
+
+function BaristaProfileEditWizard(): React.JSX.Element {
   const { t } = useTranslation();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -123,10 +131,6 @@ export default function ProfileEditPage(): React.JSX.Element {
   );
 
   const isBarista = user?.accountType === "barista";
-
-  useEffect(() => {
-    if (user && !isBarista) router.replace("/profile");
-  }, [user, isBarista, router]);
 
   useEffect(() => {
     let cancelled = false;
