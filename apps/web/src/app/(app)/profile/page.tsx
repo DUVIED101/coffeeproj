@@ -15,6 +15,7 @@ import {
   reportRejections,
 } from "@bystrobarista/core/utils/pickPhotos";
 import { transformedImageUrl } from "@/lib/imageTransform";
+import { formatDateOnly } from "@/lib/dates";
 import { StarRow } from "@/components/StarRow";
 import { BusinessProfileView } from "@/components/BusinessProfileView";
 import { ReviewService } from "@bystrobarista/core/services/ReviewService";
@@ -275,7 +276,7 @@ export default function ProfilePage(): React.JSX.Element {
               <>
                 <p className={label}>{t("baristaProfileScreen.dateOfBirth")}</p>
                 <p className="text-sm">
-                  {new Date(profile.dateOfBirth).toLocaleDateString(locale)}
+                  {formatDateOnly(profile.dateOfBirth, locale)}
                 </p>
               </>
             )}
@@ -284,9 +285,7 @@ export default function ProfilePage(): React.JSX.Element {
                 <p className={label}>{t("medicalBook.label")}</p>
                 <p className="text-sm">
                   {t("medicalBook.status.valid", {
-                    date: new Date(
-                      profile.medicalBookExpiresOn,
-                    ).toLocaleDateString(locale),
+                    date: formatDateOnly(profile.medicalBookExpiresOn, locale),
                   })}
                 </p>
               </>
@@ -389,9 +388,7 @@ export default function ProfilePage(): React.JSX.Element {
               <>
                 <p className={label}>{t("baristaSetup.fieldAvailableFrom")}</p>
                 <p className="text-sm">
-                  {new Date(profile.availableFromDate).toLocaleDateString(
-                    locale,
-                  )}
+                  {formatDateOnly(profile.availableFromDate, locale)}
                 </p>
               </>
             )}

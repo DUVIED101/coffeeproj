@@ -85,13 +85,21 @@ export default function ApplicantsPage(): React.JSX.Element {
   const userId = user?.id;
   const queryClient = useQueryClient();
 
-  // Owner-only surface: RLS already hides the data from other roles, but a
-  // barista landing here should get the job page, not an empty list.
+  const jobQuery = useQuery({
+    queryKey: ["jobs", "byId", jobId],
+    queryFn: () => JobService.getJobById(jobId),
+  });
+
+  // Owner-only surface: RLS already hides the data from everyone else, but
+  // a barista or another business landing here should get the job page,
+  // not an empty list.
   useEffect(() => {
-    if (user && user.accountType !== "business") {
+    if (!user) return;
+    const ownerId = jobQuery.data?.businessOwnerId;
+    if (user.accountType !== "business" || (ownerId && ownerId !== user.id)) {
       router.replace(`/jobs/${jobId}`);
     }
-  }, [user, router, jobId]);
+  }, [user, router, jobId, jobQuery.data?.businessOwnerId]);
 
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [cancellingOfferIds, setCancellingOfferIds] = useState<Set<string>>(
@@ -104,11 +112,6 @@ export default function ApplicantsPage(): React.JSX.Element {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
-
-  const jobQuery = useQuery({
-    queryKey: ["jobs", "byId", jobId],
-    queryFn: () => JobService.getJobById(jobId),
-  });
 
   const applicationsQuery = useQuery({
     queryKey: ["applications", "byJob", jobId],
@@ -150,16 +153,13 @@ export default function ApplicantsPage(): React.JSX.Element {
   const reviewsQuery = useQuery({
     queryKey: ["reviews", "byApplications", "business", completedIds],
     queryFn: async () => {
-      const entries = await Promise.all(
-        completedIds.map(async (id) => {
-          const review = await ReviewService.getReviewByApplication(
-            id as ApplicationId,
-            "business",
-          ).catch(() => null);
-          return [id, Boolean(review)] as const;
-        }),
-      );
-      return Object.fromEntries(entries) as Record<string, boolean>;
+      const reviews = await ReviewService.getReviewsByApplications(
+        completedIds as ApplicationId[],
+        "business",
+      ).catch(() => new Map());
+      return Object.fromEntries(
+        completedIds.map((id) => [id, reviews.has(id as ApplicationId)]),
+      ) as Record<string, boolean>;
     },
     enabled: completedIds.length > 0,
   });

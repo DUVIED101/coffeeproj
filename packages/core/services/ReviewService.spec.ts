@@ -306,3 +306,42 @@ describe('review service select payload', () => {
     expect(selectedColumns).not.toContain('rater_id');
   });
 });
+
+describe('getReviewsByApplications', () => {
+  it('returns an empty map without calling Supabase when given no ids', async () => {
+    const result = await ReviewService.getReviewsByApplications([], RATER_ROLE_BUSINESS);
+
+    expect(mockFrom).not.toHaveBeenCalled();
+    expect(result).toEqual(new Map());
+  });
+
+  it('maps rows by application id for the requested rater role', async () => {
+    const builder = createSelectBuilderMock<ReviewRow>([REVIEW_ROW_NO_COMMENT]);
+    mockFrom.mockReturnValue(builder);
+
+    const result = await ReviewService.getReviewsByApplications(
+      [APPLICATION_ID],
+      RATER_ROLE_BARISTA
+    );
+
+    expect(mockFrom).toHaveBeenCalledWith('application_reviews');
+    expect(builder.in).toHaveBeenCalledWith('application_id', [APPLICATION_ID]);
+    expect(builder.eq).toHaveBeenCalledWith('rater_role', RATER_ROLE_BARISTA);
+    expect(result).toEqual(
+      new Map([
+        [
+          APPLICATION_ID,
+          {
+            id: REVIEW_ID,
+            applicationId: APPLICATION_ID,
+            raterRole: RATER_ROLE_BARISTA,
+            rateeId: RATEE_USER_ID,
+            rating: RATING_FOUR,
+            comment: undefined,
+            createdAt: CREATED_AT,
+          },
+        ],
+      ])
+    );
+  });
+});

@@ -88,6 +88,35 @@ export class ReviewService {
     }
   }
 
+  /**
+   * Batch variant of getReviewByApplication — one query instead of N when a
+   * list screen needs "has this side already reviewed?" per application.
+   */
+  static async getReviewsByApplications(
+    applicationIds: ApplicationId[],
+    raterRole: RaterRole
+  ): Promise<Map<ApplicationId, ApplicationReview>> {
+    if (applicationIds.length === 0) return new Map();
+    try {
+      const { data, error } = await supabase
+        .from('application_reviews')
+        .select(REVIEW_COLUMNS)
+        .in('application_id', applicationIds)
+        .eq('rater_role', raterRole);
+
+      if (error) throw error;
+      const map = new Map<ApplicationId, ApplicationReview>();
+      for (const row of data || []) {
+        const review = this.mapReview(row);
+        map.set(review.applicationId, review);
+      }
+      return map;
+    } catch (error) {
+      console.error('Error in getReviewsByApplications:', error);
+      throw error;
+    }
+  }
+
   static async getReviewsForUser(userId: UserId): Promise<ApplicationReview[]> {
     try {
       const { data, error } = await supabase

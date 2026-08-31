@@ -151,7 +151,10 @@ export default function BranchesPage(): React.JSX.Element {
       controller.abort();
       clearTimeout(timer);
     };
-  }, [form?.address, form?.city, form]);
+    // Only the address+city matter here — depending on the whole form object
+    // would restart the debounce on every unrelated keystroke (name, chips).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form?.address, form?.city]);
 
   const openCreate = (): void => {
     geocodedKeyRef.current = null;

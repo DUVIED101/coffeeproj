@@ -22,6 +22,7 @@ import {
 import { computeMedicalBookStatus } from "@bystrobarista/core/utils/medicalBook";
 import { StarRow } from "@/components/StarRow";
 import { transformedImageUrl } from "@/lib/imageTransform";
+import { formatDateOnly } from "@/lib/dates";
 
 const sectionTitle = "mb-2 text-base font-semibold";
 const chipClass =
@@ -125,7 +126,7 @@ export default function ViewBaristaProfilePage(): React.JSX.Element {
 
   const medicalStatus = computeMedicalBookStatus(profile.medicalBookExpiresOn);
   const medicalDate = profile.medicalBookExpiresOn
-    ? new Date(profile.medicalBookExpiresOn).toLocaleDateString(locale, {
+    ? formatDateOnly(profile.medicalBookExpiresOn, locale, {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -133,7 +134,7 @@ export default function ViewBaristaProfilePage(): React.JSX.Element {
     : "";
 
   const longDate = (iso: string): string =>
-    new Date(iso).toLocaleDateString(locale, {
+    formatDateOnly(iso, locale, {
       year: "numeric",
       month: "long",
       day: "numeric",

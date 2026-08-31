@@ -12,6 +12,7 @@ import { ReviewService } from "@bystrobarista/core/services/ReviewService";
 import type { UserId } from "@bystrobarista/core/types/ids";
 import { StarRow } from "@/components/StarRow";
 import { transformedImageUrl } from "@/lib/imageTransform";
+import { safeExternalUrl } from "@/lib/safeUrl";
 
 // Port of BusinessPublicProfileScreen: header with logo/rating/reliability,
 // brand links, branches list, "view jobs" CTA.
@@ -113,9 +114,9 @@ export default function BusinessPublicProfilePage(): React.JSX.Element {
             {t("businessProfile.brandSection")}
           </h2>
           <div className="rounded-card border border-line bg-white">
-            {business.website && (
+            {safeExternalUrl(business.website) && (
               <a
-                href={business.website}
+                href={safeExternalUrl(business.website) as string}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-between border-b border-line px-4 py-3 text-sm last:border-b-0 hover:bg-bg-secondary"

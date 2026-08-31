@@ -21,27 +21,31 @@ import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import type { SocialLink } from "@bystrobarista/core/types/business";
 import type { UserId } from "@bystrobarista/core/types/ids";
 import { transformedImageUrl } from "@/lib/imageTransform";
+import { safeExternalUrl } from "@/lib/safeUrl";
 import { MdiIcon } from "@/components/MdiIcon";
 
 const stripAt = (value: string): string => value.replace(/^@+/, "");
 
 // Same URL-building rules as mobile's BusinessProfileScreen: bare handles get
-// their platform prefix; 'other' entries are display-only.
+// their platform prefix; 'other' entries are display-only. Every result is
+// passed through safeExternalUrl so only http(s) becomes clickable.
 const buildSocialLinkUrl = (link: SocialLink): string | null => {
   const value = link.value.trim();
   if (!value) return null;
-  if (/^https?:\/\//i.test(value)) return value;
+  if (/^https?:\/\//i.test(value)) return safeExternalUrl(value);
   switch (link.platform) {
     case "instagram":
-      return `https://instagram.com/${stripAt(value)}`;
+      return safeExternalUrl(`https://instagram.com/${stripAt(value)}`);
     case "telegram":
-      return `https://t.me/${stripAt(value)}`;
+      return safeExternalUrl(`https://t.me/${stripAt(value)}`);
     case "vk":
-      return value.startsWith("vk.com")
-        ? `https://${value}`
-        : `https://vk.com/${stripAt(value)}`;
+      return safeExternalUrl(
+        value.startsWith("vk.com")
+          ? `https://${value}`
+          : `https://vk.com/${stripAt(value)}`,
+      );
     case "website":
-      return `https://${value}`;
+      return safeExternalUrl(value);
     default:
       return null;
   }
@@ -225,11 +229,7 @@ export function BusinessProfileView(): React.JSX.Element {
               icon={mdiWeb}
               label={t("businessProfile.website")}
               value={business.website.replace(/^https?:\/\//i, "")}
-              href={
-                /^https?:\/\//i.test(business.website)
-                  ? business.website
-                  : `https://${business.website}`
-              }
+              href={safeExternalUrl(business.website) ?? undefined}
               external
             />
           )}

@@ -120,14 +120,21 @@ export function BusinessJobDetails({
   const formatDate = (iso: string): string =>
     new Date(iso).toLocaleDateString(locale);
   const shift = job.shiftDetails;
+  // The management surface belongs to the owner only. Another business
+  // following a job link gets the same sections read-only, with no
+  // applicants/edit/status controls (server-side ownership checks are the
+  // backstop; this removes the misleading UI).
+  const isOwner = job.businessOwnerId === userId;
   const canViewApplicants =
-    (job.applicationCount ?? 0) > 0 || pendingOfferCount > 0;
-  const canClose = job.status === "open" || job.status === "in_review";
+    isOwner && ((job.applicationCount ?? 0) > 0 || pendingOfferCount > 0);
+  const canClose =
+    isOwner && (job.status === "open" || job.status === "in_review");
   const canReopen =
-    job.status === "filled" ||
-    job.status === "cancelled" ||
-    job.status === "expired";
-  const canEdit = job.status === "open";
+    isOwner &&
+    (job.status === "filled" ||
+      job.status === "cancelled" ||
+      job.status === "expired");
+  const canEdit = isOwner && job.status === "open";
 
   const compensationType =
     job.compensation.type === "hourly"
