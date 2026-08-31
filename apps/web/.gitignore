@@ -12,3 +12,4 @@
 
 # TS incremental
 *.tsbuildinfo
+.next-build/
