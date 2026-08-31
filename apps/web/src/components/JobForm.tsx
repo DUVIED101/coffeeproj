@@ -187,6 +187,11 @@ export function JobForm({
   const clearError = (key: string): void =>
     setErrors((prev) => (prev[key] ? { ...prev, [key]: undefined } : prev));
 
+  // Business-only form; a barista landing here goes back to the feed.
+  useEffect(() => {
+    if (user && user.accountType !== "business") router.replace("/jobs");
+  }, [user, router]);
+
   // Single-branch auto-select (create mode parity with mobile).
   useEffect(() => {
     if (!isEditMode && !selectedBranchId && branches.length === 1) {

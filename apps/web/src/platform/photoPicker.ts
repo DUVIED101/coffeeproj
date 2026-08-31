@@ -96,10 +96,11 @@ export const webPhotoPicker: PhotoPickerAdapter = {
   async readAsArrayBuffer(uri) {
     const registered = blobRegistry.get(uri);
     if (registered) {
-      const buffer = await registered.arrayBuffer();
-      blobRegistry.delete(uri);
-      URL.revokeObjectURL(uri);
-      return buffer;
+      // Keep the registry entry and the object URL alive: the caller may
+      // retry the upload after a network failure, and the URI may still be
+      // rendered as a preview. A few MB per picked photo until navigation
+      // is an acceptable cost for a working retry.
+      return registered.arrayBuffer();
     }
     const response = await fetch(uri);
     if (!response.ok)

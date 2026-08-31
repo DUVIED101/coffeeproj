@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -80,8 +80,18 @@ export default function ApplicantsPage(): React.JSX.Element {
   const locale = i18n.language === "ru" ? "ru-RU" : "en-US";
   const params = useParams<{ jobId: string }>();
   const jobId = params.jobId;
-  const userId = useAuthStore((s) => s.user?.id);
+  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const userId = user?.id;
   const queryClient = useQueryClient();
+
+  // Owner-only surface: RLS already hides the data from other roles, but a
+  // barista landing here should get the job page, not an empty list.
+  useEffect(() => {
+    if (user && user.accountType !== "business") {
+      router.replace(`/jobs/${jobId}`);
+    }
+  }, [user, router, jobId]);
 
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [cancellingOfferIds, setCancellingOfferIds] = useState<Set<string>>(
@@ -205,7 +215,6 @@ export default function ApplicantsPage(): React.JSX.Element {
   const changeStatus = async (
     applicationId: string,
     status: "accepted" | "rejected",
-    successKey: string,
     failureKey: string,
   ): Promise<void> => {
     if (!userId) return;
@@ -230,7 +239,6 @@ export default function ApplicantsPage(): React.JSX.Element {
     void changeStatus(
       applicationId,
       "rejected",
-      "applications.cancelShift.success",
       "applications.cancelShift.failure",
     );
   };
@@ -473,7 +481,6 @@ export default function ApplicantsPage(): React.JSX.Element {
                       void changeStatus(
                         app.id,
                         "accepted",
-                        "applicants.acceptSuccess",
                         "applicants.acceptFailure",
                       )
                     }
@@ -488,7 +495,6 @@ export default function ApplicantsPage(): React.JSX.Element {
                       void changeStatus(
                         app.id,
                         "rejected",
-                        "applicants.rejectSuccess",
                         "applicants.rejectFailure",
                       )
                     }
