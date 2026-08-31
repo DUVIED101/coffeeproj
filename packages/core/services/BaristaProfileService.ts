@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase';
+import { getPlatform } from '../platform';
 import type {
   BaristaProfile,
   CreateBaristaProfileData,
@@ -223,22 +224,8 @@ export class BaristaProfileService {
       const fileName = `${userId}/avatar_${Date.now()}.jpg`;
       console.log('[uploadAvatar] File name:', fileName);
 
-      // Read file as ArrayBuffer using XMLHttpRequest for React Native
       console.log('[uploadAvatar] Reading file as ArrayBuffer...');
-      const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.onload = function () {
-          console.log('[uploadAvatar] ArrayBuffer loaded, byteLength:', xhr.response?.byteLength);
-          resolve(xhr.response);
-        };
-        xhr.onerror = function (e) {
-          console.error('[uploadAvatar] XHR error:', e);
-          reject(new Error('Failed to read file'));
-        };
-        xhr.responseType = 'arraybuffer';
-        xhr.open('GET', photoUri, true);
-        xhr.send(null);
-      });
+      const arrayBuffer = await getPlatform().photoPicker.readAsArrayBuffer(photoUri);
 
       console.log('[uploadAvatar] Uploading to Supabase Storage...');
       const { data, error } = await supabase.storage
@@ -290,19 +277,7 @@ export class BaristaProfileService {
 
       const fileName = `${userId}/portfolio_${Date.now()}.jpg`;
 
-      // Read file as ArrayBuffer using XMLHttpRequest for React Native
-      const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.onload = function () {
-          resolve(xhr.response);
-        };
-        xhr.onerror = function () {
-          reject(new Error('Failed to read file'));
-        };
-        xhr.responseType = 'arraybuffer';
-        xhr.open('GET', photoUri, true);
-        xhr.send(null);
-      });
+      const arrayBuffer = await getPlatform().photoPicker.readAsArrayBuffer(photoUri);
 
       const { error } = await supabase.storage
         .from('barista-portfolios')
@@ -354,18 +329,7 @@ export class BaristaProfileService {
   static async uploadCertificateFile(userId: string, photoUri: string): Promise<string> {
     const fileName = `${userId}/certificates/cert_${Date.now()}.jpg`;
 
-    const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = function () {
-        resolve(xhr.response);
-      };
-      xhr.onerror = function () {
-        reject(new Error('Failed to read file'));
-      };
-      xhr.responseType = 'arraybuffer';
-      xhr.open('GET', photoUri, true);
-      xhr.send(null);
-    });
+    const arrayBuffer = await getPlatform().photoPicker.readAsArrayBuffer(photoUri);
 
     const { error } = await supabase.storage
       .from('barista-portfolios')
@@ -424,7 +388,10 @@ export class BaristaProfileService {
     // behaviour, with the security_definer_view advisor flag retired.
     const { data, error } = await supabase
       .rpc('get_barista_reliability', { p_user_id: userId })
-      .maybeSingle<{ incidents_30d: number | null; reliability_score: number | null }>();
+      .maybeSingle<{
+        incidents_30d: number | null;
+        reliability_score: number | null;
+      }>();
     if (error) throw error;
     if (!data) return null;
     return {
