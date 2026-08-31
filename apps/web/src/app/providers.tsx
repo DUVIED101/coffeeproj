@@ -36,6 +36,10 @@ if (typeof window !== "undefined" && !window.__bbBootstrapped) {
     detectSessionInUrl: true,
     flowType: "pkce",
   });
+  // Inside the guard, not the React effect: Strict Mode double-runs effects
+  // in dev, and a second registerAuthListener would attach a duplicate
+  // onAuthStateChange handler (double setSession / profile fetches).
+  registerAuthListener();
 }
 
 export function Providers({
@@ -49,7 +53,6 @@ export function Providers({
     let mounted = true;
     (async () => {
       await initI18n();
-      registerAuthListener();
       void useAuthStore.getState().initialize();
       if (mounted) setReady(true);
     })();

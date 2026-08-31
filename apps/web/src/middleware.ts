@@ -113,6 +113,11 @@ export async function middleware(request: NextRequest) {
       : null;
   if (profile && (profile.sub !== user.id || profile.exp <= Date.now()))
     profile = null;
+  // Never trust a cached INCOMPLETE profile: bootstrap is about to change
+  // exactly these fields, and a stale hasConsent=false would bounce the user
+  // between /auth/bootstrap and the app until the TTL expired. Incomplete
+  // states re-query on every request — they live for seconds, not minutes.
+  if (profile && (!profile.accountType || !profile.hasConsent)) profile = null;
 
   if (!profile) {
     const { data: row } = await supabase
@@ -129,7 +134,8 @@ export async function middleware(request: NextRequest) {
       hasConsent: !!row?.consent_accepted_at,
       exp: Date.now() + PROFILE_TTL_MS,
     };
-    if (secret) {
+    const complete = !!profile.accountType && profile.hasConsent;
+    if (secret && complete) {
       response.cookies.set(PROFILE_COOKIE, await signPayload(profile, secret), {
         httpOnly: true,
         secure: true,
