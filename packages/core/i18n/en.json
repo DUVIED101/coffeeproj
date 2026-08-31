@@ -131,7 +131,8 @@
       "errors": {
         "fillRequired": "Fill in the required fields or remove the entry."
       }
-    }
+    },
+    "hourlySingle": "{{amount}}/hour"
   },
   "shiftHistory": {
     "title": "Shift history",
@@ -315,8 +316,11 @@
       "underReview": "Under Review",
       "accepted": "Accepted",
       "rejected": "Rejected",
-      "withdrawn": "Withdrawn"
-    }
+      "withdrawn": "Withdrawn",
+      "completed": "Completed"
+    },
+    "applyBlockedTitle": "Complete your profile",
+    "applyBlockedBody": "Your profile is {{current}}% complete. To apply for jobs it must be at least {{min}}% complete."
   },
   "businessJobs": {
     "fallbackTitle": "Jobs",
@@ -1262,7 +1266,8 @@
     "apply": "Apply",
     "clear": "Clear",
     "done": "Done",
-    "reset": "Reset"
+    "reset": "Reset",
+    "cityPlaceholder": "City"
   },
   "workloadType": {
     "full_time": "Full time",
@@ -1296,7 +1301,8 @@
   },
   "equipmentCategories": {
     "espresso": "Espresso machines",
-    "grinder": "Grinders"
+    "grinder": "Grinders",
+    "other": "Other"
   },
   "medicalBook": {
     "label": "Medical book",
@@ -1338,7 +1344,9 @@
     "notSpecified": "Not specified",
     "somethingWentWrong": "Something went wrong",
     "reloadScreen": "Reload screen",
-    "unknownError": "Unknown error"
+    "unknownError": "Unknown error",
+    "clear": "Clear",
+    "tryAgain": "Please try again"
   },
   "connectionError": {
     "title": "Connection problem",
@@ -1450,7 +1458,7 @@
     "blockedUsers": {
       "title": "Blocked Users",
       "emptyTitle": "No blocked users",
-      "emptyBody": "You can block a user from the chat \u2014 their messages and content will be hidden.",
+      "emptyBody": "You can block a user from the chat — their messages and content will be hidden.",
       "unblockCta": "Unblock",
       "unblockTitle": "Unblock user",
       "unblockBody": "{{name}} will be able to message you again and reappear in your chats.",

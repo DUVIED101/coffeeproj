@@ -42,6 +42,8 @@ const statusLabel = (status: string, t: TFunction): string => {
       return t("jobDetails.status.rejected");
     case "withdrawn":
       return t("jobDetails.status.withdrawn");
+    case "completed":
+      return t("jobDetails.status.completed");
     default:
       return status;
   }
