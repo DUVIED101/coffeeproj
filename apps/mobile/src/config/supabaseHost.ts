@@ -1,77 +1,24 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SUPABASE_URL, SUPABASE_PROXY_URL } from '@env';
 import { STABLE_STORAGE_KEY } from '@bystrobarista/core/config/authStorage';
+import {
+  computeHostChoice,
+  getDeviceTimezone,
+  isRussianTimezone,
+  RU_TIMEZONES,
+  type HostChoice,
+  type HostChoiceReason,
+} from '@bystrobarista/core/config/hostPick';
 
 export const DIRECT_URL: string = SUPABASE_URL;
 export const PROXY_URL: string | undefined = SUPABASE_PROXY_URL || undefined;
 
-// Re-exported for callers that still import STABLE_STORAGE_KEY from here —
-// the canonical definition lives in @bystrobarista/core/config/authStorage
-// so web/mobile agree on the string used to persist the Supabase session.
-export { STABLE_STORAGE_KEY };
+// Re-exported for callers that import these from here — canonical definitions
+// live in core so web/mobile agree on the session key and the RU host pick.
+export { STABLE_STORAGE_KEY, RU_TIMEZONES, isRussianTimezone, getDeviceTimezone };
+export type { HostChoice, HostChoiceReason };
+
 export const FORCE_PROXY_STORAGE_KEY = 'diagnostics.forceProxy';
-
-// IANA zone names for every Russian time band (Europe/* west of Urals,
-// Asia/* east). Kept as a Set for O(1) lookup. Aliases like Europe/Volgograd
-// and Asia/Khandyga are included so devices on older tzdata still match.
-export const RU_TIMEZONES: ReadonlySet<string> = new Set<string>([
-  'Europe/Astrakhan',
-  'Europe/Kaliningrad',
-  'Europe/Kirov',
-  'Europe/Moscow',
-  'Europe/Samara',
-  'Europe/Saratov',
-  'Europe/Simferopol',
-  'Europe/Ulyanovsk',
-  'Europe/Volgograd',
-  'Asia/Anadyr',
-  'Asia/Barnaul',
-  'Asia/Chita',
-  'Asia/Irkutsk',
-  'Asia/Kamchatka',
-  'Asia/Khandyga',
-  'Asia/Krasnoyarsk',
-  'Asia/Magadan',
-  'Asia/Novokuznetsk',
-  'Asia/Novosibirsk',
-  'Asia/Omsk',
-  'Asia/Sakhalin',
-  'Asia/Srednekolymsk',
-  'Asia/Tomsk',
-  'Asia/Ust-Nera',
-  'Asia/Vladivostok',
-  'Asia/Yakutsk',
-  'Asia/Yekaterinburg',
-]);
-
-export function isRussianTimezone(tz: string | null | undefined): boolean {
-  return typeof tz === 'string' && RU_TIMEZONES.has(tz);
-}
-
-export function getDeviceTimezone(): string | null {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export type HostChoiceReason = 'forced' | 'tz' | 'default';
-
-export type HostChoice = {
-  url: string;
-  useProxy: boolean;
-  reason: HostChoiceReason;
-};
-
-function directChoice(): HostChoice {
-  return { url: DIRECT_URL, useProxy: false, reason: 'default' };
-}
-
-function proxyChoice(reason: 'forced' | 'tz'): HostChoice {
-  // Should never be called when PROXY_URL is undefined — callers gate on it.
-  return { url: PROXY_URL as string, useProxy: true, reason };
-}
 
 // Synchronous host pick — used at supabase client init when AsyncStorage
 // isn't reachable. Honours device timezone only. The Force-proxy override is
@@ -83,30 +30,16 @@ function proxyChoice(reason: 'forced' | 'tz'): HostChoice {
 // pass `opts.timezone` explicitly and bypass the cache.
 let _cachedChoice: HostChoice | null = null;
 
-function computeSyncChoice(tz: string | null | undefined): HostChoice {
-  if (!PROXY_URL) return directChoice();
-  if (isRussianTimezone(tz)) return proxyChoice('tz');
-  // Hermes' Intl polyfill on iOS can return null/'UTC' if it hasn't finished
-  // initializing when supabase.ts evaluates at bundle time. Treat unreliable
-  // TZ as "probably Russian" — false-positive proxy costs ~100ms for non-RU
-  // users, false-negative direct means the app hangs entirely for RU users.
-  if (!tz || tz === 'UTC') return proxyChoice('tz');
-  // Offset-based fallback for devices that report a non-canonical TZ name
-  // (e.g. legacy aliases like 'W-SU', or 'GMT+3' on some Hermes builds) but
-  // sit in the Russian UTC offset band (Moscow UTC+3 → Kamchatka UTC+12).
-  // getTimezoneOffset returns minutes WEST of UTC, so RU offsets are negative.
-  // We allow false-positives in this band (Istanbul, Dubai, Tashkent) — the
-  // extra hop costs ~100ms vs the app failing entirely for RU users with
-  // garbled Intl output.
-  const offsetMinutes = new Date().getTimezoneOffset();
-  if (offsetMinutes <= -120 && offsetMinutes >= -720) return proxyChoice('tz');
-  return directChoice();
-}
-
 export function pickSupabaseHostSync(opts?: { timezone?: string | null }): HostChoice {
-  if (opts && 'timezone' in opts) return computeSyncChoice(opts.timezone);
+  if (opts && 'timezone' in opts) {
+    return computeHostChoice({ directUrl: DIRECT_URL, proxyUrl: PROXY_URL, timezone: opts.timezone });
+  }
   if (_cachedChoice) return _cachedChoice;
-  _cachedChoice = computeSyncChoice(getDeviceTimezone());
+  _cachedChoice = computeHostChoice({
+    directUrl: DIRECT_URL,
+    proxyUrl: PROXY_URL,
+    timezone: getDeviceTimezone(),
+  });
   return _cachedChoice;
 }
 
@@ -116,14 +49,14 @@ export function _resetSyncCacheForTests(): void {
 }
 
 export async function pickSupabaseHost(opts?: { timezone?: string | null }): Promise<HostChoice> {
-  if (!PROXY_URL) return directChoice();
+  if (!PROXY_URL) return { url: DIRECT_URL, useProxy: false, reason: 'default' };
   try {
     const forced = await AsyncStorage.getItem(FORCE_PROXY_STORAGE_KEY);
-    if (forced === 'true') return proxyChoice('forced');
+    if (forced === 'true') return { url: PROXY_URL, useProxy: true, reason: 'forced' };
   } catch {
     // AsyncStorage failure — fall through to TZ logic.
   }
   const tz = opts && 'timezone' in opts ? opts.timezone : getDeviceTimezone();
-  if (isRussianTimezone(tz)) return proxyChoice('tz');
-  return directChoice();
+  if (isRussianTimezone(tz)) return { url: PROXY_URL, useProxy: true, reason: 'tz' };
+  return { url: DIRECT_URL, useProxy: false, reason: 'default' };
 }
