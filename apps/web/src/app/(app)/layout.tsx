@@ -1,19 +1,22 @@
 import React from "react";
 import { AppHeader } from "@/components/AppHeader";
+import { MobileTabBar } from "@/components/AppNav";
+import { QueryProvider } from "@/components/QueryProvider";
 
-// Authed shell. Phase 3 replaces this with the responsive sidebar (lg:) /
-// bottom-tab (<md) navigation mirroring mobile's MainTabs.
+// Authed shell: sticky header with desktop nav (md+), bottom tab bar (<md)
+// mirroring mobile's MainTabs. pb-20 keeps content clear of the tab bar.
 export default function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <>
+    <QueryProvider>
       <AppHeader />
-      <main className="mx-auto min-h-screen max-w-5xl px-4 py-6">
+      <main className="mx-auto min-h-screen max-w-5xl px-4 py-6 pb-20 md:pb-6">
         {children}
       </main>
-    </>
+      <MobileTabBar />
+    </QueryProvider>
   );
 }

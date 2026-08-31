@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import { STABLE_STORAGE_KEY } from "@bystrobarista/core/config/authStorage";
 import { webStorage } from "@/platform/storage";
+import { DesktopNav } from "@/components/AppNav";
 
 // Minimal authed-shell header until Phase 3 lands the full responsive
 // navigation (sidebar on lg:, bottom tabs below md). Sign-out has to exist
@@ -30,14 +31,15 @@ export function AppHeader(): React.JSX.Element {
   };
 
   return (
-    <header className="border-b border-line bg-white">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+    <header className="sticky top-0 z-40 border-b border-line bg-white">
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
         <Link href="/" className="text-lg font-bold text-primary">
           БыстроБариста
         </Link>
+        <DesktopNav />
         <div className="flex items-center gap-4">
           {user?.email && (
-            <span className="hidden text-sm text-ink-secondary sm:inline">
+            <span className="hidden text-sm text-ink-secondary lg:inline">
               {user.email}
             </span>
           )}
