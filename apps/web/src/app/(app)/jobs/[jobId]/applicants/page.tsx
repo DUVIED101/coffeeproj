@@ -556,6 +556,39 @@ export default function ApplicantsPage(): React.JSX.Element {
         })
       )}
 
+      {(() => {
+        // Countdown banner (mobile's ShiftCountdownBanner): accepted barista
+        // hasn't started the shift yet → entry point to the no-response flow.
+        const acceptedApp = applications.find((a) => a.status === "accepted");
+        if (!acceptedApp || !shiftStart || shiftStart <= now) return null;
+        const jobTitle = jobQuery.data?.title ?? "";
+        const query = new URLSearchParams({
+          applicationId: acceptedApp.id,
+          jobTitle,
+          shiftStart: shiftStart.toISOString(),
+        });
+        const totalMinutes = Math.floor(
+          (shiftStart.getTime() - now.getTime()) / 60_000,
+        );
+        const days = Math.floor(totalMinutes / (60 * 24));
+        const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+        const minutes = totalMinutes % 60;
+        const countdown =
+          days > 0
+            ? t("shiftCountdown.daysHours", { days, hours })
+            : hours > 0
+              ? t("shiftCountdown.hoursMinutes", { hours, minutes })
+              : t("shiftCountdown.minutes", { minutes });
+        return (
+          <Link
+            href={`/shift-alerts?${query.toString()}`}
+            className="mt-2 block rounded-card border border-[#FCD34D] bg-[#FEF3C7] px-4 py-3 text-sm font-medium text-[#92400E]"
+          >
+            {jobTitle} · {countdown}
+          </Link>
+        );
+      })()}
+
       {reviewTarget && (
         <ReviewModal
           open
