@@ -460,7 +460,7 @@ export default function ApplicantsPage(): React.JSX.Element {
                   {t("applicants.viewProfile")}
                 </Link>
                 <Link
-                  href="/chats"
+                  href={`/chats?applicationId=${app.id}`}
                   className="relative rounded-input border border-line px-3 py-1.5 text-sm font-medium"
                 >
                   {t("applicants.chat")}

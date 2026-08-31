@@ -19,6 +19,7 @@ import {
   mdiStorefrontOutline,
 } from "@mdi/js";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
+import { useChatUnreadStore } from "@bystrobarista/core/stores/chatUnreadStore";
 import { MdiIcon } from "./MdiIcon";
 
 type NavItem = {
@@ -26,7 +27,17 @@ type NavItem = {
   label: string;
   icon: string;
   iconActive: string;
+  badgeCount?: number;
 };
+
+function NavBadge({ count }: { count: number }): React.JSX.Element | null {
+  if (count <= 0) return null;
+  return (
+    <span className="absolute -right-2 -top-1 min-w-[16px] rounded-full bg-[#EF4444] px-1 text-center text-[10px] font-bold leading-4 text-white">
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
 
 // Mirrors mobile MainTabs, including the focused/unfocused icon pairs the RN
 // tab bar renders (briefcase-search, file-document, chat, account-circle for
@@ -34,6 +45,7 @@ type NavItem = {
 const useNavItems = (): NavItem[] => {
   const { t } = useTranslation();
   const accountType = useAuthStore((s) => s.user?.accountType);
+  const chatUnread = useChatUnreadStore((s) => s.unreadCount);
 
   if (accountType === "business") {
     return [
@@ -54,6 +66,7 @@ const useNavItems = (): NavItem[] => {
         label: t("chats.title"),
         icon: mdiChatOutline,
         iconActive: mdiChat,
+        badgeCount: chatUnread,
       },
       {
         href: "/profile",
@@ -81,6 +94,7 @@ const useNavItems = (): NavItem[] => {
       label: t("chats.title"),
       icon: mdiChatOutline,
       iconActive: mdiChat,
+      badgeCount: chatUnread,
     },
     {
       href: "/profile",
@@ -114,7 +128,10 @@ export function DesktopNav(): React.JSX.Element {
                 : "text-ink-secondary hover:text-ink"
             }`}
           >
-            <MdiIcon path={active ? item.iconActive : item.icon} size={18} />
+            <span className="relative">
+              <MdiIcon path={active ? item.iconActive : item.icon} size={18} />
+              <NavBadge count={item.badgeCount ?? 0} />
+            </span>
             {item.label}
           </Link>
         );
@@ -144,7 +161,10 @@ export function MobileTabBar(): React.JSX.Element {
               active ? "font-semibold text-primary" : "text-ink-secondary"
             }`}
           >
-            <MdiIcon path={active ? item.iconActive : item.icon} size={24} />
+            <span className="relative">
+              <MdiIcon path={active ? item.iconActive : item.icon} size={24} />
+              <NavBadge count={item.badgeCount ?? 0} />
+            </span>
             {item.label}
           </Link>
         );
