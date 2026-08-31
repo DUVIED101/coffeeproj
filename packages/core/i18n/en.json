@@ -1346,7 +1346,8 @@
     "reloadScreen": "Reload screen",
     "unknownError": "Unknown error",
     "clear": "Clear",
-    "tryAgain": "Please try again"
+    "tryAgain": "Please try again",
+    "showMore": "Show more"
   },
   "connectionError": {
     "title": "Connection problem",

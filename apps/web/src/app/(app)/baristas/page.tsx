@@ -5,8 +5,11 @@
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
-import { BaristaSearchService } from "@bystrobarista/core/services/BaristaSearchService";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  BaristaSearchService,
+  BARISTA_SEARCH_PAGE_SIZE,
+} from "@bystrobarista/core/services/BaristaSearchService";
 import { BusinessService } from "@bystrobarista/core/services/BusinessService";
 import { ReviewService } from "@bystrobarista/core/services/ReviewService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
@@ -189,11 +192,21 @@ export default function BaristasPage(): React.JSX.Element {
     [branches],
   );
 
-  const baristasQuery = useQuery({
+  const baristasQuery = useInfiniteQuery({
     queryKey: ["baristas", "search", filters],
-    queryFn: () => BaristaSearchService.searchBaristas(filters),
+    queryFn: ({ pageParam }) =>
+      BaristaSearchService.searchBaristas(filters, pageParam),
+    initialPageParam: 0,
+    // A short page means the server ran out of matches.
+    getNextPageParam: (lastPage, _pages, lastPageParam) =>
+      lastPage.length === BARISTA_SEARCH_PAGE_SIZE
+        ? lastPageParam + 1
+        : undefined,
   });
-  const baristas = baristasQuery.data ?? [];
+  const baristas = useMemo(
+    () => (baristasQuery.data?.pages ?? []).flat(),
+    [baristasQuery.data],
+  );
 
   const baristaIds = useMemo(
     () => baristas.map((b) => b.userId as UserId),
@@ -496,13 +509,25 @@ export default function BaristasPage(): React.JSX.Element {
           </p>
         </div>
       ) : (
-        baristas.map((profile) => (
-          <BaristaCard
-            key={profile.id}
-            profile={profile}
-            aggregate={aggregates.get(profile.userId as UserId)}
-          />
-        ))
+        <>
+          {baristas.map((profile) => (
+            <BaristaCard
+              key={profile.id}
+              profile={profile}
+              aggregate={aggregates.get(profile.userId as UserId)}
+            />
+          ))}
+          {baristasQuery.hasNextPage && (
+            <button
+              type="button"
+              onClick={() => void baristasQuery.fetchNextPage()}
+              disabled={baristasQuery.isFetchingNextPage}
+              className="mt-2 w-full rounded-card border border-line bg-white px-4 py-3 text-sm font-medium text-primary hover:bg-bg-secondary disabled:opacity-50"
+            >
+              {baristasQuery.isFetchingNextPage ? "…" : t("common.showMore")}
+            </button>
+          )}
+        </>
       )}
     </div>
   );

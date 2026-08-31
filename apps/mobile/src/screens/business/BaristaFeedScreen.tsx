@@ -1,10 +1,21 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  RefreshControl,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { BaristaSearchService } from '@bystrobarista/core/services/BaristaSearchService';
+import {
+  BaristaSearchService,
+  BARISTA_SEARCH_PAGE_SIZE,
+} from '@bystrobarista/core/services/BaristaSearchService';
 import { BusinessService } from '@bystrobarista/core/services/BusinessService';
 import { ReviewService } from '@bystrobarista/core/services/ReviewService';
 import { useAuthStore } from '@bystrobarista/core/stores/authStore';
@@ -40,9 +51,13 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
   const [aggregates, setAggregates] = useState<Map<UserId, UserReviewAggregate>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [filters, setFilters] = useState<BaristaFilters>({});
   const [branchMetroStations, setBranchMetroStations] = useState<string[]>([]);
   const [branchCities, setBranchCities] = useState<CityCode[]>([]);
+  const pageRef = useRef(0);
+  const inFlightRef = useRef(false);
 
   useEffect(() => {
     loadBranchMetroStations();
@@ -74,30 +89,45 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const loadBaristas = async () => {
+  const loadBaristas = async (reset = true) => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+    const page = reset ? 0 : pageRef.current + 1;
     try {
-      const results = await BaristaSearchService.searchBaristas(filters);
-      setBaristas(results);
+      const results = await BaristaSearchService.searchBaristas(filters, page);
+      pageRef.current = page;
+      setHasMore(results.length === BARISTA_SEARCH_PAGE_SIZE);
+      setBaristas(prev => (reset ? results : [...prev, ...results]));
       const userIds = results.map(p => p.userId as UserId);
       if (userIds.length > 0) {
         const aggMap = await ReviewService.getAggregatesForUsers(userIds);
-        setAggregates(aggMap);
-      } else {
+        setAggregates(prev => (reset ? aggMap : new Map([...prev, ...aggMap])));
+      } else if (reset) {
         setAggregates(new Map());
       }
     } catch (error) {
       console.error('Error loading baristas:', error);
       Alert.alert(t('baristaFeed.loadFailedTitle'), t('baristaFeed.loadFailedBody'));
     } finally {
+      inFlightRef.current = false;
       setIsLoading(false);
       setIsRefreshing(false);
+      setIsLoadingMore(false);
     }
   };
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     await loadBaristas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
+
+  const handleLoadMore = useCallback(() => {
+    if (!hasMore || inFlightRef.current || isLoading || isRefreshing) return;
+    setIsLoadingMore(true);
+    loadBaristas(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMore, isLoading, isRefreshing, filters]);
 
   const handleFilterChange = useCallback((newFilters: BaristaFilters) => {
     setFilters(newFilters);
@@ -179,6 +209,13 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={renderEmpty}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isLoadingMore ? (
+              <ActivityIndicator style={styles.footerLoader} color={COLORS.primary} />
+            ) : null
+          }
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
@@ -229,6 +266,9 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+  },
+  footerLoader: {
+    paddingVertical: 16,
   },
   emptyContainer: {
     alignItems: 'center',
