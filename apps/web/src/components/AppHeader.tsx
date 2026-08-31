@@ -3,10 +3,38 @@
 import Link from "next/link";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { mdiBell, mdiBellOutline } from "@mdi/js";
+import { usePathname } from "next/navigation";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import { STABLE_STORAGE_KEY } from "@bystrobarista/core/config/authStorage";
 import { webStorage } from "@/platform/storage";
 import { DesktopNav } from "@/components/AppNav";
+import { MdiIcon } from "@/components/MdiIcon";
+import { useNotificationFeedStore } from "@/stores/notificationFeedStore";
+
+function NotificationBell(): React.JSX.Element {
+  const { t } = useTranslation();
+  const pathname = usePathname();
+  const unreadCount = useNotificationFeedStore((s) => s.unreadCount);
+  const active = pathname.startsWith("/notifications");
+
+  return (
+    <Link
+      href="/notifications"
+      aria-label={t("notifications.feed.title")}
+      className={`relative rounded-input p-1.5 ${
+        active ? "text-primary" : "text-ink-secondary hover:text-ink"
+      }`}
+    >
+      <MdiIcon path={active ? mdiBell : mdiBellOutline} size={22} />
+      {unreadCount > 0 && (
+        <span className="absolute -right-0.5 -top-0.5 min-w-[16px] rounded-full bg-[#EF4444] px-1 text-center text-[10px] font-bold leading-4 text-white">
+          {unreadCount > 99 ? "99+" : unreadCount}
+        </span>
+      )}
+    </Link>
+  );
+}
 
 // Minimal authed-shell header until Phase 3 lands the full responsive
 // navigation (sidebar on lg:, bottom tabs below md). Sign-out has to exist
@@ -37,7 +65,8 @@ export function AppHeader(): React.JSX.Element {
           БыстроБариста
         </Link>
         <DesktopNav />
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <NotificationBell />
           {user?.email && (
             <span className="hidden text-sm text-ink-secondary lg:inline">
               {user.email}

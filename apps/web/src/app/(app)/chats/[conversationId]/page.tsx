@@ -13,7 +13,6 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { ChatService } from "@bystrobarista/core/services/ChatService";
-import { NotificationFeedService } from "@bystrobarista/core/services/NotificationFeedService";
 import { ReportService } from "@bystrobarista/core/services/ReportService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import { useBlockedUsersStore } from "@bystrobarista/core/stores/blockedUsersStore";
@@ -31,6 +30,7 @@ import {
 } from "@bystrobarista/core/utils/dateUtils";
 import { getPlatform } from "@bystrobarista/core/platform";
 import { transformedImageUrl } from "@/lib/imageTransform";
+import { useNotificationFeedStore } from "@/stores/notificationFeedStore";
 
 const MESSAGE_MAX_LENGTH = 500;
 
@@ -192,10 +192,10 @@ export default function ChatConversationPage(): React.JSX.Element {
     if (!userId || !accountType) return;
     void ChatService.markAsRead(conversationId, userId).catch(() => {});
     void refreshChatUnread(userId, accountType).catch(() => {});
-    void NotificationFeedService.markConversationAsRead(
-      userId as UserId,
-      conversationId,
-    ).catch(() => {});
+    void useNotificationFeedStore
+      .getState()
+      .markConversationAsRead(userId as UserId, conversationId)
+      .catch(() => {});
   }, [conversationId, userId, accountType, refreshChatUnread]);
 
   useEffect(() => {
