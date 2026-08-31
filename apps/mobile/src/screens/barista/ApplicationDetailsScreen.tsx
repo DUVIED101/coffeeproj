@@ -25,7 +25,7 @@ import { ReviewService } from '@bystrobarista/core/services/ReviewService';
 import { ReviewModal } from '../../components/ReviewModal';
 import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { queryKeys } from '../../lib/queryClient';
-import { getShiftEnd, canBaristaCancelShift, getShiftStart } from '../../utils/shiftLifecycle';
+import { getShiftEnd, canBaristaCancelShift, getShiftStart } from '@bystrobarista/core/utils/shiftLifecycle';
 import type { Application, DisputeSummary } from '@bystrobarista/core/types/application';
 import type { ApplicationId, UserId } from '@bystrobarista/core/types/ids';
 import type { ApplicationReview } from '@bystrobarista/core/types/review';

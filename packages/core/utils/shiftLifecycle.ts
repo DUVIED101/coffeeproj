@@ -3,8 +3,8 @@ import type {
   ApplicationStatus,
   ShiftConfirmationStatus,
   ShiftLifecycleStatus,
-} from '@bystrobarista/core/types/application';
-import type { Job, ShiftDetails } from '@bystrobarista/core/types/job';
+} from '../types/application';
+import type { Job, ShiftDetails } from '../types/job';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 

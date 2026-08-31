@@ -30,7 +30,7 @@ import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
 import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import { ResponsiveContainer } from '../../components/ResponsiveContainer';
-import { classifyShiftLifecycle } from '../../utils/shiftLifecycle';
+import { classifyShiftLifecycle } from '@bystrobarista/core/utils/shiftLifecycle';
 import type { Job, JobStatus } from '@bystrobarista/core/types';
 import type { Application, ShiftLifecycleStatus } from '@bystrobarista/core/types/application';
 

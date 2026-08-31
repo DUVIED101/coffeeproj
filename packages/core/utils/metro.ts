@@ -1,5 +1,5 @@
 import metroData from '../data/metro-stations.json';
-import type { CityCode } from '@bystrobarista/core/types/city';
+import type { CityCode } from '../types/city';
 
 export interface MetroStation {
   id: string;

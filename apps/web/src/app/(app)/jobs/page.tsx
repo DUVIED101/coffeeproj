@@ -19,6 +19,7 @@ import type { GeoPoint } from "@bystrobarista/core/types/business";
 import type { UserId } from "@bystrobarista/core/types/ids";
 import type { UserReviewAggregate } from "@bystrobarista/core/types/review";
 import { JobCard } from "@/components/JobCard";
+import { FilterBar } from "@/components/FilterBar";
 
 function SkeletonCard(): React.JSX.Element {
   return (
@@ -40,7 +41,7 @@ function BaristaJobFeed(): React.JSX.Element {
   const [userLocation, setUserLocation] = useState<GeoPoint | undefined>(
     undefined,
   );
-  const [filters] = useState<JobFilters>({});
+  const [filters, setFilters] = useState<JobFilters>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -127,6 +128,12 @@ function BaristaJobFeed(): React.JSX.Element {
           </span>
         </Link>
       )}
+
+      <FilterBar
+        filters={filters}
+        userLocation={userLocation}
+        onChange={setFilters}
+      />
 
       {jobsQuery.isPending ? (
         <div>

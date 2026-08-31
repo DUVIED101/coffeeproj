@@ -25,7 +25,7 @@ import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { ReviewModal } from '../../components/ReviewModal';
 import { ShiftCountdownBanner } from '../../components/ShiftCountdownBanner';
 import { Skeleton } from '../../components/Skeleton';
-import { getShiftEnd, getShiftStart, canCancelShiftNow } from '../../utils/shiftLifecycle';
+import { getShiftEnd, getShiftStart, canCancelShiftNow } from '@bystrobarista/core/utils/shiftLifecycle';
 import type { Application, ApplicationStatus, DisputeSummary } from '@bystrobarista/core/types/application';
 import type { JobOffer } from '@bystrobarista/core/types/jobOffer';
 import type { ShiftDetails } from '@bystrobarista/core/types/job';

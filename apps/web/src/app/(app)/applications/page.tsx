@@ -134,7 +134,7 @@ export default function ApplicationsPage(): React.JSX.Element {
             >
               <div className="mb-1 flex items-start justify-between gap-2">
                 <Link
-                  href={`/jobs/${application.jobId}`}
+                  href={`/applications/${application.id}`}
                   className="flex-1 font-semibold hover:text-primary"
                 >
                   {application.job?.title ?? t("applications.fallbackJob")}
