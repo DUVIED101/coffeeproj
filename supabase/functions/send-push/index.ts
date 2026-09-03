@@ -160,15 +160,64 @@ const SUPABASE_SERVICE_ROLE_KEY =
 // JWT or the new sb_secret_ format depending on project age — triggers need a value
 // the Supabase gateway also accepts as JWT.
 const INTERNAL_AUTH_TOKEN = Deno.env.get("INTERNAL_AUTH_TOKEN") ?? "";
-// Web Push: VAPID keypair (base64url) + contact subject. SEND_WEB_PUSH is the
-// rollout flag — anything but "true" keeps browser subscriptions stored but
-// silent, so the migration can land before web delivery is switched on.
+// Web Push: VAPID keypair (base64url) + contact subject + rollout flag.
+// Env vars win when set; otherwise the config comes from Vault through the
+// service_role-only RPC public.get_web_push_config() (migration 121), cached
+// per isolate so a chat burst doesn't hit the DB once per push.
 const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY") ?? "";
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY") ?? "";
-const VAPID_SUBJECT =
-  Deno.env.get("VAPID_SUBJECT") ?? "mailto:bystrobarista@gmail.com";
+const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "";
 const SEND_WEB_PUSH = Deno.env.get("SEND_WEB_PUSH") === "true";
 const WEB_PUSH_TTL_SECONDS = 24 * 60 * 60;
+const WEB_PUSH_CONFIG_CACHE_MS = 5 * 60 * 1000;
+const DEFAULT_VAPID_SUBJECT = "mailto:bystrobarista@gmail.com";
+
+type WebPushConfig = { keys: VapidKeys | null; enabled: boolean };
+let cachedWebPushConfig: { value: WebPushConfig; expiresAt: number } | null =
+  null;
+
+async function loadWebPushConfig(
+  supabase: SupabaseClient,
+): Promise<WebPushConfig> {
+  if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+    return {
+      keys: {
+        publicKey: VAPID_PUBLIC_KEY,
+        privateKey: VAPID_PRIVATE_KEY,
+        subject: VAPID_SUBJECT || DEFAULT_VAPID_SUBJECT,
+      },
+      enabled: SEND_WEB_PUSH,
+    };
+  }
+  const now = Date.now();
+  if (cachedWebPushConfig && cachedWebPushConfig.expiresAt > now) {
+    return cachedWebPushConfig.value;
+  }
+  const { data, error } = await supabase.rpc("get_web_push_config");
+  if (error) {
+    console.warn("get_web_push_config failed", { message: error.message });
+    return { keys: null, enabled: false };
+  }
+  const cfg = (data ?? {}) as {
+    public_key?: string | null;
+    private_key?: string | null;
+    subject?: string | null;
+    enabled?: boolean | null;
+  };
+  const value: WebPushConfig =
+    cfg.public_key && cfg.private_key
+      ? {
+          keys: {
+            publicKey: cfg.public_key,
+            privateKey: cfg.private_key,
+            subject: cfg.subject || DEFAULT_VAPID_SUBJECT,
+          },
+          enabled: cfg.enabled === true || SEND_WEB_PUSH,
+        }
+      : { keys: null, enabled: false };
+  cachedWebPushConfig = { value, expiresAt: now + WEB_PUSH_CONFIG_CACHE_MS };
+  return value;
+}
 
 const CORS_HEADERS: Record<string, string> = {
   "access-control-allow-origin": "*",
@@ -547,14 +596,13 @@ async function handleRequest(req: Request): Promise<Response> {
     outcomes.push(...native);
   }
 
-  const webEnabled =
-    SEND_WEB_PUSH && VAPID_PUBLIC_KEY.length > 0 && VAPID_PRIVATE_KEY.length > 0;
-  if (webTokens.length > 0 && webEnabled) {
-    const vapid: VapidKeys = {
-      publicKey: VAPID_PUBLIC_KEY,
-      privateKey: VAPID_PRIVATE_KEY,
-      subject: VAPID_SUBJECT,
-    };
+  const webConfig =
+    webTokens.length > 0
+      ? await loadWebPushConfig(supabase)
+      : { keys: null, enabled: false };
+  const webEnabled = webConfig.enabled && webConfig.keys !== null;
+  if (webTokens.length > 0 && webEnabled && webConfig.keys) {
+    const vapid: VapidKeys = webConfig.keys;
     // The service worker (apps/web/public/sw.js) renders this: title/body,
     // `tag` collapses chat bursts like apns-collapse-id, `data` feeds the
     // /push deep-link router on click.
