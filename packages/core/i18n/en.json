@@ -1608,5 +1608,24 @@
     "blockedActionTitle": "Action unavailable",
     "blockedActionBody": "Your account is restricted until {{date}}. During this period you cannot post jobs, apply to jobs, or send messages.",
     "blockedActionGeneric": "Your account is restricted. Actions are temporarily unavailable."
+  },
+  "push": {
+    "prompt": {
+      "title": "Turn on browser notifications?",
+      "body": "Messages, applications and shift reminders will arrive even when the tab is closed.",
+      "enable": "Turn on",
+      "later": "Later"
+    },
+    "settings": {
+      "label": "Push notifications in this browser",
+      "enabled": "On",
+      "disabled": "Off",
+      "blocked": "Blocked in browser settings",
+      "unsupported": "This browser doesn't support push notifications",
+      "iosInstallHint": "On iPhone, add the site to your Home Screen first (Share → Add to Home Screen), then turn on notifications.",
+      "enable": "Turn on",
+      "disable": "Turn off",
+      "failed": "Couldn't turn on notifications"
+    }
   }
 }

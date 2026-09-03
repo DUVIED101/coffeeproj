@@ -13,6 +13,8 @@ type Brand<K, T> = K & { __brand: T };
 
 export type DeviceToken = Brand<string, 'DeviceToken'>;
 export type ApnsEnvironment = 'sandbox' | 'production';
+export type PushEnvironment = ApnsEnvironment | 'web';
+export type PushPlatform = 'ios' | 'android' | 'web';
 
 export type NotificationKind =
   | 'new_message'
@@ -61,11 +63,16 @@ export type PushNotificationPayload = {
   };
 };
 
-export type ApnsTokenRow = {
+// device_tokens row: APNs tokens (platform ios) and Web Push subscriptions
+// (platform web — deviceToken holds the endpoint, p256dh/auth the keys).
+export type DeviceTokenRow = {
   id: string;
   userId: UserId;
   deviceToken: DeviceToken;
-  environment: ApnsEnvironment;
+  environment: PushEnvironment;
+  platform: PushPlatform;
+  p256dh: string | null;
+  auth: string | null;
   lastSeenAt: string;
   createdAt: string;
 };

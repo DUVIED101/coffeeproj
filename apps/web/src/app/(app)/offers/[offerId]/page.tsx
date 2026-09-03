@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import React, { useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -13,14 +13,19 @@ import {
 import type { JobOfferId } from "@bystrobarista/core/types/ids";
 
 // Port of JobOfferScreen: a single offer opened from a notification /
-// deep link, with accept ("interested") and decline actions.
-export default function JobOfferPage(): React.JSX.Element {
+// deep link, with accept ("interested") and decline actions. `?action=`
+// carries a push notification action button (web twin of mobile's
+// pendingOfferActionsQueue) and fires the response once the offer loads.
+function JobOfferView(): React.JSX.Element {
   const { t } = useTranslation();
   const router = useRouter();
   const params = useParams<{ offerId: string }>();
+  const searchParams = useSearchParams();
+  const pushAction = searchParams.get("action");
   const offerId = params.offerId as JobOfferId;
   const [responding, setResponding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const autoRespondedRef = useRef(false);
 
   const offerQuery = useQuery({
     queryKey: ["offers", "byId", offerId],
@@ -50,6 +55,20 @@ export default function JobOfferPage(): React.JSX.Element {
       setResponding(false);
     }
   };
+
+  useEffect(() => {
+    if (
+      !offer ||
+      offer.status !== "pending" ||
+      autoRespondedRef.current ||
+      (pushAction !== "accepted" && pushAction !== "declined")
+    ) {
+      return;
+    }
+    autoRespondedRef.current = true;
+    void respond(pushAction);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offer, pushAction]);
 
   if (offerQuery.isPending) {
     return (
@@ -132,5 +151,13 @@ export default function JobOfferPage(): React.JSX.Element {
         </div>
       )}
     </div>
+  );
+}
+
+export default function JobOfferPage(): React.JSX.Element {
+  return (
+    <Suspense fallback={null}>
+      <JobOfferView />
+    </Suspense>
   );
 }

@@ -1,10 +1,17 @@
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendWebPush, type VapidKeys, type WebPushOutcome } from "./webpush.ts";
+
+// send-push: fan-out of one notification to every push target of a user —
+// APNs for iOS device tokens, Web Push (VAPID + aes128gcm) for browser
+// subscriptions. Successor of send-apns; same request contract, same
+// notification_preferences gate, same trigger caller (app_internal.send_apns_invoke).
 
 type Brand<T, B> = T & { readonly __brand: B };
 type UserId = Brand<string, "UserId">;
 type DeviceToken = Brand<string, "DeviceToken">;
 
 type ApnsEnvironment = "sandbox" | "production";
+type PushPlatform = "ios" | "android" | "web";
 
 type NotificationKind =
   | "new_message"
@@ -25,7 +32,8 @@ type NotificationKind =
   | "shift_confirmation_required"
   | "shift_confirmed"
   | "shift_declined"
-  | "shift_no_response_alert";
+  | "shift_no_response_alert"
+  | "dispute_filed";
 
 type GatedKind =
   | "new_message"
@@ -45,8 +53,8 @@ type GatedKind =
   | "shift_reminder_3h"
   | "shift_confirmed"
   | "shift_declined";
-// shift_confirmation_required and shift_no_response_alert are deliberately
-// excluded — they are critical safety notifications and cannot be turned off.
+// shift_confirmation_required, shift_no_response_alert and dispute_filed are
+// deliberately excluded — safety/moderation notifications cannot be turned off.
 
 type NotificationPrefsRow = {
   new_message: boolean;
@@ -105,6 +113,14 @@ type ApnsTokenRow = {
   environment: ApnsEnvironment;
 };
 
+type DeviceTokenRow = {
+  device_token: DeviceToken;
+  environment: ApnsEnvironment | "web";
+  platform: PushPlatform;
+  p256dh: string | null;
+  auth: string | null;
+};
+
 type JwtCache = { jwt: string; expiresAt: number };
 
 const KNOWN_KINDS: ReadonlySet<NotificationKind> = new Set<NotificationKind>([
@@ -127,6 +143,7 @@ const KNOWN_KINDS: ReadonlySet<NotificationKind> = new Set<NotificationKind>([
   "shift_confirmed",
   "shift_declined",
   "shift_no_response_alert",
+  "dispute_filed",
 ]);
 
 const JWT_TTL_SECONDS = 3300;
@@ -143,6 +160,15 @@ const SUPABASE_SERVICE_ROLE_KEY =
 // JWT or the new sb_secret_ format depending on project age — triggers need a value
 // the Supabase gateway also accepts as JWT.
 const INTERNAL_AUTH_TOKEN = Deno.env.get("INTERNAL_AUTH_TOKEN") ?? "";
+// Web Push: VAPID keypair (base64url) + contact subject. SEND_WEB_PUSH is the
+// rollout flag — anything but "true" keeps browser subscriptions stored but
+// silent, so the migration can land before web delivery is switched on.
+const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY") ?? "";
+const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY") ?? "";
+const VAPID_SUBJECT =
+  Deno.env.get("VAPID_SUBJECT") ?? "mailto:bystrobarista@gmail.com";
+const SEND_WEB_PUSH = Deno.env.get("SEND_WEB_PUSH") === "true";
+const WEB_PUSH_TTL_SECONDS = 24 * 60 * 60;
 
 const CORS_HEADERS: Record<string, string> = {
   "access-control-allow-origin": "*",
@@ -356,13 +382,13 @@ async function isKindEnabled(
 async function loadActiveTokens(
   supabase: SupabaseClient,
   recipientId: UserId,
-): Promise<ApnsTokenRow[]> {
+): Promise<DeviceTokenRow[]> {
   const { data, error } = await supabase
-    .from("apns_tokens")
-    .select("device_token, environment")
+    .from("device_tokens")
+    .select("device_token, environment, platform, p256dh, auth")
     .eq("user_id", recipientId);
-  if (error) throw new Error(`apns_tokens query failed: ${error.message}`);
-  return (data ?? []) as ApnsTokenRow[];
+  if (error) throw new Error(`device_tokens query failed: ${error.message}`);
+  return (data ?? []) as DeviceTokenRow[];
 }
 
 async function deleteRetiredToken(
@@ -371,7 +397,7 @@ async function deleteRetiredToken(
   deviceToken: DeviceToken,
 ): Promise<void> {
   const { error } = await supabase
-    .from("apns_tokens")
+    .from("device_tokens")
     .delete()
     .eq("user_id", recipientId)
     .eq("device_token", deviceToken);
@@ -404,9 +430,6 @@ async function handleRequest(req: Request): Promise<Response> {
   }
   const request = parsed;
 
-  if (!APNS_KEY_P8 || !APNS_KEY_ID || !APNS_TEAM_ID || !APNS_BUNDLE_ID) {
-    return jsonResponse(500, { error: "apns_not_configured" });
-  }
   if (!SUPABASE_URL) {
     return jsonResponse(500, { error: "supabase_not_configured" });
   }
@@ -430,94 +453,174 @@ async function handleRequest(req: Request): Promise<Response> {
   if (tokens.length === 0) {
     return jsonResponse(200, { ok: true, sent: 0, removed_tokens: 0 });
   }
+  const nativeTokens: ApnsTokenRow[] = tokens
+    .filter((t) => t.platform !== "web" && t.environment !== "web")
+    .map((t) => ({
+      device_token: t.device_token,
+      environment: t.environment as ApnsEnvironment,
+    }));
+  const webTokens = tokens.filter(
+    (t): t is DeviceTokenRow & { p256dh: string; auth: string } =>
+      t.platform === "web" && t.p256dh !== null && t.auth !== null,
+  );
 
-  let jwt: string;
-  try {
-    jwt = await signApnsJwt();
-  } catch (err) {
-    console.error("jwt signing failed", { err: String(err) });
-    return jsonResponse(500, { error: "jwt_signing_failed" });
-  }
-
-  // job_offer_received uses category=JOB_OFFER so iOS shows the
-  // Интересно / Неинтересно action buttons (registered in AppDelegate.swift).
-  // thread-id keeps related notifications grouped together in the system UI
-  // (one per offer; one per conversation for chat-related kinds).
-  const aps: Record<string, unknown> = {
-    alert: { title: request.title, body: request.body },
-    sound: "default",
-    "mutable-content": 1,
-  };
-  if (request.kind === "job_offer_received") {
-    aps.category = "JOB_OFFER";
-    const offerId = request.data?.offerId;
-    if (typeof offerId === "string" && offerId.length > 0) {
-      aps["thread-id"] = offerId;
-    }
-  } else if (
-    request.kind === "new_message" ||
-    request.kind === "conversation_started"
-  ) {
-    const conversationId = request.data?.conversationId;
-    if (typeof conversationId === "string" && conversationId.length > 0) {
-      aps["thread-id"] = `conversation:${conversationId}`;
-    }
-  } else if (
+  // Grouping keys shared by both transports: thread-id (iOS grouping) and the
+  // collapse key (apns-collapse-id / Web Push `topic` + notification `tag`).
+  const conversationId = request.data?.conversationId;
+  const offerId = request.data?.offerId;
+  const applicationId = request.data?.applicationId;
+  const isChatKind =
+    request.kind === "new_message" || request.kind === "conversation_started";
+  const isShiftKind =
     request.kind === "shift_confirmation_required" ||
     request.kind === "shift_no_response_alert" ||
     request.kind === "shift_reminder_24h" ||
     request.kind === "shift_reminder_3h" ||
     request.kind === "shift_confirmed" ||
-    request.kind === "shift_declined"
-  ) {
-    const applicationId = request.data?.applicationId;
-    if (typeof applicationId === "string" && applicationId.length > 0) {
-      aps["thread-id"] = `shift:${applicationId}`;
+    request.kind === "shift_declined";
+  const collapseId =
+    isChatKind && typeof conversationId === "string" && conversationId.length > 0
+      ? `conversation:${conversationId}`
+      : null;
+  const threadId =
+    request.kind === "job_offer_received" &&
+    typeof offerId === "string" &&
+    offerId.length > 0
+      ? offerId
+      : isChatKind && collapseId !== null
+        ? collapseId
+        : isShiftKind &&
+            typeof applicationId === "string" &&
+            applicationId.length > 0
+          ? `shift:${applicationId}`
+          : null;
+
+  const outcomes: ApnsSendOutcome[] = [];
+  const webOutcomes: WebPushOutcome[] = [];
+
+  if (nativeTokens.length > 0) {
+    if (!APNS_KEY_P8 || !APNS_KEY_ID || !APNS_TEAM_ID || !APNS_BUNDLE_ID) {
+      return jsonResponse(500, { error: "apns_not_configured" });
     }
-  }
-
-  // apns-collapse-id collapses successive chat pushes from the same conversation
-  // into a single notification — the latest message replaces older ones, so a
-  // burst of messages shows up as one tile instead of N.
-  let collapseId: string | null = null;
-  if (
-    request.kind === "new_message" ||
-    request.kind === "conversation_started"
-  ) {
-    const conversationId = request.data?.conversationId;
-    if (typeof conversationId === "string" && conversationId.length > 0) {
-      collapseId = `conversation:${conversationId}`;
+    let jwt: string;
+    try {
+      jwt = await signApnsJwt();
+    } catch (err) {
+      console.error("jwt signing failed", { err: String(err) });
+      return jsonResponse(500, { error: "jwt_signing_failed" });
     }
-  }
 
-  const apnsPayload: Record<string, unknown> = {
-    aps,
-    kind: request.kind,
-    ...(request.data ?? {}),
-  };
+    // job_offer_received uses category=JOB_OFFER so iOS shows the
+    // Интересно / Неинтересно action buttons (registered in AppDelegate.swift).
+    const aps: Record<string, unknown> = {
+      alert: { title: request.title, body: request.body },
+      sound: "default",
+      "mutable-content": 1,
+    };
+    if (request.kind === "job_offer_received") aps.category = "JOB_OFFER";
+    if (threadId !== null) aps["thread-id"] = threadId;
 
-  const outcomes = await Promise.all(
-    tokens.map(async (token) => {
-      try {
-        const outcome = await sendOneApns(jwt, token, apnsPayload, collapseId);
-        if (outcome === "retired") {
-          await deleteRetiredToken(
-            supabase,
-            request.recipient_id,
-            token.device_token,
-          );
+    const apnsPayload: Record<string, unknown> = {
+      aps,
+      kind: request.kind,
+      ...(request.data ?? {}),
+    };
+
+    const native = await Promise.all(
+      nativeTokens.map(async (token) => {
+        try {
+          const outcome = await sendOneApns(jwt, token, apnsPayload, collapseId);
+          if (outcome === "retired") {
+            await deleteRetiredToken(
+              supabase,
+              request.recipient_id,
+              token.device_token,
+            );
+          }
+          return outcome;
+        } catch (err) {
+          console.warn("per-token send failed", { err: String(err) });
+          return "failed" as ApnsSendOutcome;
         }
-        return outcome;
-      } catch (err) {
-        console.warn("per-token send failed", { err: String(err) });
-        return "failed" as ApnsSendOutcome;
-      }
-    }),
-  );
+      }),
+    );
+    outcomes.push(...native);
+  }
 
-  const sent = outcomes.filter((o) => o === "sent").length;
-  const removed = outcomes.filter((o) => o === "retired").length;
-  return jsonResponse(200, { ok: true, sent, removed_tokens: removed });
+  const webEnabled =
+    SEND_WEB_PUSH && VAPID_PUBLIC_KEY.length > 0 && VAPID_PRIVATE_KEY.length > 0;
+  if (webTokens.length > 0 && webEnabled) {
+    const vapid: VapidKeys = {
+      publicKey: VAPID_PUBLIC_KEY,
+      privateKey: VAPID_PRIVATE_KEY,
+      subject: VAPID_SUBJECT,
+    };
+    // The service worker (apps/web/public/sw.js) renders this: title/body,
+    // `tag` collapses chat bursts like apns-collapse-id, `data` feeds the
+    // /push deep-link router on click.
+    const webPayload = JSON.stringify({
+      title: request.title,
+      body: request.body,
+      kind: request.kind,
+      tag: collapseId ?? threadId ?? undefined,
+      data: { kind: request.kind, ...(request.data ?? {}) },
+    });
+    // Web Push `topic` is capped at 32 base64url chars — a dash-less UUID
+    // fits exactly, so chat bursts collapse per conversation.
+    const topic =
+      collapseId !== null && typeof conversationId === "string"
+        ? conversationId.replace(/-/g, "").slice(0, 32)
+        : undefined;
+    const urgency: "high" | "normal" =
+      isChatKind ||
+      request.kind === "shift_confirmation_required" ||
+      request.kind === "shift_no_response_alert"
+        ? "high"
+        : "normal";
+
+    const web = await Promise.all(
+      webTokens.map(async (token) => {
+        try {
+          const { outcome } = await sendWebPush(
+            {
+              endpoint: token.device_token,
+              p256dh: token.p256dh,
+              auth: token.auth,
+            },
+            webPayload,
+            vapid,
+            { ttlSeconds: WEB_PUSH_TTL_SECONDS, urgency, topic },
+          );
+          if (outcome === "retired") {
+            await deleteRetiredToken(
+              supabase,
+              request.recipient_id,
+              token.device_token,
+            );
+          }
+          return outcome;
+        } catch (err) {
+          console.warn("per-subscription web send failed", { err: String(err) });
+          return "failed" as WebPushOutcome;
+        }
+      }),
+    );
+    webOutcomes.push(...web);
+  }
+
+  const sent =
+    outcomes.filter((o) => o === "sent").length +
+    webOutcomes.filter((o) => o === "sent").length;
+  const removed =
+    outcomes.filter((o) => o === "retired").length +
+    webOutcomes.filter((o) => o === "retired").length;
+  return jsonResponse(200, {
+    ok: true,
+    sent,
+    removed_tokens: removed,
+    web_sent: webOutcomes.filter((o) => o === "sent").length,
+    web_suppressed: webTokens.length > 0 && !webEnabled ? webTokens.length : 0,
+  });
 }
 
 Deno.serve(handleRequest);

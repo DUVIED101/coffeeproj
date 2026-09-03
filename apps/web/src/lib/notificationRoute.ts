@@ -1,13 +1,24 @@
-import type { Notification } from "@bystrobarista/core/types/notification";
+import type {
+  Notification,
+  NotificationData,
+  NotificationKind,
+} from "@bystrobarista/core/types/notification";
+
+export type RoutableNotification = Pick<Notification, "kind"> & {
+  data: Partial<NotificationData>;
+};
 
 // Web twin of mobile's dispatchPayload (navigationRef.ts): maps a notification
-// to the route its tap should open, branched on account type exactly like the
-// RN tab dispatch. Falls back to the role's home feed when IDs are missing.
+// (feed row or push payload) to the route its tap should open, branched on
+// account type exactly like the RN tab dispatch. Falls back to the role's home
+// feed when IDs are missing. `action` carries a notification action button
+// (job offer accept/decline) through to the offer page.
 export const notificationHref = (
-  notification: Notification,
+  notification: RoutableNotification,
   accountType: "barista" | "business",
+  action?: "accepted" | "declined",
 ): string => {
-  const { kind } = notification;
+  const kind: NotificationKind = notification.kind;
   const data = notification.data;
   const isBusiness = accountType === "business";
   const home = isBusiness ? "/dashboard" : "/jobs";
@@ -18,7 +29,10 @@ export const notificationHref = (
     case "conversation_started":
       return data.conversationId ? `/chats/${data.conversationId}` : "/chats";
     case "job_offer_received":
-      return data.offerId ? `/offers/${data.offerId}` : home;
+      if (!data.offerId) return home;
+      return action
+        ? `/offers/${data.offerId}?action=${action}`
+        : `/offers/${data.offerId}`;
     case "job_offer_accepted":
     case "job_offer_declined":
     case "new_application":

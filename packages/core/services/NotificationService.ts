@@ -15,15 +15,25 @@ export class NotificationService {
     return result === 'granted';
   }
 
+  // One row per push target in device_tokens. Web subscriptions store the
+  // endpoint as the token plus their two keys; native rows leave the keys
+  // NULL (enforced by the device_tokens_platform_shape check).
   static async registerDevice(userId: UserId, signal?: AbortSignal): Promise<void> {
     const subscription = await getPlatform().push.subscribe(signal);
+    const isWeb = subscription.environment === 'web';
+    if (isWeb && !subscription.webPushKeys) {
+      throw new Error('Web Push subscription is missing p256dh/auth keys');
+    }
     const { error } = await getSupabase()
-      .from('apns_tokens')
+      .from('device_tokens')
       .upsert(
         {
           user_id: userId,
           device_token: subscription.token,
           environment: subscription.environment,
+          platform: isWeb ? 'web' : 'ios',
+          p256dh: isWeb ? subscription.webPushKeys!.p256dh : null,
+          auth: isWeb ? subscription.webPushKeys!.auth : null,
           last_seen_at: new Date().toISOString(),
         },
         { onConflict: 'user_id,device_token' }
@@ -35,19 +45,22 @@ export class NotificationService {
     this.lastRegisteredToken = subscription.token;
   }
 
-  static async unregisterDevice(userId: UserId): Promise<void> {
+  // `token` lets a caller that knows its own subscription (web settings after
+  // a reload, when lastRegisteredToken is empty) drop exactly that row.
+  static async unregisterDevice(userId: UserId, token?: DeviceToken): Promise<void> {
     try {
-      // Only delete the token THIS session registered. When we never
-      // registered (push denied, or a platform without push — web until
-      // Phase 6), deleting nothing is the only safe option: an unscoped
-      // delete would wipe the user's push tokens on every other device
-      // (e.g. web sign-out silently killing iPhone notifications).
-      if (!this.lastRegisteredToken) return;
+      const target = token ?? this.lastRegisteredToken;
+      // Only delete a token we can name — this session's registration or the
+      // caller's explicit one. When we never registered (push denied, or a
+      // browser without push support), deleting nothing is the only safe
+      // option: an unscoped delete would wipe the user's push tokens on every
+      // other device (e.g. web sign-out silently killing iPhone notifications).
+      if (!target) return;
       const { error } = await getSupabase()
-        .from('apns_tokens')
+        .from('device_tokens')
         .delete()
         .eq('user_id', userId)
-        .eq('device_token', this.lastRegisteredToken);
+        .eq('device_token', target);
       if (error) throw error;
       this.lastRegisteredToken = null;
       await getPlatform().push.unsubscribe();

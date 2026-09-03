@@ -86,7 +86,9 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     url.search =
-      pathname === "/" ? "" : `?next=${encodeURIComponent(pathname)}`;
+      pathname === "/"
+        ? ""
+        : `?next=${encodeURIComponent(pathname + request.nextUrl.search)}`;
     return NextResponse.redirect(url);
   }
 
