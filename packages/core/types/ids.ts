@@ -11,3 +11,4 @@ export type JobOfferId = Brand<string, 'JobOfferId'>;
 export type DisputeId = Brand<string, 'DisputeId'>;
 export type ShiftIncidentId = Brand<string, 'ShiftIncidentId'>;
 export type UserReportId = Brand<string, 'UserReportId'>;
+export type EmploymentId = Brand<string, 'EmploymentId'>;

@@ -10,6 +10,7 @@ import type {
 } from '@bystrobarista/core/types/application';
 import type { ApplicationId, DisputeId, UserId } from '@bystrobarista/core/types/ids';
 import type { ApplicationReview, RaterRole, StarRating } from '@bystrobarista/core/types/review';
+import { pickEmbeddedEmployment } from '@bystrobarista/core/utils/employment';
 import { computeShiftHours } from '@bystrobarista/core/utils/shiftHours';
 
 export type CompletedShiftEntry = Application & {
@@ -40,6 +41,7 @@ export class ApplicationService {
         (db.shift_confirmation_status as ShiftConfirmationStatus) ?? undefined,
       shiftConfirmationRequestedAt: db.shift_confirmation_requested_at ?? undefined,
       shiftConfirmationRespondedAt: db.shift_confirmation_responded_at ?? undefined,
+      employment: pickEmbeddedEmployment(db.employments),
     };
   }
 
@@ -63,6 +65,7 @@ export class ApplicationService {
         (db.shift_confirmation_status as ShiftConfirmationStatus) ?? undefined,
       shiftConfirmationRequestedAt: db.shift_confirmation_requested_at ?? undefined,
       shiftConfirmationRespondedAt: db.shift_confirmation_responded_at ?? undefined,
+      employment: pickEmbeddedEmployment(db.employments),
       job: db.jobs
         ? {
             id: db.jobs.id,
@@ -158,6 +161,7 @@ export class ApplicationService {
         .select(
           `
           *,
+          employments (*),
           jobs (
             *,
             businesses (name),
@@ -191,6 +195,7 @@ export class ApplicationService {
         .select(
           `
           *,
+          employments (*),
           jobs (
             *,
             businesses (name),
@@ -266,6 +271,7 @@ export class ApplicationService {
         .select(
           `
           *,
+          employments (*),
           jobs!inner (
             *,
             businesses (name),
@@ -330,7 +336,7 @@ export class ApplicationService {
       // First, get applications
       const { data: applications, error: appsError } = await supabase
         .from('applications')
-        .select('*')
+        .select('*, employments (*)')
         .eq('job_id', jobId)
         .order('created_at', { ascending: false })
         .limit(100);
@@ -426,12 +432,29 @@ export class ApplicationService {
   }
 
   /**
-   * Update application status (business can accept/reject).
+   * Business accepts an applicant. Goes through the accept_application RPC so
+   * a permanent job can stay open for more hires (keepJobOpen) — the DB
+   * triggers still fill temporary shifts and reject their sibling applications.
+   */
+  static async acceptApplication(
+    applicationId: ApplicationId,
+    options: { keepJobOpen?: boolean } = {}
+  ): Promise<void> {
+    const { error } = await supabase.rpc('accept_application', {
+      p_application_id: applicationId,
+      p_keep_job_open: options.keepJobOpen ?? false,
+    });
+    if (error) throw error;
+  }
+
+  /**
+   * Business rejects an applicant. Acceptance goes through acceptApplication;
+   * completion through the mutual completed_by_* flags or the employment RPCs.
    * Requires ownerUserId for defence-in-depth ownership check.
    */
   static async updateApplicationStatus(
     applicationId: string,
-    status: ApplicationStatus,
+    status: Extract<ApplicationStatus, 'rejected'>,
     ownerUserId: string
   ): Promise<void> {
     try {
@@ -511,6 +534,7 @@ export class ApplicationService {
         .select(
           `
           *,
+          employments (*),
           jobs (
             *,
             businesses (name),

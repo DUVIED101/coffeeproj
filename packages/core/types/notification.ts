@@ -2,6 +2,7 @@ import type { ConversationId } from './chat';
 import type {
   ApplicationId,
   DisputeId,
+  EmploymentId,
   JobId,
   JobOfferId,
   NotificationId,
@@ -36,7 +37,11 @@ export type NotificationKind =
   | 'shift_confirmed'
   | 'shift_declined'
   | 'shift_no_response_alert'
-  | 'dispute_filed';
+  | 'dispute_filed'
+  | 'employment_started'
+  | 'employment_start_due'
+  | 'employment_end_requested'
+  | 'employment_ended';
 
 export const JOB_OFFER_ACTION_ACCEPT = 'JOB_OFFER_ACCEPT';
 export const JOB_OFFER_ACTION_DECLINE = 'JOB_OFFER_DECLINE';
@@ -58,6 +63,7 @@ export type PushNotificationPayload = {
     reviewId?: ReviewId;
     offerId?: JobOfferId;
     disputeId?: DisputeId;
+    employmentId?: EmploymentId;
     jobTitle?: string;
     shiftStartIso?: string;
   };

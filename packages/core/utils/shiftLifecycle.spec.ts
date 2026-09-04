@@ -82,7 +82,11 @@ describe('classifyShiftLifecycle', () => {
 
   it('handles a cross-midnight shift (endTime <= startTime, same startDate)', () => {
     // 2026-05-20 22:00 → 2026-05-21 06:00.
-    const shift = baseShift({ startTime: '22:00', endTime: '06:00', endDate: undefined });
+    const shift = baseShift({
+      startTime: '22:00',
+      endTime: '06:00',
+      endDate: undefined,
+    });
     const midShift = new Date('2026-05-21T02:00:00Z');
 
     expect(classifyShiftLifecycle(job('filled', shift), apps(['accepted']), midShift)).toBe(
@@ -153,6 +157,14 @@ describe('canBaristaCancelShift', () => {
   it('returns false after shift ends regardless of confirmation status', () => {
     expect(canBaristaCancelShift(confirmationApp(undefined), shift, longAfterShift)).toBe(false);
     expect(canBaristaCancelShift(confirmationApp('pending'), shift, longAfterShift)).toBe(false);
+  });
+
+  it('returns false for a permanent hire even before the start date', () => {
+    const permanent: ShiftDetails = {
+      kind: 'permanent',
+      startDate: '2026-05-20',
+    };
+    expect(canBaristaCancelShift(confirmationApp(undefined), permanent, beforeShift)).toBe(false);
   });
 
   it('handles cross-midnight shift: returns true before start, false after cancel window', () => {

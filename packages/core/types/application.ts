@@ -1,22 +1,14 @@
+import type { Employment } from './employment';
 import type { Job } from './job';
 
 // Application Types
 export type ApplicationStatus =
-  | 'pending'
-  | 'under_review'
-  | 'accepted'
-  | 'rejected'
-  | 'withdrawn'
-  | 'completed';
+  'pending' | 'under_review' | 'accepted' | 'rejected' | 'withdrawn' | 'completed';
 
 export type ShiftConfirmationStatus = 'pending' | 'confirmed' | 'declined' | 'no_response';
 
 export type ShiftLifecycleStatus =
-  | 'open'
-  | 'under_review'
-  | 'accepted'
-  | 'in_progress'
-  | 'completed';
+  'open' | 'under_review' | 'accepted' | 'in_progress' | 'completed';
 
 export interface Application {
   id: string;
@@ -36,6 +28,7 @@ export interface Application {
 
   // Joined fields (from database queries)
   job?: Job;
+  employment?: Employment; // Permanent hires only
   baristaEmail?: string; // For business view of applicants
   baristaProfile?: {
     firstName: string;

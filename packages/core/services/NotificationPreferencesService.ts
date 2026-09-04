@@ -20,6 +20,8 @@ type PrefsRow = {
   job_offer_declined: boolean;
   work_completion_requested: boolean;
   work_completion_confirmed: boolean;
+  employment_started: boolean;
+  employment_ended: boolean;
   updated_at: string;
 };
 
@@ -37,6 +39,8 @@ const CAMEL_TO_SNAKE: Readonly<Record<keyof UpdateNotificationPreferences, keyof
   jobOfferDeclined: 'job_offer_declined',
   workCompletionRequested: 'work_completion_requested',
   workCompletionConfirmed: 'work_completion_confirmed',
+  employmentStarted: 'employment_started',
+  employmentEnded: 'employment_ended',
 };
 
 export class NotificationPreferencesService {
@@ -56,6 +60,8 @@ export class NotificationPreferencesService {
       jobOfferDeclined: db.job_offer_declined,
       workCompletionRequested: db.work_completion_requested,
       workCompletionConfirmed: db.work_completion_confirmed,
+      employmentStarted: db.employment_started ?? true,
+      employmentEnded: db.employment_ended ?? true,
       updatedAt: db.updated_at,
     };
   }

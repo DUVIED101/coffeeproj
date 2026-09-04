@@ -33,7 +33,11 @@ type NotificationKind =
   | "shift_confirmed"
   | "shift_declined"
   | "shift_no_response_alert"
-  | "dispute_filed";
+  | "dispute_filed"
+  | "employment_started"
+  | "employment_start_due"
+  | "employment_end_requested"
+  | "employment_ended";
 
 type GatedKind =
   | "new_message"
@@ -52,9 +56,12 @@ type GatedKind =
   | "shift_reminder_24h"
   | "shift_reminder_3h"
   | "shift_confirmed"
-  | "shift_declined";
-// shift_confirmation_required, shift_no_response_alert and dispute_filed are
-// deliberately excluded — safety/moderation notifications cannot be turned off.
+  | "shift_declined"
+  | "employment_started"
+  | "employment_ended";
+// shift_confirmation_required, shift_no_response_alert, dispute_filed,
+// employment_start_due and employment_end_requested are deliberately excluded —
+// safety/moderation/action-required notifications cannot be turned off.
 
 type NotificationPrefsRow = {
   new_message: boolean;
@@ -74,6 +81,8 @@ type NotificationPrefsRow = {
   shift_reminder_3h: boolean;
   shift_confirmed: boolean;
   shift_declined: boolean;
+  employment_started: boolean;
+  employment_ended: boolean;
 };
 
 const GATED_KIND_COLUMNS: Readonly<Record<GatedKind, keyof NotificationPrefsRow>> = {
@@ -94,6 +103,8 @@ const GATED_KIND_COLUMNS: Readonly<Record<GatedKind, keyof NotificationPrefsRow>
   shift_reminder_3h: "shift_reminder_3h",
   shift_confirmed: "shift_confirmed",
   shift_declined: "shift_declined",
+  employment_started: "employment_started",
+  employment_ended: "employment_ended",
 };
 
 function isGatedKind(kind: NotificationKind): kind is GatedKind {
@@ -144,6 +155,10 @@ const KNOWN_KINDS: ReadonlySet<NotificationKind> = new Set<NotificationKind>([
   "shift_declined",
   "shift_no_response_alert",
   "dispute_filed",
+  "employment_started",
+  "employment_start_due",
+  "employment_end_requested",
+  "employment_ended",
 ]);
 
 const JWT_TTL_SECONDS = 3300;
@@ -415,7 +430,7 @@ async function isKindEnabled(
   const { data, error } = await supabase
     .from("notification_preferences")
     .select(
-      "new_message, application_accepted, application_rejected, new_application, application_withdrawn, shift_cancelled, new_review, conversation_started, job_offer_received, job_offer_accepted, job_offer_declined, work_completion_requested, work_completion_confirmed, shift_reminder_24h, shift_reminder_3h, shift_confirmed, shift_declined",
+      "new_message, application_accepted, application_rejected, new_application, application_withdrawn, shift_cancelled, new_review, conversation_started, job_offer_received, job_offer_accepted, job_offer_declined, work_completion_requested, work_completion_confirmed, shift_reminder_24h, shift_reminder_3h, shift_confirmed, shift_declined, employment_started, employment_ended",
     )
     .eq("user_id", recipientId)
     .single();
@@ -527,6 +542,11 @@ async function handleRequest(req: Request): Promise<Response> {
     request.kind === "shift_reminder_3h" ||
     request.kind === "shift_confirmed" ||
     request.kind === "shift_declined";
+  const isEmploymentKind =
+    request.kind === "employment_started" ||
+    request.kind === "employment_start_due" ||
+    request.kind === "employment_end_requested" ||
+    request.kind === "employment_ended";
   const collapseId =
     isChatKind && typeof conversationId === "string" && conversationId.length > 0
       ? `conversation:${conversationId}`
@@ -542,7 +562,11 @@ async function handleRequest(req: Request): Promise<Response> {
             typeof applicationId === "string" &&
             applicationId.length > 0
           ? `shift:${applicationId}`
-          : null;
+          : isEmploymentKind &&
+              typeof applicationId === "string" &&
+              applicationId.length > 0
+            ? `employment:${applicationId}`
+            : null;
 
   const outcomes: ApnsSendOutcome[] = [];
   const webOutcomes: WebPushOutcome[] = [];
@@ -622,7 +646,9 @@ async function handleRequest(req: Request): Promise<Response> {
     const urgency: "high" | "normal" =
       isChatKind ||
       request.kind === "shift_confirmation_required" ||
-      request.kind === "shift_no_response_alert"
+      request.kind === "shift_no_response_alert" ||
+      request.kind === "employment_start_due" ||
+      request.kind === "employment_end_requested"
         ? "high"
         : "normal";
 

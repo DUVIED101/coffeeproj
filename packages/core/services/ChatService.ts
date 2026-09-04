@@ -1,6 +1,11 @@
 import { supabase } from '../config/supabase';
 import { withRetry } from '@bystrobarista/core/utils/withRetry';
-import type { Conversation, Message, SendMessageData, ConversationId } from '@bystrobarista/core/types/chat';
+import type {
+  Conversation,
+  Message,
+  SendMessageData,
+  ConversationId,
+} from '@bystrobarista/core/types/chat';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export class ChatService {
@@ -40,6 +45,21 @@ export class ChatService {
     };
   }
 
+  // Permanent-hire fields from the embedded applications(employments, jobs)
+  // rows. The 1:0..1 employments embed arrives as an object or a one-element
+  // array depending on how PostgREST resolved the relationship.
+  private static employmentFields(
+    application: any
+  ): Pick<Conversation, 'jobType' | 'employmentStatus' | 'employmentEndedAt'> {
+    const embedded = application?.employments;
+    const employment = Array.isArray(embedded) ? embedded[0] : embedded;
+    return {
+      jobType: application?.jobs?.job_type ?? undefined,
+      employmentStatus: employment?.status ?? undefined,
+      employmentEndedAt: employment?.ended_at ?? undefined,
+    };
+  }
+
   /**
    * Get conversation by application ID
    */
@@ -52,8 +72,10 @@ export class ChatService {
           *,
           applications(
             status,
+            employments(status, ended_at),
             jobs!inner(
               title,
+              job_type,
               businesses!inner(name, logo_url)
             )
           ),
@@ -91,6 +113,7 @@ export class ChatService {
           : undefined,
         baristaAvatarUrl: baristaProfile?.avatar_url ?? undefined,
         applicationStatus: data.applications?.status,
+        ...this.employmentFields(data.applications),
       };
     } catch (error) {
       console.error('Error in getConversationByApplication:', error);
@@ -111,8 +134,10 @@ export class ChatService {
           *,
           applications(
             status,
+            employments(status, ended_at),
             jobs!inner(
               title,
+              job_type,
               businesses!inner(name, logo_url)
             )
           ),
@@ -148,6 +173,7 @@ export class ChatService {
           : undefined,
         baristaAvatarUrl: baristaProfile?.avatar_url ?? undefined,
         applicationStatus: data.applications?.status,
+        ...this.employmentFields(data.applications),
       };
     } catch (error) {
       console.error('Error in getConversationById:', error);
@@ -254,7 +280,10 @@ export class ChatService {
       return null;
     }
     if (!data) return null;
-    return { name: data.name ?? undefined, logoUrl: data.logo_url ?? undefined };
+    return {
+      name: data.name ?? undefined,
+      logoUrl: data.logo_url ?? undefined,
+    };
   }
 
   /**
@@ -367,8 +396,10 @@ export class ChatService {
             *,
             applications(
               status,
+              employments(status, ended_at),
               jobs!inner(
                 title,
+                job_type,
                 businesses!inner(name, logo_url),
                 branches(id, name, city, metro_station)
               )
@@ -401,6 +432,7 @@ export class ChatService {
             : undefined,
           baristaAvatarUrl: baristaProfile?.avatar_url ?? undefined,
           applicationStatus: conv.applications?.status,
+          ...this.employmentFields(conv.applications),
           city: joinedBranch?.city ?? undefined,
           metroStation: joinedBranch?.metro_station ?? undefined,
           branchId: joinedBranch?.id ?? undefined,

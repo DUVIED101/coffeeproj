@@ -1,5 +1,7 @@
 import type { ApplicationStatus } from './application';
 import type { CityCode } from './city';
+import type { EmploymentStatus } from './employment';
+import type { JobType } from './job';
 
 // Brand utility type for type-safe IDs
 type Brand<K, T> = K & { __brand: T };
@@ -24,6 +26,9 @@ export interface Conversation {
   baristaName?: string;
   baristaAvatarUrl?: string;
   applicationStatus?: ApplicationStatus;
+  jobType?: JobType;
+  employmentStatus?: EmploymentStatus;
+  employmentEndedAt?: string;
   city?: CityCode;
   metroStation?: string;
   branchId?: string;

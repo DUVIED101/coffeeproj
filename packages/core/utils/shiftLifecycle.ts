@@ -62,11 +62,14 @@ export const canCancelShiftNow = (shift: ShiftDetails, now: Date = new Date()): 
 
 // Returns false when the barista has confirmed the shift — cancel is locked
 // from confirmation until shift end. Otherwise delegates to canCancelShiftNow.
+// Permanent hires never "cancel a shift" — they end the employment instead
+// (see utils/employment.ts).
 export const canBaristaCancelShift = (
   application: Pick<Application, 'status' | 'shiftConfirmationStatus'>,
   shift: ShiftDetails,
   now: Date = new Date()
 ): boolean => {
+  if (shift.kind === 'permanent') return false;
   if (application.status !== 'accepted') return false;
   if (application.shiftConfirmationStatus === 'confirmed') return false;
   return canCancelShiftNow(shift, now);

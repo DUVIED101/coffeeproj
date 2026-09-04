@@ -729,7 +729,8 @@
     },
     "report": {
       "actionSheetTitle": "Message actions"
-    }
+    },
+    "employmentEnded": "Employment ended {{date}}"
   },
   "chats": {
     "title": "Messages"
@@ -862,7 +863,8 @@
     },
     "tabs": {
       "jobs": "Jobs",
-      "shifts": "Shifts"
+      "shifts": "Shifts",
+      "staff": "Staff"
     }
   },
   "baristaFeed": {
@@ -1197,6 +1199,88 @@
       "waitAction": "Wait"
     }
   },
+  "employment": {
+    "currentJob": "Current job",
+    "historyLabel": "Permanent position",
+    "period": "{{start}} — {{end}}",
+    "sectionTitle": "Employment",
+    "startDate": "Start date: {{date}}",
+    "openDetails": "Open",
+    "stage": {
+      "pending_start": "Starts {{date}}",
+      "active": "On staff since {{date}}",
+      "ending": "Awaiting end confirmation",
+      "ended": "Ended {{date}}"
+    },
+    "stageShort": {
+      "pending_start": "Awaiting start",
+      "active": "Working",
+      "ending": "Ending",
+      "ended": "Ended"
+    },
+    "start": {
+      "action": "Started work",
+      "actionBarista": "I started work",
+      "noShow": "Did not show up",
+      "confirmTitle": "Confirm the start?",
+      "confirmBody": "Today will be recorded as the first working day.",
+      "success": "Start confirmed",
+      "failure": "Could not confirm the start"
+    },
+    "accept": {
+      "title": "Accept candidate",
+      "closeJob": "Accept and close the vacancy",
+      "keepJobOpen": "Accept, keep the vacancy open",
+      "hint": "If the vacancy stays open, the other applications are kept and you can hire more people."
+    },
+    "end": {
+      "actionBusiness": "End employment",
+      "actionBarista": "Leave the job",
+      "confirmAction": "Confirm the end",
+      "cancelRequest": "Cancel request",
+      "title": "End the employment?",
+      "bodyBusiness": "The barista will be notified and must confirm. Without a reply it is confirmed automatically after 3 days.",
+      "bodyBarista": "The employer will be notified and must confirm. Without a reply it is confirmed automatically after 3 days.",
+      "reasonLabel": "Reason",
+      "commentPlaceholder": "Comment (optional)",
+      "confirm": "End",
+      "requestSuccess": "End request sent",
+      "confirmSuccess": "Employment ended",
+      "cancelSuccess": "Request cancelled",
+      "failure": "The action failed. Please try again.",
+      "pendingByBarista": "The barista asked to end the employment",
+      "pendingByBusiness": "The employer asked to end the employment",
+      "pendingOwn": "You asked to end the employment",
+      "autoHint": "Without a reply it ends automatically on {{date}}",
+      "reasonLine": "Reason: {{reason}}",
+      "endedByBarista": "The barista ended the employment",
+      "endedByBusiness": "The employer ended the employment",
+      "endedAuto": "Confirmed automatically",
+      "confirmTitle": "Confirm the end?",
+      "confirmBody": "After confirming you can rate each other."
+    },
+    "endReason": {
+      "quit": "Resigned",
+      "found_other": "Found another job",
+      "conditions_mismatch": "Conditions differed from the listing",
+      "dismissed": "Not a fit",
+      "no_show": "Did not show up",
+      "probation_failed": "Did not pass probation",
+      "position_closed": "Position closed",
+      "other": "Other"
+    },
+    "reopenJob": "Reopen the vacancy",
+    "reopenSuccess": "Vacancy reopened",
+    "staff": {
+      "title": "Staff",
+      "filterActive": "Working",
+      "filterEnded": "Ended",
+      "emptyActive": "No staff yet",
+      "emptyEnded": "No ended employments yet",
+      "loadFailed": "Could not load staff",
+      "openApplicants": "Applicants"
+    }
+  },
   "manageJobs": {
     "title": "Manage Jobs",
     "create": "+ Create",
@@ -1447,7 +1531,9 @@
       "shiftReminder24h": "24-hour shift reminder",
       "shiftReminder3h": "3-hour shift reminder",
       "shiftConfirmed": "Shift confirmed by barista",
-      "shiftDeclined": "Shift declined by barista"
+      "shiftDeclined": "Shift declined by barista",
+      "employmentStarted": "Hired for a permanent position",
+      "employmentEnded": "Employment ended"
     },
     "visibility": {
       "title": "Visibility",

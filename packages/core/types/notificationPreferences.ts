@@ -13,7 +13,9 @@ export type NotificationKindPref =
   | 'job_offer_accepted'
   | 'job_offer_declined'
   | 'work_completion_requested'
-  | 'work_completion_confirmed';
+  | 'work_completion_confirmed'
+  | 'employment_started'
+  | 'employment_ended';
 
 export type NotificationPreferences = {
   userId: UserId;
@@ -30,6 +32,8 @@ export type NotificationPreferences = {
   jobOfferDeclined: boolean;
   workCompletionRequested: boolean;
   workCompletionConfirmed: boolean;
+  employmentStarted: boolean;
+  employmentEnded: boolean;
   updatedAt: string;
 };
 
@@ -49,5 +53,7 @@ export type UpdateNotificationPreferences = Partial<
     | 'jobOfferDeclined'
     | 'workCompletionRequested'
     | 'workCompletionConfirmed'
+    | 'employmentStarted'
+    | 'employmentEnded'
   >
 >;
