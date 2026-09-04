@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { useFocusEffect, type RouteProp } from "@react-navigation/native";
+import { useFocusEffect, type RouteProp } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -8,7 +8,9 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
+  ActionSheetIOS,
   Alert,
+  Platform,
   RefreshControl,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -22,13 +24,24 @@ import { JobService } from '@bystrobarista/core/services/JobService';
 import { JobOfferService } from '@bystrobarista/core/services/JobOfferService';
 import { ReviewService } from '@bystrobarista/core/services/ReviewService';
 import { useAuthStore } from '@bystrobarista/core/stores/authStore';
+import { EmploymentStageActions } from '../../components/EmploymentStageActions';
 import { ReviewModal } from '../../components/ReviewModal';
 import { ShiftCountdownBanner } from '../../components/ShiftCountdownBanner';
 import { Skeleton } from '../../components/Skeleton';
-import { getShiftEnd, getShiftStart, canCancelShiftNow } from '@bystrobarista/core/utils/shiftLifecycle';
-import type { Application, ApplicationStatus, DisputeSummary } from '@bystrobarista/core/types/application';
+import { useEmploymentActions } from '../../hooks/useEmploymentActions';
+import {
+  getShiftEnd,
+  getShiftStart,
+  canCancelShiftNow,
+} from '@bystrobarista/core/utils/shiftLifecycle';
+import type {
+  Application,
+  ApplicationStatus,
+  DisputeSummary,
+} from '@bystrobarista/core/types/application';
+import type { Employment } from '@bystrobarista/core/types/employment';
 import type { JobOffer } from '@bystrobarista/core/types/jobOffer';
-import type { ShiftDetails } from '@bystrobarista/core/types/job';
+import type { JobStatus, ShiftDetails } from '@bystrobarista/core/types/job';
 import type { ApplicationId, JobId, UserId } from '@bystrobarista/core/types/ids';
 import type { ApplicationReview } from '@bystrobarista/core/types/review';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
@@ -98,6 +111,15 @@ interface ApplicantItemProps {
   shiftEndReached: boolean;
   shiftWaitingLabel: string;
   cancelWindowOpen: boolean;
+  isPermanent: boolean;
+  employment: Employment | undefined;
+  isEmploymentProcessing: boolean;
+  canReopenJob: boolean;
+  onConfirmStart: (applicationId: ApplicationId) => void;
+  onRequestEnd: (applicationId: ApplicationId) => void;
+  onConfirmEnd: (applicationId: ApplicationId) => void;
+  onCancelEndRequest: (applicationId: ApplicationId) => void;
+  onReopenJob: (jobId: JobId) => void;
   t: TFunction;
 }
 
@@ -125,6 +147,15 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     shiftEndReached,
     shiftWaitingLabel,
     cancelWindowOpen,
+    isPermanent,
+    employment,
+    isEmploymentProcessing,
+    canReopenJob,
+    onConfirmStart,
+    onRequestEnd,
+    onConfirmEnd,
+    onCancelEndRequest,
+    onReopenJob,
     t,
   }) => {
     const handleAccept = useCallback(() => onAccept(applicationId), [onAccept, applicationId]);
@@ -173,11 +204,14 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     const statusColor = getStatusColor(application.status);
     const statusText = getStatusText(application.status, t);
     const isActionable = application.status === 'pending' || application.status === 'under_review';
+    // Permanent hires end through the employment lifecycle, never through the
+    // shift completion / cancel-shift buttons.
     const showConfirmCompletionSection =
-      application.status === 'accepted' && !application.completedByBusiness;
+      !isPermanent && application.status === 'accepted' && !application.completedByBusiness;
     const canConfirmCompletion = showConfirmCompletionSection && shiftEndReached;
     const isWaitingForShiftEnd = showConfirmCompletionSection && !shiftEndReached;
-    const canCancelShift = application.status === 'accepted' && cancelWindowOpen;
+    const canCancelShift = !isPermanent && application.status === 'accepted' && cancelWindowOpen;
+    const showEmployment = isPermanent && employment !== undefined;
 
     return (
       <View style={styles.applicantCard}>
@@ -271,6 +305,23 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
           </TouchableOpacity>
         )}
 
+        {showEmployment && employment && (
+          <View style={styles.employmentSection}>
+            <Text style={styles.employmentTitle}>{t('employment.sectionTitle')}</Text>
+            <EmploymentStageActions
+              employment={employment}
+              side="business"
+              isProcessing={isEmploymentProcessing}
+              canReopenJob={canReopenJob}
+              onConfirmStart={onConfirmStart}
+              onRequestEnd={onRequestEnd}
+              onConfirmEnd={onConfirmEnd}
+              onCancelEndRequest={onCancelEndRequest}
+              onReopenJob={onReopenJob}
+            />
+          </View>
+        )}
+
         {needsReview && (
           <TouchableOpacity
             style={styles.reviewBanner}
@@ -350,35 +401,42 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
   } | null>(null);
   const [shiftDetails, setShiftDetails] = useState<ShiftDetails | null>(null);
   const [jobTitle, setJobTitle] = useState<string>('');
+  const [jobStatus, setJobStatus] = useState<JobStatus | null>(null);
   const [now, setNow] = useState<Date>(() => new Date());
   const [ownDisputeMap, setOwnDisputeMap] = useState<Record<string, DisputeSummary>>({});
   const promptedAppIds = useRef<Set<string>>(new Set());
 
-  const shiftEnd = useMemo(() => (shiftDetails ? getShiftEnd(shiftDetails) : null), [shiftDetails]);
-  const cancelWindowClose = useMemo(
-    () => (shiftDetails ? new Date(getShiftStart(shiftDetails).getTime() + 60 * 60 * 1000) : null),
-    [shiftDetails]
+  const isPermanent = shiftDetails?.kind === 'permanent';
+  // Permanent jobs have no shift boundary (getShiftEnd returns start + 100 years),
+  // so the shift-end gating and its timers only apply to temporary shifts.
+  const shiftEnd = useMemo(
+    () => (shiftDetails && !isPermanent ? getShiftEnd(shiftDetails) : null),
+    [shiftDetails, isPermanent]
   );
-  const cancelWindowOpen = shiftDetails ? canCancelShiftNow(shiftDetails, now) : true;
+  const cancelWindowClose = useMemo(
+    () =>
+      shiftDetails && !isPermanent
+        ? new Date(getShiftStart(shiftDetails).getTime() + 60 * 60 * 1000)
+        : null,
+    [shiftDetails, isPermanent]
+  );
+  const cancelWindowOpen =
+    shiftDetails && !isPermanent ? canCancelShiftNow(shiftDetails, now) : true;
+
+  const loadJob = useCallback(async () => {
+    try {
+      const job = await JobService.getJobById(jobId);
+      setShiftDetails(job.shiftDetails);
+      setJobTitle(job.title);
+      setJobStatus(job.status);
+    } catch (error) {
+      console.error('Error loading job for shift gating:', error);
+    }
+  }, [jobId]);
 
   useEffect(() => {
-    let cancelled = false;
-    const loadJob = async () => {
-      try {
-        const job = await JobService.getJobById(jobId);
-        if (!cancelled) {
-          setShiftDetails(job.shiftDetails);
-          setJobTitle(job.title);
-        }
-      } catch (error) {
-        console.error('Error loading job for shift gating:', error);
-      }
-    };
     loadJob();
-    return () => {
-      cancelled = true;
-    };
-  }, [jobId]);
+  }, [loadJob]);
 
   useEffect(() => {
     if (applications.length === 0) return;
@@ -486,13 +544,12 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   }, [loadApplicants]);
 
-  const handleAccept = useCallback(
-    async (applicationId: string) => {
-      if (!user) return;
+  const acceptApplication = useCallback(
+    async (applicationId: string, keepJobOpen: boolean) => {
       try {
         markProcessing(applicationId, true);
-        await ApplicationService.updateApplicationStatus(applicationId, 'accepted', user.id);
-        await loadApplicants();
+        await ApplicationService.acceptApplication(applicationId as ApplicationId, { keepJobOpen });
+        await Promise.all([loadApplicants(), loadJob()]);
         showSuccessToast(t('applicants.acceptSuccess'));
       } catch (error) {
         console.error('Error accepting application:', error);
@@ -501,8 +558,60 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         markProcessing(applicationId, false);
       }
     },
-    [user, markProcessing, loadApplicants, t]
+    [markProcessing, loadApplicants, loadJob, t]
   );
+
+  // Permanent jobs: the business decides whether the vacancy closes with this hire.
+  const handleAccept = useCallback(
+    (applicationId: string) => {
+      if (!user) return;
+      if (!isPermanent) {
+        void acceptApplication(applicationId, false);
+        return;
+      }
+      const closeLabel = t('employment.accept.closeJob');
+      const keepOpenLabel = t('employment.accept.keepJobOpen');
+      if (Platform.OS === 'ios') {
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            title: t('employment.accept.title'),
+            message: t('employment.accept.hint'),
+            options: [closeLabel, keepOpenLabel, t('common.cancel')],
+            cancelButtonIndex: 2,
+          },
+          index => {
+            if (index === 0) void acceptApplication(applicationId, false);
+            if (index === 1) void acceptApplication(applicationId, true);
+          }
+        );
+        return;
+      }
+      Alert.alert(t('employment.accept.title'), t('employment.accept.hint'), [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: keepOpenLabel, onPress: () => void acceptApplication(applicationId, true) },
+        { text: closeLabel, onPress: () => void acceptApplication(applicationId, false) },
+      ]);
+    },
+    [user, isPermanent, acceptApplication, t]
+  );
+
+  const openReviewIfMissing = useCallback(async (applicationId: ApplicationId, rateeId: UserId) => {
+    if (promptedAppIds.current.has(applicationId)) return;
+    promptedAppIds.current.add(applicationId);
+    const existing = await ReviewService.getReviewByApplication(applicationId, 'business');
+    if (!existing) setReviewTarget({ applicationId, rateeId });
+  }, []);
+
+  const reloadAll = useCallback(async () => {
+    await Promise.all([loadApplicants(), loadJob()]);
+  }, [loadApplicants, loadJob]);
+
+  const employmentActions = useEmploymentActions({
+    side: 'business',
+    userId: user?.id as UserId | undefined,
+    onChanged: reloadAll,
+    onEnded: employment => openReviewIfMissing(employment.applicationId, employment.baristaId),
+  });
 
   const handleReject = useCallback(
     async (applicationId: string) => {
@@ -702,6 +811,15 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
         shiftEndReached={shiftEndReached}
         shiftWaitingLabel={shiftWaitingLabel}
         cancelWindowOpen={cancelWindowOpen}
+        isPermanent={isPermanent}
+        employment={item.employment}
+        isEmploymentProcessing={employmentActions.processingIds.has(item.id)}
+        canReopenJob={jobStatus === 'filled'}
+        onConfirmStart={employmentActions.confirmStart}
+        onRequestEnd={employmentActions.requestEnd}
+        onConfirmEnd={employmentActions.confirmEnd}
+        onCancelEndRequest={employmentActions.cancelEndRequest}
+        onReopenJob={employmentActions.reopenJob}
         t={t}
       />
     ),
@@ -725,6 +843,14 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
       shiftEndReached,
       shiftWaitingLabel,
       cancelWindowOpen,
+      isPermanent,
+      jobStatus,
+      employmentActions.processingIds,
+      employmentActions.confirmStart,
+      employmentActions.requestEnd,
+      employmentActions.confirmEnd,
+      employmentActions.cancelEndRequest,
+      employmentActions.reopenJob,
       t,
     ]
   );
@@ -867,6 +993,8 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
           />
         }
       />
+
+      {employmentActions.endModal}
 
       {reviewTarget && (
         <ReviewModal
@@ -1134,6 +1262,18 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     fontSize: 14,
     fontWeight: '600',
+  },
+  employmentSection: {
+    marginBottom: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    gap: 8,
+  },
+  employmentTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
   },
   reviewBanner: {
     marginTop: 8,

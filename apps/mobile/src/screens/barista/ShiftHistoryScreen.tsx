@@ -12,8 +12,12 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '@bystrobarista/core/config/constants';
-import { ApplicationService, type CompletedShiftEntry } from '@bystrobarista/core/services/ApplicationService';
+import {
+  ApplicationService,
+  type CompletedShiftEntry,
+} from '@bystrobarista/core/services/ApplicationService';
 import { useAuthStore } from '@bystrobarista/core/stores/authStore';
+import { isPermanentApplication } from '@bystrobarista/core/utils/employment';
 import { StarRow } from '../../components/StarRow';
 import { ReviewModal } from '../../components/ReviewModal';
 import { Skeleton } from '../../components/Skeleton';
@@ -28,18 +32,17 @@ type Props = {
   navigation: NativeStackNavigationProp<ShiftHistoryStackParamList, 'ShiftHistory'>;
 };
 
+const formatShortDate = (iso: string, locale: string): string =>
+  new Date(iso).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: '2-digit' });
+
 const formatRange = (
   startIso: string | undefined,
   endIso: string | undefined,
   locale: string
 ): string => {
-  const fmt = (iso: string) => {
-    const d = new Date(iso);
-    return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: '2-digit' });
-  };
   if (!startIso) return '';
-  if (!endIso || endIso === startIso) return fmt(startIso);
-  return `${fmt(startIso)} → ${fmt(endIso)}`;
+  if (!endIso || endIso === startIso) return formatShortDate(startIso, locale);
+  return `${formatShortDate(startIso, locale)} → ${formatShortDate(endIso, locale)}`;
 };
 
 const ShiftHistoryCard = React.memo<{
@@ -56,11 +59,17 @@ const ShiftHistoryCard = React.memo<{
   const branchName = entry.job?.branchName;
   const metro = entry.job?.metroStation;
   const shiftDetails = entry.job?.shiftDetails;
-  const range = shiftDetails
-    ? shiftDetails.kind === 'permanent'
-      ? formatRange(shiftDetails.startDate, undefined, locale)
-      : formatRange(shiftDetails.startDate, shiftDetails.endDate, locale)
-    : '';
+  const isPermanent = isPermanentApplication(entry);
+  const periodStart = entry.employment?.startDate ?? shiftDetails?.startDate;
+  const periodEnd = entry.employment?.endedAt ?? entry.completedAt;
+  const range = isPermanent
+    ? t('employment.period', {
+        start: periodStart ? formatShortDate(periodStart, locale) : '',
+        end: formatShortDate(periodEnd, locale),
+      })
+    : shiftDetails?.kind === 'temporary'
+      ? formatRange(shiftDetails.startDate, shiftDetails.endDate, locale)
+      : '';
 
   const canRate = !entry.baristaReview && Boolean(entry.job?.businessOwnerId);
 
@@ -70,7 +79,11 @@ const ShiftHistoryCard = React.memo<{
         <Text style={styles.businessName} numberOfLines={1}>
           {businessName}
         </Text>
-        <Text style={styles.hours}>{t('shiftHistory.hours', { hours: entry.hoursWorked })}</Text>
+        <Text style={styles.hours}>
+          {isPermanent
+            ? t('employment.historyLabel')
+            : t('shiftHistory.hours', { hours: entry.hoursWorked })}
+        </Text>
       </View>
 
       {(branchName || metro) && (

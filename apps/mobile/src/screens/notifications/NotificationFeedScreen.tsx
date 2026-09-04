@@ -77,6 +77,10 @@ const ICON_BY_KIND: Record<NotificationKind, string> = {
   shift_declined: 'calendar-remove-outline',
   shift_no_response_alert: 'calendar-alert',
   dispute_filed: 'alert-circle-outline',
+  employment_started: 'badge-account-outline',
+  employment_start_due: 'badge-account-outline',
+  employment_end_requested: 'account-off-outline',
+  employment_ended: 'account-off-outline',
 };
 
 const formatTimestamp = (date: Date): string => {

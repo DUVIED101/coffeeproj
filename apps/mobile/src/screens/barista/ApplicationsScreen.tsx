@@ -15,18 +15,22 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { ApplicationService } from '@bystrobarista/core/services/ApplicationService';
 import { ChatService } from '@bystrobarista/core/services/ChatService';
+import { EmploymentService } from '@bystrobarista/core/services/EmploymentService';
+import { CurrentEmploymentCard } from '../../components/CurrentEmploymentCard';
 import { Skeleton } from '../../components/Skeleton';
 import { useMasterDetail } from '../../components/MasterDetailContext';
 import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import type { Application, ApplicationStatus } from '@bystrobarista/core/types/application';
 import type { ConversationId } from '@bystrobarista/core/types/chat';
+import type { Employment } from '@bystrobarista/core/types/employment';
+import type { UserId } from '@bystrobarista/core/types/ids';
 
 type BaristaStackParamList = {
   JobFeed: undefined;
   JobDetails: { jobId: string; distance?: number };
   Apply: { jobId: string };
   Applications: undefined;
-  ApplicationDetails: { application: Application };
+  ApplicationDetails: { application: Application } | { applicationId: string };
   Chat: { applicationId: string; conversationId?: ConversationId };
 };
 
@@ -153,6 +157,7 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [businessHasSpoken, setBusinessHasSpoken] = useState<Set<string>>(new Set());
+  const [activeEmployment, setActiveEmployment] = useState<Employment | null>(null);
 
   const loadApplications = useCallback(async () => {
     if (!user?.id) {
@@ -165,10 +170,16 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
       setApplications(data);
 
       const ids = data.map(a => a.id);
-      const [countsResult, spokenResult] = await Promise.allSettled([
+      const [countsResult, spokenResult, employmentResult] = await Promise.allSettled([
         ChatService.getUnreadCountsByApplicationIds(ids, 'barista'),
         ChatService.getBusinessHasSpokenByApplicationIds(ids),
+        EmploymentService.getActiveForBarista(user.id as UserId),
       ]);
+      if (employmentResult.status === 'fulfilled') {
+        setActiveEmployment(employmentResult.value);
+      } else {
+        console.error('Error fetching active employment:', employmentResult.reason);
+      }
       if (countsResult.status === 'fulfilled') {
         setUnreadCounts(countsResult.value);
       } else {
@@ -220,6 +231,21 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
       });
     },
     [navigation]
+  );
+
+  const handleOpenEmployment = useCallback(
+    (employment: Employment) => {
+      if (masterDetail) {
+        masterDetail.select(employment.applicationId);
+        return;
+      }
+      const application = applications.find(a => a.id === employment.applicationId);
+      navigation.navigate(
+        'ApplicationDetails',
+        application ? { application } : { applicationId: employment.applicationId }
+      );
+    },
+    [navigation, masterDetail, applications]
   );
 
   const renderApplication = useCallback(
@@ -279,6 +305,15 @@ export const ApplicationsScreen: React.FC<Props> = ({ navigation }) => {
         renderItem={renderApplication}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
+        ListHeaderComponent={
+          activeEmployment ? (
+            <CurrentEmploymentCard
+              employment={activeEmployment}
+              onOpen={handleOpenEmployment}
+              onChat={handleChatPress}
+            />
+          ) : null
+        }
         ListEmptyComponent={renderEmpty}
         initialNumToRender={8}
         maxToRenderPerBatch={15}

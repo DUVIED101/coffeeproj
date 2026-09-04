@@ -17,29 +17,39 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
+import { EmploymentCard } from '../../components/EmploymentCard';
 import { JobCard } from '../../components/JobCard';
+import { ReviewModal } from '../../components/ReviewModal';
 import { ScreenHeaderWithActions } from '../../components/ScreenHeaderWithActions';
 import { ShiftCard } from '../../components/ShiftCard';
-import { ShiftFilterSheet, type ShiftFilters } from "../../components/ShiftFilterSheet";
+import { ShiftFilterSheet, type ShiftFilters } from '../../components/ShiftFilterSheet';
 import { Skeleton } from '../../components/Skeleton';
 import { AddFab } from '../../components/AddFab';
+import { useEmploymentActions } from '../../hooks/useEmploymentActions';
 import { JobService } from '@bystrobarista/core/services/JobService';
 import { ApplicationService } from '@bystrobarista/core/services/ApplicationService';
 import { BusinessService } from '@bystrobarista/core/services/BusinessService';
+import { EmploymentService } from '@bystrobarista/core/services/EmploymentService';
+import { ReviewService } from '@bystrobarista/core/services/ReviewService';
 import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { useNotificationFeedStore } from '../../stores/notificationFeedStore';
+import { showErrorToast } from '../../stores/errorToastStore';
 import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import { ResponsiveContainer } from '../../components/ResponsiveContainer';
 import { classifyShiftLifecycle } from '@bystrobarista/core/utils/shiftLifecycle';
 import type { Job, JobStatus } from '@bystrobarista/core/types';
 import type { Application, ShiftLifecycleStatus } from '@bystrobarista/core/types/application';
+import type { Employment } from '@bystrobarista/core/types/employment';
+import type { ApplicationId, UserId } from '@bystrobarista/core/types/ids';
 
 const SHOW_ARCHIVED_KEY = 'business.showArchivedJobs';
 const ARCHIVED_STATUSES: JobStatus[] = ['filled', 'expired', 'cancelled'];
 
 type BusinessHomeScreenProps = NativeStackScreenProps<BusinessStackParamList, 'BusinessHome'>;
 
-type TabType = 'jobs' | 'shifts';
+type TabType = 'jobs' | 'shifts' | 'staff';
+
+type StaffFilter = 'active' | 'ended';
 
 type LifecycleTabValue = ShiftLifecycleStatus | 'all';
 
@@ -114,6 +124,16 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
   const [shiftFilters, setShiftFilters] = useState<ShiftFilters>({ includeArchive: false });
   const [filterSheetVisible, setFilterSheetVisible] = useState(false);
 
+  // Staff tab state (permanent hires)
+  const [employments, setEmployments] = useState<Employment[]>([]);
+  const [isLoadingStaff, setIsLoadingStaff] = useState(false);
+  const [isRefreshingStaff, setIsRefreshingStaff] = useState(false);
+  const [staffFilter, setStaffFilter] = useState<StaffFilter>('active');
+  const [reviewTarget, setReviewTarget] = useState<{
+    applicationId: ApplicationId;
+    rateeId: UserId;
+  } | null>(null);
+
   useEffect(() => {
     AsyncStorage.getItem(SHOW_ARCHIVED_KEY)
       .then(value => {
@@ -185,6 +205,20 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     }
   }, [businessId]);
 
+  const loadStaff = useCallback(async () => {
+    if (!user?.id) return;
+    setIsLoadingStaff(true);
+    try {
+      const fetched = await EmploymentService.getForBusinessOwner(user.id as UserId);
+      setEmployments(fetched);
+    } catch (error) {
+      console.error('Error loading staff:', error);
+      showErrorToast(t('employment.staff.loadFailed'));
+    } finally {
+      setIsLoadingStaff(false);
+    }
+  }, [user?.id, t]);
+
   // Combined focus + tab-switch loader. useFocusEffect re-fires on focus AND
   // whenever its callback identity changes, so depending on `activeTab` lets
   // us drop a parallel useEffect (which was double-firing on mount-and-focus
@@ -193,10 +227,12 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     useCallback(() => {
       if (activeTab === 'jobs') {
         loadJobs();
-      } else {
+      } else if (activeTab === 'shifts') {
         loadShifts();
+      } else {
+        loadStaff();
       }
-    }, [activeTab, loadJobs, loadShifts])
+    }, [activeTab, loadJobs, loadShifts, loadStaff])
   );
 
   const handleRefreshJobs = async () => {
@@ -210,6 +246,87 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     await loadShifts();
     setIsRefreshingShifts(false);
   };
+
+  const handleRefreshStaff = async () => {
+    setIsRefreshingStaff(true);
+    await loadStaff();
+    setIsRefreshingStaff(false);
+  };
+
+  const openReviewIfMissing = useCallback(async (employment: Employment) => {
+    const existing = await ReviewService.getReviewByApplication(
+      employment.applicationId,
+      'business'
+    );
+    if (!existing) {
+      setReviewTarget({ applicationId: employment.applicationId, rateeId: employment.baristaId });
+    }
+  }, []);
+
+  const employmentActions = useEmploymentActions({
+    side: 'business',
+    userId: user?.id as UserId | undefined,
+    onChanged: loadStaff,
+    onEnded: openReviewIfMissing,
+  });
+
+  const handleStaffChat = useCallback(
+    (applicationId: ApplicationId) => {
+      navigation.getParent()?.navigate('Chats', { screen: 'Chat', params: { applicationId } });
+    },
+    [navigation]
+  );
+
+  const handleStaffOpenApplicants = useCallback(
+    (jobId: string) => {
+      navigation.navigate('Applicants', { jobId });
+    },
+    [navigation]
+  );
+
+  const filteredEmployments = useMemo(
+    () =>
+      employments.filter(e =>
+        staffFilter === 'ended' ? e.status === 'ended' : e.status !== 'ended'
+      ),
+    [employments, staffFilter]
+  );
+
+  const staffCounts = useMemo(() => {
+    let active = 0;
+    let ended = 0;
+    for (const e of employments) {
+      if (e.status === 'ended') ended += 1;
+      else active += 1;
+    }
+    return { active, ended };
+  }, [employments]);
+
+  const renderEmployment = useCallback(
+    ({ item }: { item: Employment }) => (
+      <EmploymentCard
+        employment={item}
+        isProcessing={employmentActions.processingIds.has(item.applicationId)}
+        onChat={handleStaffChat}
+        onOpenApplicants={handleStaffOpenApplicants}
+        onConfirmStart={employmentActions.confirmStart}
+        onRequestEnd={employmentActions.requestEnd}
+        onConfirmEnd={employmentActions.confirmEnd}
+        onCancelEndRequest={employmentActions.cancelEndRequest}
+        onReopenJob={employmentActions.reopenJob}
+      />
+    ),
+    [
+      employmentActions.processingIds,
+      employmentActions.confirmStart,
+      employmentActions.requestEnd,
+      employmentActions.confirmEnd,
+      employmentActions.cancelEndRequest,
+      employmentActions.reopenJob,
+      handleStaffChat,
+      handleStaffOpenApplicants,
+    ]
+  );
 
   const handleJobPress = useCallback(
     (jobId: string) => {
@@ -520,6 +637,85 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     </View>
   );
 
+  const STAFF_FILTERS: Array<{ value: StaffFilter; label: string; count: number }> = [
+    { value: 'active', label: t('employment.staff.filterActive'), count: staffCounts.active },
+    { value: 'ended', label: t('employment.staff.filterEnded'), count: staffCounts.ended },
+  ];
+
+  const renderStaffTab = () => (
+    <View style={styles.tabContent}>
+      <View style={styles.statusTabsWrap}>
+        <View style={[styles.statusTabsContent, styles.staffFilterRow]}>
+          {STAFF_FILTERS.map(item => (
+            <TouchableOpacity
+              key={item.value}
+              style={[styles.statusTab, staffFilter === item.value && styles.statusTabActive]}
+              onPress={() => setStaffFilter(item.value)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: staffFilter === item.value }}>
+              <Text
+                style={[
+                  styles.statusTabText,
+                  staffFilter === item.value && styles.statusTabTextActive,
+                ]}>
+                {item.label}
+              </Text>
+              <View style={styles.countBadge}>
+                <Text style={styles.countText}>{item.count}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {isLoadingStaff ? (
+        <View style={styles.skeletonList}>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <View key={i} style={styles.skeletonCard}>
+              <Skeleton width="55%" height={17} />
+              <Skeleton width="70%" height={14} style={styles.skeletonGap} />
+              <Skeleton width="40%" height={14} style={styles.skeletonGap} />
+            </View>
+          ))}
+        </View>
+      ) : (
+        <FlatList
+          data={filteredEmployments}
+          keyExtractor={item => item.id}
+          renderItem={renderEmployment}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl refreshing={isRefreshingStaff} onRefresh={handleRefreshStaff} />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>
+                {t(
+                  staffFilter === 'ended'
+                    ? 'employment.staff.emptyEnded'
+                    : 'employment.staff.emptyActive'
+                )}
+              </Text>
+            </View>
+          }
+        />
+      )}
+
+      {employmentActions.endModal}
+
+      {reviewTarget && (
+        <ReviewModal
+          visible
+          applicationId={reviewTarget.applicationId}
+          raterRole="business"
+          rateeId={reviewTarget.rateeId}
+          onSubmitted={() => setReviewTarget(null)}
+          onSkip={() => setReviewTarget(null)}
+        />
+      )}
+    </View>
+  );
+
   if (isResolvingBusiness) {
     return (
       <SafeAreaView style={styles.container}>
@@ -568,10 +764,21 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
               {t('business.tabs.shifts')}
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'staff' && styles.tabActive]}
+            onPress={() => setActiveTab('staff')}>
+            <Text style={[styles.tabText, activeTab === 'staff' && styles.tabTextActive]}>
+              {t('business.tabs.staff')}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Tab Content */}
-        {activeTab === 'jobs' ? renderJobsTab() : renderShiftsTab()}
+        {activeTab === 'jobs'
+          ? renderJobsTab()
+          : activeTab === 'shifts'
+            ? renderShiftsTab()
+            : renderStaffTab()}
       </ResponsiveContainer>
     </SafeAreaView>
   );
@@ -647,6 +854,10 @@ const styles = StyleSheet.create({
     paddingLeft: 12,
     paddingRight: 48,
     gap: 8,
+  },
+  staffFilterRow: {
+    flexDirection: 'row',
+    paddingRight: 12,
   },
   statusTab: {
     flexDirection: 'row',

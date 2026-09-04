@@ -33,6 +33,7 @@ import type { UserId } from '@bystrobarista/core/types/ids';
 import type { Message, ConversationId, Conversation } from '@bystrobarista/core/types/chat';
 import { formatDateHeader, isSameDay } from '../../utils/dateUtils';
 import { clampToEffectiveLength } from '../../utils/textLength';
+import { formatEmploymentDate } from '../../utils/employmentPresentation';
 import { useReportSheet } from '../../hooks/useReportSheet';
 import { handleApiError } from '../../utils/handleApiError';
 import { useBlockedUsersStore } from '@bystrobarista/core/stores/blockedUsersStore';
@@ -134,7 +135,8 @@ export function ChatScreen({ navigation, route }: any) {
   const refreshChatUnread = useChatUnreadStore(s => s.refresh);
   const markConversationNotificationsRead = useNotificationFeedStore(s => s.markConversationAsRead);
   const headerHeight = useHeaderHeight();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
 
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -471,6 +473,8 @@ export function ChatScreen({ navigation, route }: any) {
 
   const isChatClosed =
     conversation.applicationStatus === 'rejected' || conversation.applicationStatus === 'withdrawn';
+  const employmentEnded =
+    conversation.jobType === 'permanent' && conversation.employmentStatus === 'ended';
 
   // Server-side gate (migration 065): barista cannot send messages until the
   // business has spoken. Surface this in the UI instead of letting the send
@@ -521,35 +525,50 @@ export function ChatScreen({ navigation, route }: any) {
           <Text style={styles.closedBannerSubtitle}>{t('chat.waitingForBusiness.subtitle')}</Text>
         </View>
       ) : (
-        <View style={styles.inputContainer}>
-          <TextInput
-            ref={textInputRef}
-            style={styles.textInput}
-            value={messageText}
-            onChangeText={text => setMessageText(clampToEffectiveLength(text, MESSAGE_MAX_LENGTH))}
-            placeholder={t('chat.inputPlaceholder', { defaultValue: 'Type a message...' })}
-            placeholderTextColor={COLORS.textSecondary}
-            multiline
-            blurOnSubmit={false}
-            autoCorrect={false}
-            spellCheck={false}
-            autoComplete="off"
-            keyboardType="default"
-          />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              (!messageText.trim() || isSending) && styles.sendButtonDisabled,
-            ]}
-            onPress={handleSendMessage}
-            disabled={!messageText.trim() || isSending}>
-            {isSending ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.sendButtonText}>{t('chat.send', { defaultValue: 'Send' })}</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+        <>
+          {employmentEnded && (
+            <View style={[styles.closedBanner, styles.endedBanner]}>
+              <Text style={[styles.closedBannerSubtitle, styles.endedBannerText]}>
+                {t('chat.employmentEnded', {
+                  date: formatEmploymentDate(conversation.employmentEndedAt, locale),
+                })}
+              </Text>
+            </View>
+          )}
+          <View style={styles.inputContainer}>
+            <TextInput
+              ref={textInputRef}
+              style={styles.textInput}
+              value={messageText}
+              onChangeText={text =>
+                setMessageText(clampToEffectiveLength(text, MESSAGE_MAX_LENGTH))
+              }
+              placeholder={t('chat.inputPlaceholder', { defaultValue: 'Type a message...' })}
+              placeholderTextColor={COLORS.textSecondary}
+              multiline
+              blurOnSubmit={false}
+              autoCorrect={false}
+              spellCheck={false}
+              autoComplete="off"
+              keyboardType="default"
+            />
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                (!messageText.trim() || isSending) && styles.sendButtonDisabled,
+              ]}
+              onPress={handleSendMessage}
+              disabled={!messageText.trim() || isSending}>
+              {isSending ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.sendButtonText}>
+                  {t('chat.send', { defaultValue: 'Send' })}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </>
       )}
       {reportSheet}
     </KeyboardAvoidingView>
@@ -780,5 +799,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#7F1D1D',
     textAlign: 'center',
+  },
+  endedBanner: {
+    backgroundColor: COLORS.backgroundSecondary,
+    borderTopColor: COLORS.border,
+    paddingVertical: 10,
+  },
+  endedBannerText: {
+    color: COLORS.textSecondary,
   },
 });

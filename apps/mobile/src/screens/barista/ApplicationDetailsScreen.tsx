@@ -15,9 +15,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect, type RouteProp } from '@react-navigation/native';
 import { COLORS } from '@bystrobarista/core/config/constants';
+import { EmploymentStageActions } from '../../components/EmploymentStageActions';
 import { ShiftCountdownBanner } from '../../components/ShiftCountdownBanner';
 import { Skeleton } from '../../components/Skeleton';
+import { useEmploymentActions } from '../../hooks/useEmploymentActions';
 import { useStaleCallback } from '../../hooks/useStaleCallback';
+import { employmentStageLine, formatEmploymentDate } from '../../utils/employmentPresentation';
 import { showSuccessToast } from '../../stores/errorToastStore';
 import { handleApiError } from '../../utils/handleApiError';
 import { ApplicationService } from '@bystrobarista/core/services/ApplicationService';
@@ -25,7 +28,11 @@ import { ReviewService } from '@bystrobarista/core/services/ReviewService';
 import { ReviewModal } from '../../components/ReviewModal';
 import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { queryKeys } from '../../lib/queryClient';
-import { getShiftEnd, canBaristaCancelShift, getShiftStart } from '@bystrobarista/core/utils/shiftLifecycle';
+import {
+  getShiftEnd,
+  canBaristaCancelShift,
+  getShiftStart,
+} from '@bystrobarista/core/utils/shiftLifecycle';
 import type { Application, DisputeSummary } from '@bystrobarista/core/types/application';
 import type { ApplicationId, UserId } from '@bystrobarista/core/types/ids';
 import type { ApplicationReview } from '@bystrobarista/core/types/review';
@@ -129,10 +136,17 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
   const job = application?.job;
   const businessOwnerId = job?.businessOwnerId as UserId | undefined;
   const applicationId = (application?.id ?? idParam) as ApplicationId;
+  const employment = application?.employment;
+  const isPermanent =
+    employment !== undefined ||
+    job?.jobType === 'permanent' ||
+    job?.shiftDetails?.kind === 'permanent';
 
+  // Permanent hires have no shift boundary (getShiftEnd returns start + 100
+  // years); their lifecycle lives in the employment section instead.
   const shiftEnd = useMemo(
-    () => (job?.shiftDetails ? getShiftEnd(job.shiftDetails) : null),
-    [job?.shiftDetails]
+    () => (job?.shiftDetails && !isPermanent ? getShiftEnd(job.shiftDetails) : null),
+    [job?.shiftDetails, isPermanent]
   );
   const [now, setNow] = useState<Date>(() => new Date());
 
@@ -146,10 +160,10 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
 
   const cancelWindowClose = useMemo(
     () =>
-      job?.shiftDetails
+      job?.shiftDetails && !isPermanent
         ? new Date(getShiftStart(job.shiftDetails).getTime() + 60 * 60 * 1000)
         : null,
-    [job?.shiftDetails]
+    [job?.shiftDetails, isPermanent]
   );
 
   useEffect(() => {
@@ -353,6 +367,23 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
   const showReviewBanner =
     currentStatus === 'completed' && !existingReview && !showReviewModal && !!businessOwnerId;
 
+  const openReviewAfterEmploymentEnd = useCallback(async () => {
+    if (hasPromptedThisSession.current || !businessOwnerId) return;
+    const review = await ReviewService.getReviewByApplication(applicationId, 'barista');
+    if (review) {
+      setExistingReview(review);
+      return;
+    }
+    hasPromptedThisSession.current = true;
+    setShowReviewModal(true);
+  }, [applicationId, businessOwnerId]);
+
+  const employmentActions = useEmploymentActions({
+    side: 'barista',
+    onChanged: () => refreshApplication(false),
+    onEnded: openReviewAfterEmploymentEnd,
+  });
+
   const formatJobDate = (iso: string): string => {
     return new Date(iso).toLocaleDateString(locale, {
       day: 'numeric',
@@ -387,8 +418,9 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
 
   const canWithdraw = currentStatus === 'pending' || currentStatus === 'under_review';
   const shiftEndReached = !shiftEnd || now.getTime() >= shiftEnd.getTime();
-  const canMarkComplete = currentStatus === 'accepted' && !completedByBarista && shiftEndReached;
-  const showMarkCompleteSection = currentStatus === 'accepted' && !completedByBarista;
+  const showMarkCompleteSection =
+    !isPermanent && currentStatus === 'accepted' && !completedByBarista;
+  const canMarkComplete = showMarkCompleteSection && shiftEndReached;
   const isWaitingForShiftEnd = showMarkCompleteSection && !shiftEndReached;
   const shiftEndLabel = shiftEnd
     ? shiftEnd.toLocaleString(locale, {
@@ -398,14 +430,18 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
         minute: '2-digit',
       })
     : '';
-  const canCancelShift = job?.shiftDetails
-    ? canBaristaCancelShift(
-        { status: currentStatus, shiftConfirmationStatus },
-        job.shiftDetails,
-        now
-      )
-    : currentStatus === 'accepted';
-  const showCompletionStatus = currentStatus === 'accepted' || currentStatus === 'completed';
+  const canCancelShift = isPermanent
+    ? false
+    : job?.shiftDetails
+      ? canBaristaCancelShift(
+          { status: currentStatus, shiftConfirmationStatus },
+          job.shiftDetails,
+          now
+        )
+      : currentStatus === 'accepted';
+  const showCompletionStatus =
+    !isPermanent && (currentStatus === 'accepted' || currentStatus === 'completed');
+  const showDisputeEntry = currentStatus === 'accepted' || currentStatus === 'completed';
 
   if (isLoadingApp || !application) {
     return (
@@ -452,6 +488,29 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
             })}
           </Text>
         </View>
+
+        {employment && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('employment.sectionTitle')}</Text>
+            <Text style={styles.employmentStage}>{employmentStageLine(employment, t, locale)}</Text>
+            <Text style={styles.employmentMeta}>
+              {t('employment.startDate', {
+                date: formatEmploymentDate(employment.startDate, locale),
+              })}
+            </Text>
+            <View style={styles.employmentActions}>
+              <EmploymentStageActions
+                employment={employment}
+                side="barista"
+                isProcessing={employmentActions.processingIds.has(employment.applicationId)}
+                onConfirmStart={employmentActions.confirmStart}
+                onRequestEnd={employmentActions.requestEnd}
+                onConfirmEnd={employmentActions.confirmEnd}
+                onCancelEndRequest={employmentActions.cancelEndRequest}
+              />
+            </View>
+          </View>
+        )}
 
         {/* Job Information */}
         <View style={styles.section}>
@@ -672,6 +731,8 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
         )}
       </ScrollView>
 
+      {employmentActions.endModal}
+
       {businessOwnerId && (
         <ReviewModal
           visible={showReviewModal}
@@ -687,10 +748,7 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
       )}
 
       {/* Action Buttons */}
-      {(canWithdraw ||
-        showMarkCompleteSection ||
-        canCancelShift ||
-        currentStatus === 'completed') && (
+      {(canWithdraw || showMarkCompleteSection || canCancelShift || showDisputeEntry) && (
         <View style={styles.footer}>
           {showMarkCompleteSection && (
             <>
@@ -743,7 +801,7 @@ export const ApplicationDetailsScreen: React.FC<Props> = ({ navigation, route })
               </Text>
             </TouchableOpacity>
           )}
-          {(currentStatus === 'completed' || currentStatus === 'accepted') &&
+          {showDisputeEntry &&
             (disputeSummary ? (
               <TouchableOpacity
                 style={styles.disputeStatusBox}
@@ -1012,6 +1070,19 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     marginTop: 4,
     lineHeight: 16,
+  },
+  employmentStage: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  employmentMeta: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginTop: 4,
+  },
+  employmentActions: {
+    marginTop: 12,
   },
   completionBanner: {
     backgroundColor: '#D1FAE5',

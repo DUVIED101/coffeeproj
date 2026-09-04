@@ -138,6 +138,26 @@ export const dispatchPayload = (payload: PushNotificationPayload): void => {
     return;
   }
 
+  if (
+    kind === 'employment_started' ||
+    kind === 'employment_start_due' ||
+    kind === 'employment_end_requested' ||
+    kind === 'employment_ended'
+  ) {
+    if (accountType === 'barista') {
+      if (applicationId) {
+        navigateTab('Applications', { screen: 'ApplicationDetails', params: { applicationId } });
+      } else {
+        navigateTab('Applications', { screen: 'ApplicationsList' });
+      }
+    } else if (jobId) {
+      navigateTab('Business', { screen: 'Applicants', params: { jobId } });
+    } else {
+      navigateTab('Business');
+    }
+    return;
+  }
+
   if (kind === 'shift_no_response_alert') {
     if (applicationId && jobTitle && shiftStartIso) {
       navigateTab('Business', {

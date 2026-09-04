@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Switch, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -26,6 +26,8 @@ type PrefsState = {
   jobOfferDeclined: boolean;
   workCompletionRequested: boolean;
   workCompletionConfirmed: boolean;
+  employmentStarted: boolean;
+  employmentEnded: boolean;
 };
 
 const DEFAULT_PREFS: PrefsState = {
@@ -42,6 +44,8 @@ const DEFAULT_PREFS: PrefsState = {
   jobOfferDeclined: true,
   workCompletionRequested: true,
   workCompletionConfirmed: true,
+  employmentStarted: true,
+  employmentEnded: true,
 };
 
 type PrefRow = { key: PrefKey; labelKey: string };
@@ -53,6 +57,8 @@ const BARISTA_PREF_ROWS: ReadonlyArray<PrefRow> = [
   { key: 'applicationAccepted', labelKey: 'settings.notifications.applicationAccepted' },
   { key: 'applicationRejected', labelKey: 'settings.notifications.applicationRejected' },
   { key: 'workCompletionConfirmed', labelKey: 'settings.notifications.workCompletionConfirmed' },
+  { key: 'employmentStarted', labelKey: 'settings.notifications.employmentStarted' },
+  { key: 'employmentEnded', labelKey: 'settings.notifications.employmentEnded' },
   { key: 'shiftCancelled', labelKey: 'settings.notifications.shiftCancelled' },
   { key: 'newReview', labelKey: 'settings.notifications.newReview' },
 ];
@@ -65,6 +71,7 @@ const BUSINESS_PREF_ROWS: ReadonlyArray<PrefRow> = [
   { key: 'jobOfferAccepted', labelKey: 'settings.notifications.jobOfferAccepted' },
   { key: 'jobOfferDeclined', labelKey: 'settings.notifications.jobOfferDeclined' },
   { key: 'workCompletionRequested', labelKey: 'settings.notifications.workCompletionRequested' },
+  { key: 'employmentEnded', labelKey: 'settings.notifications.employmentEnded' },
   { key: 'shiftCancelled', labelKey: 'settings.notifications.shiftCancelled' },
   { key: 'newReview', labelKey: 'settings.notifications.newReview' },
 ];
@@ -108,6 +115,8 @@ export const NotificationsScreen: React.FC = () => {
             jobOfferDeclined: loaded.jobOfferDeclined,
             workCompletionRequested: loaded.workCompletionRequested,
             workCompletionConfirmed: loaded.workCompletionConfirmed,
+            employmentStarted: loaded.employmentStarted,
+            employmentEnded: loaded.employmentEnded,
           });
         }
       } catch (err) {
