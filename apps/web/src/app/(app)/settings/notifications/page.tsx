@@ -148,6 +148,8 @@ const DEFAULT_PREFS: PrefsState = {
   jobOfferDeclined: true,
   workCompletionRequested: true,
   workCompletionConfirmed: true,
+  employmentStarted: true,
+  employmentEnded: true,
 };
 
 type PrefRow = { key: PrefKey; labelKey: string };
@@ -175,6 +177,14 @@ const BARISTA_PREF_ROWS: ReadonlyArray<PrefRow> = [
     key: "workCompletionConfirmed",
     labelKey: "settings.notifications.workCompletionConfirmed",
   },
+  {
+    key: "employmentStarted",
+    labelKey: "settings.notifications.employmentStarted",
+  },
+  {
+    key: "employmentEnded",
+    labelKey: "settings.notifications.employmentEnded",
+  },
   { key: "shiftCancelled", labelKey: "settings.notifications.shiftCancelled" },
   { key: "newReview", labelKey: "settings.notifications.newReview" },
 ];
@@ -201,6 +211,10 @@ const BUSINESS_PREF_ROWS: ReadonlyArray<PrefRow> = [
   {
     key: "workCompletionRequested",
     labelKey: "settings.notifications.workCompletionRequested",
+  },
+  {
+    key: "employmentEnded",
+    labelKey: "settings.notifications.employmentEnded",
   },
   { key: "shiftCancelled", labelKey: "settings.notifications.shiftCancelled" },
   { key: "newReview", labelKey: "settings.notifications.newReview" },
@@ -242,6 +256,8 @@ export default function NotificationSettingsPage(): React.JSX.Element {
             jobOfferDeclined: loaded.jobOfferDeclined,
             workCompletionRequested: loaded.workCompletionRequested,
             workCompletionConfirmed: loaded.workCompletionConfirmed,
+            employmentStarted: loaded.employmentStarted,
+            employmentEnded: loaded.employmentEnded,
           });
         }
       } catch (err) {

@@ -9,9 +9,15 @@ import type { TFunction } from "i18next";
 import { ApplicationService } from "@bystrobarista/core/services/ApplicationService";
 import { ReviewService } from "@bystrobarista/core/services/ReviewService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
+import { isPermanentApplication } from "@bystrobarista/core/utils/employment";
 import { getShiftEnd } from "@bystrobarista/core/utils/shiftLifecycle";
 import type { ApplicationId, UserId } from "@bystrobarista/core/types/ids";
 import type { ApplicationStatus } from "@bystrobarista/core/types/application";
+import { formatDateOnly } from "@/lib/dates";
+import { EMPLOYMENT_BADGE } from "@/lib/employmentUi";
+import { useEmploymentActions } from "@/hooks/useEmploymentActions";
+import { EmploymentStagePanel } from "@/components/EmploymentStagePanel";
+import { EndEmploymentModal } from "@/components/EndEmploymentModal";
 import { ReviewModal } from "@/components/ReviewModal";
 
 const STATUS_BADGE: Record<ApplicationStatus, string> = {
@@ -42,7 +48,8 @@ const statusLabel = (status: ApplicationStatus, t: TFunction): string => {
 
 // Port of ApplicationDetailsScreen (barista side): status, job summary,
 // cover letter, completion banners, withdraw / mark-complete / review /
-// dispute actions.
+// dispute actions. Permanent hires get the employment section instead of
+// the shift completion controls.
 export default function ApplicationDetailsPage(): React.JSX.Element {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === "ru" ? "ru-RU" : "en-US";
@@ -55,6 +62,8 @@ export default function ApplicationDetailsPage(): React.JSX.Element {
   const [acting, setActing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [endOpen, setEndOpen] = useState(false);
+  const employmentActions = useEmploymentActions();
 
   const applicationQuery = useQuery({
     queryKey: ["applications", "byId", applicationId],
@@ -91,12 +100,17 @@ export default function ApplicationDetailsPage(): React.JSX.Element {
   }
 
   const job = application.job;
-  const shiftEnd = job?.shiftDetails ? getShiftEnd(job.shiftDetails) : null;
+  const employment = application.employment;
+  const isPermanent = isPermanentApplication(application);
+  const shiftEnd =
+    !isPermanent && job?.shiftDetails ? getShiftEnd(job.shiftDetails) : null;
   const shiftEndReached = shiftEnd ? Date.now() >= shiftEnd.getTime() : false;
   const canWithdraw =
     application.status === "pending" || application.status === "under_review";
   const canMarkComplete =
-    application.status === "accepted" && !application.completedByBarista;
+    !isPermanent &&
+    application.status === "accepted" &&
+    !application.completedByBarista;
 
   const refresh = (): void => {
     void queryClient.invalidateQueries({ queryKey: ["applications"] });
@@ -133,6 +147,15 @@ export default function ApplicationDetailsPage(): React.JSX.Element {
     }
   };
 
+  const handleConfirmEnd = async (): Promise<void> => {
+    const ended = await employmentActions.confirmEnd(applicationId);
+    if (!ended) return;
+    if (await employmentActions.isAlreadyReviewed(applicationId, "barista")) {
+      return;
+    }
+    setReviewOpen(true);
+  };
+
   const compensation = job?.compensation;
   const compensationText = compensation
     ? compensation.type === "hourly"
@@ -150,9 +173,15 @@ export default function ApplicationDetailsPage(): React.JSX.Element {
     <div className="mx-auto max-w-2xl pb-10">
       <div className="flex flex-col items-center">
         <span
-          className={`rounded-full px-4 py-1.5 text-sm font-semibold text-white ${STATUS_BADGE[application.status]}`}
+          className={`rounded-full px-4 py-1.5 text-sm font-semibold text-white ${
+            employment
+              ? EMPLOYMENT_BADGE[employment.status]
+              : STATUS_BADGE[application.status]
+          }`}
         >
-          {statusLabel(application.status, t)}
+          {employment
+            ? t(`employment.stageShort.${employment.status}`)
+            : statusLabel(application.status, t)}
         </span>
         <p className="mt-2 text-xs text-ink-secondary">
           {t("applications.details.appliedOn", {
@@ -214,22 +243,49 @@ export default function ApplicationDetailsPage(): React.JSX.Element {
         </section>
       )}
 
-      {(application.status === "accepted" ||
-        application.status === "completed") && (
-        <div
-          className={`mt-4 rounded-card px-4 py-3 text-sm ${
-            application.completedByBarista && application.completedByBusiness
-              ? "bg-[#D1FAE5] text-[#065F46]"
-              : application.completedByBarista
-                ? "bg-[#FEF3C7] text-[#92400E]"
-                : "hidden"
-          }`}
-        >
-          {application.completedByBarista && application.completedByBusiness
-            ? t("applications.details.completedBoth")
-            : t("applications.details.completedAwaitingBusiness")}
-        </div>
+      {employment && (
+        <section className="mt-4 rounded-card border border-line bg-white p-4">
+          <h2 className="mb-1 text-sm font-semibold text-ink-secondary">
+            {t("employment.sectionTitle")}
+          </h2>
+          <p className="text-sm">
+            {t("employment.startDate", {
+              date: formatDateOnly(employment.startDate, locale),
+            })}
+          </p>
+          <EmploymentStagePanel
+            employment={employment}
+            side="barista"
+            busy={acting || employmentActions.isBusy(applicationId)}
+            onConfirmStart={() =>
+              void employmentActions.confirmStart(applicationId)
+            }
+            onRequestEnd={() => setEndOpen(true)}
+            onConfirmEnd={() => void handleConfirmEnd()}
+            onCancelEndRequest={() =>
+              void employmentActions.cancelEndRequest(applicationId)
+            }
+          />
+        </section>
       )}
+
+      {!isPermanent &&
+        (application.status === "accepted" ||
+          application.status === "completed") && (
+          <div
+            className={`mt-4 rounded-card px-4 py-3 text-sm ${
+              application.completedByBarista && application.completedByBusiness
+                ? "bg-[#D1FAE5] text-[#065F46]"
+                : application.completedByBarista
+                  ? "bg-[#FEF3C7] text-[#92400E]"
+                  : "hidden"
+            }`}
+          >
+            {application.completedByBarista && application.completedByBusiness
+              ? t("applications.details.completedBoth")
+              : t("applications.details.completedAwaitingBusiness")}
+          </div>
+        )}
 
       {actionError && (
         <p role="alert" className="mt-4 text-sm text-error">
@@ -313,6 +369,22 @@ export default function ApplicationDetailsPage(): React.JSX.Element {
             </Link>
           ))}
       </div>
+
+      {endOpen && (
+        <EndEmploymentModal
+          open
+          side="barista"
+          onSubmit={async (reason, comment) => {
+            await employmentActions.requestEnd({
+              applicationId,
+              reason,
+              comment,
+            });
+            setEndOpen(false);
+          }}
+          onClose={() => setEndOpen(false)}
+        />
+      )}
 
       {reviewOpen && job?.businessOwnerId && (
         <ReviewModal

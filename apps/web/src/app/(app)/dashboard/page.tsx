@@ -9,14 +9,25 @@ import { getPlatform } from "@bystrobarista/core/platform";
 import { BusinessService } from "@bystrobarista/core/services/BusinessService";
 import { JobService } from "@bystrobarista/core/services/JobService";
 import { ApplicationService } from "@bystrobarista/core/services/ApplicationService";
+import { EmploymentService } from "@bystrobarista/core/services/EmploymentService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import type { Job, JobStatus } from "@bystrobarista/core/types/job";
 import type { Application } from "@bystrobarista/core/types/application";
+import type {
+  Employment,
+  EmploymentEndReason,
+} from "@bystrobarista/core/types/employment";
+import type { ApplicationId, UserId } from "@bystrobarista/core/types/ids";
 import { classifyShiftLifecycle } from "@bystrobarista/core/utils/shiftLifecycle";
+import { isEmploymentOpen } from "@bystrobarista/core/utils/employment";
 import type { ShiftLifecycleStatus } from "@bystrobarista/core/types/application";
 import { JobCard } from "@/components/JobCard";
 import { ShiftCard, type ShiftEntry } from "@/components/ShiftCard";
 import { MdiIcon } from "@/components/MdiIcon";
+import { EmploymentCard } from "@/components/EmploymentCard";
+import { EndEmploymentModal } from "@/components/EndEmploymentModal";
+import { ReviewModal } from "@/components/ReviewModal";
+import { useEmploymentActions } from "@/hooks/useEmploymentActions";
 
 // Same persistence key as mobile BusinessHomeScreen's archive toggle.
 const SHOW_ARCHIVED_KEY = "business.showArchivedJobs";
@@ -46,17 +57,30 @@ const countBadge = (active: boolean): string =>
   }`;
 
 // Web port of mobile's BusinessHomeScreen: jobs tab (status pills + archive
-// toggle) and shifts tab (lifecycle tabs over job+applications entries).
+// toggle), shifts tab (lifecycle tabs over job+applications entries) and the
+// staff tab (permanent hires with their lifecycle actions).
 export default function DashboardPage(): React.JSX.Element {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
-  const [activeTab, setActiveTab] = useState<"jobs" | "shifts">("jobs");
+  const [activeTab, setActiveTab] = useState<"jobs" | "shifts" | "staff">(
+    "jobs",
+  );
   const [selectedStatus, setSelectedStatus] = useState<JobStatus>("open");
   const [showArchived, setShowArchived] = useState(false);
   const [selectedLifecycle, setSelectedLifecycle] = useState<
     ShiftLifecycleStatus | "all"
   >("all");
   const [includeArchive, setIncludeArchive] = useState(false);
+  const [staffFilter, setStaffFilter] = useState<"active" | "ended">("active");
+  const [endTarget, setEndTarget] = useState<{
+    applicationId: ApplicationId;
+    initialReason?: EmploymentEndReason;
+  } | null>(null);
+  const [reviewTarget, setReviewTarget] = useState<{
+    applicationId: ApplicationId;
+    rateeId: UserId;
+  } | null>(null);
+  const employmentActions = useEmploymentActions();
 
   useEffect(() => {
     void getPlatform()
@@ -95,6 +119,12 @@ export default function DashboardPage(): React.JSX.Element {
     queryFn: () =>
       ApplicationService.getApplicationsByBusiness(businessId as string),
     enabled: Boolean(businessId) && activeTab === "shifts",
+  });
+
+  const employmentsQuery = useQuery({
+    queryKey: ["employments", "byOwner", user?.id],
+    queryFn: () => EmploymentService.getForBusinessOwner(user?.id as UserId),
+    enabled: Boolean(user?.id) && activeTab === "staff",
   });
 
   const jobs = useMemo(() => jobsQuery.data ?? [], [jobsQuery.data]);
@@ -146,6 +176,29 @@ export default function DashboardPage(): React.JSX.Element {
     return true;
   });
 
+  const employments = employmentsQuery.data ?? [];
+  const openEmployments = employments.filter(isEmploymentOpen);
+  const endedEmployments = employments.filter((e) => !isEmploymentOpen(e));
+  const visibleEmployments =
+    staffFilter === "active" ? openEmployments : endedEmployments;
+
+  const handleConfirmEnd = async (employment: Employment): Promise<void> => {
+    const ended = await employmentActions.confirmEnd(employment.applicationId);
+    if (!ended) return;
+    if (
+      await employmentActions.isAlreadyReviewed(
+        employment.applicationId,
+        "business",
+      )
+    ) {
+      return;
+    }
+    setReviewTarget({
+      applicationId: employment.applicationId,
+      rateeId: employment.baristaId,
+    });
+  };
+
   const isResolvingBusiness = businessQuery.isPending;
 
   if (!isResolvingBusiness && businessQuery.isSuccess && !businessId) {
@@ -173,7 +226,8 @@ export default function DashboardPage(): React.JSX.Element {
   const isLoadingList =
     isResolvingBusiness ||
     jobsQuery.isPending ||
-    (activeTab === "shifts" && applicationsQuery.isPending);
+    (activeTab === "shifts" && applicationsQuery.isPending) ||
+    (activeTab === "staff" && employmentsQuery.isPending);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -188,7 +242,7 @@ export default function DashboardPage(): React.JSX.Element {
       </div>
 
       <div className="mb-4 flex rounded-card border border-line bg-white p-1">
-        {(["jobs", "shifts"] as const).map((tab) => (
+        {(["jobs", "shifts", "staff"] as const).map((tab) => (
           <button
             key={tab}
             type="button"
@@ -309,6 +363,109 @@ export default function DashboardPage(): React.JSX.Element {
             ))
           )}
         </>
+      )}
+
+      {activeTab === "staff" && (
+        <>
+          <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+            {(["active", "ended"] as const).map((value) => {
+              const active = staffFilter === value;
+              const count =
+                value === "active"
+                  ? openEmployments.length
+                  : endedEmployments.length;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setStaffFilter(value)}
+                  className={pill(active)}
+                >
+                  {t(
+                    value === "active"
+                      ? "employment.staff.filterActive"
+                      : "employment.staff.filterEnded",
+                  )}
+                  {count > 0 && (
+                    <span className={countBadge(active)}>{count}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {isLoadingList ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="mb-3 h-36 animate-pulse rounded-card border border-line bg-bg-secondary"
+              />
+            ))
+          ) : employmentsQuery.isError ? (
+            <p role="alert" className="py-16 text-center text-sm text-error">
+              {t("employment.staff.loadFailed")}
+            </p>
+          ) : visibleEmployments.length === 0 ? (
+            <p className="py-16 text-center text-sm text-ink-secondary">
+              {t(
+                staffFilter === "active"
+                  ? "employment.staff.emptyActive"
+                  : "employment.staff.emptyEnded",
+              )}
+            </p>
+          ) : (
+            visibleEmployments.map((employment) => (
+              <EmploymentCard
+                key={employment.id}
+                employment={employment}
+                busy={employmentActions.isBusy(employment.applicationId)}
+                onConfirmStart={() =>
+                  void employmentActions.confirmStart(employment.applicationId)
+                }
+                onRequestEnd={(initialReason) =>
+                  setEndTarget({
+                    applicationId: employment.applicationId,
+                    initialReason,
+                  })
+                }
+                onConfirmEnd={() => void handleConfirmEnd(employment)}
+                onCancelEndRequest={() =>
+                  void employmentActions.cancelEndRequest(
+                    employment.applicationId,
+                  )
+                }
+              />
+            ))
+          )}
+        </>
+      )}
+
+      {endTarget && (
+        <EndEmploymentModal
+          open
+          side="business"
+          initialReason={endTarget.initialReason}
+          onSubmit={async (reason, comment) => {
+            await employmentActions.requestEnd({
+              applicationId: endTarget.applicationId,
+              reason,
+              comment,
+            });
+            setEndTarget(null);
+          }}
+          onClose={() => setEndTarget(null)}
+        />
+      )}
+
+      {reviewTarget && (
+        <ReviewModal
+          open
+          applicationId={reviewTarget.applicationId}
+          raterRole="business"
+          rateeId={reviewTarget.rateeId}
+          onSubmitted={() => setReviewTarget(null)}
+          onSkip={() => setReviewTarget(null)}
+        />
       )}
     </div>
   );

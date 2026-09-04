@@ -50,6 +50,10 @@ export const notificationHref = (
       return "/profile";
     case "shift_reminder_24h":
     case "shift_reminder_3h":
+    case "employment_started":
+    case "employment_start_due":
+    case "employment_end_requested":
+    case "employment_ended":
       if (isBusiness) return applicants;
       return data.applicationId
         ? `/applications/${data.applicationId}`

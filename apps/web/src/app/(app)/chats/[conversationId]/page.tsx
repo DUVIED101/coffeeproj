@@ -29,6 +29,7 @@ import {
   isSameDay,
 } from "@bystrobarista/core/utils/dateUtils";
 import { getPlatform } from "@bystrobarista/core/platform";
+import { formatDateOnly } from "@/lib/dates";
 import { transformedImageUrl } from "@/lib/imageTransform";
 import { useNotificationFeedStore } from "@/stores/notificationFeedStore";
 
@@ -454,6 +455,17 @@ export default function ChatConversationPage(): React.JSX.Element {
         )}
         <div ref={bottomRef} />
       </div>
+
+      {conversation.jobType === "permanent" &&
+        conversation.employmentStatus === "ended" && (
+          <p className="mb-2 rounded-card bg-bg-secondary px-4 py-2 text-center text-sm text-ink-secondary">
+            {t("chat.employmentEnded", {
+              date: conversation.employmentEndedAt
+                ? formatDateOnly(conversation.employmentEndedAt, locale)
+                : "",
+            })}
+          </p>
+        )}
 
       {isClosed ? (
         <div className="rounded-card bg-[#FEF2F2] p-4 text-center">

@@ -8,6 +8,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
+import { getPlatform } from "@bystrobarista/core/platform";
 import { JobService } from "@bystrobarista/core/services/JobService";
 import { ApplicationService } from "@bystrobarista/core/services/ApplicationService";
 import { JobOfferService } from "@bystrobarista/core/services/JobOfferService";
@@ -18,17 +19,23 @@ import type {
   Application,
   DisputeSummary,
 } from "@bystrobarista/core/types/application";
+import type { EmploymentEndReason } from "@bystrobarista/core/types/employment";
 import type {
   ApplicationId,
   JobId,
   JobOfferId,
   UserId,
 } from "@bystrobarista/core/types/ids";
+import { isPermanentShift } from "@bystrobarista/core/utils/employment";
 import {
   getShiftEnd,
   getShiftStart,
 } from "@bystrobarista/core/utils/shiftLifecycle";
 import { transformedImageUrl } from "@/lib/imageTransform";
+import { EMPLOYMENT_BADGE } from "@/lib/employmentUi";
+import { useEmploymentActions } from "@/hooks/useEmploymentActions";
+import { EmploymentStagePanel } from "@/components/EmploymentStagePanel";
+import { EndEmploymentModal } from "@/components/EndEmploymentModal";
 import { ReviewModal } from "@/components/ReviewModal";
 
 const CANCEL_WINDOW_MS = 60 * 60 * 1000;
@@ -70,10 +77,61 @@ const displayName = (app: Application, t: TFunction): string => {
   return name || app.baristaEmail || t("applicants.noEmail");
 };
 
+// Permanent hire: the business decides whether accepting closes the vacancy.
+function AcceptPermanentDialog({
+  onChoose,
+  onClose,
+}: {
+  onChoose: (keepJobOpen: boolean) => void;
+  onClose: () => void;
+}): React.JSX.Element {
+  const { t } = useTranslation();
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="w-full max-w-sm rounded-card bg-white p-6">
+        <h2 className="text-lg font-semibold">
+          {t("employment.accept.title")}
+        </h2>
+        <p className="mt-1 text-sm text-ink-secondary">
+          {t("employment.accept.hint")}
+        </p>
+        <div className="mt-4 flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => onChoose(false)}
+            className="rounded-card bg-success px-4 py-2.5 text-sm font-semibold text-white"
+          >
+            {t("employment.accept.closeJob")}
+          </button>
+          <button
+            type="button"
+            onClick={() => onChoose(true)}
+            className="rounded-card border border-primary px-4 py-2.5 text-sm font-semibold text-primary"
+          >
+            {t("employment.accept.keepJobOpen")}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-card px-4 py-2.5 text-sm font-medium text-ink-secondary"
+          >
+            {t("common.cancel")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Web port of mobile's ApplicantsScreen: pending offers on top, then the
 // application cards with accept/reject, chat, profile link, completion
 // confirmation gated by shift end, cancel-shift within the 60-minute window,
 // review prompt after completion, and dispute status / filing entry.
+// Permanent jobs swap the shift blocks for the employment lifecycle panel.
 export default function ApplicantsPage(): React.JSX.Element {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === "ru" ? "ru-RU" : "en-US";
@@ -109,8 +167,15 @@ export default function ApplicantsPage(): React.JSX.Element {
     applicationId: ApplicationId;
     rateeId: UserId;
   } | null>(null);
+  const [acceptTarget, setAcceptTarget] = useState<Application | null>(null);
+  const [endTarget, setEndTarget] = useState<{
+    applicationId: ApplicationId;
+    initialReason?: EmploymentEndReason;
+  } | null>(null);
+  const [reopening, setReopening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
+  const employmentActions = useEmploymentActions();
 
   const applicationsQuery = useQuery({
     queryKey: ["applications", "byJob", jobId],
@@ -174,7 +239,12 @@ export default function ApplicantsPage(): React.JSX.Element {
   });
   const disputeMap = disputesQuery.data ?? {};
 
-  const shift = jobQuery.data?.shiftDetails;
+  const job = jobQuery.data;
+  const isPermanent =
+    job?.jobType === "permanent" || isPermanentShift(job?.shiftDetails);
+  // Permanent hires have no shift boundary (core pads the end by a century):
+  // drop the completion gate, the cancel window and their timers entirely.
+  const shift = isPermanent ? undefined : job?.shiftDetails;
   const shiftEnd = shift ? getShiftEnd(shift) : null;
   const shiftStart = shift ? getShiftStart(shift) : null;
   const shiftEndReached = shiftEnd ? now >= shiftEnd : false;
@@ -211,20 +281,15 @@ export default function ApplicantsPage(): React.JSX.Element {
         queryClient.invalidateQueries({ queryKey: ["jobs", "byId", jobId] }),
       );
 
-  const changeStatus = async (
+  const runApplicationAction = async (
     applicationId: string,
-    status: "accepted" | "rejected",
+    action: () => Promise<void>,
     failureKey: string,
   ): Promise<void> => {
-    if (!userId) return;
     markProcessing(applicationId, true);
     setError(null);
     try {
-      await ApplicationService.updateApplicationStatus(
-        applicationId,
-        status,
-        userId,
-      );
+      await action();
       await reload();
     } catch {
       setError(t(failureKey));
@@ -233,13 +298,47 @@ export default function ApplicantsPage(): React.JSX.Element {
     }
   };
 
+  const handleAccept = (app: Application): void => {
+    if (isPermanent) {
+      setAcceptTarget(app);
+      return;
+    }
+    void runApplicationAction(
+      app.id,
+      () => ApplicationService.acceptApplication(app.id as ApplicationId),
+      "applicants.acceptFailure",
+    );
+  };
+
+  const handleAcceptPermanent = (keepJobOpen: boolean): void => {
+    if (!acceptTarget) return;
+    const applicationId = acceptTarget.id as ApplicationId;
+    setAcceptTarget(null);
+    void runApplicationAction(
+      applicationId,
+      () =>
+        ApplicationService.acceptApplication(applicationId, { keepJobOpen }),
+      "applicants.acceptFailure",
+    );
+  };
+
+  const handleReject = (applicationId: string, failureKey: string): void => {
+    if (!userId) return;
+    void runApplicationAction(
+      applicationId,
+      () =>
+        ApplicationService.updateApplicationStatus(
+          applicationId,
+          "rejected",
+          userId,
+        ),
+      failureKey,
+    );
+  };
+
   const handleCancelShift = (applicationId: string): void => {
     if (!window.confirm(t("applications.cancelShift.confirmBody"))) return;
-    void changeStatus(
-      applicationId,
-      "rejected",
-      "applications.cancelShift.failure",
-    );
+    handleReject(applicationId, "applications.cancelShift.failure");
   };
 
   const handleConfirmCompletion = async (app: Application): Promise<void> => {
@@ -263,6 +362,35 @@ export default function ApplicantsPage(): React.JSX.Element {
       setError(t("applicants.confirmCompletionFailure"));
     } finally {
       markProcessing(app.id, false);
+    }
+  };
+
+  const handleConfirmEnd = async (app: Application): Promise<void> => {
+    const applicationId = app.id as ApplicationId;
+    const ended = await employmentActions.confirmEnd(applicationId);
+    if (!ended || reviewedIds.has(app.id)) return;
+    if (await employmentActions.isAlreadyReviewed(applicationId, "business")) {
+      return;
+    }
+    setReviewTarget({ applicationId, rateeId: app.baristaId as UserId });
+  };
+
+  const handleReopenJob = async (): Promise<void> => {
+    if (!userId) return;
+    setReopening(true);
+    setError(null);
+    try {
+      await JobService.updateJobStatus(jobId, "open", userId);
+      await queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      getPlatform().alert.show(
+        t("common.success"),
+        t("employment.reopenSuccess"),
+        [{ text: t("common.ok") }],
+      );
+    } catch {
+      setError(t("job.errors.updateFailed"));
+    } finally {
+      setReopening(false);
     }
   };
 
@@ -393,6 +521,7 @@ export default function ApplicantsPage(): React.JSX.Element {
           const dispute = disputeMap[app.id];
           const reviewed =
             reviewedIds.has(app.id) || reviewedByApplication[app.id];
+          const employment = app.employment;
           return (
             <div
               key={app.id}
@@ -428,9 +557,15 @@ export default function ApplicantsPage(): React.JSX.Element {
                   </div>
                 </div>
                 <span
-                  className={`shrink-0 rounded-chip px-2 py-1 text-xs font-semibold text-white ${STATUS_BADGE[app.status] ?? "bg-ink-secondary"}`}
+                  className={`shrink-0 rounded-chip px-2 py-1 text-xs font-semibold text-white ${
+                    employment
+                      ? EMPLOYMENT_BADGE[employment.status]
+                      : (STATUS_BADGE[app.status] ?? "bg-ink-secondary")
+                  }`}
                 >
-                  {statusLabel(app.status, t)}
+                  {employment
+                    ? t(`employment.stageShort.${employment.status}`)
+                    : statusLabel(app.status, t)}
                 </span>
               </div>
 
@@ -476,13 +611,7 @@ export default function ApplicantsPage(): React.JSX.Element {
                   <button
                     type="button"
                     disabled={processing}
-                    onClick={() =>
-                      void changeStatus(
-                        app.id,
-                        "accepted",
-                        "applicants.acceptFailure",
-                      )
-                    }
+                    onClick={() => handleAccept(app)}
                     className="flex-1 rounded-card bg-success px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
                   >
                     {t("applicants.accept")}
@@ -491,11 +620,7 @@ export default function ApplicantsPage(): React.JSX.Element {
                     type="button"
                     disabled={processing}
                     onClick={() =>
-                      void changeStatus(
-                        app.id,
-                        "rejected",
-                        "applicants.rejectFailure",
-                      )
+                      handleReject(app.id, "applicants.rejectFailure")
                     }
                     className="flex-1 rounded-card border border-error px-4 py-2.5 text-sm font-semibold text-error disabled:opacity-50"
                   >
@@ -504,36 +629,74 @@ export default function ApplicantsPage(): React.JSX.Element {
                 </div>
               )}
 
-              {app.status === "accepted" && !app.completedByBusiness && (
-                <div className="mt-3">
-                  <button
-                    type="button"
-                    disabled={processing || !shiftEndReached}
-                    onClick={() => void handleConfirmCompletion(app)}
-                    className="w-full rounded-card bg-success px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
-                  >
-                    {t("applicants.confirmCompletion")}
-                  </button>
-                  {!shiftEndReached && shiftEndLabel && (
-                    <p className="mt-1 text-center text-xs text-ink-secondary">
-                      {t("applications.details.availableAfter", {
-                        time: shiftEndLabel,
-                      })}
-                    </p>
-                  )}
-                </div>
+              {employment && (
+                <EmploymentStagePanel
+                  employment={employment}
+                  side="business"
+                  busy={processing || employmentActions.isBusy(app.id)}
+                  onConfirmStart={() =>
+                    void employmentActions.confirmStart(app.id as ApplicationId)
+                  }
+                  onRequestEnd={(initialReason) =>
+                    setEndTarget({
+                      applicationId: app.id as ApplicationId,
+                      initialReason,
+                    })
+                  }
+                  onConfirmEnd={() => void handleConfirmEnd(app)}
+                  onCancelEndRequest={() =>
+                    void employmentActions.cancelEndRequest(
+                      app.id as ApplicationId,
+                    )
+                  }
+                />
               )}
 
-              {app.status === "accepted" && cancelWindowOpen && (
+              {employment?.status === "ended" && job?.status === "filled" && (
                 <button
                   type="button"
-                  disabled={processing}
-                  onClick={() => handleCancelShift(app.id)}
-                  className="mt-2 w-full rounded-card border border-error px-4 py-2.5 text-sm font-semibold text-error disabled:opacity-50"
+                  disabled={reopening}
+                  onClick={() => void handleReopenJob()}
+                  className="mt-2 w-full rounded-card border border-primary px-4 py-2.5 text-sm font-semibold text-primary disabled:opacity-50"
                 >
-                  {t("applications.cancelShift.action")}
+                  {t("employment.reopenJob")}
                 </button>
               )}
+
+              {app.status === "accepted" &&
+                !isPermanent &&
+                !app.completedByBusiness && (
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      disabled={processing || !shiftEndReached}
+                      onClick={() => void handleConfirmCompletion(app)}
+                      className="w-full rounded-card bg-success px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                    >
+                      {t("applicants.confirmCompletion")}
+                    </button>
+                    {!shiftEndReached && shiftEndLabel && (
+                      <p className="mt-1 text-center text-xs text-ink-secondary">
+                        {t("applications.details.availableAfter", {
+                          time: shiftEndLabel,
+                        })}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+              {app.status === "accepted" &&
+                !isPermanent &&
+                cancelWindowOpen && (
+                  <button
+                    type="button"
+                    disabled={processing}
+                    onClick={() => handleCancelShift(app.id)}
+                    className="mt-2 w-full rounded-card border border-error px-4 py-2.5 text-sm font-semibold text-error disabled:opacity-50"
+                  >
+                    {t("applications.cancelShift.action")}
+                  </button>
+                )}
 
               {app.status === "completed" && !reviewed && (
                 <button
@@ -577,7 +740,7 @@ export default function ApplicantsPage(): React.JSX.Element {
         // hasn't started the shift yet → entry point to the no-response flow.
         const acceptedApp = applications.find((a) => a.status === "accepted");
         if (!acceptedApp || !shiftStart || shiftStart <= now) return null;
-        const jobTitle = jobQuery.data?.title ?? "";
+        const jobTitle = job?.title ?? "";
         const query = new URLSearchParams({
           applicationId: acceptedApp.id,
           jobTitle,
@@ -604,6 +767,30 @@ export default function ApplicantsPage(): React.JSX.Element {
           </Link>
         );
       })()}
+
+      {acceptTarget && (
+        <AcceptPermanentDialog
+          onChoose={handleAcceptPermanent}
+          onClose={() => setAcceptTarget(null)}
+        />
+      )}
+
+      {endTarget && (
+        <EndEmploymentModal
+          open
+          side="business"
+          initialReason={endTarget.initialReason}
+          onSubmit={async (reason, comment) => {
+            await employmentActions.requestEnd({
+              applicationId: endTarget.applicationId,
+              reason,
+              comment,
+            });
+            setEndTarget(null);
+          }}
+          onClose={() => setEndTarget(null)}
+        />
+      )}
 
       {reviewTarget && (
         <ReviewModal

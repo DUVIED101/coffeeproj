@@ -7,11 +7,15 @@ import { useQuery } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
 import { ApplicationService } from "@bystrobarista/core/services/ApplicationService";
 import { ChatService } from "@bystrobarista/core/services/ChatService";
+import { EmploymentService } from "@bystrobarista/core/services/EmploymentService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import type {
   Application,
   ApplicationStatus,
 } from "@bystrobarista/core/types/application";
+import type { UserId } from "@bystrobarista/core/types/ids";
+import { EMPLOYMENT_BADGE } from "@/lib/employmentUi";
+import { CurrentEmploymentCard } from "@/components/CurrentEmploymentCard";
 
 const STATUS_BADGE: Record<ApplicationStatus, string> = {
   pending: "bg-[#F59E0B]",
@@ -69,6 +73,12 @@ export default function ApplicationsPage(): React.JSX.Element {
     enabled: Boolean(userId),
   });
 
+  const employmentQuery = useQuery({
+    queryKey: ["employments", "activeForBarista", userId],
+    queryFn: () => EmploymentService.getActiveForBarista(userId as UserId),
+    enabled: Boolean(userId),
+  });
+
   const applications = applicationsQuery.data ?? [];
   const applicationIds = applications.map((a) => a.id);
 
@@ -107,6 +117,10 @@ export default function ApplicationsPage(): React.JSX.Element {
     <div>
       <h1 className="mb-4 text-2xl font-bold">{t("applications.title")}</h1>
 
+      {employmentQuery.data && (
+        <CurrentEmploymentCard employment={employmentQuery.data} />
+      )}
+
       {applications.length === 0 ? (
         <div className="py-16 text-center">
           <p className="mb-2 text-lg font-semibold text-ink-secondary">
@@ -140,9 +154,17 @@ export default function ApplicationsPage(): React.JSX.Element {
                   {application.job?.title ?? t("applications.fallbackJob")}
                 </Link>
                 <span
-                  className={`shrink-0 rounded-chip px-2 py-1 text-xs font-semibold text-white ${STATUS_BADGE[application.status]}`}
+                  className={`shrink-0 rounded-chip px-2 py-1 text-xs font-semibold text-white ${
+                    application.employment
+                      ? EMPLOYMENT_BADGE[application.employment.status]
+                      : STATUS_BADGE[application.status]
+                  }`}
                 >
-                  {statusLabel(application.status, t)}
+                  {application.employment
+                    ? t(
+                        `employment.stageShort.${application.employment.status}`,
+                      )
+                    : statusLabel(application.status, t)}
                 </span>
               </div>
 

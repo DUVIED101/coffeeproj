@@ -4,9 +4,13 @@ import { useRouter } from "next/navigation";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  mdiAccountAlertOutline,
+  mdiAccountClockOutline,
+  mdiAccountOffOutline,
   mdiAccountPlusOutline,
   mdiAccountRemoveOutline,
   mdiAlertCircleOutline,
+  mdiBadgeAccountOutline,
   mdiBellOffOutline,
   mdiBriefcaseCheckOutline,
   mdiBriefcasePlusOutline,
@@ -95,6 +99,10 @@ const ICON_BY_KIND: Record<NotificationKind, string> = {
   shift_declined: mdiCalendarRemove,
   shift_no_response_alert: mdiCalendarAlert,
   dispute_filed: mdiAlertCircleOutline,
+  employment_started: mdiBadgeAccountOutline,
+  employment_start_due: mdiAccountClockOutline,
+  employment_end_requested: mdiAccountAlertOutline,
+  employment_ended: mdiAccountOffOutline,
 };
 
 function NotificationCard({
