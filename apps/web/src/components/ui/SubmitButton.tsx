@@ -9,6 +9,7 @@ type Props = {
   variant?: "primary" | "secondary";
   onClick?: () => void;
   type?: "submit" | "button";
+  tourKey?: string;
 };
 
 export function SubmitButton({
@@ -18,6 +19,7 @@ export function SubmitButton({
   variant = "primary",
   onClick,
   type = "submit",
+  tourKey,
 }: Props): React.JSX.Element {
   const base =
     "rounded-card px-4 py-3 text-sm font-semibold transition-opacity disabled:opacity-50";
@@ -31,6 +33,7 @@ export function SubmitButton({
       onClick={onClick}
       disabled={disabled || loading}
       aria-busy={loading}
+      data-tour={tourKey}
       className={`${base} ${styles}`}
     >
       {loading ? "…" : label}

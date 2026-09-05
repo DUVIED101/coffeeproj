@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
+import { useTutorialStore } from "@bystrobarista/core/stores/tutorialStore";
+import { getPlatform } from "@bystrobarista/core/platform";
 import { getCurrentLanguage } from "@bystrobarista/core/i18n";
 import { hasPasswordAuth } from "@bystrobarista/core/utils/authProvider";
 import { STABLE_STORAGE_KEY } from "@bystrobarista/core/config/authStorage";
@@ -77,6 +80,7 @@ function Section({
 // Port of SettingsScreen: same sections, rows and ordering as mobile.
 export default function SettingsPage(): React.JSX.Element {
   const { t } = useTranslation();
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const session = useAuthStore((s) => s.session);
   const hasEmailLogin = hasPasswordAuth(session);
@@ -86,6 +90,25 @@ export default function SettingsPage(): React.JSX.Element {
     currentLang === "ru"
       ? t("settings.language.russian")
       : t("settings.language.english");
+
+  const handleReplayTutorial = (): void => {
+    getPlatform().alert.show(
+      t("tutorial.settings.confirmTitle"),
+      t("tutorial.settings.confirmBody"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("tutorial.settings.confirm"),
+          onPress: () => {
+            void useTutorialStore.getState().restart();
+            router.push(
+              user?.accountType === "business" ? "/dashboard" : "/jobs",
+            );
+          },
+        },
+      ],
+    );
+  };
 
   const handleSignOut = async (): Promise<void> => {
     if (!window.confirm(t("settings.items.signOut"))) return;
@@ -126,6 +149,11 @@ export default function SettingsPage(): React.JSX.Element {
         <Row
           label={t("settings.items.notifications")}
           href="/settings/notifications"
+        />
+        <Row
+          label={t("settings.items.tutorial")}
+          value={t("tutorial.settings.replay")}
+          onClick={handleReplayTutorial}
         />
       </Section>
 

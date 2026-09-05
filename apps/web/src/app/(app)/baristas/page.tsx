@@ -50,9 +50,11 @@ const filterLabel =
 function BaristaCard({
   profile,
   aggregate,
+  tourKey,
 }: {
   profile: BaristaProfile;
   aggregate?: UserReviewAggregate;
+  tourKey?: string;
 }): React.JSX.Element {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === "ru" ? "ru-RU" : "en-US";
@@ -77,6 +79,7 @@ function BaristaCard({
   return (
     <Link
       href={`/baristas/${profile.userId}`}
+      data-tour={tourKey}
       className="mb-3 block rounded-card border border-line bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
     >
       <div className="flex items-center gap-3">
@@ -266,6 +269,7 @@ export default function BaristasPage(): React.JSX.Element {
         <button
           type="button"
           onClick={() => setFiltersOpen(!filtersOpen)}
+          data-tour="baristas.filters"
           className={chip(activeFilterCount > 0 || filtersOpen)}
         >
           {t("shifts.filter.title")}
@@ -510,11 +514,12 @@ export default function BaristasPage(): React.JSX.Element {
         </div>
       ) : (
         <>
-          {baristas.map((profile) => (
+          {baristas.map((profile, index) => (
             <BaristaCard
               key={profile.id}
               profile={profile}
               aggregate={aggregates.get(profile.userId as UserId)}
+              tourKey={index === 0 ? "baristas.firstCard" : undefined}
             />
           ))}
           {baristasQuery.hasNextPage && (

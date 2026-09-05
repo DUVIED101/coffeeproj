@@ -153,6 +153,7 @@ export function BusinessProfileView(): React.JSX.Element {
         </p>
         <Link
           href="/profile/edit"
+          data-tour="business.createCta"
           className="mt-4 inline-block rounded-card bg-primary px-5 py-2.5 text-sm font-semibold text-white"
         >
           {t("businessProfile.createCta")}

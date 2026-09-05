@@ -12,6 +12,7 @@ import {
   BranchPhotoLimitError,
 } from "@bystrobarista/core/services/BusinessService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
+import { useTutorialStore } from "@bystrobarista/core/stores/tutorialStore";
 import { EQUIPMENT_TYPES } from "@bystrobarista/core/config/constants";
 import type {
   Branch,
@@ -237,6 +238,8 @@ export default function BranchesPage(): React.JSX.Element {
         });
       }
       await queryClient.invalidateQueries({ queryKey: ["branches"] });
+      // Creating a branch does not navigate, so the tutorial re-checks facts here.
+      void useTutorialStore.getState().refreshFacts();
       closeForm();
     } catch (e) {
       console.error("Error saving branch:", e);
@@ -330,6 +333,7 @@ export default function BranchesPage(): React.JSX.Element {
           <button
             type="button"
             onClick={openCreate}
+            data-tour="branches.add"
             className="rounded-card bg-primary px-4 py-2 text-sm font-semibold text-white"
           >
             {t("branches.add")}
@@ -492,6 +496,7 @@ export default function BranchesPage(): React.JSX.Element {
               type="button"
               onClick={() => void handleSave()}
               disabled={isSaving}
+              data-tour="branches.add"
               className="flex-1 rounded-card bg-primary px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
             >
               {t(

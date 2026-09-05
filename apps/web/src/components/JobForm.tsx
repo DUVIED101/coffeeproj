@@ -1132,6 +1132,7 @@ export function JobForm({
           type="button"
           onClick={() => void handleSave()}
           disabled={isSaving}
+          data-tour="createJob.save"
           className="rounded-card bg-primary px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"
         >
           {isSaving

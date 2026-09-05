@@ -319,6 +319,7 @@ function BaristaJobDetails(): React.JSX.Element {
           ) : (
             <Link
               href={`/jobs/${job.id}/apply`}
+              data-tour="job.apply"
               aria-disabled={!hasCheckedApplication}
               className={`block rounded-card bg-primary px-6 py-3 text-center text-sm font-semibold text-white ${
                 hasCheckedApplication ? "" : "pointer-events-none opacity-50"

@@ -22,6 +22,15 @@ import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import { useChatUnreadStore } from "@bystrobarista/core/stores/chatUnreadStore";
 import { MdiIcon } from "./MdiIcon";
 
+const TOUR_KEY_BY_HREF: Readonly<Record<string, string>> = {
+  "/jobs": "tab.jobs",
+  "/applications": "tab.applications",
+  "/chats": "tab.chats",
+  "/profile": "tab.profile",
+  "/dashboard": "tab.business",
+  "/baristas": "tab.baristas",
+};
+
 type NavItem = {
   href: string;
   label: string;
@@ -122,6 +131,7 @@ export function DesktopNav(): React.JSX.Element {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
+            data-tour={TOUR_KEY_BY_HREF[item.href]}
             className={`flex items-center gap-1.5 rounded-input px-3 py-1.5 text-sm font-medium ${
               active
                 ? "bg-bg-secondary text-primary"
@@ -157,6 +167,7 @@ export function MobileTabBar(): React.JSX.Element {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
+            data-tour={TOUR_KEY_BY_HREF[item.href]}
             className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${
               active ? "font-semibold text-primary" : "text-ink-secondary"
             }`}

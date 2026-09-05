@@ -5,6 +5,7 @@ import { ChatUnreadWatcher } from "@/components/ChatUnreadWatcher";
 import { NotificationFeedWatcher } from "@/components/NotificationFeedWatcher";
 import { PushSetup } from "@/components/PushSetup";
 import { QueryProvider } from "@/components/QueryProvider";
+import { TutorialOverlay } from "@/components/tutorial/TutorialOverlay";
 
 // Authed shell: sticky header with desktop nav (md+), bottom tab bar (<md)
 // mirroring mobile's MainTabs. pb-20 keeps content clear of the tab bar.
@@ -23,6 +24,7 @@ export default function AppLayout({
         {children}
       </main>
       <MobileTabBar />
+      <TutorialOverlay />
     </QueryProvider>
   );
 }

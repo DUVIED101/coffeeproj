@@ -411,6 +411,7 @@ export function BusinessProfileForm(): React.JSX.Element {
           type="button"
           onClick={() => void handleSave()}
           disabled={isSaving}
+          data-tour="business.wizardFooter"
           className="rounded-card bg-primary px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"
         >
           {isSaving

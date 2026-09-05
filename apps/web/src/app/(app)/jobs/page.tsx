@@ -107,6 +107,7 @@ function BaristaJobFeed(): React.JSX.Element {
       {showProfileBanner && (
         <Link
           href="/profile/edit"
+          data-tour="profile.createCta"
           className="mb-4 flex items-center justify-between rounded-card border border-[#FCD34D] bg-[#FEF3C7] px-4 py-3"
         >
           <span>
@@ -130,11 +131,13 @@ function BaristaJobFeed(): React.JSX.Element {
         </Link>
       )}
 
-      <FilterBar
-        filters={filters}
-        userLocation={userLocation}
-        onChange={setFilters}
-      />
+      <div data-tour="feed.filters">
+        <FilterBar
+          filters={filters}
+          userLocation={userLocation}
+          onChange={setFilters}
+        />
+      </div>
 
       {jobsQuery.isPending ? (
         <div>
@@ -166,10 +169,11 @@ function BaristaJobFeed(): React.JSX.Element {
         </div>
       ) : (
         <div className="md:grid md:grid-cols-2 md:gap-4 md:[&>a]:mb-0">
-          {jobs.map((job: Job) => (
+          {jobs.map((job: Job, index: number) => (
             <JobCard
               key={job.id}
               job={job}
+              tourKey={index === 0 ? "feed.firstJob" : undefined}
               ownerAggregate={ownerAggregates.get(
                 job.businessOwnerId as UserId,
               )}

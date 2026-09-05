@@ -414,6 +414,7 @@ export default function ViewBaristaProfilePage(): React.JSX.Element {
           {hasOfferableJobs ? (
             <Link
               href={`/baristas/${baristaId}/offer`}
+              data-tour="barista.offer"
               className="block rounded-card bg-primary px-4 py-3 text-center text-sm font-semibold text-white"
             >
               {t("viewBarista.offerJob")}

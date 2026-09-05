@@ -706,6 +706,7 @@ function BaristaProfileEditWizard(): React.JSX.Element {
             type="button"
             onClick={handleNext}
             disabled={saving}
+            data-tour="profile.wizardFooter"
             className="flex-1 rounded-card bg-primary px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
           >
             {saving

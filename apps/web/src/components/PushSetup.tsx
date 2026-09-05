@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NotificationService } from "@bystrobarista/core/services/NotificationService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
+import { useTutorialStore } from "@bystrobarista/core/stores/tutorialStore";
 import type { UserId } from "@bystrobarista/core/types/ids";
 import type { PushNotificationPayload } from "@bystrobarista/core/types/notification";
 import { notificationHref } from "@/lib/notificationRoute";
@@ -48,6 +49,7 @@ export function PushSetup(): React.JSX.Element | null {
   const userId = user?.id as UserId | undefined;
   const accountType = user?.accountType;
   const [showPrompt, setShowPrompt] = useState(false);
+  const tutorialActive = useTutorialStore((s) => s.status === "active");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -112,7 +114,7 @@ export function PushSetup(): React.JSX.Element | null {
     }
   }, [userId]);
 
-  if (!showPrompt) return null;
+  if (!showPrompt || tutorialActive) return null;
 
   return (
     <div

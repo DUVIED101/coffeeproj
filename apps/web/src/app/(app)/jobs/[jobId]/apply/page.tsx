@@ -137,7 +137,11 @@ export default function ApplyPage(): React.JSX.Element {
           </p>
         )}
 
-        <SubmitButton label={t("apply.submitCta")} loading={submitting} />
+        <SubmitButton
+          label={t("apply.submitCta")}
+          loading={submitting}
+          tourKey="apply.submit"
+        />
       </form>
     </div>
   );

@@ -12,6 +12,7 @@ import { StarRow } from "./StarRow";
 import { transformedImageUrl } from "@/lib/imageTransform";
 
 type JobCardProps = {
+  tourKey?: string;
   job: Job;
   ownerAggregate?: UserReviewAggregate;
   alreadyApplied?: boolean;
@@ -68,6 +69,7 @@ const getCompensationText = (
 
 export const JobCard = React.memo<JobCardProps>(function JobCard({
   job,
+  tourKey,
   ownerAggregate,
   alreadyApplied,
 }) {
@@ -108,6 +110,7 @@ export const JobCard = React.memo<JobCardProps>(function JobCard({
   return (
     <Link
       href={`/jobs/${job.id}`}
+      data-tour={tourKey}
       className="mb-3 block rounded-card border border-line bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
     >
       <div className="mb-2 flex items-start justify-between gap-2">

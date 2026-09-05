@@ -158,35 +158,37 @@ export default function OfferJobPage(): React.JSX.Element {
           </Link>
         </div>
       ) : (
-        jobs.map((job) => {
-          const offered = offeredJobIds.has(job.id);
-          return (
-            <button
-              key={job.id}
-              type="button"
-              disabled={offered}
-              onClick={() => setSelectedJob(job)}
-              className={`mb-3 block w-full rounded-card border border-line bg-white p-4 text-left ${
-                offered ? "opacity-60" : "hover:shadow-md"
-              }`}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <p className="min-w-0 flex-1 truncate font-semibold">
-                  {job.title}
-                </p>
-                {offered && (
-                  <span className="shrink-0 rounded-chip bg-bg-secondary px-2 py-1 text-xs font-medium text-ink-secondary">
-                    {t("offerJob.alreadyOfferedBadge")}
-                  </span>
+        <div data-tour="offer.jobs">
+          {jobs.map((job) => {
+            const offered = offeredJobIds.has(job.id);
+            return (
+              <button
+                key={job.id}
+                type="button"
+                disabled={offered}
+                onClick={() => setSelectedJob(job)}
+                className={`mb-3 block w-full rounded-card border border-line bg-white p-4 text-left ${
+                  offered ? "opacity-60" : "hover:shadow-md"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="min-w-0 flex-1 truncate font-semibold">
+                    {job.title}
+                  </p>
+                  {offered && (
+                    <span className="shrink-0 rounded-chip bg-bg-secondary px-2 py-1 text-xs font-medium text-ink-secondary">
+                      {t("offerJob.alreadyOfferedBadge")}
+                    </span>
+                  )}
+                </div>
+                {job.branchName && (
+                  <p className="text-sm text-ink-secondary">{job.branchName}</p>
                 )}
-              </div>
-              {job.branchName && (
-                <p className="text-sm text-ink-secondary">{job.branchName}</p>
-              )}
-              <p className="text-xs text-ink-secondary">{jobMeta(job)}</p>
-            </button>
-          );
-        })
+                <p className="text-xs text-ink-secondary">{jobMeta(job)}</p>
+              </button>
+            );
+          })}
+        </div>
       )}
 
       {selectedJob && (

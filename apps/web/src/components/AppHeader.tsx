@@ -19,6 +19,7 @@ function NotificationBell(): React.JSX.Element {
   return (
     <Link
       href="/notifications"
+      data-tour="header.bell"
       aria-label={t("notifications.feed.title")}
       className={`relative rounded-input p-1.5 ${
         active ? "text-primary" : "text-ink-secondary hover:text-ink"
@@ -42,6 +43,7 @@ function SettingsGear(): React.JSX.Element {
   return (
     <Link
       href="/settings"
+      data-tour="header.settings"
       aria-label={t("settings.title")}
       className={`rounded-input p-1.5 ${
         active ? "text-primary" : "text-ink-secondary hover:text-ink"

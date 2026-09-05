@@ -215,6 +215,7 @@ export default function DashboardPage(): React.JSX.Element {
         </p>
         <Link
           href="/profile"
+          data-tour="business.createCta"
           className="mt-4 inline-block rounded-card bg-primary px-5 py-2.5 text-sm font-semibold text-white"
         >
           {t("businessGate.cta")}
@@ -235,13 +236,17 @@ export default function DashboardPage(): React.JSX.Element {
         <h1 className="text-2xl font-bold">{t("business.home.title")}</h1>
         <Link
           href="/jobs/new"
+          data-tour="business.addJob"
           className="rounded-card bg-primary px-4 py-2 text-sm font-semibold text-white"
         >
           {t("manageJobs.create")}
         </Link>
       </div>
 
-      <div className="mb-4 flex rounded-card border border-line bg-white p-1">
+      <div
+        data-tour="business.tabs"
+        className="mb-4 flex rounded-card border border-line bg-white p-1"
+      >
         {(["jobs", "shifts", "staff"] as const).map((tab) => (
           <button
             key={tab}
@@ -304,7 +309,13 @@ export default function DashboardPage(): React.JSX.Element {
               })}
             </p>
           ) : (
-            filteredJobs.map((job) => <JobCard key={job.id} job={job} />)
+            filteredJobs.map((job, index) => (
+              <JobCard
+                key={job.id}
+                job={job}
+                tourKey={index === 0 ? "business.firstJob" : undefined}
+              />
+            ))
           )}
         </>
       )}
