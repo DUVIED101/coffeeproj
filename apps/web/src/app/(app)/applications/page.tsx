@@ -50,14 +50,14 @@ const compensationLine = (
 ): string | null => {
   const compensation = application.job?.compensation;
   if (!compensation) return null;
-  const amount = `₽${compensation.amount.toLocaleString(locale)}`;
+  const amount = `${compensation.amount.toLocaleString(locale)} ₽`;
   switch (compensation.type) {
     case "hourly":
-      return t("applications.perHour", { amount });
+      return `${amount} · ${t("applications.perHour")}`;
     case "daily":
-      return t("applications.perDay", { amount });
+      return `${amount} · ${t("applications.perDay")}`;
     default:
-      return amount;
+      return `${amount} · ${t("applications.fixed")}`;
   }
 };
 

@@ -29,6 +29,7 @@ import { ReviewModal } from '../../components/ReviewModal';
 import { ShiftCountdownBanner } from '../../components/ShiftCountdownBanner';
 import { Skeleton } from '../../components/Skeleton';
 import { useEmploymentActions } from '../../hooks/useEmploymentActions';
+import { employmentStageLine } from '../../utils/employmentPresentation';
 import {
   getShiftEnd,
   getShiftStart,
@@ -158,6 +159,7 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
     onReopenJob,
     t,
   }) => {
+    const { i18n } = useTranslation();
     const handleAccept = useCallback(() => onAccept(applicationId), [onAccept, applicationId]);
     const handleReject = useCallback(() => onReject(applicationId), [onReject, applicationId]);
     const handleCancelShift = useCallback(
@@ -308,6 +310,9 @@ const ApplicantItem = React.memo<ApplicantItemProps>(
         {showEmployment && employment && (
           <View style={styles.employmentSection}>
             <Text style={styles.employmentTitle}>{t('employment.sectionTitle')}</Text>
+            <Text style={styles.employmentStage}>
+              {employmentStageLine(employment, t, i18n.language === 'ru' ? 'ru-RU' : 'en-US')}
+            </Text>
             <EmploymentStageActions
               employment={employment}
               side="business"
@@ -1274,6 +1279,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: COLORS.text,
+  },
+  employmentStage: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
   },
   reviewBanner: {
     marginTop: 8,

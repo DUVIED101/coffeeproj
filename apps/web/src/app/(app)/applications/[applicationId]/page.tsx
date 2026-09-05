@@ -158,15 +158,13 @@ export default function ApplicationDetailsPage(): React.JSX.Element {
 
   const compensation = job?.compensation;
   const compensationText = compensation
-    ? compensation.type === "hourly"
-      ? t("applications.details.perHour", {
-          amount: `₽${compensation.amount.toLocaleString(locale)}`,
-        })
-      : compensation.type === "daily"
-        ? t("applications.details.perDay", {
-            amount: `₽${compensation.amount.toLocaleString(locale)}`,
-          })
-        : `₽${compensation.amount.toLocaleString(locale)}`
+    ? `${compensation.amount.toLocaleString(locale)} ₽ · ${t(
+        compensation.type === "hourly"
+          ? "applications.details.perHour"
+          : compensation.type === "daily"
+            ? "applications.details.perDay"
+            : "applications.details.fixed",
+      )}`
     : null;
 
   return (
@@ -226,7 +224,9 @@ export default function ApplicationDetailsPage(): React.JSX.Element {
           )}
           {job.metroStation && (
             <p className="text-sm text-ink-secondary">
-              {t("applications.details.metroPrefix")} {job.metroStation}
+              {t("applications.details.metroPrefix", {
+                station: job.metroStation,
+              })}
             </p>
           )}
         </section>
