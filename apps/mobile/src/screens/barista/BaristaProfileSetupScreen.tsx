@@ -37,7 +37,10 @@ import {
   YEARS_MAX_LENGTH,
   COMPENSATION_MAX_DIGITS,
 } from '../../utils/validation';
-import { requestLocationPermission, getCurrentLocation } from '@bystrobarista/core/utils/geolocation';
+import {
+  requestLocationPermission,
+  getCurrentLocation,
+} from '@bystrobarista/core/utils/geolocation';
 import { clampToEffectiveLength, effectiveTextLength } from '../../utils/textLength';
 import { dobMinDate, dobMaxDate } from '../../utils/dateRanges';
 import type { GeoPoint } from '@bystrobarista/core/types/business';
@@ -55,6 +58,7 @@ import {
   type WorkExperienceDraft,
   type WorkExperienceFieldError,
 } from '@bystrobarista/core/types/workExperience';
+import { TutorialAnchor } from '../../components/tutorial/TutorialAnchor';
 
 type BaristaStackParamList = {
   JobFeed: undefined;
@@ -885,6 +889,11 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       </KeyboardAvoidingView>
 
       <View style={styles.footer}>
+        <TutorialAnchor
+          tutorialKey="profile.wizardFooter"
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
         <View style={styles.buttonRow}>
           {currentStep > 0 && (
             <TouchableOpacity style={styles.secondaryButton} onPress={handleBack}>

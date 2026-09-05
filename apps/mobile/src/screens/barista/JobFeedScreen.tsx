@@ -34,6 +34,8 @@ import type { Job, JobFilters } from '@bystrobarista/core/types/job';
 import type { GeoPoint } from '@bystrobarista/core/types/business';
 import type { UserId } from '@bystrobarista/core/types/ids';
 import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
+import { useTutorialStore } from '@bystrobarista/core/stores/tutorialStore';
+import { TutorialAnchor } from '../../components/tutorial/TutorialAnchor';
 
 type BaristaStackParamList = {
   JobFeed: undefined;
@@ -95,7 +97,13 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
         setUserLocation(cached);
         setLocationPermissionDenied(false);
       }
-      const hasPermission = await requestLocationPermission();
+      useTutorialStore.getState().hold('location');
+      let hasPermission = false;
+      try {
+        hasPermission = await requestLocationPermission();
+      } finally {
+        useTutorialStore.getState().release('location');
+      }
       if (!hasPermission) {
         if (!cached) setLocationPermissionDenied(true);
         return;
@@ -191,14 +199,21 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   const renderJob = useCallback(
-    ({ item }: { item: Job }) => (
-      <JobCardWithDistance
-        job={item}
-        onPressJobId={handleJobPress}
-        ownerAggregate={ownerAggregates.get(item.businessOwnerId as UserId)}
-        alreadyApplied={appliedJobIds.has(item.id)}
-      />
-    ),
+    ({ item, index }: { item: Job; index: number }) => {
+      const card = (
+        <JobCardWithDistance
+          job={item}
+          onPressJobId={handleJobPress}
+          ownerAggregate={ownerAggregates.get(item.businessOwnerId as UserId)}
+          alreadyApplied={appliedJobIds.has(item.id)}
+        />
+      );
+      return index === 0 ? (
+        <TutorialAnchor tutorialKey="feed.firstJob">{card}</TutorialAnchor>
+      ) : (
+        card
+      );
+    },
     [handleJobPress, ownerAggregates, appliedJobIds]
   );
 
@@ -238,6 +253,11 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
         <TouchableOpacity
           style={styles.profileBanner}
           onPress={() => navigation.navigate('BaristaProfileSetup')}>
+          <TutorialAnchor
+            tutorialKey="profile.createCta"
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
           <View style={styles.bannerContent}>
             <Text style={styles.bannerTitle}>
               {t('jobFeed.profileBannerTitle', { defaultValue: 'Заполните профиль' })}
@@ -257,11 +277,13 @@ export const JobFeedScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableOpacity>
       )}
 
-      <FilterBar
-        onFilterChange={handleFilterChange}
-        currentFilters={filters}
-        userLocation={userLocation}
-      />
+      <TutorialAnchor tutorialKey="feed.filters">
+        <FilterBar
+          onFilterChange={handleFilterChange}
+          currentFilters={filters}
+          userLocation={userLocation}
+        />
+      </TutorialAnchor>
 
       <FlatList
         data={jobs}

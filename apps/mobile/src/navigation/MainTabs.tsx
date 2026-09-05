@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator, Pressable } from "react-native";
-import { createBottomTabNavigator, BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { TutorialTabButton } from '../components/tutorial/TutorialTabButton';
 import { useTranslation } from 'react-i18next';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import type { NavigatorScreenParams } from '@react-navigation/native';
@@ -36,12 +37,12 @@ const ChatsStackPhoneBoundary = wrapWithBoundary(ChatsStack);
 const ChatsStackTabletBoundary = wrapWithBoundary(ChatsStackTablet);
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { BusinessStack } from './BusinessStack';
-import { BusinessProfileStack, type BusinessProfileStackParamList } from "./BusinessProfileStack";
+import { BusinessProfileStack, type BusinessProfileStackParamList } from './BusinessProfileStack';
 import { BusinessSearchStack } from './BusinessSearchStack';
 import { BaristaStack } from './BaristaStack';
 import { BaristaStackTablet } from './BaristaStack.tablet';
 import { ProfileStack } from './ProfileStack';
-import { ChatsStack, type ChatsStackParamList } from "./ChatsStack";
+import { ChatsStack, type ChatsStackParamList } from './ChatsStack';
 import { ChatsStackTablet } from './ChatsStack.tablet';
 import { ApplicationsStack } from './ApplicationsStack';
 import { ApplicationsStackTablet } from './ApplicationsStack.tablet';
@@ -65,6 +66,8 @@ export const MainTabs: React.FC = () => {
   const chatUnreadCount = useChatUnreadStore(s => s.unreadCount);
   const refreshChatUnread = useChatUnreadStore(s => s.refresh);
   const isTablet = useIsTablet();
+  const isBarista = user?.accountType === 'barista';
+  const isBusiness = user?.accountType === 'business';
   const BaristaStackBoundary = isTablet ? BaristaStackTabletBoundary : BaristaStackPhoneBoundary;
   const ApplicationsStackBoundary = isTablet
     ? ApplicationsStackTabletBoundary
@@ -128,6 +131,7 @@ export const MainTabs: React.FC = () => {
               size={size}
             />
           ),
+          tabBarButton: props => <TutorialTabButton tutorialKey="tab.profile" {...props} />,
         }}
       />
       <Tab.Screen
@@ -144,12 +148,9 @@ export const MainTabs: React.FC = () => {
               size={size}
             />
           ),
-          tabBarButton: (props: BottomTabBarButtonProps) => {
-            const { user } = useAuthStore.getState();
-            const isBaristaUser = user?.accountType === 'barista';
-            if (!isBaristaUser) return null;
-            return <Pressable {...props} />;
-          },
+          tabBarButton: props => (
+            <TutorialTabButton tutorialKey="tab.jobs" visible={isBarista} {...props} />
+          ),
         }}
       />
       <Tab.Screen
@@ -166,12 +167,9 @@ export const MainTabs: React.FC = () => {
               size={size}
             />
           ),
-          tabBarButton: (props: BottomTabBarButtonProps) => {
-            const { user } = useAuthStore.getState();
-            const isBaristaUser = user?.accountType === 'barista';
-            if (!isBaristaUser) return null;
-            return <Pressable {...props} />;
-          },
+          tabBarButton: props => (
+            <TutorialTabButton tutorialKey="tab.applications" visible={isBarista} {...props} />
+          ),
         }}
       />
       <Tab.Screen
@@ -188,12 +186,9 @@ export const MainTabs: React.FC = () => {
               size={size}
             />
           ),
-          tabBarButton: (props: BottomTabBarButtonProps) => {
-            const { user } = useAuthStore.getState();
-            const isBusinessUser = user?.accountType === 'business';
-            if (!isBusinessUser) return null;
-            return <Pressable {...props} />;
-          },
+          tabBarButton: props => (
+            <TutorialTabButton tutorialKey="tab.business" visible={isBusiness} {...props} />
+          ),
         }}
       />
       <Tab.Screen
@@ -210,12 +205,9 @@ export const MainTabs: React.FC = () => {
               size={size}
             />
           ),
-          tabBarButton: (props: BottomTabBarButtonProps) => {
-            const { user } = useAuthStore.getState();
-            const isBusinessUser = user?.accountType === 'business';
-            if (!isBusinessUser) return null;
-            return <Pressable {...props} />;
-          },
+          tabBarButton: props => (
+            <TutorialTabButton tutorialKey="tab.baristas" visible={isBusiness} {...props} />
+          ),
         }}
       />
       <Tab.Screen
@@ -233,6 +225,7 @@ export const MainTabs: React.FC = () => {
               size={size}
             />
           ),
+          tabBarButton: props => <TutorialTabButton tutorialKey="tab.chats" {...props} />,
         }}
       />
     </Tab.Navigator>

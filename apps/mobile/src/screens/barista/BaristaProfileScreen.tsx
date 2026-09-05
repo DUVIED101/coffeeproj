@@ -45,7 +45,10 @@ import {
   computeProfileCompleteness,
   type CompletenessItemKey,
 } from '../../utils/profileCompleteness';
-import { requestLocationPermission, getCurrentLocation } from '@bystrobarista/core/utils/geolocation';
+import {
+  requestLocationPermission,
+  getCurrentLocation,
+} from '@bystrobarista/core/utils/geolocation';
 import { clampToEffectiveLength } from '../../utils/textLength';
 import { dobMinDate, dobMaxDate } from '../../utils/dateRanges';
 import { yearsBetween } from '../../utils/age';
@@ -66,7 +69,12 @@ import type {
   WorkloadType,
 } from '@bystrobarista/core/types/baristaProfile';
 import { DAYS_OF_WEEK, WORKLOAD_TYPES } from '@bystrobarista/core/types/baristaProfile';
-import { DEFAULT_CITY, toCityCode, CITY_LABELS_RU, type CityCode } from '@bystrobarista/core/types/city';
+import {
+  DEFAULT_CITY,
+  toCityCode,
+  CITY_LABELS_RU,
+  type CityCode,
+} from '@bystrobarista/core/types/city';
 import type { BaristaProfileId, UserId } from '@bystrobarista/core/types/ids';
 import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
 import type { ProfileStackParamList } from '../../navigation/ProfileStack';
@@ -75,20 +83,21 @@ import type {
   WorkExperienceDraft,
   WorkExperienceFieldError,
 } from '@bystrobarista/core/types/workExperience';
-import { computeDuration, computeTotalDuration, findDraftErrors } from '@bystrobarista/core/types/workExperience';
+import {
+  computeDuration,
+  computeTotalDuration,
+  findDraftErrors,
+} from '@bystrobarista/core/types/workExperience';
 import { computeMedicalBookStatus, type MedicalBookStatus } from '../../utils/medicalBook';
 import { showErrorToast } from '../../stores/errorToastStore';
+import { TutorialAnchor } from '../../components/tutorial/TutorialAnchor';
 
 type Props = {
   navigation: NativeStackNavigationProp<ProfileStackParamList, 'BaristaProfile'>;
 };
 
 type EditableSectionKey =
-  | 'personal'
-  | 'professional'
-  | 'workExperience'
-  | 'preferences'
-  | 'portfolio';
+  'personal' | 'professional' | 'workExperience' | 'preferences' | 'portfolio';
 
 const COMPLETENESS_TO_SECTION: Record<CompletenessItemKey, EditableSectionKey> = {
   basicInfo: 'personal',
@@ -710,11 +719,13 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
               badgeCount: unreadCount,
               onPress: () => navigation.navigate('NotificationFeed'),
               testID: 'bell',
+              tutorialKey: 'header.bell',
             },
             {
               icon: 'cog-outline',
               onPress: () => navigation.navigate('Settings'),
               testID: 'settings',
+              tutorialKey: 'header.settings',
             },
           ]}
         />
@@ -733,6 +744,11 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.emptyCta}
             onPress={() => navigation.navigate('BaristaProfileSetup')}
             activeOpacity={0.85}>
+            <TutorialAnchor
+              tutorialKey="profile.createCta"
+              style={StyleSheet.absoluteFill}
+              pointerEvents="none"
+            />
             <Text style={styles.emptyCtaText}>
               {t('baristaProfile.createCta', { defaultValue: 'Создать профиль' })}
             </Text>
@@ -756,11 +772,13 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
             badgeCount: unreadCount,
             onPress: () => navigation.navigate('NotificationFeed'),
             testID: 'bell',
+            tutorialKey: 'header.bell',
           },
           {
             icon: 'cog-outline',
             onPress: () => navigation.navigate('Settings'),
             testID: 'settings',
+            tutorialKey: 'header.settings',
           },
         ]}
       />

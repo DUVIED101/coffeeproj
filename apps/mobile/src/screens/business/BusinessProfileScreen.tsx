@@ -29,6 +29,7 @@ import type { UserId } from '@bystrobarista/core/types/ids';
 import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
 import type { BusinessProfileStackParamList } from '../../navigation/BusinessProfileStack';
 import type { TFunction } from 'i18next';
+import { TutorialAnchor } from '../../components/tutorial/TutorialAnchor';
 
 type Props = NativeStackScreenProps<BusinessProfileStackParamList, 'BusinessProfileHome'>;
 
@@ -167,11 +168,13 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
               badgeCount: unreadCount,
               onPress: () => navigation.navigate('NotificationFeed'),
               testID: 'bell',
+              tutorialKey: 'header.bell',
             },
             {
               icon: 'cog-outline',
               onPress: () => navigation.navigate('Settings'),
               testID: 'settings',
+              tutorialKey: 'header.settings',
             },
           ]}
         />
@@ -184,6 +187,11 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.emptyTitle}>{t('businessProfile.noBusinessTitle')}</Text>
           <Text style={styles.emptySubtitle}>{t('businessProfile.noBusinessSubtitle')}</Text>
           <TouchableOpacity style={styles.emptyCta} onPress={handleEditProfile}>
+            <TutorialAnchor
+              tutorialKey="business.createCta"
+              style={StyleSheet.absoluteFill}
+              pointerEvents="none"
+            />
             <Text style={styles.emptyCtaText}>{t('businessProfile.createCta')}</Text>
           </TouchableOpacity>
         </View>
@@ -206,11 +214,13 @@ export const BusinessProfileScreen: React.FC<Props> = ({ navigation }) => {
             badgeCount: unreadCount,
             onPress: () => navigation.navigate('NotificationFeed'),
             testID: 'bell',
+            tutorialKey: 'header.bell',
           },
           {
             icon: 'cog-outline',
             onPress: () => navigation.navigate('Settings'),
             testID: 'settings',
+            tutorialKey: 'header.settings',
           },
         ]}
       />

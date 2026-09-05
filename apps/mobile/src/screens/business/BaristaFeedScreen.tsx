@@ -30,6 +30,7 @@ import type { CityCode } from '@bystrobarista/core/types/city';
 import type { UserId } from '@bystrobarista/core/types/ids';
 import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
 import type { BusinessSearchStackParamList } from '../../navigation/BusinessSearchStack';
+import { TutorialAnchor } from '../../components/tutorial/TutorialAnchor';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessSearchStackParamList, 'BaristaFeed'>;
@@ -141,13 +142,20 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   const renderBarista = useCallback(
-    ({ item }: { item: BaristaProfile }) => (
-      <BaristaCardItem
-        profile={item}
-        onPressUserId={handleBaristaPress}
-        reviewAggregate={aggregates.get(item.userId as UserId)}
-      />
-    ),
+    ({ item, index }: { item: BaristaProfile; index: number }) => {
+      const card = (
+        <BaristaCardItem
+          profile={item}
+          onPressUserId={handleBaristaPress}
+          reviewAggregate={aggregates.get(item.userId as UserId)}
+        />
+      );
+      return index === 0 ? (
+        <TutorialAnchor tutorialKey="baristas.firstCard">{card}</TutorialAnchor>
+      ) : (
+        card
+      );
+    },
     [handleBaristaPress, aggregates]
   );
 
@@ -192,16 +200,19 @@ export const BaristaFeedScreen: React.FC<Props> = ({ navigation }) => {
               badgeCount: unreadCount,
               onPress: () => navigation.navigate('NotificationFeed'),
               testID: 'bell',
+              tutorialKey: 'header.bell',
             },
           ]}
         />
 
-        <BaristaFilterBar
-          onFilterChange={handleFilterChange}
-          currentFilters={filters}
-          branchMetroStations={branchMetroStations}
-          branchCities={branchCities}
-        />
+        <TutorialAnchor tutorialKey="baristas.filters">
+          <BaristaFilterBar
+            onFilterChange={handleFilterChange}
+            currentFilters={filters}
+            branchMetroStations={branchMetroStations}
+            branchCities={branchCities}
+          />
+        </TutorialAnchor>
 
         <FlatList
           data={baristas}

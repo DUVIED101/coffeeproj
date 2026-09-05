@@ -17,14 +17,24 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { RouteProp } from '@react-navigation/native';
-import { COLORS, EQUIPMENT_TYPES, RADII, SHOW_PLATFORM_FEE } from '@bystrobarista/core/config/constants';
+import {
+  COLORS,
+  EQUIPMENT_TYPES,
+  RADII,
+  SHOW_PLATFORM_FEE,
+} from '@bystrobarista/core/config/constants';
 import { JobService } from '@bystrobarista/core/services/JobService';
 import { BusinessService } from '@bystrobarista/core/services/BusinessService';
 import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { showErrorToast } from '../../stores/errorToastStore';
 import { handleApiError } from '../../utils/handleApiError';
 import type { Branch, Equipment } from '@bystrobarista/core/types/business';
-import type { JobType, CompensationType, ShiftDetails, WeekdayKey } from '@bystrobarista/core/types/job';
+import type {
+  JobType,
+  CompensationType,
+  ShiftDetails,
+  WeekdayKey,
+} from '@bystrobarista/core/types/job';
 import type { BusinessStackParamList } from '../../navigation/BusinessStack';
 import type { MainTabsParamList } from '../../navigation/MainTabs';
 import {
@@ -37,6 +47,7 @@ import {
 import { clampToEffectiveLength } from '../../utils/textLength';
 import { jobMinDate, jobMaxDate, clampDate } from '../../utils/dateRanges';
 import { computeShiftHours } from '@bystrobarista/core/utils/shiftHours';
+import { TutorialAnchor } from '../../components/tutorial/TutorialAnchor';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'CreateJob' | 'EditJob'>;
@@ -1365,6 +1376,11 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
           onPress={handleSave}
           disabled={isSaving}>
+          <TutorialAnchor
+            tutorialKey="createJob.save"
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
           {isSaving ? (
             <ActivityIndicator color="#fff" />
           ) : (

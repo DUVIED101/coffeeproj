@@ -11,6 +11,8 @@ import { getCurrentLanguage } from '@bystrobarista/core/i18n';
 import type { SettingsStackParamList } from '../../navigation/SettingsStack';
 import { APP_VERSION } from '../../config/version';
 import { hasPasswordAuth } from '../../utils/authProvider';
+import { useTutorialStore } from '@bystrobarista/core/stores/tutorialStore';
+import { navigateToRoute } from '../../components/tutorial/tutorialBindings';
 
 type Navigation = NativeStackNavigationProp<SettingsStackParamList, 'SettingsHome'>;
 
@@ -69,6 +71,20 @@ export const SettingsScreen: React.FC = () => {
   const langLabel =
     currentLang === 'ru' ? t('settings.language.russian') : t('settings.language.english');
 
+  const handleReplayTutorial = () => {
+    Alert.alert(t('tutorial.settings.confirmTitle'), t('tutorial.settings.confirmBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('tutorial.settings.confirm'),
+        onPress: () => {
+          const role = user?.accountType;
+          void useTutorialStore.getState().restart();
+          if (role) navigateToRoute('profile', role);
+        },
+      },
+    ]);
+  };
+
   const handleSignOut = () => {
     Alert.alert(t('settings.items.signOut'), '', [
       { text: t('common.cancel'), style: 'cancel' },
@@ -121,6 +137,13 @@ export const SettingsScreen: React.FC = () => {
           <SettingsRow
             label={t('settings.items.notifications')}
             onPress={() => navigation.navigate('Notifications')}
+            showChevron
+          />
+          <View style={styles.separator} />
+          <SettingsRow
+            label={t('settings.items.tutorial')}
+            value={t('tutorial.settings.replay')}
+            onPress={handleReplayTutorial}
             showChevron
           />
         </View>

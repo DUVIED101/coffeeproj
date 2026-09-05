@@ -6,7 +6,7 @@ export const navigationRef = createNavigationContainerRef();
 
 let pendingPayload: PushNotificationPayload | null = null;
 
-const navigateTab = (tabName: string, child?: { screen: string; params?: object }): void => {
+export const navigateTab = (tabName: string, child?: { screen: string; params?: object }): void => {
   if (!navigationRef.isReady()) return;
   // `initial: false` tells the nested stack navigator to keep its initialRouteName
   // (e.g. ConversationsList) at the bottom of the back stack, so back from a

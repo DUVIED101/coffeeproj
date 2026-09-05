@@ -44,6 +44,7 @@ import {
   type WorkExperience,
 } from '@bystrobarista/core/types/workExperience';
 import { isCityCode } from '@bystrobarista/core/types/city';
+import { TutorialAnchor } from '../../components/tutorial/TutorialAnchor';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'ViewBaristaProfile'>;
@@ -505,6 +506,11 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
               onPress={handleOfferJob}
               disabled={hasOfferableJobs === false}
               activeOpacity={0.7}>
+              <TutorialAnchor
+                tutorialKey="barista.offer"
+                style={StyleSheet.absoluteFill}
+                pointerEvents="none"
+              />
               <Text style={styles.messageButtonText}>{t('viewBarista.offerJob')}</Text>
             </TouchableOpacity>
             {hasOfferableJobs === false && (

@@ -5,6 +5,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useTranslation } from 'react-i18next';
 import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import { Avatar } from './Avatar';
+import { TutorialAnchor } from './tutorial/TutorialAnchor';
+import type { TutorialAnchorKey } from '@bystrobarista/core/types/tutorial';
 
 export type HeaderAction = {
   /** Text label — renders a pill button. Required when `icon` is not set. */
@@ -18,6 +20,8 @@ export type HeaderAction = {
   onPress: () => void;
   /** Stable key — required when an action has no label. */
   testID?: string;
+  /** Registers the button as a first-run tutorial spotlight target. */
+  tutorialKey?: TutorialAnchorKey;
 };
 
 type ScreenHeaderWithActionsProps = {
@@ -91,6 +95,7 @@ export const ScreenHeaderWithActions = React.memo<ScreenHeaderWithActionsProps>(
                       style={styles.iconButton}
                       onPress={action.onPress}
                       activeOpacity={0.7}
+                      testID={action.testID}
                       accessibilityRole="button"
                       accessibilityLabel={
                         action.badgeCount && action.badgeCount > 0
@@ -98,6 +103,13 @@ export const ScreenHeaderWithActions = React.memo<ScreenHeaderWithActionsProps>(
                           : a11yLabel
                       }
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      {action.tutorialKey && (
+                        <TutorialAnchor
+                          tutorialKey={action.tutorialKey}
+                          style={StyleSheet.absoluteFill}
+                          pointerEvents="none"
+                        />
+                      )}
                       <MaterialCommunityIcons name={action.icon} size={24} color={COLORS.primary} />
                       {action.badgeCount !== undefined && action.badgeCount > 0 && (
                         <View style={styles.badge}>

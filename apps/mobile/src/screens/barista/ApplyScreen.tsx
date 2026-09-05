@@ -22,6 +22,7 @@ import { useAuthStore } from '@bystrobarista/core/stores/authStore';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 import { clampToEffectiveLength, effectiveTextLength } from '../../utils/textLength';
 import type { Job } from '@bystrobarista/core/types/job';
+import { TutorialAnchor } from '../../components/tutorial/TutorialAnchor';
 
 type BaristaStackParamList = {
   JobFeed: undefined;
@@ -172,6 +173,11 @@ export const ApplyScreen: React.FC<Props> = ({ navigation, route }) => {
             style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
             onPress={handleSubmit}
             disabled={isSubmitting}>
+            <TutorialAnchor
+              tutorialKey="apply.submit"
+              style={StyleSheet.absoluteFill}
+              pointerEvents="none"
+            />
             {isSubmitting ? (
               <ActivityIndicator color="#fff" />
             ) : (

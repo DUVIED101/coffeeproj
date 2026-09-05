@@ -24,7 +24,14 @@ import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
 import { SocialLinksEditor } from '../../components/SocialLinksEditor';
 import { EquipmentChips } from '../../components/EquipmentChips';
 import { useAuthStore } from '@bystrobarista/core/stores/authStore';
-import type { Business, Branch, BusinessType, Equipment, GeoPoint, LegalForm } from '@bystrobarista/core/types';
+import type {
+  Business,
+  Branch,
+  BusinessType,
+  Equipment,
+  GeoPoint,
+  LegalForm,
+} from '@bystrobarista/core/types';
 import type { SocialLink } from '@bystrobarista/core/types/business';
 import { DEFAULT_CITY, toCityCode, type CityCode } from '@bystrobarista/core/types/city';
 import { PHOTO_LIMIT } from '@bystrobarista/core/utils/storage';
@@ -42,6 +49,7 @@ import {
 import { showErrorToast } from '../../stores/errorToastStore';
 import { handleApiError } from '../../utils/handleApiError';
 import { isAccountBlocked } from '@bystrobarista/core/utils/errorHandler';
+import { TutorialAnchor } from '../../components/tutorial/TutorialAnchor';
 
 type SetupStackParamList = {
   BusinessProfileSetup: undefined;
@@ -778,6 +786,11 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
       </KeyboardAvoidingView>
 
       <View style={styles.footer}>
+        <TutorialAnchor
+          tutorialKey="business.wizardFooter"
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
         <View style={styles.buttonRow}>
           {currentStep > 0 && (
             <TouchableOpacity style={styles.secondaryButton} onPress={handleBack}>

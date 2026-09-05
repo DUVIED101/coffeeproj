@@ -137,6 +137,7 @@ const JobFeedHeader: React.FC<{ navigation: any }> = ({ navigation }) => {
           badgeCount: unreadCount,
           onPress: () => navigation.navigate('NotificationFeed'),
           testID: 'bell',
+          tutorialKey: 'header.bell',
         },
       ]}
     />

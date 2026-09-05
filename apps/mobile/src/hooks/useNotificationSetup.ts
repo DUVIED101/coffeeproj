@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 import { useAuthStore } from '@bystrobarista/core/stores/authStore';
+import { useTutorialStore } from '@bystrobarista/core/stores/tutorialStore';
 import { useNotificationFeedStore } from '../stores/notificationFeedStore';
 import { NotificationService } from '@bystrobarista/core/services/NotificationService';
 import type { PushNotificationPayload } from '@bystrobarista/core/types/notification';
@@ -32,7 +33,13 @@ export const useNotificationSetup = (opts?: Options): void => {
 
     (async () => {
       try {
-        const granted = await NotificationService.requestPermission();
+        useTutorialStore.getState().hold('push');
+        let granted = false;
+        try {
+          granted = await NotificationService.requestPermission();
+        } finally {
+          useTutorialStore.getState().release('push');
+        }
         if (!granted || controller.signal.aborted) return;
         await NotificationService.registerDevice(userId, controller.signal);
       } catch (err) {

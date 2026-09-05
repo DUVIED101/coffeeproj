@@ -281,6 +281,7 @@ export function ConversationsListScreen({ navigation }: any) {
             badgeCount: unreadCount,
             onPress: () => navigation.navigate('NotificationFeed'),
             testID: 'bell',
+            tutorialKey: 'header.bell',
           },
         ]}
       />

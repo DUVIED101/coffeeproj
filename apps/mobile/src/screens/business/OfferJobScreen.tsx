@@ -31,6 +31,7 @@ import { clampToEffectiveLength, effectiveTextLength } from '../../utils/textLen
 import { showErrorToast } from '../../stores/errorToastStore';
 import { handleApiError } from '../../utils/handleApiError';
 import { isAccountBlocked } from '@bystrobarista/core/utils/errorHandler';
+import { TutorialAnchor } from '../../components/tutorial/TutorialAnchor';
 
 type Props = {
   navigation: NativeStackNavigationProp<BusinessStackParamList, 'OfferJob'>;
@@ -186,28 +187,30 @@ export const OfferJobScreen: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <FlatList
-        data={jobs}
-        keyExtractor={item => item.id}
-        renderItem={renderJob}
-        contentContainerStyle={styles.listContent}
-        ListHeaderComponent={
-          <View style={styles.header}>
-            <Text style={styles.title}>{t('offerJob.title')}</Text>
-            <Text style={styles.subtitle}>{t('offerJob.subtitle')}</Text>
-          </View>
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>{t('offerJob.empty')}</Text>
-            <TouchableOpacity
-              style={styles.emptyCtaButton}
-              onPress={() => navigation.navigate('CreateJob')}>
-              <Text style={styles.emptyCtaText}>{t('offerJob.emptyCta')}</Text>
-            </TouchableOpacity>
-          </View>
-        }
-      />
+      <TutorialAnchor tutorialKey="offer.jobs" style={styles.listWrap}>
+        <FlatList
+          data={jobs}
+          keyExtractor={item => item.id}
+          renderItem={renderJob}
+          contentContainerStyle={styles.listContent}
+          ListHeaderComponent={
+            <View style={styles.header}>
+              <Text style={styles.title}>{t('offerJob.title')}</Text>
+              <Text style={styles.subtitle}>{t('offerJob.subtitle')}</Text>
+            </View>
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>{t('offerJob.empty')}</Text>
+              <TouchableOpacity
+                style={styles.emptyCtaButton}
+                onPress={() => navigation.navigate('CreateJob')}>
+                <Text style={styles.emptyCtaText}>{t('offerJob.emptyCta')}</Text>
+              </TouchableOpacity>
+            </View>
+          }
+        />
+      </TutorialAnchor>
 
       <Modal
         visible={selectedJob !== null}
@@ -264,6 +267,7 @@ export const OfferJobScreen: React.FC<Props> = ({ navigation, route }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
+  listWrap: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   listContent: { paddingBottom: 24 },
   header: {

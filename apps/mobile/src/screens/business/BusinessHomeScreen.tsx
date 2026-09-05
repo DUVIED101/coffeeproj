@@ -41,6 +41,7 @@ import type { Job, JobStatus } from '@bystrobarista/core/types';
 import type { Application, ShiftLifecycleStatus } from '@bystrobarista/core/types/application';
 import type { Employment } from '@bystrobarista/core/types/employment';
 import type { ApplicationId, UserId } from '@bystrobarista/core/types/ids';
+import { TutorialAnchor } from '../../components/tutorial/TutorialAnchor';
 
 const SHOW_ARCHIVED_KEY = 'business.showArchivedJobs';
 const ARCHIVED_STATUSES: JobStatus[] = ['filled', 'expired', 'cancelled'];
@@ -168,6 +169,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
               badgeCount: unreadCount,
               onPress: () => navigation.navigate('NotificationFeed'),
               testID: 'bell',
+              tutorialKey: 'header.bell',
             },
           ]}
         />
@@ -515,7 +517,15 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
         <FlatList
           data={filteredJobs}
           keyExtractor={item => item.id}
-          renderItem={({ item }) => <JobCard job={item} onPress={handleJobPress} />}
+          renderItem={({ item, index }) =>
+            index === 0 ? (
+              <TutorialAnchor tutorialKey="business.firstJob">
+                <JobCard job={item} onPress={handleJobPress} />
+              </TutorialAnchor>
+            ) : (
+              <JobCard job={item} onPress={handleJobPress} />
+            )
+          }
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={isRefreshingJobs} onRefresh={handleRefreshJobs} />
@@ -532,7 +542,11 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
         />
       )}
 
-      <AddFab onPress={handleCreateJob} accessibilityLabel={t('manageJobs.create')} />
+      <AddFab
+        onPress={handleCreateJob}
+        accessibilityLabel={t('manageJobs.create')}
+        tutorialKey="business.addJob"
+      />
     </View>
   );
 
@@ -738,6 +752,11 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
           <Text style={styles.gateTitle}>{t('businessGate.title')}</Text>
           <Text style={styles.gateSubtitle}>{t('businessGate.subtitle')}</Text>
           <TouchableOpacity style={styles.gateCta} onPress={handleGoToProfile}>
+            <TutorialAnchor
+              tutorialKey="business.createCta"
+              style={StyleSheet.absoluteFill}
+              pointerEvents="none"
+            />
             <Text style={styles.gateCtaText}>{t('businessGate.cta')}</Text>
           </TouchableOpacity>
         </View>
@@ -750,6 +769,11 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
       <ResponsiveContainer maxWidth={720}>
         {/* Main Tab Bar */}
         <View style={styles.tabBar}>
+          <TutorialAnchor
+            tutorialKey="business.tabs"
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
           <TouchableOpacity
             style={[styles.tab, activeTab === 'jobs' && styles.tabActive]}
             onPress={() => setActiveTab('jobs')}>

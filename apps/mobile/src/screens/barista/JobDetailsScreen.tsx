@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useFocusEffect, type RouteProp } from "@react-navigation/native";
+import { useFocusEffect, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { JobService } from '@bystrobarista/core/services/JobService';
@@ -25,6 +25,7 @@ import type { Job } from '@bystrobarista/core/types/job';
 import type { Application } from '@bystrobarista/core/types/application';
 import type { UserId } from '@bystrobarista/core/types/ids';
 import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
+import { TutorialAnchor } from '../../components/tutorial/TutorialAnchor';
 
 type BaristaStackParamList = {
   JobFeed: undefined;
@@ -274,6 +275,11 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
             ]}
             onPress={handleApply}
             disabled={!hasCheckedApplication || isNavigating}>
+            <TutorialAnchor
+              tutorialKey="job.apply"
+              style={StyleSheet.absoluteFill}
+              pointerEvents="none"
+            />
             <Text style={styles.applyButtonText}>
               {t('jobDetails.applyCta', { defaultValue: 'Откликнуться на вакансию' })}
             </Text>
