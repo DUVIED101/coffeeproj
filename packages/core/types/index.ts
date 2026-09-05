@@ -12,3 +12,4 @@ export * from './baristaProfile';
 export * from './review';
 export * from './userReport';
 export * from './employment';
+export * from './tutorial';

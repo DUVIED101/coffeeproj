@@ -1493,7 +1493,8 @@
       "diagnostic": "Diagnostics",
       "yandexMapsTerms": "Yandex Maps API Terms",
       "signOut": "Sign Out",
-      "deleteAccount": "Delete Account"
+      "deleteAccount": "Delete Account",
+      "tutorial": "Tutorial"
     },
     "language": {
       "title": "Language",
@@ -1712,6 +1713,151 @@
       "enable": "Turn on",
       "disable": "Turn off",
       "failed": "Couldn't turn on notifications"
+    }
+  },
+  "tutorial": {
+    "common": {
+      "start": "Start",
+      "gotIt": "Got it",
+      "skipStep": "Skip step",
+      "skipAll": "Skip tutorial",
+      "showMe": "Show me",
+      "stepOf": "Step {{n}} of {{total}}"
+    },
+    "welcome": {
+      "barista": {
+        "title": "Welcome to BystroBarista",
+        "body": "We'll show you how to find a shift: profile, search, application and chat. It takes a couple of minutes."
+      },
+      "business": {
+        "title": "Welcome to BystroBarista",
+        "body": "We'll show you how to find a barista: venue profile, branch, job, search and offers. It takes a couple of minutes."
+      }
+    },
+    "replayHint": {
+      "title": "All set",
+      "body": "You know the basics. You can replay the tutorial from Settings, section \"Tutorial\".",
+      "ok": "Got it"
+    },
+    "settings": {
+      "confirmTitle": "Replay the tutorial?",
+      "confirmBody": "Tips will start from the first step. Actions you've already done are marked automatically.",
+      "confirm": "Replay",
+      "replay": "Replay"
+    },
+    "steps": {
+      "barista": {
+        "profileOpen": {
+          "title": "Profile first",
+          "body": "You can't apply without a profile. Tap \"Create profile\"."
+        },
+        "profileFill": {
+          "title": "Fill in your profile",
+          "body": "Go through the steps and tap \"Done\". 20% is enough to apply, but a complete profile gets noticed more often."
+        },
+        "jobsTab": {
+          "title": "Jobs",
+          "body": "Shifts and jobs near you live here. Open the tab."
+        },
+        "jobsFilters": {
+          "title": "Filters",
+          "body": "Narrow down by job type, metro, distance and date."
+        },
+        "jobsOpen": {
+          "title": "Open a job",
+          "body": "Tap a card to see the details. If the feed is empty, skip this step."
+        },
+        "jobsApply": {
+          "title": "Apply",
+          "body": "The button at the bottom sends your application. If your profile is under 20%, complete it first."
+        },
+        "jobsSend": {
+          "title": "Send the application",
+          "body": "A cover letter is optional but improves your chances. Tap \"Send application\"."
+        },
+        "applicationsTab": {
+          "title": "Applications",
+          "body": "Application statuses, upcoming shifts and permanent work are on this tab."
+        },
+        "chatsTab": {
+          "title": "Chats",
+          "body": "A chat appears after you apply. The venue writes first, then you can talk freely."
+        },
+        "notificationsBell": {
+          "title": "Notifications",
+          "body": "Replies to applications, offers from venues and shift reminders arrive here."
+        },
+        "settingsGear": {
+          "title": "Settings",
+          "body": "Language, notifications, profile visibility. You can also replay the tutorial here."
+        }
+      },
+      "business": {
+        "businessProfileOpen": {
+          "title": "Venue profile first",
+          "body": "Jobs and shifts stay locked without it. Tap \"Create profile\"."
+        },
+        "businessProfileFill": {
+          "title": "Fill in the profile",
+          "body": "Basics, brand, branch, photos. The branch is required: jobs are posted for it."
+        },
+        "businessBranch": {
+          "title": "Add a branch",
+          "body": "Enter the branch address. Without it you can't create a job."
+        },
+        "businessTab": {
+          "title": "My business",
+          "body": "Jobs, shifts and staff live on this tab. Open it."
+        },
+        "businessTabs": {
+          "title": "Three sections",
+          "body": "Jobs are your postings. Shifts are accepted baristas by date. Staff is permanent hires."
+        },
+        "jobCreateOpen": {
+          "title": "Create a job",
+          "body": "Tap the plus button to post your first job."
+        },
+        "jobCreateFill": {
+          "title": "Fill in the job",
+          "body": "Branch, type (shift or permanent), date, pay. Once saved, the job appears in baristas' feeds."
+        },
+        "baristasTab": {
+          "title": "Baristas",
+          "body": "A feed of baristas looking for work. Open the tab."
+        },
+        "baristasFilters": {
+          "title": "Filters",
+          "body": "Narrow down by experience, metro, equipment and rate."
+        },
+        "baristasOpen": {
+          "title": "Open a profile",
+          "body": "Tap a card to see experience and reviews."
+        },
+        "baristasOffer": {
+          "title": "Message a barista",
+          "body": "Direct contact goes through a job offer: pick a job and add a message. The chat opens once the barista accepts. The button is active when you have an open job."
+        },
+        "baristasOfferSend": {
+          "title": "Send the offer",
+          "body": "Pick a job, write a few words (up to 280 characters) and send."
+        },
+        "applicants": {
+          "title": "Applicants",
+          "body": "Applications land in the job. Open its card and the \"Applicants\" section: accept, reject or open a chat there."
+        },
+        "chatsTab": {
+          "title": "Chats",
+          "body": "Conversations with applicants and staff. You write first, the barista replies."
+        },
+        "notificationsBell": {
+          "title": "Notifications",
+          "body": "New applications, replies to offers and shift confirmations arrive here."
+        },
+        "settingsGear": {
+          "title": "Settings",
+          "body": "Language, notifications, venue visibility. You can also replay the tutorial here."
+        }
+      }
     }
   }
 }
