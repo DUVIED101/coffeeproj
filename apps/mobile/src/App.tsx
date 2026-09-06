@@ -46,7 +46,9 @@ import { ShiftConfirmationGate } from './components/ShiftConfirmationGate';
 import { SuspendedUserBanner } from './components/SuspendedUserBanner';
 import { BannedUserBlocker } from './components/BannedUserBlocker';
 import { TutorialOverlay } from './components/tutorial/TutorialOverlay';
+import { WhatsNewSheet } from './components/whatsNew/WhatsNewSheet';
 import { useTutorialBootstrap } from './hooks/useTutorialBootstrap';
+import { useWhatsNewBootstrap } from './hooks/useWhatsNewBootstrap';
 import { JobOfferService } from '@bystrobarista/core/services/JobOfferService';
 import { pendingOfferActionsQueue } from '@bystrobarista/core/services/pendingOfferActionsQueue';
 import { useNotificationFeedStore } from './stores/notificationFeedStore';
@@ -147,6 +149,7 @@ const drainPendingOfferActions = (): void => {
 function AppContent(): React.JSX.Element {
   useNotificationSetup({ onNotification: handlePushNotification });
   useTutorialBootstrap();
+  useWhatsNewBootstrap();
   useEffect(() => {
     drainPendingOfferActions();
   }, []);
@@ -158,6 +161,7 @@ function AppContent(): React.JSX.Element {
             <AppNavigator />
           </SuspendedUserBanner>
           <TutorialOverlay />
+          <WhatsNewSheet />
           <InAppToast />
           <ShiftConfirmationGate />
           <BannedUserBlocker />

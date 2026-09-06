@@ -1855,5 +1855,28 @@
         }
       }
     }
+  },
+  "whatsNew": {
+    "eyebrow": "What's new",
+    "ok": "Got it",
+    "releases": {
+      "r20260906": {
+        "title": "What changed in this update",
+        "items": {
+          "tutorial": {
+            "title": "First-run tutorial",
+            "body": "Coach marks over the real screens walk you through profile, jobs, applications and chats. Replay it from Settings."
+          },
+          "employment": {
+            "title": "Permanent hires",
+            "body": "Permanent jobs now have their own flow: acceptance, start confirmation and a Staff section."
+          },
+          "offers": {
+            "title": "Replying to an invitation",
+            "body": "After \"Interested\" you get a confirmation; the chat opens once the venue writes first."
+          }
+        }
+      }
+    }
   }
 }
