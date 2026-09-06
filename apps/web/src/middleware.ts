@@ -8,10 +8,10 @@ type CookieToSet = { name: string; value: string; options?: CookieOptions };
 // Paths reachable without a session. Everything else redirects to /auth/login.
 const PUBLIC_PATHS = [
   "/auth",
-  "/about",
   "/terms",
   "/privacy",
   "/personal-data",
+  "/data-consent",
   "/robots.txt",
   "/sitemap.xml",
 ];
