@@ -61,7 +61,13 @@ export const toTutorialRoute = (path: readonly string[]): TutorialRouteKey => {
 const profileScreen = (role: TutorialRole): string =>
   role === 'business' ? 'BusinessProfileHome' : 'BaristaProfile';
 
-export const navigateToRoute = (route: TutorialRouteKey, role: TutorialRole): void => {
+export type TutorialRouteParams = { businessId?: string };
+
+export const navigateToRoute = (
+  route: TutorialRouteKey,
+  role: TutorialRole,
+  params: TutorialRouteParams = {}
+): void => {
   switch (route) {
     case 'profile':
       navigateTab('Profile', { screen: profileScreen(role) });
@@ -72,7 +78,14 @@ export const navigateToRoute = (route: TutorialRouteKey, role: TutorialRole): vo
       });
       return;
     case 'branches':
-      navigateTab('Profile', { screen: 'BranchManagement' });
+      if (params.businessId) {
+        navigateTab('Profile', {
+          screen: 'BranchManagement',
+          params: { businessId: params.businessId },
+        });
+      } else {
+        navigateTab('Profile', { screen: profileScreen(role) });
+      }
       return;
     case 'notifications':
       navigateTab('Profile', { screen: 'NotificationFeed' });

@@ -11,6 +11,7 @@ import {
   JobOfferTerminalError,
 } from "@bystrobarista/core/services/JobOfferService";
 import type { JobOfferId } from "@bystrobarista/core/types/ids";
+import { getPlatform } from "@bystrobarista/core/platform";
 
 // Port of JobOfferScreen: a single offer opened from a notification /
 // deep link, with accept ("interested") and decline actions. `?action=`
@@ -40,7 +41,17 @@ function JobOfferView(): React.JSX.Element {
     try {
       const result = await JobOfferService.respondToOffer(offer.id, response);
       if (result.status === "accepted") {
-        router.push(`/chats?applicationId=${result.applicationId}`);
+        // The venue writes first, so the chat stays closed for the barista until then.
+        getPlatform().alert.show(
+          t("jobOffer.acceptedTitle"),
+          t("jobOffer.acceptedToast"),
+          [
+            {
+              text: t("common.ok"),
+              onPress: () => router.push("/applications"),
+            },
+          ],
+        );
       } else {
         router.push("/jobs");
       }

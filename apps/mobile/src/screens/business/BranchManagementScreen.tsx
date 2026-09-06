@@ -39,6 +39,7 @@ import { SHORT_TEXT_MAX_LENGTH, ADDRESS_MAX_LENGTH } from '../../utils/validatio
 import { showErrorToast, showSuccessToast } from '../../stores/errorToastStore';
 import { handleApiError } from '../../utils/handleApiError';
 import { isAccountBlocked } from '@bystrobarista/core/utils/errorHandler';
+import { useTutorialStore } from '@bystrobarista/core/stores/tutorialStore';
 
 type BusinessStackParamList = {
   BusinessProfileSetup: undefined;
@@ -336,6 +337,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
         });
 
         showSuccessToast(t('branches.save.success'));
+        void useTutorialStore.getState().refreshFacts();
       }
 
       closeForm();
@@ -664,6 +666,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
         onPress={toggleHeaderForm}
         accessibilityLabel={isAddingBranch ? t('common.cancel') : t('branches.add')}
         iconName={isAddingBranch ? 'close' : 'plus'}
+        tutorialKey="branches.add"
       />
     </SafeAreaView>
   );

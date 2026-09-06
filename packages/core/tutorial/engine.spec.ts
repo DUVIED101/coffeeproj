@@ -13,6 +13,7 @@ import {
   markStep,
   normalizeProgress,
   resolveCurrentStep,
+  resolvePresentation,
   skipRemaining,
   stepPosition,
 } from './engine';
@@ -145,12 +146,106 @@ describe('isStepSatisfied', () => {
     ).toBe(true);
   });
 
+  it('closes the business profile step once the branch step is on screen', () => {
+    const step = stepByKey(BUSINESS_STEPS, 'business.profile.fill');
+    expect(
+      isStepSatisfied(step, {
+        ...emptyContext,
+        visibleAnchors: new Set(['branches.add' as const]),
+      })
+    ).toBe(true);
+    expect(isStepSatisfied(step, { ...emptyContext, route: 'branches' })).toBe(false);
+  });
+
   it('closes on a true fact and ignores missing facts', () => {
     const step = stepByKey(BUSINESS_STEPS, 'job.create.fill');
     expect(isStepSatisfied(step, { ...emptyContext, facts: { ...noFacts, hasJob: true } })).toBe(
       true
     );
     expect(isStepSatisfied(step, { ...emptyContext, facts: null })).toBe(false);
+  });
+});
+
+describe('resolvePresentation', () => {
+  const welcome = stepByKey(BARISTA_STEPS, 'welcome');
+  const profileFill = stepByKey(BARISTA_STEPS, 'profile.fill');
+  const jobsTab = stepByKey(BARISTA_STEPS, 'jobs.tab');
+  const createJobFill = stepByKey(BUSINESS_STEPS, 'job.create.fill');
+  const offer = stepByKey(BUSINESS_STEPS, 'baristas.offer');
+
+  it.each([
+    {
+      name: 'card step anywhere',
+      step: welcome,
+      route: 'profileSetup',
+      anchor: 'absent',
+      expected: 'card',
+    },
+    {
+      name: 'hint with its anchor on a form screen',
+      step: profileFill,
+      route: 'profileSetup',
+      anchor: 'visible',
+      expected: 'hint',
+    },
+    {
+      name: 'hint whose anchor is scrolled away on a form screen',
+      step: createJobFill,
+      route: 'createJob',
+      anchor: 'offscreen',
+      expected: 'docked',
+    },
+    {
+      name: 'hint without anchor on a form screen',
+      step: profileFill,
+      route: 'profileSetup',
+      anchor: 'absent',
+      expected: 'hidden',
+    },
+    {
+      name: 'hint without anchor elsewhere',
+      step: profileFill,
+      route: 'profile',
+      anchor: 'absent',
+      expected: 'docked',
+    },
+    {
+      name: 'spotlight with visible anchor on a form screen',
+      step: jobsTab,
+      route: 'profileSetup',
+      anchor: 'visible',
+      expected: 'hidden',
+    },
+    {
+      name: 'spotlight with visible anchor elsewhere',
+      step: jobsTab,
+      route: 'profile',
+      anchor: 'visible',
+      expected: 'spotlight',
+    },
+    {
+      name: 'spotlight with visible anchor and unknown route',
+      step: jobsTab,
+      route: null,
+      anchor: 'visible',
+      expected: 'spotlight',
+    },
+    {
+      name: 'spotlight whose anchor is scrolled away',
+      step: offer,
+      route: 'baristaProfile',
+      anchor: 'offscreen',
+      expected: 'docked',
+    },
+    {
+      name: 'spotlight without anchor elsewhere',
+      step: jobsTab,
+      route: 'settings',
+      anchor: 'absent',
+      expected: 'docked',
+    },
+  ] as const)('returns $expected for $name', ({ step, route, anchor, expected }) => {
+    expect(resolvePresentation(step, route, anchor)).toBe(expected);
   });
 });
 
@@ -184,12 +279,12 @@ describe('isCompleted', () => {
 
 describe('stepPosition', () => {
   it('numbers non-card steps from one and excludes cards from the total', () => {
-    expect(stepPosition(BARISTA_STEPS, 'profile.open')).toEqual({ n: 1, total: 11 });
-    expect(stepPosition(BARISTA_STEPS, 'settings.gear')).toEqual({ n: 11, total: 11 });
-    expect(stepPosition(BUSINESS_STEPS, 'settings.gear')).toEqual({ n: 16, total: 16 });
+    expect(stepPosition(BARISTA_STEPS, 'profile.open')).toEqual({ n: 1, total: 10 });
+    expect(stepPosition(BARISTA_STEPS, 'settings.gear')).toEqual({ n: 10, total: 10 });
+    expect(stepPosition(BUSINESS_STEPS, 'settings.gear')).toEqual({ n: 15, total: 15 });
   });
 
   it('gives cards position zero', () => {
-    expect(stepPosition(BARISTA_STEPS, 'welcome')).toEqual({ n: 0, total: 11 });
+    expect(stepPosition(BARISTA_STEPS, 'welcome')).toEqual({ n: 0, total: 10 });
   });
 });

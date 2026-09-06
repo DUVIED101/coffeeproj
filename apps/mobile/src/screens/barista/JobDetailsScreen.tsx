@@ -178,6 +178,8 @@ export const JobDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
         return t('jobDetails.status.rejected', { defaultValue: 'Отклонено' });
       case 'withdrawn':
         return t('jobDetails.status.withdrawn', { defaultValue: 'Отозвано' });
+      case 'completed':
+        return t('jobDetails.status.completed', { defaultValue: 'Завершено' });
       default:
         return status;
     }

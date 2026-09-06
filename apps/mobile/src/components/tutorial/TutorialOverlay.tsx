@@ -14,7 +14,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import { selectCurrentStep, useTutorialStore } from '@bystrobarista/core/stores/tutorialStore';
-import { stepPosition } from '@bystrobarista/core/tutorial/engine';
+import {
+  resolvePresentation,
+  stepPosition,
+  type TutorialAnchorState,
+} from '@bystrobarista/core/tutorial/engine';
 import {
   isRectUsable,
   padRect,
@@ -22,26 +26,54 @@ import {
   type Rect,
   type Size,
 } from '@bystrobarista/core/tutorial/placement';
-import type { TutorialAnchorKey } from '@bystrobarista/core/types/tutorial';
+import type {
+  TutorialAnchorKey,
+  TutorialRole,
+  TutorialRouteKey,
+  TutorialStepKey,
+} from '@bystrobarista/core/types/tutorial';
+import { BusinessService } from '@bystrobarista/core/services/BusinessService';
 import { navigationRef } from '../../navigation/navigationRef';
 import { pickAnchorEntries, useTutorialAnchorStore } from '../../stores/tutorialAnchorStore';
 import { TutorialCard } from './TutorialCard';
+import { TutorialChip } from './TutorialChip';
 import { describeRoute, navigateToRoute, toTutorialRoute } from './tutorialBindings';
 
 const CARD_MAX_WIDTH = 360;
 const CARD_MARGIN = 16;
 const CARD_GAP = 12;
 const CARD_FALLBACK_HEIGHT = 180;
+const CHIP_FALLBACK_SIZE: Size = { width: 64, height: 44 };
 const HOLE_PADDING = 6;
 const TAB_BAR_HEIGHT = 49;
 const SPOTLIGHT_REMEASURE_MS = 250;
+const HINT_REMEASURE_MS = 500;
 const FADE_MS = 180;
 
 const sameRect = (a: Rect | null, b: Rect | null): boolean =>
   a === b ||
   (!!a && !!b && a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height);
 
+const sameSize = (a: Size | null, b: Size): boolean =>
+  !!a && a.width === b.width && a.height === b.height;
+
+type AnchorInfo = { state: TutorialAnchorState; reveal?: () => void };
+const ABSENT_ANCHOR: AnchorInfo = { state: 'absent' };
+
 const swallowTouches = { onStartShouldSetResponder: () => true, accessible: false } as const;
+
+const openRoute = async (
+  route: TutorialRouteKey,
+  role: TutorialRole,
+  userId: string | null
+): Promise<void> => {
+  if (route !== 'branches' || !userId) {
+    navigateToRoute(route, role);
+    return;
+  }
+  const business = await BusinessService.getBusinessByOwnerId(userId).catch(() => null);
+  navigateToRoute(route, role, business ? { businessId: business.id } : {});
+};
 
 export const TutorialOverlay: React.FC = () => {
   const { t } = useTranslation();
@@ -51,13 +83,18 @@ export const TutorialOverlay: React.FC = () => {
   const currentStep = useTutorialStore(selectCurrentStep);
   const steps = useTutorialStore(s => s.steps);
   const accountType = useTutorialStore(s => s.accountType);
+  const userId = useTutorialStore(s => s.userId);
+  const route = useTutorialStore(s => s.route);
   const entries = useTutorialAnchorStore(s => s.entries);
   const layoutVersion = useTutorialAnchorStore(s => s.layoutVersion);
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [hole, setHole] = useState<Rect | null>(null);
+  const [anchorInfo, setAnchorInfo] = useState<AnchorInfo>(ABSENT_ANCHOR);
   const [cardSize, setCardSize] = useState<Size | null>(null);
-  const [keyboardTick, setKeyboardTick] = useState(0);
+  const [chipSize, setChipSize] = useState<Size | null>(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(() => Keyboard.isVisible());
+  const [collapsedKey, setCollapsedKey] = useState<TutorialStepKey | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -82,14 +119,18 @@ export const TutorialOverlay: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const bump = (): void => setKeyboardTick(tick => tick + 1);
-    const show = Keyboard.addListener('keyboardDidShow', bump);
-    const hide = Keyboard.addListener('keyboardDidHide', bump);
+    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
     return () => {
       show.remove();
       hide.remove();
     };
   }, []);
+
+  // Typing into the form means the hint was read: keep it collapsed afterwards.
+  useEffect(() => {
+    if (keyboardVisible && currentStep?.mode === 'hint') setCollapsedKey(currentStep.key);
+  }, [keyboardVisible, currentStep]);
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled()
@@ -100,6 +141,7 @@ export const TutorialOverlay: React.FC = () => {
   useEffect(() => {
     if (!active || !currentStep) {
       setHole(null);
+      setAnchorInfo(ABSENT_ANCHOR);
       return undefined;
     }
     let cancelled = false;
@@ -114,19 +156,40 @@ export const TutorialOverlay: React.FC = () => {
         : null;
       const visible: TutorialAnchorKey[] = [];
       let nextHole: Rect | null = null;
+      let nextInfo: AnchorInfo = ABSENT_ANCHOR;
       for (const key of keys) {
         for (const entry of pickAnchorEntries(entries, key, focused)) {
           const rect = await entry.measure();
           if (cancelled) return;
+          const isStepAnchor = key === currentStep.anchor;
           if (isRectUsable(rect, viewport)) {
             visible.push(key);
-            if (key === currentStep.anchor) nextHole = rect;
+            if (isStepAnchor) {
+              nextHole = rect;
+              nextInfo = { state: 'visible', reveal: entry.reveal };
+            }
             break;
+          }
+          // Mounted on the focused screen but scrolled out of view.
+          if (
+            isStepAnchor &&
+            nextInfo.state === 'absent' &&
+            rect &&
+            rect.width > 0 &&
+            rect.height > 0 &&
+            entry.routeKey === focused
+          ) {
+            nextInfo = { state: 'offscreen', reveal: entry.reveal };
           }
         }
       }
       if (cancelled) return;
       setHole(previous => (sameRect(previous, nextHole) ? previous : nextHole));
+      setAnchorInfo(previous =>
+        previous.state === nextInfo.state && previous.reveal === nextInfo.reveal
+          ? previous
+          : nextInfo
+      );
       useTutorialStore.getState().setVisibleAnchors(visible);
     };
 
@@ -135,20 +198,31 @@ export const TutorialOverlay: React.FC = () => {
         void measureAll();
       });
     });
-    const interval =
-      currentStep.mode === 'spotlight'
-        ? setInterval(() => {
-            void measureAll();
-          }, SPOTLIGHT_REMEASURE_MS)
-        : null;
+    const interval = setInterval(
+      () => {
+        void measureAll();
+      },
+      currentStep.mode === 'spotlight' ? SPOTLIGHT_REMEASURE_MS : HINT_REMEASURE_MS
+    );
     return () => {
       cancelled = true;
       task.cancel();
-      if (interval) clearInterval(interval);
+      clearInterval(interval);
     };
-  }, [active, currentStep, entries, layoutVersion, width, height, keyboardTick]);
+  }, [active, currentStep, entries, layoutVersion, width, height, keyboardVisible]);
 
-  const visibleKey = showReplayHint ? 'replay' : active && currentStep ? currentStep.key : null;
+  const presentation =
+    active && currentStep
+      ? resolvePresentation(currentStep, route, hole ? 'visible' : anchorInfo.state)
+      : null;
+  const collapsed = currentStep !== null && collapsedKey === currentStep.key;
+  // A native-driven fade only reaches a view that is mounted while it runs,
+  // so it must restart whenever the mounted element changes.
+  const visibleKey = showReplayHint
+    ? 'replay'
+    : presentation && presentation !== 'hidden' && currentStep
+      ? `${currentStep.key}:${presentation}:${collapsed}`
+      : null;
   useEffect(() => {
     if (!visibleKey) return;
     if (reduceMotion) {
@@ -161,11 +235,14 @@ export const TutorialOverlay: React.FC = () => {
 
   const handleCardLayout = (event: LayoutChangeEvent): void => {
     const { width: cardWidth, height: cardHeight } = event.nativeEvent.layout;
-    setCardSize(previous =>
-      previous && previous.width === cardWidth && previous.height === cardHeight
-        ? previous
-        : { width: cardWidth, height: cardHeight }
-    );
+    const next = { width: cardWidth, height: cardHeight };
+    setCardSize(previous => (sameSize(previous, next) ? previous : next));
+  };
+
+  const handleChipLayout = (event: LayoutChangeEvent): void => {
+    const { width: chipWidth, height: chipHeight } = event.nativeEvent.layout;
+    const next = { width: chipWidth, height: chipHeight };
+    setChipSize(previous => (sameSize(previous, next) ? previous : next));
   };
 
   if (showReplayHint) {
@@ -220,6 +297,8 @@ export const TutorialOverlay: React.FC = () => {
     );
   }
 
+  if (!presentation || presentation === 'hidden') return null;
+
   const isInfo = currentStep.kind === 'info';
   const dismissLabel = isInfo ? t('tutorial.common.gotIt') : t('tutorial.common.skipStep');
   const dismiss = (): void => {
@@ -227,8 +306,16 @@ export const TutorialOverlay: React.FC = () => {
     else store.skipStep(stepKey);
   };
   const showMeRoute = currentStep.showMeRoute;
+  const onScreen = anchorInfo.state === 'offscreen';
+  const reveal = anchorInfo.reveal;
   const showMe =
-    showMeRoute && accountType ? () => navigateToRoute(showMeRoute, accountType) : undefined;
+    onScreen && reveal
+      ? reveal
+      : showMeRoute && accountType
+        ? () => {
+            void openRoute(showMeRoute, accountType, userId);
+          }
+        : undefined;
 
   if (!hole) {
     return (
@@ -240,6 +327,7 @@ export const TutorialOverlay: React.FC = () => {
           pointerEvents="box-none">
           <TutorialCard
             title={title}
+            body={onScreen ? body : undefined}
             stepLabel={stepLabel}
             primaryLabel={showMe ? t('tutorial.common.showMe') : dismissLabel}
             onPrimary={showMe ?? dismiss}
@@ -256,44 +344,63 @@ export const TutorialOverlay: React.FC = () => {
 
   const viewport = { width, height };
   const padded = padRect(hole, HOLE_PADDING, viewport);
-  const placement = placeCard(
+  const placementOptions = {
+    gap: CARD_GAP,
+    margin: CARD_MARGIN,
+    insets: { top: insets.top, bottom: insets.bottom + TAB_BAR_HEIGHT },
+  };
+  const cardPlacement = placeCard(
     padded,
     { width: cardWidth, height: cardSize?.height ?? CARD_FALLBACK_HEIGHT },
     viewport,
-    {
-      gap: CARD_GAP,
-      margin: CARD_MARGIN,
-      insets: { top: insets.top, bottom: insets.bottom + TAB_BAR_HEIGHT },
-    }
-  );
-  // A hint must leave the form usable: below the anchor when it fits, else at the top.
-  const cardTop =
-    currentStep.mode === 'hint' && placement.side !== 'below'
-      ? insets.top + CARD_MARGIN
-      : placement.top;
-  const card = (
-    <TutorialCard
-      title={title}
-      body={body}
-      stepLabel={stepLabel}
-      primaryLabel={isInfo ? dismissLabel : undefined}
-      onPrimary={isInfo ? dismiss : undefined}
-      secondaryLabel={isInfo ? undefined : dismissLabel}
-      onSecondary={isInfo ? undefined : dismiss}
-      tertiaryLabel={skipAllLabel}
-      onTertiary={() => store.skipAll()}
-      maxBodyHeight={maxBodyHeight}
-      onLayout={handleCardLayout}
-      style={[styles.placedCard, { top: cardTop, left: placement.left, width: cardWidth }]}
-    />
+    placementOptions
   );
 
-  if (currentStep.mode === 'hint') {
+  if (presentation === 'hint') {
+    if (keyboardVisible) return null;
+    if (collapsed) {
+      const chipPlacement = placeCard(
+        padded,
+        chipSize ?? CHIP_FALLBACK_SIZE,
+        viewport,
+        placementOptions
+      );
+      return (
+        <Animated.View
+          style={[StyleSheet.absoluteFill, styles.root, { opacity }]}
+          pointerEvents="box-none">
+          <TutorialChip
+            label={t('tutorial.common.chip', { n: position.n, total: position.total })}
+            accessibilityLabel={[stepLabel, title].filter(Boolean).join('. ')}
+            accessibilityHint={t('tutorial.common.expand')}
+            onPress={() => setCollapsedKey(null)}
+            onLayout={handleChipLayout}
+            style={[styles.chip, { top: chipPlacement.top }]}
+          />
+        </Animated.View>
+      );
+    }
     return (
       <Animated.View
         style={[StyleSheet.absoluteFill, styles.root, { opacity }]}
         pointerEvents="box-none">
-        {card}
+        <TutorialCard
+          title={title}
+          body={body}
+          stepLabel={stepLabel}
+          primaryLabel={t('tutorial.common.gotIt')}
+          onPrimary={() => setCollapsedKey(stepKey)}
+          secondaryLabel={dismissLabel}
+          onSecondary={dismiss}
+          tertiaryLabel={skipAllLabel}
+          onTertiary={() => store.skipAll()}
+          maxBodyHeight={maxBodyHeight}
+          onLayout={handleCardLayout}
+          style={[
+            styles.placedCard,
+            { top: cardPlacement.top, left: cardPlacement.left, width: cardWidth },
+          ]}
+        />
       </Animated.View>
     );
   }
@@ -333,7 +440,23 @@ export const TutorialOverlay: React.FC = () => {
           { top: padded.y, left: padded.x, width: padded.width, height: padded.height },
         ]}
       />
-      {card}
+      <TutorialCard
+        title={title}
+        body={body}
+        stepLabel={stepLabel}
+        primaryLabel={isInfo ? dismissLabel : undefined}
+        onPrimary={isInfo ? dismiss : undefined}
+        secondaryLabel={isInfo ? undefined : dismissLabel}
+        onSecondary={isInfo ? undefined : dismiss}
+        tertiaryLabel={skipAllLabel}
+        onTertiary={() => store.skipAll()}
+        maxBodyHeight={maxBodyHeight}
+        onLayout={handleCardLayout}
+        style={[
+          styles.placedCard,
+          { top: cardPlacement.top, left: cardPlacement.left, width: cardWidth },
+        ]}
+      />
     </Animated.View>
   );
 };
@@ -365,6 +488,10 @@ const styles = StyleSheet.create({
   },
   placedCard: {
     position: 'absolute',
+  },
+  chip: {
+    position: 'absolute',
+    right: CARD_MARGIN,
   },
   dock: {
     position: 'absolute',

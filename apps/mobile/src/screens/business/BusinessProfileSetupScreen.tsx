@@ -787,7 +787,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
       <View style={styles.footer}>
         <TutorialAnchor
-          tutorialKey="business.wizardFooter"
+          tutorialKey={currentStep === 2 ? 'branches.add' : 'business.wizardFooter'}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />

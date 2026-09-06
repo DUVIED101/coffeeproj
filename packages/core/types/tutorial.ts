@@ -53,7 +53,6 @@ export type TutorialAnchorKey =
   | 'feed.filters'
   | 'feed.firstJob'
   | 'job.apply'
-  | 'apply.submit'
   | 'business.createCta'
   | 'business.wizardFooter'
   | 'branches.add'
@@ -63,8 +62,7 @@ export type TutorialAnchorKey =
   | 'createJob.save'
   | 'baristas.filters'
   | 'baristas.firstCard'
-  | 'barista.offer'
-  | 'offer.jobs';
+  | 'barista.offer';
 
 export type BaristaTutorialStepKey =
   | 'welcome'
@@ -74,7 +72,6 @@ export type BaristaTutorialStepKey =
   | 'jobs.filters'
   | 'jobs.open'
   | 'jobs.apply'
-  | 'jobs.send'
   | 'applications.tab'
   | 'chats.tab'
   | 'notifications.bell'
@@ -93,7 +90,6 @@ export type BusinessTutorialStepKey =
   | 'baristas.filters'
   | 'baristas.open'
   | 'baristas.offer'
-  | 'baristas.offer.send'
   | 'applicants'
   | 'chats.tab'
   | 'notifications.bell'

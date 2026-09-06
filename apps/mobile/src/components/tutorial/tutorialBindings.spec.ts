@@ -91,6 +91,19 @@ describe('navigateToRoute', () => {
     expect(mockNavigateTab).toHaveBeenCalledWith('Jobs', { screen: 'JobFeed' });
   });
 
+  it('opens branch management for the given business', () => {
+    navigateToRoute('branches', 'business', { businessId: 'biz-1' });
+    expect(mockNavigateTab).toHaveBeenCalledWith('Profile', {
+      screen: 'BranchManagement',
+      params: { businessId: 'biz-1' },
+    });
+  });
+
+  it('falls back to the profile root when there is no business yet', () => {
+    navigateToRoute('branches', 'business');
+    expect(mockNavigateTab).toHaveBeenCalledWith('Profile', { screen: 'BusinessProfileHome' });
+  });
+
   it('ignores routes without a home', () => {
     navigateToRoute('other', 'barista');
     expect(mockNavigateTab).not.toHaveBeenCalled();

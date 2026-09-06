@@ -12,6 +12,21 @@ import type {
 } from '../types/tutorial';
 import { TUTORIAL_VERSION } from './steps';
 
+export type TutorialPresentation = 'card' | 'spotlight' | 'hint' | 'docked' | 'hidden';
+// visible: measured inside the viewport; offscreen: mounted on the focused
+// screen but scrolled out of view; absent: not on this screen at all.
+export type TutorialAnchorState = 'visible' | 'offscreen' | 'absent';
+
+// Form screens: the tour must not dim them or dock a card over their footer,
+// so only a hint anchored on that very screen is shown there.
+const QUIET_ROUTES: ReadonlySet<TutorialRouteKey> = new Set<TutorialRouteKey>([
+  'profileSetup',
+  'apply',
+  'createJob',
+  'offerJob',
+  'branches',
+]);
+
 export type TutorialStepContext = {
   facts: TutorialFacts | null;
   route: TutorialRouteKey | null;
@@ -71,6 +86,22 @@ export const isStepSatisfied = (step: TutorialStep, context: TutorialStepContext
   if (condition.route && context.route && condition.route.includes(context.route)) return true;
   if (condition.anchorVisible && context.visibleAnchors.has(condition.anchorVisible)) return true;
   return false;
+};
+
+export const resolvePresentation = (
+  step: TutorialStep,
+  route: TutorialRouteKey | null,
+  anchor: TutorialAnchorState
+): TutorialPresentation => {
+  if (step.mode === 'card') return 'card';
+  const quiet = route !== null && QUIET_ROUTES.has(route);
+  if (step.mode === 'hint') {
+    if (anchor === 'visible') return 'hint';
+    if (anchor === 'offscreen') return 'docked';
+    return quiet ? 'hidden' : 'docked';
+  }
+  if (quiet) return 'hidden';
+  return anchor === 'visible' ? 'spotlight' : 'docked';
 };
 
 export const markStep = (

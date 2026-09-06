@@ -516,7 +516,8 @@
     "respondFailure": "Failed to send your response",
     "jobUnavailable": "The vacancy is no longer available",
     "alreadyResolved": "This offer has already been resolved",
-    "acceptedToast": "Great! Opening the chat with the employer.",
+    "acceptedTitle": "Response sent",
+    "acceptedToast": "Wait for the venue to reply. The chat will appear in Messages once they write to you.",
     "declinedToast": "Offer declined",
     "statusBanner": {
       "accepted": "You accepted this offer",
@@ -1723,7 +1724,9 @@
       "skipStep": "Skip step",
       "skipAll": "Skip tutorial",
       "showMe": "Show me",
-      "stepOf": "Step {{n}} of {{total}}"
+      "stepOf": "Step {{n}} of {{total}}",
+      "chip": "{{n}}/{{total}}",
+      "expand": "Show details"
     },
     "welcome": {
       "barista": {
@@ -1769,12 +1772,8 @@
           "body": "Tap a card to see the details. If the feed is empty, skip this step."
         },
         "jobsApply": {
-          "title": "Apply",
-          "body": "The button at the bottom sends your application. If your profile is under 20%, complete it first."
-        },
-        "jobsSend": {
-          "title": "Send the application",
-          "body": "A cover letter is optional but improves your chances. Tap \"Send application\"."
+          "title": "Applying to a job",
+          "body": "This is the apply button: tap it, add a few words and send. You don't have to apply right now — tap \"Got it\". Applying needs a profile that is at least 20% complete."
         },
         "applicationsTab": {
           "title": "Applications",
@@ -1835,12 +1834,8 @@
           "body": "Tap a card to see experience and reviews."
         },
         "baristasOffer": {
-          "title": "Message a barista",
-          "body": "Direct contact goes through a job offer: pick a job and add a message. The chat opens once the barista accepts. The button is active when you have an open job."
-        },
-        "baristasOfferSend": {
-          "title": "Send the offer",
-          "body": "Pick a job, write a few words (up to 280 characters) and send."
+          "title": "Invite a barista",
+          "body": "Invite a barista with a job offer: tap the button, pick a job and add a message. The chat opens once the barista accepts. You don't have to send one now — tap \"Got it\". The button is there while you have an open job."
         },
         "applicants": {
           "title": "Applicants",

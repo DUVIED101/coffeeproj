@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -89,6 +89,7 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
   const { baristaId } = route.params;
   const currentUser = useAuthStore(state => state.user);
   const { t, i18n } = useTranslation();
+  const scrollRef = useRef<ScrollView>(null);
 
   const [profile, setProfile] = useState<BaristaProfile | null>(null);
   const [aggregate, setAggregate] = useState<UserReviewAggregate | null>(null);
@@ -203,6 +204,7 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
+        ref={scrollRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -508,6 +510,7 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
               activeOpacity={0.7}>
               <TutorialAnchor
                 tutorialKey="barista.offer"
+                scrollRef={scrollRef}
                 style={StyleSheet.absoluteFill}
                 pointerEvents="none"
               />

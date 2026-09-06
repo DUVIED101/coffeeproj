@@ -11,6 +11,8 @@ export type AnchorEntry = {
   // outside any screen, e.g. the tab bar.
   routeKey: string | null;
   measure: AnchorMeasure;
+  // Scrolls the anchor into view when it lives inside a scroll container.
+  reveal?: () => void;
 };
 
 type TutorialAnchorState = {

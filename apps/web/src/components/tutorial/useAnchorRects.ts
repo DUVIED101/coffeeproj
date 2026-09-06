@@ -25,24 +25,35 @@ const inViewport = (box: DOMRect): boolean =>
 // element that is laid out (display:none elements have no rects) and on
 // screen. An element that exists only below the fold is scrolled into view
 // once per key, so a form's save button can host a hint.
+type AnchorLookup = { rect: Rect | null; present: boolean };
+
 const findVisibleRect = (
   key: TutorialAnchorKey,
   scrolledKeys: Set<TutorialAnchorKey>,
-): Rect | null => {
+): AnchorLookup => {
   const nodes = document.querySelectorAll<HTMLElement>(`[data-tour="${key}"]`);
   let offscreen: HTMLElement | null = null;
   for (const node of nodes) {
     if (node.getClientRects().length === 0) continue;
     const box = node.getBoundingClientRect();
     if (box.width <= 0 || box.height <= 0) continue;
-    if (inViewport(box)) return toRect(box);
+    if (inViewport(box)) return { rect: toRect(box), present: true };
     offscreen = offscreen ?? node;
   }
   if (offscreen && !scrolledKeys.has(key)) {
     scrolledKeys.add(key);
     offscreen.scrollIntoView({ block: "center", behavior: "smooth" });
   }
-  return null;
+  return { rect: null, present: offscreen !== null };
+};
+
+export const scrollAnchorIntoView = (key: TutorialAnchorKey): boolean => {
+  const node = [
+    ...document.querySelectorAll<HTMLElement>(`[data-tour="${key}"]`),
+  ].find((el) => el.getClientRects().length > 0);
+  if (!node) return false;
+  node.scrollIntoView({ block: "center", behavior: "smooth" });
+  return true;
 };
 
 const sameRects = (a: AnchorRects, b: AnchorRects): boolean => {
@@ -62,28 +73,43 @@ const sameRects = (a: AnchorRects, b: AnchorRects): boolean => {
   });
 };
 
+export type AnchorSnapshot = {
+  rects: AnchorRects;
+  // Keys that have a laid-out element on the page, in view or not.
+  present: readonly TutorialAnchorKey[];
+};
+
+const EMPTY_SNAPSHOT: AnchorSnapshot = { rects: {}, present: [] };
+
 export function useAnchorRects(
   keys: readonly TutorialAnchorKey[],
   enabled: boolean,
-): AnchorRects {
-  const [rects, setRects] = useState<AnchorRects>({});
+): AnchorSnapshot {
+  const [snapshot, setSnapshot] = useState<AnchorSnapshot>(EMPTY_SNAPSHOT);
   const signature = keys.join("|");
 
   useEffect(() => {
     if (!enabled || signature === "") {
-      setRects({});
+      setSnapshot(EMPTY_SNAPSHOT);
       return undefined;
     }
     const wanted = signature.split("|") as TutorialAnchorKey[];
     const scrolledKeys = new Set<TutorialAnchorKey>();
     let frame = 0;
     const measure = (): void => {
-      const next: AnchorRects = {};
+      const rects: AnchorRects = {};
+      const present: TutorialAnchorKey[] = [];
       for (const key of wanted) {
-        const rect = findVisibleRect(key, scrolledKeys);
-        if (rect) next[key] = rect;
+        const found = findVisibleRect(key, scrolledKeys);
+        if (found.rect) rects[key] = found.rect;
+        if (found.present) present.push(key);
       }
-      setRects((previous) => (sameRects(previous, next) ? previous : next));
+      setSnapshot((previous) =>
+        sameRects(previous.rects, rects) &&
+        previous.present.join("|") === present.join("|")
+          ? previous
+          : { rects, present },
+      );
     };
     const schedule = (): void => {
       if (frame) return;
@@ -117,5 +143,5 @@ export function useAnchorRects(
     };
   }, [enabled, signature]);
 
-  return rects;
+  return snapshot;
 }

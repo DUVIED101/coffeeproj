@@ -214,7 +214,7 @@ describe('tutorialStore finishing', () => {
       null,
     ]);
     const patch = mockSaveProgress.mock.calls[0][2] as Record<string, unknown>;
-    expect(Object.keys(patch.steps as object)).toHaveLength(12);
+    expect(Object.keys(patch.steps as object)).toHaveLength(11);
     expect(patch.skippedAllAt).toEqual(expect.any(String));
     expect(patch.completedAt).toEqual(expect.any(String));
   });

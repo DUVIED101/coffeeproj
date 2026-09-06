@@ -118,6 +118,7 @@ const sanitizePercentInput = (input: string): string => {
 
 export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
   const { t } = useTranslation();
+  const scrollRef = useRef<ScrollView>(null);
   const user = useAuthStore(s => s.user);
 
   const editJobId =
@@ -682,7 +683,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.content}>
+      <ScrollView ref={scrollRef} style={styles.content}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('createJob.sections.jobType')}</Text>
           <View style={styles.segmentedControl}>
@@ -1378,6 +1379,7 @@ export const CreateJobScreen: React.FC<Props> = ({ navigation, route }) => {
           disabled={isSaving}>
           <TutorialAnchor
             tutorialKey="createJob.save"
+            scrollRef={scrollRef}
             style={StyleSheet.absoluteFill}
             pointerEvents="none"
           />

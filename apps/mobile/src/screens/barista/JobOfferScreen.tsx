@@ -79,15 +79,13 @@ export const JobOfferScreen: React.FC<Props> = ({ navigation, route }) => {
     try {
       const result = await JobOfferService.respondToOffer(offer.id, 'accepted');
       if (result.status === 'accepted') {
-        Alert.alert(t('common.success'), t('jobOffer.acceptedToast'), [
+        // The venue writes first, so the chat stays closed for the barista until then.
+        Alert.alert(t('jobOffer.acceptedTitle'), t('jobOffer.acceptedToast'), [
           {
             text: t('common.ok'),
             onPress: () => {
-              navigation.getParent()?.navigate('Chats', {
-                screen: 'Chat',
-                initial: false,
-                params: { applicationId: result.applicationId },
-              });
+              if (navigation.canGoBack()) navigation.goBack();
+              else navigation.getParent()?.navigate('Applications');
             },
           },
         ]);
