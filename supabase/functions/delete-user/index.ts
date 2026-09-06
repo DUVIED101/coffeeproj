@@ -31,7 +31,7 @@ const APPLE_JWKS = createRemoteJWKSet(
 const CORS_HEADERS: Record<string, string> = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "POST, OPTIONS",
-  "access-control-allow-headers": "authorization, content-type",
+  "access-control-allow-headers": "authorization, x-client-info, apikey, content-type",
 };
 
 function jsonResponse(status: number, body: Record<string, unknown>): Response {
