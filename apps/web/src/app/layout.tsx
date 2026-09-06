@@ -14,10 +14,8 @@ export const metadata: Metadata = {
     "Биржа смен для бариста и кофеен: находите смены рядом, публикуйте вакансии, договаривайтесь в чате.",
   metadataBase: new URL("https://app.bystrobarista.com"),
   manifest: "/manifest.webmanifest",
-  icons: {
-    icon: "/icons/icon-192.png",
-    apple: "/icons/apple-touch-icon.png",
-  },
+  // Favicon and Apple touch icon come from app/icon.png and app/apple-icon.png
+  // (Next file conventions); the PWA icons live in the manifest.
   // iOS Safari only offers Web Push to Home Screen installs (16.4+).
   appleWebApp: {
     capable: true,

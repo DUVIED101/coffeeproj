@@ -28,8 +28,13 @@ export default function PasswordResetPage(): React.JSX.Element {
     try {
       await AuthService.resetPassword(email.trim());
       setStep("confirm");
-    } catch {
-      setError(t("auth.passwordReset.errorTitle"));
+    } catch (err) {
+      const message = err instanceof Error ? err.message.toLowerCase() : "";
+      setError(
+        message.includes("rate limit")
+          ? t("auth.login.tooManyAttemptsBody")
+          : t("auth.passwordReset.errorTitle"),
+      );
     } finally {
       setSubmitting(false);
     }

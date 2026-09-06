@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -20,6 +20,7 @@ import { ReviewService } from "@bystrobarista/core/services/ReviewService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import type { SocialLink } from "@bystrobarista/core/types/business";
 import type { UserId } from "@bystrobarista/core/types/ids";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { transformedImageUrl } from "@/lib/imageTransform";
 import { safeExternalUrl } from "@/lib/safeUrl";
 import { MdiIcon } from "@/components/MdiIcon";
@@ -166,17 +167,30 @@ export function BusinessProfileView(): React.JSX.Element {
   const reliability = reliabilityQuery.data;
   const branchCount = branchesQuery.data?.length ?? 0;
   const hasBrand = Boolean(business.website) || business.socialLinks.length > 0;
+  const [logoOpen, setLogoOpen] = useState(false);
 
   return (
     <>
+      {logoOpen && business.logoUrl && (
+        <ImageLightbox
+          photos={[business.logoUrl]}
+          onClose={() => setLogoOpen(false)}
+        />
+      )}
       <div className="rounded-card border border-line bg-white p-4">
         <div className="flex items-center gap-4">
           {business.logoUrl ? (
-            <img
-              src={transformedImageUrl(business.logoUrl, 144)}
-              alt=""
-              className="h-18 w-18 h-[72px] w-[72px] rounded-full object-cover"
-            />
+            <button
+              type="button"
+              onClick={() => setLogoOpen(true)}
+              className="shrink-0 rounded-full"
+            >
+              <img
+                src={transformedImageUrl(business.logoUrl, 144)}
+                alt=""
+                className="h-[72px] w-[72px] rounded-full object-cover"
+              />
+            </button>
           ) : (
             <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-bg-secondary">
               <MdiIcon

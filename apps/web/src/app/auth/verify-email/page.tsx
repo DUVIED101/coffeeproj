@@ -48,8 +48,13 @@ function VerifyEmailForm(): React.JSX.Element {
     try {
       await AuthService.resendSignupOtp(email);
       setNotice(t("auth.verify.codeResentBody"));
-    } catch {
-      setError(t("auth.verify.failedTitle"));
+    } catch (err) {
+      const message = err instanceof Error ? err.message.toLowerCase() : "";
+      setError(
+        message.includes("rate limit")
+          ? t("auth.login.tooManyAttemptsBody")
+          : t("auth.verify.failedTitle"),
+      );
     } finally {
       setResending(false);
     }

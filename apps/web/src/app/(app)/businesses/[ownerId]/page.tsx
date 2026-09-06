@@ -4,13 +4,14 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { BusinessService } from "@bystrobarista/core/services/BusinessService";
 import { ReviewService } from "@bystrobarista/core/services/ReviewService";
 import type { UserId } from "@bystrobarista/core/types/ids";
 import { StarRow } from "@/components/StarRow";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { transformedImageUrl } from "@/lib/imageTransform";
 import { safeExternalUrl } from "@/lib/safeUrl";
 
@@ -64,16 +65,28 @@ export default function BusinessPublicProfilePage(): React.JSX.Element {
   const aggregate = aggregateQuery.data;
   const reliability = reliabilityQuery.data;
   const branches = branchesQuery.data ?? [];
+  const [lightbox, setLightbox] = useState<{
+    photos: string[];
+    index: number;
+  } | null>(null);
 
   return (
     <div className="mx-auto max-w-2xl">
       <div className="flex flex-col items-center text-center">
         {business.logoUrl ? (
-          <img
-            src={transformedImageUrl(business.logoUrl, 72)}
-            alt=""
-            className="h-[72px] w-[72px] rounded-full bg-bg-secondary object-cover"
-          />
+          <button
+            type="button"
+            onClick={() =>
+              setLightbox({ photos: [business.logoUrl as string], index: 0 })
+            }
+            className="rounded-full"
+          >
+            <img
+              src={transformedImageUrl(business.logoUrl, 72)}
+              alt=""
+              className="h-[72px] w-[72px] rounded-full bg-bg-secondary object-cover"
+            />
+          </button>
         ) : (
           <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-bg-secondary text-3xl">
             🏪
@@ -160,10 +173,37 @@ export default function BusinessPublicProfilePage(): React.JSX.Element {
                     Ⓜ {branch.metroStation}
                   </p>
                 )}
+                {branch.photos.length > 0 && (
+                  <div className="mt-2 grid grid-cols-4 gap-1.5 sm:grid-cols-6">
+                    {branch.photos.map((url, i) => (
+                      <button
+                        key={url}
+                        type="button"
+                        onClick={() =>
+                          setLightbox({ photos: branch.photos, index: i })
+                        }
+                        className="aspect-square"
+                      >
+                        <img
+                          src={transformedImageUrl(url, 160)}
+                          alt=""
+                          className="h-full w-full rounded-input object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </section>
+      )}
+      {lightbox && (
+        <ImageLightbox
+          photos={lightbox.photos}
+          initialIndex={lightbox.index}
+          onClose={() => setLightbox(null)}
+        />
       )}
     </div>
   );

@@ -14,7 +14,12 @@ export default function LegalLayout({
     <div className="min-h-screen bg-white">
       <header className="border-b border-line">
         <div className="mx-auto flex max-w-2xl items-center px-4 py-4">
-          <Link href="/" className="text-lg font-bold text-primary">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-lg font-bold text-primary"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="" className="h-7 w-7 rounded-full" />
             БыстроБариста
           </Link>
         </div>

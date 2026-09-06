@@ -38,6 +38,7 @@ import type {
   NotificationKind,
 } from "@bystrobarista/core/types/notification";
 import { MdiIcon } from "@/components/MdiIcon";
+import { PushEnableCard } from "@/components/PushEnableCard";
 import { notificationHref } from "@/lib/notificationRoute";
 import { useNotificationFeedStore } from "@/stores/notificationFeedStore";
 
@@ -244,6 +245,8 @@ export default function NotificationsPage(): React.JSX.Element {
           )}
         </div>
       </div>
+
+      {userId && <PushEnableCard userId={userId} />}
 
       <div className="mb-4 flex gap-2">
         <button

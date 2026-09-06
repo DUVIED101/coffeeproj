@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { JobFilters } from "@bystrobarista/core/types/job";
 import type { GeoPoint } from "@bystrobarista/core/types/business";
@@ -33,6 +33,7 @@ export function FilterBar({
   onChange,
 }: Props): React.JSX.Element {
   const { t, i18n } = useTranslation();
+  const dateInputRef = useRef<HTMLInputElement>(null);
   const locale = i18n.language === "ru" ? "ru-RU" : "en-US";
   const [metroOpen, setMetroOpen] = useState(false);
   const [metroSelection, setMetroSelection] = useState<string[]>([]);
@@ -104,24 +105,40 @@ export function FilterBar({
           </button>
         ))}
 
-      <label
-        className={`${chip(Boolean(filters.startDateMinimum))} cursor-pointer`}
+      {/* A label around a visually-hidden date input only focuses it — Chrome
+          never opens the calendar that way. Drive the picker explicitly. */}
+      <button
+        type="button"
+        onClick={() => {
+          const el = dateInputRef.current;
+          if (!el) return;
+          try {
+            el.showPicker();
+          } catch {
+            el.focus();
+            el.click();
+          }
+        }}
+        className={chip(Boolean(filters.startDateMinimum))}
       >
         {filters.startDateMinimum
           ? new Date(filters.startDateMinimum).toLocaleDateString(locale)
           : t("filters.fromDate")}
-        <input
-          type="date"
-          className="sr-only"
-          value={filters.startDateMinimum ?? ""}
-          onChange={(e) =>
-            onChange({
-              ...filters,
-              startDateMinimum: e.target.value || undefined,
-            })
-          }
-        />
-      </label>
+      </button>
+      <input
+        ref={dateInputRef}
+        type="date"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="sr-only"
+        value={filters.startDateMinimum ?? ""}
+        onChange={(e) =>
+          onChange({
+            ...filters,
+            startDateMinimum: e.target.value || undefined,
+          })
+        }
+      />
 
       {(filters.jobType ||
         filters.metroStations?.length ||

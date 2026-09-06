@@ -31,6 +31,7 @@ import {
   SHORT_TEXT_MAX_LENGTH,
 } from "@bystrobarista/core/utils/validation";
 import { geocodeAddress } from "@/lib/geocode";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { transformedImageUrl } from "@/lib/imageTransform";
 
 const GEOCODE_DEBOUNCE_MS = 1500;
@@ -72,6 +73,10 @@ const emptyForm = (): FormState => ({
 // while the branch has open jobs (BranchHasActiveJobsError).
 export default function BranchesPage(): React.JSX.Element {
   const { t, i18n } = useTranslation();
+  const [lightbox, setLightbox] = useState<{
+    photos: string[];
+    index: number;
+  } | null>(null);
   void i18n;
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
@@ -579,13 +584,21 @@ export default function BranchesPage(): React.JSX.Element {
               <div className="mt-3">
                 {branch.photos.length > 0 && (
                   <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                    {branch.photos.map((url) => (
+                    {branch.photos.map((url, i) => (
                       <div key={url} className="relative aspect-square">
-                        <img
-                          src={transformedImageUrl(url, 240)}
-                          alt=""
-                          className="h-full w-full rounded-input object-cover"
-                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setLightbox({ photos: branch.photos, index: i })
+                          }
+                          className="block h-full w-full"
+                        >
+                          <img
+                            src={transformedImageUrl(url, 240)}
+                            alt=""
+                            className="h-full w-full rounded-input object-cover"
+                          />
+                        </button>
                         <button
                           type="button"
                           onClick={() => void handleRemovePhoto(branch, url)}
@@ -623,6 +636,13 @@ export default function BranchesPage(): React.JSX.Element {
             </div>
           ))}
         </>
+      )}
+      {lightbox && (
+        <ImageLightbox
+          photos={lightbox.photos}
+          initialIndex={lightbox.index}
+          onClose={() => setLightbox(null)}
+        />
       )}
     </div>
   );

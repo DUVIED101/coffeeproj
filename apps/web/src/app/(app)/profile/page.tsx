@@ -3,6 +3,8 @@
 import Link from "next/link";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { MdiIcon } from "@/components/MdiIcon";
+import { mdiCameraOutline, mdiPencilOutline } from "@mdi/js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BaristaProfileService } from "@bystrobarista/core/services/BaristaProfileService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
@@ -189,21 +191,23 @@ export default function ProfilePage(): React.JSX.Element {
                 type="button"
                 onClick={handleAvatarUpload}
                 disabled={avatarUploading}
-                className="rounded-input border border-line px-3 py-1.5 text-sm font-medium disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-input border border-line px-3 py-1.5 text-sm font-medium disabled:opacity-50"
               >
+                <MdiIcon path={mdiCameraOutline} size={16} />
                 {avatarUploading
                   ? t("baristaProfileScreen.uploading")
                   : t(
                       profile.avatarUrl
-                        ? "baristaProfileScreen.changePhoto"
+                        ? "baristaProfileScreen.changePhotoLong"
                         : "baristaProfileScreen.addPhoto",
                     )}
               </button>
               <Link
                 href="/profile/edit"
-                className="rounded-input bg-primary px-3 py-1.5 text-sm font-medium text-white"
+                className="inline-flex items-center gap-1.5 rounded-input bg-primary px-3 py-1.5 text-sm font-medium text-white"
               >
-                {t("baristaProfileScreen.edit")}
+                <MdiIcon path={mdiPencilOutline} size={16} />
+                {t("baristaProfileScreen.editProfileLong")}
               </Link>
               <Link
                 href="/shifts"

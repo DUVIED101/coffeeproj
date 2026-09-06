@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { MobileTabBar } from "@/components/AppNav";
 import { ChatUnreadWatcher } from "@/components/ChatUnreadWatcher";
 import { NotificationFeedWatcher } from "@/components/NotificationFeedWatcher";
+import { NotificationToastHost } from "@/components/NotificationToastHost";
 import { PushSetup } from "@/components/PushSetup";
 import { QueryProvider } from "@/components/QueryProvider";
 import { TutorialOverlay } from "@/components/tutorial/TutorialOverlay";
@@ -25,6 +26,7 @@ export default function AppLayout({
         {children}
       </main>
       <MobileTabBar />
+      <NotificationToastHost />
       <WhatsNewDialog />
       <TutorialOverlay />
     </QueryProvider>

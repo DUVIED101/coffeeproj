@@ -62,7 +62,12 @@ export function AppHeader(): React.JSX.Element {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-white">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="text-lg font-bold text-primary">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-lg font-bold text-primary"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="" className="h-7 w-7 rounded-full" />
           БыстроБариста
         </Link>
         <DesktopNav />

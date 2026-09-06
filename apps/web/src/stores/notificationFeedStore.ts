@@ -13,6 +13,9 @@ type NotificationFeedState = {
   unreadCount: number;
   isLoading: boolean;
   channel: RealtimeChannel | null;
+  // Most recent realtime insert — NotificationToastHost turns it into an
+  // in-app banner while the tab is visible (push covers the hidden case).
+  lastIncoming: Notification | null;
   load: (userId: UserId) => Promise<void>;
   refreshUnreadCount: (userId: UserId) => Promise<void>;
   markAsRead: (notificationId: NotificationId) => Promise<void>;
@@ -33,6 +36,7 @@ export const useNotificationFeedStore = create<NotificationFeedState>(
     unreadCount: 0,
     isLoading: false,
     channel: null,
+    lastIncoming: null,
 
     load: async (userId) => {
       set({ isLoading: true });
@@ -143,6 +147,7 @@ export const useNotificationFeedStore = create<NotificationFeedState>(
           return {
             notifications: [incoming, ...state.notifications],
             unreadCount: state.unreadCount + (incoming.readAt ? 0 : 1),
+            lastIncoming: incoming,
           };
         });
       });
@@ -167,6 +172,7 @@ export const useNotificationFeedStore = create<NotificationFeedState>(
         unreadCount: 0,
         isLoading: false,
         channel: null,
+        lastIncoming: null,
       });
     },
   }),

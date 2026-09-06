@@ -102,6 +102,8 @@ export default function SignupPage(): React.JSX.Element {
       const message = err instanceof Error ? err.message : "";
       if (message === "email_already_registered") {
         setError(t("auth.signup.errorEmailTaken"));
+      } else if (message.startsWith("Too many")) {
+        setError(t("auth.login.tooManyAttemptsBody"));
       } else if (message.toLowerCase().includes("email")) {
         setError(t("auth.signup.errorInvalidEmail"));
       } else {

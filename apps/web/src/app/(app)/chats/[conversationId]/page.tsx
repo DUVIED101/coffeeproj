@@ -109,14 +109,17 @@ export default function ChatConversationPage(): React.JSX.Element {
     let cancelled = false;
     void (async () => {
       try {
-        const loaded = await ChatService.getConversationById(conversationId);
+        // Both queries only need the route id — one round trip instead of
+        // two through the RU proxy, which is what makes a fresh chat feel slow.
+        const [loaded, loadedMessages] = await Promise.all([
+          ChatService.getConversationById(conversationId),
+          ChatService.getMessages(conversationId),
+        ]);
         if (cancelled) return;
         if (!loaded) {
           setLoadState("error");
           return;
         }
-        const loadedMessages = await ChatService.getMessages(loaded.id);
-        if (cancelled) return;
         setConversation(loaded);
         setMessages([...loadedMessages].reverse());
         setLoadState("ready");

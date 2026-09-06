@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { BaristaProfileService } from "@bystrobarista/core/services/BaristaProfileService";
@@ -22,6 +22,7 @@ import {
 import { computeMedicalBookStatus } from "@bystrobarista/core/utils/medicalBook";
 import { ReportButton } from "@/components/ReportButton";
 import { StarRow } from "@/components/StarRow";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { transformedImageUrl } from "@/lib/imageTransform";
 import { formatDateOnly } from "@/lib/dates";
 
@@ -72,6 +73,10 @@ export default function ViewBaristaProfilePage(): React.JSX.Element {
   });
 
   const isBusiness = currentUser?.accountType === "business";
+  const [lightbox, setLightbox] = useState<{
+    photos: string[];
+    index: number;
+  } | null>(null);
 
   const openJobsQuery = useQuery({
     queryKey: ["jobs", "byOwnerOpen", currentUser?.id],
@@ -402,12 +407,13 @@ export default function ViewBaristaProfilePage(): React.JSX.Element {
         <div className="mt-4 rounded-card border border-line bg-white p-4">
           <h2 className={sectionTitle}>{t("viewBarista.portfolio")}</h2>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-            {profile.portfolioPhotos.map((url) => (
-              <a
+            {profile.portfolioPhotos.map((url, i) => (
+              <button
                 key={url}
-                href={transformedImageUrl(url, 1200)}
-                target="_blank"
-                rel="noopener noreferrer"
+                type="button"
+                onClick={() =>
+                  setLightbox({ photos: profile.portfolioPhotos, index: i })
+                }
                 className="aspect-square"
               >
                 <img
@@ -415,7 +421,7 @@ export default function ViewBaristaProfilePage(): React.JSX.Element {
                   alt=""
                   className="h-full w-full rounded-input object-cover"
                 />
-              </a>
+              </button>
             ))}
           </div>
         </div>
@@ -446,6 +452,13 @@ export default function ViewBaristaProfilePage(): React.JSX.Element {
             </>
           )}
         </div>
+      )}
+      {lightbox && (
+        <ImageLightbox
+          photos={lightbox.photos}
+          initialIndex={lightbox.index}
+          onClose={() => setLightbox(null)}
+        />
       )}
     </div>
   );

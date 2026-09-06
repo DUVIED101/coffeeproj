@@ -447,7 +447,9 @@
     "errorRemovePhoto": "Не удалось удалить фото. Попробуйте ещё раз.",
     "errorSomePhotosFailed": "Часть фотографий не загрузилась. Попробуйте ещё раз.",
     "errorUpdate": "Не удалось обновить профиль. Попробуйте ещё раз.",
-    "successProfile": "Профиль успешно обновлён!"
+    "successProfile": "Профиль успешно обновлён!",
+    "changePhotoLong": "Сменить фото",
+    "editProfileLong": "Редактировать профиль"
   },
   "shiftTimes": {
     "morning": "Утро",
@@ -777,6 +779,9 @@
       "filterAll": "Все",
       "filterUnread": "Только непрочитанные ({{count}})",
       "emptyUnread": "Непрочитанных уведомлений нет"
+    },
+    "toast": {
+      "fallbackTitle": "Новое уведомление"
     }
   },
   "portfolioPhotos": {

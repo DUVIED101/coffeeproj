@@ -442,7 +442,9 @@
     "errorRemovePhoto": "Failed to remove photo. Please try again.",
     "errorSomePhotosFailed": "Some photos failed to upload. Please try again.",
     "errorUpdate": "Failed to update profile. Please try again.",
-    "successProfile": "Profile updated successfully!"
+    "successProfile": "Profile updated successfully!",
+    "changePhotoLong": "Change photo",
+    "editProfileLong": "Edit profile"
   },
   "shiftTimes": {
     "morning": "Morning",
@@ -768,6 +770,9 @@
       "filterAll": "All",
       "filterUnread": "Unread only ({{count}})",
       "emptyUnread": "No unread notifications"
+    },
+    "toast": {
+      "fallbackTitle": "New notification"
     }
   },
   "portfolioPhotos": {
