@@ -1,4 +1,8 @@
-import { combineChunks, createChunks } from "@supabase/ssr";
+import {
+  combineChunks,
+  createChunks,
+  stringFromBase64URL,
+} from "@supabase/ssr";
 import { STABLE_STORAGE_KEY } from "@bystrobarista/core/config/authStorage";
 import type { StorageAdapter } from "@bystrobarista/core/platform/storage";
 
@@ -36,10 +40,22 @@ const removeCookieChunks = (key: string): void => {
   }
 };
 
+// @supabase/ssr's server clients default to writing cookies as
+// "base64-<base64url(json)>". Ours are pinned to raw JSON (cookieEncoding:
+// "raw"), but decode the prefixed form anyway so a cookie written by an
+// older deployment — or by a future ssr default change — can never leave the
+// browser client blind to a session the middleware still considers valid.
+const SSR_BASE64_PREFIX = "base64-";
+
+const decodeSsrCookie = (value: string): string =>
+  value.startsWith(SSR_BASE64_PREFIX)
+    ? stringFromBase64URL(value.slice(SSR_BASE64_PREFIX.length))
+    : value;
+
 const cookieChunkStorage = {
   async getItem(key: string): Promise<string | null> {
     const combined = await combineChunks(key, (name) => readCookie(name));
-    return combined ?? null;
+    return combined ? decodeSsrCookie(combined) : null;
   },
   async setItem(key: string, value: string): Promise<void> {
     removeCookieChunks(key);
