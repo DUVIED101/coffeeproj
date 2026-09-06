@@ -703,7 +703,8 @@
       "yandexErrorTitle": "Yandex ID",
       "googleConfigMissing": "GOOGLE_IOS_CLIENT_ID is not configured in .env",
       "yandexConfigMissing": "YANDEX_CLIENT_ID is not configured in .env",
-      "emailAlreadyRegistered": "This email is already registered with a different sign-in method. Use the same method you originally signed up with."
+      "emailAlreadyRegistered": "This email is already registered with a different sign-in method. Use the same method you originally signed up with.",
+      "popupBlocked": "Your browser blocked the pop-up window. Allow pop-ups for this site and try again."
     }
   },
   "chat": {

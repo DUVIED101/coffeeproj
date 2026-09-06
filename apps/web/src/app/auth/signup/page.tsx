@@ -8,6 +8,7 @@ import type { AccountType } from "@bystrobarista/core/types";
 import { AuthService } from "@bystrobarista/core/services/AuthService";
 import { stashPendingAccountType } from "@bystrobarista/core/utils/socialAuthStash";
 import { stashConsentAccepted } from "@bystrobarista/core/utils/consentStash";
+import { SocialAuthButtons } from "@/components/SocialAuthButtons";
 import { TextField } from "@/components/ui/TextField";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 
@@ -26,6 +27,7 @@ export default function SignupPage(): React.JSX.Element {
   const [acceptedData, setAcceptedData] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const consentsValid = acceptedTerms && acceptedData;
 
   if (!accountType) {
     return (
@@ -201,6 +203,13 @@ export default function SignupPage(): React.JSX.Element {
         </p>
       )}
       <SubmitButton label={t("auth.signup.cta")} loading={submitting} />
+      {/* Consent boxes above apply to every sign-up method, mobile parity:
+          social buttons stay locked until both are ticked. */}
+      <SocialAuthButtons
+        accountType={accountType}
+        consentAccepted={consentsValid}
+        disabled={!consentsValid}
+      />
       <p className="text-center text-sm text-ink-secondary">
         {t("auth.signup.haveAccount")}
         <Link href="/auth/login" className="text-primary">

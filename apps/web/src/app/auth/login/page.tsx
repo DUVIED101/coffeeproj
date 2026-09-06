@@ -1,21 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import React, { Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AuthService } from "@bystrobarista/core/services/AuthService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
+import { safeInternalPath } from "@bystrobarista/core/utils/safePath";
+import { SocialAuthButtons } from "@/components/SocialAuthButtons";
 import { TextField } from "@/components/ui/TextField";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 
+// OAuth callbacks bounce here with ?error= when the handshake fails or the
+// email belongs to another sign-in method.
+const callbackErrorKey = (code: string | null): string | null => {
+  if (code === "email_already_registered") {
+    return "auth.social.emailAlreadyRegistered";
+  }
+  return code ? "auth.login.errorGeneric" : null;
+};
+
 function LoginForm(): React.JSX.Element {
   const { t } = useTranslation();
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const next = safeInternalPath(searchParams.get("next"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => {
+    const key = callbackErrorKey(searchParams.get("error"));
+    return key ? t(key) : null;
+  });
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
@@ -29,10 +43,9 @@ function LoginForm(): React.JSX.Element {
     try {
       await AuthService.signInWithEmail(email.trim(), password);
       await useAuthStore.getState().initialize();
-      const next = searchParams.get("next");
       // router.push would be an SPA transition; a full navigation makes the
       // middleware re-run against the fresh session cookie.
-      window.location.assign(next && next.startsWith("/") ? next : "/");
+      window.location.assign(next ?? "/");
     } catch (err) {
       const message = err instanceof Error ? err.message : "";
       if (message.includes("Invalid email or password")) {
@@ -78,6 +91,7 @@ function LoginForm(): React.JSX.Element {
         </p>
       )}
       <SubmitButton label={t("auth.login.cta")} loading={submitting} />
+      <SocialAuthButtons next={next} />
       <div className="flex flex-col gap-2 text-center text-sm">
         <Link href="/auth/password-reset" className="text-primary">
           {t("auth.login.forgotPassword")}

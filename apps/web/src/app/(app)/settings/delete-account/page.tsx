@@ -11,12 +11,16 @@ import {
   isAppleOnlyUser,
 } from "@bystrobarista/core/utils/authProvider";
 import { STABLE_STORAGE_KEY } from "@bystrobarista/core/config/authStorage";
+import { signInWithApplePopup } from "@/lib/appleAuth";
 import { webStorage } from "@/platform/storage";
 
-// Port of DeleteAccountScreen. Two of mobile's three re-auth paths work on
-// web: current password (email accounts) and emailed OTP (Google/Yandex).
-// Apple SIWA re-auth needs the native flow — web points those users at the
-// iOS app until Phase 7 lands Sign in with Apple JS.
+const APPLE_SERVICES_ID = process.env.NEXT_PUBLIC_APPLE_SERVICES_ID;
+
+// Port of DeleteAccountScreen with all three re-auth paths: current password
+// (email accounts), emailed OTP (Google/Yandex) and a fresh Apple id_token
+// from the Sign in with Apple popup (Apple accounts — privaterelay aliases
+// can't receive our OTP mail). Without a Services ID configured, Apple users
+// are pointed at the iOS app.
 export default function DeleteAccountPage(): React.JSX.Element {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
@@ -24,11 +28,15 @@ export default function DeleteAccountPage(): React.JSX.Element {
 
   const passwordPath = hasPasswordAuth(session);
   const appleOnly = isAppleOnlyUser(session);
+  const applePath = appleOnly && !!APPLE_SERVICES_ID;
   const otpPath = !passwordPath && !appleOnly;
 
   const [password, setPassword] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [appleIdToken, setAppleIdToken] = useState<string | null>(null);
+  const [appleError, setAppleError] = useState<string | null>(null);
+  const [isReauthingApple, setIsReauthingApple] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [forceChecked, setForceChecked] = useState(false);
   const [activeJobsCount, setActiveJobsCount] = useState(0);
@@ -71,13 +79,33 @@ export default function DeleteAccountPage(): React.JSX.Element {
     }
   };
 
+  const handleAppleReauth = async (): Promise<void> => {
+    if (isReauthingApple || !APPLE_SERVICES_ID) return;
+    setIsReauthingApple(true);
+    setAppleError(null);
+    try {
+      const outcome = await signInWithApplePopup(APPLE_SERVICES_ID);
+      if (outcome.status === "ok") {
+        setAppleIdToken(outcome.idToken);
+      } else if (outcome.status !== "cancelled") {
+        setAppleError(t("settings.delete.appleReauthFailed"));
+      }
+    } catch (err) {
+      console.error("Apple re-auth failed:", err);
+      setAppleError(t("settings.delete.appleReauthFailed"));
+    } finally {
+      setIsReauthingApple(false);
+    }
+  };
+
   const credentialsReady = passwordPath
     ? password.length > 0
-    : otpPath
-      ? otpCode.trim().length === 6
-      : false;
+    : applePath
+      ? appleIdToken !== null
+      : otpPath
+        ? otpCode.trim().length === 6
+        : false;
   const canSubmit =
-    !appleOnly &&
     credentialsReady &&
     confirmText === expectedKeyword &&
     (activeJobsCount === 0 || forceChecked) &&
@@ -94,7 +122,9 @@ export default function DeleteAccountPage(): React.JSX.Element {
         .deleteAccount(
           passwordPath
             ? { password, force }
-            : { otpCode: otpCode.trim(), force },
+            : applePath && appleIdToken
+              ? { appleIdToken, force }
+              : { otpCode: otpCode.trim(), force },
         );
       await webStorage.removeItem(STABLE_STORAGE_KEY);
       window.location.assign("/auth/login");
@@ -104,6 +134,9 @@ export default function DeleteAccountPage(): React.JSX.Element {
         setError(t("settings.delete.invalidPassword"));
       } else if (message === "invalid_otp") {
         setError(t("settings.delete.invalidOtp"));
+      } else if (message === "invalid_apple_token") {
+        setAppleIdToken(null);
+        setAppleError(t("settings.delete.invalidAppleToken"));
       } else if (message.startsWith("active_jobs:")) {
         const count = Number(message.split(":")[1]) || activeJobsCount;
         setActiveJobsCount(count);
@@ -130,7 +163,7 @@ export default function DeleteAccountPage(): React.JSX.Element {
         {t("settings.delete.warning")}
       </p>
 
-      {appleOnly ? (
+      {appleOnly && !applePath ? (
         <p className="rounded-card bg-bg-secondary p-4 text-sm">
           {t("settings.delete.appleUseMobile")}
         </p>
@@ -174,6 +207,31 @@ export default function DeleteAccountPage(): React.JSX.Element {
                 className="w-full rounded-input border border-line p-2.5 text-sm"
               />
             </label>
+          )}
+
+          {applePath && (
+            <div>
+              <p className="mb-2 text-sm text-ink-secondary">
+                {t("settings.delete.appleConfirmHint")}
+              </p>
+              <button
+                type="button"
+                onClick={() => void handleAppleReauth()}
+                disabled={isReauthingApple || appleIdToken !== null}
+                className="rounded-input bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+              >
+                {isReauthingApple
+                  ? "…"
+                  : appleIdToken !== null
+                    ? t("settings.delete.appleConfirmed")
+                    : t("settings.delete.appleConfirm")}
+              </button>
+              {appleError && (
+                <p role="alert" className="mt-2 text-sm text-error">
+                  {appleError}
+                </p>
+              )}
+            </div>
           )}
 
           {otpPath && (

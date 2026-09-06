@@ -15,7 +15,14 @@ import {
   clearPendingAccountType,
 } from "@bystrobarista/core/utils/socialAuthStash";
 import { consumeStashedConsent } from "@bystrobarista/core/utils/consentStash";
+import { safeInternalPath } from "@bystrobarista/core/utils/safePath";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+
+// Deep link the user was heading to before auth (login/OAuth carry it as
+// ?next=). Read lazily — this module is also evaluated during SSR.
+const destination = (): string =>
+  safeInternalPath(new URLSearchParams(window.location.search).get("next")) ??
+  "/";
 
 type Phase =
   | { name: "working" }
@@ -147,7 +154,7 @@ export default function BootstrapPage(): React.JSX.Element {
 
       // Full navigation: the middleware profile cache (bb_profile, 5 min TTL)
       // must be re-derived now that consent/account_type changed.
-      window.location.assign("/");
+      window.location.assign(destination());
     } catch (e) {
       const message = e instanceof Error ? e.message : "Unknown error";
       setPhase({
@@ -179,7 +186,7 @@ export default function BootstrapPage(): React.JSX.Element {
         .eq("id", phase.userId);
       if (updErr) throw new Error(updErr.message);
       await recordCurrentLegalAcceptances(phase.userId);
-      window.location.assign("/");
+      window.location.assign(destination());
     } catch (e) {
       setConsentError(e instanceof Error ? e.message : "Unknown error");
       setAccepting(false);

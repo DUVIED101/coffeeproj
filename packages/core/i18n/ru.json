@@ -710,7 +710,8 @@
       "yandexErrorTitle": "Yandex ID",
       "googleConfigMissing": "GOOGLE_IOS_CLIENT_ID не настроен в .env",
       "yandexConfigMissing": "YANDEX_CLIENT_ID не настроен в .env",
-      "emailAlreadyRegistered": "Этот email уже зарегистрирован другим способом входа. Войдите тем же способом, что использовали при регистрации."
+      "emailAlreadyRegistered": "Этот email уже зарегистрирован другим способом входа. Войдите тем же способом, что использовали при регистрации.",
+      "popupBlocked": "Браузер заблокировал всплывающее окно. Разрешите всплывающие окна для этого сайта и попробуйте снова."
     }
   },
   "chat": {
