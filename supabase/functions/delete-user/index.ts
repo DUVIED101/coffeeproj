@@ -19,6 +19,10 @@ const SUPABASE_SERVICE_ROLE_KEY =
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const APPLE_BUNDLE_ID =
   Deno.env.get("APPLE_BUNDLE_ID") ?? "com.quickbarista.app";
+// Sign in with Apple JS (web) mints id_tokens for the Services ID, not the
+// bundle id — both audiences prove ownership of the same Apple sub.
+const APPLE_WEB_CLIENT_ID =
+  Deno.env.get("APPLE_WEB_CLIENT_ID") ?? "com.bystrobarista.web";
 
 const APPLE_JWKS = createRemoteJWKSet(
   new URL("https://appleid.apple.com/auth/keys"),
@@ -55,7 +59,7 @@ async function appleSubFromIdToken(idToken: string): Promise<string | null> {
   try {
     const { payload } = await jwtVerify(idToken, APPLE_JWKS, {
       issuer: "https://appleid.apple.com",
-      audience: APPLE_BUNDLE_ID,
+      audience: [APPLE_BUNDLE_ID, APPLE_WEB_CLIENT_ID],
     });
     return typeof payload.sub === "string" ? payload.sub : null;
   } catch (err) {
@@ -279,7 +283,7 @@ type CascadeReport = {
   conversations_as_business: number;
   messages: number;
   barista_profiles: number;
-  apns_tokens: number;
+  device_tokens: number;
   notification_preferences: number;
 };
 
@@ -309,7 +313,7 @@ async function verifyCascade(
     conversationsAsBusiness,
     messages,
     baristaProfiles,
-    apnsTokens,
+    deviceTokens,
     notificationPrefs,
   ] = await Promise.all([
     countRows(supabase, "applications", "barista_id", userId),
@@ -319,7 +323,7 @@ async function verifyCascade(
     countRows(supabase, "conversations", "business_id", userId),
     countRows(supabase, "messages", "sender_id", userId),
     countRows(supabase, "barista_profiles", "user_id", userId),
-    countRows(supabase, "apns_tokens", "user_id", userId),
+    countRows(supabase, "device_tokens", "user_id", userId),
     countRows(supabase, "notification_preferences", "user_id", userId),
   ]);
   return {
@@ -330,7 +334,7 @@ async function verifyCascade(
     conversations_as_business: conversationsAsBusiness,
     messages,
     barista_profiles: baristaProfiles,
-    apns_tokens: apnsTokens,
+    device_tokens: deviceTokens,
     notification_preferences: notificationPrefs,
   };
 }
