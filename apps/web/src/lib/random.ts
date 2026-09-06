@@ -15,3 +15,12 @@ export const sha256Base64Url = async (input: string): Promise<string> =>
       await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input)),
     ),
   );
+
+export const sha256Hex = async (input: string): Promise<string> =>
+  Array.from(
+    new Uint8Array(
+      await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input)),
+    ),
+  )
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");

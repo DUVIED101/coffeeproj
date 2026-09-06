@@ -156,13 +156,17 @@ export class AuthService {
   }
 
   /**
-   * Sign in with Google. `idToken` comes from @react-native-google-signin/google-signin.
+   * Sign in with Google. `idToken` comes from @react-native-google-signin
+   * (mobile) or Google Identity Services (web). Web requests the token with
+   * the SHA-256 of `nonce` and passes the raw value here so Supabase can
+   * verify the binding; mobile's SDK issues no nonce and omits it.
    */
-  static async signInWithGoogle(idToken: string): Promise<void> {
+  static async signInWithGoogle(idToken: string, nonce?: string): Promise<void> {
     try {
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: idToken,
+        ...(nonce ? { nonce } : {}),
       });
       if (error) throw error;
       await this.rejectIfCrossProvider(data.user, 'google');
