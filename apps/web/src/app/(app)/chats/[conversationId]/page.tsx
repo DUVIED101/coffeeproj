@@ -13,7 +13,6 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { ChatService } from "@bystrobarista/core/services/ChatService";
-import { ReportService } from "@bystrobarista/core/services/ReportService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import { useBlockedUsersStore } from "@bystrobarista/core/stores/blockedUsersStore";
 import { useChatUnreadStore } from "@bystrobarista/core/stores/chatUnreadStore";
@@ -23,24 +22,17 @@ import type {
   Message,
 } from "@bystrobarista/core/types/chat";
 import type { UserId } from "@bystrobarista/core/types/ids";
-import type { ReportReasonCode } from "@bystrobarista/core/types/userReport";
 import {
   formatDateHeader,
   isSameDay,
 } from "@bystrobarista/core/utils/dateUtils";
 import { getPlatform } from "@bystrobarista/core/platform";
+import { ReportDialog } from "@/components/ReportDialog";
 import { formatDateOnly } from "@/lib/dates";
 import { transformedImageUrl } from "@/lib/imageTransform";
 import { useNotificationFeedStore } from "@/stores/notificationFeedStore";
 
 const MESSAGE_MAX_LENGTH = 500;
-
-const MESSAGE_REPORT_REASONS = [
-  "spam",
-  "harassment",
-  "offensive_photo",
-  "other",
-] as const;
 
 const URL_REGEX = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
 // split() needs the global flag; test() must not have it (lastIndex is sticky
@@ -71,93 +63,6 @@ function MessageText({ text }: { text: string }): React.JSX.Element {
         return <React.Fragment key={i}>{part}</React.Fragment>;
       })}
     </>
-  );
-}
-
-function ReportMessageModal({
-  messageId,
-  onClose,
-}: {
-  messageId: string;
-  onClose: () => void;
-}): React.JSX.Element {
-  const { t } = useTranslation();
-  const [reason, setReason] = useState<ReportReasonCode | null>(null);
-  const [details, setDetails] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  const handleSubmit = async (): Promise<void> => {
-    if (!reason || submitting) return;
-    setSubmitting(true);
-    try {
-      await ReportService.submitReport({
-        targetType: "message",
-        targetId: messageId,
-        reasonCode: reason,
-        details: details || undefined,
-      });
-      getPlatform().alert.show(t("report.success"), "");
-      onClose();
-    } catch {
-      getPlatform().alert.show(t("common.error"), t("common.tryAgain"));
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="w-full max-w-md rounded-card bg-white p-5">
-        <h2 className="mb-1 text-lg font-bold">{t("report.title")}</h2>
-        <p className="mb-3 text-sm text-ink-secondary">
-          {t("report.chooseReason")}
-        </p>
-        <div className="mb-3 flex flex-wrap gap-2">
-          {MESSAGE_REPORT_REASONS.map((code) => (
-            <button
-              key={code}
-              type="button"
-              onClick={() => setReason(code)}
-              className={`rounded-chip border px-3 py-1.5 text-sm ${
-                reason === code
-                  ? "border-primary bg-primary text-white"
-                  : "border-line bg-white text-ink"
-              }`}
-            >
-              {t(`report.reason.${code}`)}
-            </button>
-          ))}
-        </div>
-        <textarea
-          value={details}
-          onChange={(e) => setDetails(e.target.value)}
-          placeholder={t("report.detailsPlaceholder")}
-          rows={3}
-          maxLength={500}
-          className="mb-4 w-full rounded-input border border-line p-2 text-sm"
-        />
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-input border border-line px-4 py-2 text-sm font-medium"
-          >
-            {t("report.cancel")}
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleSubmit()}
-            disabled={!reason || submitting}
-            className="rounded-input bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            {t("report.submit")}
-          </button>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -519,8 +424,8 @@ export default function ChatConversationPage(): React.JSX.Element {
       )}
 
       {reportMessageId && (
-        <ReportMessageModal
-          messageId={reportMessageId}
+        <ReportDialog
+          target={{ type: "message", id: reportMessageId }}
           onClose={() => setReportMessageId(null)}
         />
       )}

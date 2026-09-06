@@ -1,5 +1,5 @@
 import { getCurrentLanguage } from "@bystrobarista/core/i18n";
-import { randomToken } from "@/lib/random";
+import { randomToken, sha256Hex } from "@/lib/random";
 
 type AppleAuthConfig = {
   clientId: string;
@@ -61,9 +61,11 @@ export type ApplePopupOutcome =
 
 // Sign in with Apple JS in popup mode: the id_token comes straight back to
 // this page, so one helper serves login AND the delete-account re-auth (no
-// form_post round trip, no SameSite=None cookie). Supabase accepts the raw
-// nonce and also matches Apple's claim against its SHA-256, so the same
-// value goes to both sides — exactly like its Sign in with Apple JS docs.
+// form_post round trip, no SameSite=None cookie). Nonce pairing is the same
+// as Google's: Apple receives the SHA-256 hex and stamps it into the token,
+// Supabase receives the raw value and hashes it for the comparison. Passing
+// the raw value to both sides (as Supabase's own web docs show) fails with
+// "invalid nonce: Nonces mismatch" — GoTrue only ever compares the hash.
 export const signInWithApplePopup = async (
   clientId: string,
 ): Promise<ApplePopupOutcome> => {
@@ -75,7 +77,7 @@ export const signInWithApplePopup = async (
     scope: "name email",
     redirectURI: `${window.location.origin}/auth/callback/apple`,
     state,
-    nonce,
+    nonce: await sha256Hex(nonce),
     usePopup: true,
   });
   try {

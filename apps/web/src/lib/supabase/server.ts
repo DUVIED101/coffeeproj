@@ -16,6 +16,12 @@ export function createSupabaseServerClient() {
       // writes (see src/platform/storage.ts). Without this @supabase/ssr
       // derives the name from the URL's project ref, which breaks when the
       // browser talked to the RU proxy.
+      // The browser side is plain supabase-js over our own cookie storage
+      // (src/platform/storage.ts), which expects JSON. @supabase/ssr defaults
+      // to writing "base64-…" values, which that storage cannot parse — every
+      // server-side session write (OAuth callbacks, token refresh in the
+      // middleware) silently logged the browser out. Keep the wire format raw.
+      cookieEncoding: "raw",
       cookieOptions: { name: STABLE_STORAGE_KEY },
       cookies: {
         getAll() {

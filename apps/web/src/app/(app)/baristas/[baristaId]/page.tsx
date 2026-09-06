@@ -20,6 +20,7 @@ import {
   computeTotalDuration,
 } from "@bystrobarista/core/types/workExperience";
 import { computeMedicalBookStatus } from "@bystrobarista/core/utils/medicalBook";
+import { ReportButton } from "@/components/ReportButton";
 import { StarRow } from "@/components/StarRow";
 import { transformedImageUrl } from "@/lib/imageTransform";
 import { formatDateOnly } from "@/lib/dates";
@@ -187,6 +188,17 @@ export default function ViewBaristaProfilePage(): React.JSX.Element {
                     count: reliability.incidents30d,
                   })}`}
               </p>
+            )}
+            {isBusiness && (
+              // Mobile parity: a business can flag a barista from the
+              // profile itself, before any hire or conversation exists.
+              <div className="mt-2">
+                <ReportButton
+                  targetType="user"
+                  targetId={profile.userId}
+                  variant="icon"
+                />
+              </div>
             )}
           </div>
         </div>
