@@ -81,3 +81,14 @@ apps/mobile/scripts/seed-test-jobs.js
 admin/
 supabase/migrations/
 AUDIT_REPORT.md
+
+# Self-hosted Supabase (infra/supabase-selfhost): secrets, data volumes, generated files
+infra/supabase-selfhost/.env
+infra/supabase-selfhost/volumes/db/data/
+infra/supabase-selfhost/volumes/storage/
+infra/supabase-selfhost/volumes/api/envoy/lds.yaml
+infra/supabase-selfhost/volumes/functions/*
+!infra/supabase-selfhost/volumes/functions/main/
+!infra/supabase-selfhost/volumes/functions/deno.jsonc
+infra/supabase-selfhost/backups/
+infra/supabase-selfhost/sql/vault-secrets.sql
