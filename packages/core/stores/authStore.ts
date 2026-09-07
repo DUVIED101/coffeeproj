@@ -1,13 +1,13 @@
-import { create } from 'zustand';
-import type { Session } from '@supabase/supabase-js';
-import type { User } from '../types';
-import type { UserId } from '../types/ids';
-import { supabase } from '../config/supabase';
-import { AuthService } from '../services/AuthService';
-import { NotificationService } from '../services/NotificationService';
-import { getPlatform } from '../platform';
-import { withTimeout, TimeoutError } from '../utils/withTimeout';
-import { readCachedSession } from '../utils/cachedSession';
+import { create } from "zustand";
+import type { Session } from "@supabase/supabase-js";
+import type { User } from "../types";
+import type { UserId } from "../types/ids";
+import { supabase } from "../config/supabase";
+import { AuthService } from "../services/AuthService";
+import { NotificationService } from "../services/NotificationService";
+import { getPlatform } from "../platform";
+import { withTimeout, TimeoutError } from "../utils/withTimeout";
+import { readCachedSession } from "../utils/cachedSession";
 
 // Cold-start network calls are wrapped in this timeout so the app cannot
 // hang on the spinner forever when Supabase is unreachable (Cloudflare-fronted,
@@ -23,7 +23,7 @@ interface AuthState {
   isAuthenticated: boolean;
   // null = healthy. 'timeout' = startup network call exceeded STARTUP_TIMEOUT_MS
   // and no cached session was available to fall back on.
-  connectionError: 'timeout' | null;
+  connectionError: "timeout" | null;
   // true when we proceeded on a locally-cached session because the server
   // round-trip timed out. Surfaced for UX (stale-data toast) and debugging.
   sessionStaleFromCache: boolean;
@@ -40,7 +40,7 @@ interface AuthState {
     params:
       | { password: string; force?: boolean }
       | { otpCode: string; force?: boolean }
-      | { appleIdToken: string; force?: boolean }
+      | { appleIdToken: string; force?: boolean },
   ) => Promise<void>;
   clearAuth: () => void;
 }
@@ -81,17 +81,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // so AppNavigator routes to ConnectionErrorScreen.
   initialize: async () => {
     try {
-      set({ isLoading: true, connectionError: null, sessionStaleFromCache: false });
+      set({
+        isLoading: true,
+        connectionError: null,
+        sessionStaleFromCache: false,
+      });
 
       let session: Session | null;
       try {
         const result = await withTimeout(
           supabase.auth.getSession(),
           STARTUP_TIMEOUT_MS,
-          'getSession'
+          "getSession",
         );
         if (result.error) {
-          console.error('Error getting session:', result.error);
+          console.error("Error getting session:", result.error);
           get().clearAuth();
           return;
         }
@@ -107,7 +111,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             void backgroundFetchProfile(cached.user.id);
             return;
           }
-          set({ connectionError: 'timeout' });
+          set({ connectionError: "timeout" });
           get().clearAuth();
           return;
         }
@@ -124,7 +128,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user = await withTimeout(
           fetchUserProfile(session.user.id),
           STARTUP_TIMEOUT_MS,
-          'fetchUserProfile'
+          "fetchUserProfile",
         );
       } catch (error) {
         if (error instanceof TimeoutError) {
@@ -138,7 +142,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw error;
       }
 
-      if (!user || !user.isActive) {
+      if (user && !user.isActive) {
         // Clear local state immediately — do NOT await signOut() here.
         // The /logout endpoint can timeout (504) and would hold isLoading:true
         // for 30+ seconds, making the app appear frozen on startup.
@@ -147,10 +151,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return;
       }
 
-      get().setUser(user);
+      // No row yet means a brand-new account whose ProfileBootstrap hasn't
+      // run: the navigators route `session && !user` to bootstrap, which
+      // needs this very session to insert the row. Signing out here raced
+      // the web bootstrap page (full reload → initialize) and left its
+      // insert running as anon — "new row violates row-level security".
+      if (user) get().setUser(user);
       get().setSession(session);
     } catch (error) {
-      console.error('Error initializing auth:', error);
+      console.error("Error initializing auth:", error);
       get().clearAuth();
     } finally {
       set({ isLoading: false });
@@ -185,20 +194,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         try {
           await NotificationService.unregisterDevice(currentUserId as UserId);
         } catch (err) {
-          console.warn('Error unregistering device on sign out:', err);
+          console.warn("Error unregistering device on sign out:", err);
         }
       }
 
       // Clear local state first so the UI responds immediately even if the
       // server-side /logout request times out (504 context deadline exceeded).
       get().clearAuth();
-      await getPlatform().storage.removeItem('supabase.auth.token');
+      await getPlatform().storage.removeItem("supabase.auth.token");
 
-      supabase.auth.signOut().catch(err => {
-        console.warn('Server-side signOut failed (non-blocking):', err);
+      supabase.auth.signOut().catch((err) => {
+        console.warn("Server-side signOut failed (non-blocking):", err);
       });
     } catch (error) {
-      console.error('Error during sign out:', error);
+      console.error("Error during sign out:", error);
       throw error;
     } finally {
       set({ isLoading: false });
@@ -214,21 +223,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     params:
       | { password: string; force?: boolean }
       | { otpCode: string; force?: boolean }
-      | { appleIdToken: string; force?: boolean }
+      | { appleIdToken: string; force?: boolean },
   ) => {
     const currentUserId = get().user?.id;
     if (currentUserId) {
       try {
         await NotificationService.unregisterDevice(currentUserId as UserId);
       } catch (err) {
-        console.warn('Error unregistering device on delete:', err);
+        console.warn("Error unregistering device on delete:", err);
       }
     }
 
     await AuthService.deleteAccount(params);
 
     get().clearAuth();
-    await getPlatform().storage.removeItem('supabase.auth.token');
+    await getPlatform().storage.removeItem("supabase.auth.token");
   },
 
   // Clear auth state
@@ -246,13 +255,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 // (BannedUserBlocker / SuspendedUserBanner re-render when the profile lands).
 async function backgroundFetchProfile(userId: string): Promise<void> {
   try {
-    const user = await withTimeout(fetchUserProfile(userId), STARTUP_TIMEOUT_MS, 'bgFetchProfile');
+    const user = await withTimeout(
+      fetchUserProfile(userId),
+      STARTUP_TIMEOUT_MS,
+      "bgFetchProfile",
+    );
     if (user && user.isActive) {
       useAuthStore.getState().setUser(user);
     }
   } catch (error) {
     if (!(error instanceof TimeoutError)) {
-      console.warn('backgroundFetchProfile failed:', error);
+      console.warn("backgroundFetchProfile failed:", error);
     }
   }
 }
@@ -275,12 +288,16 @@ async function fetchUserProfile(userId: string): Promise<User | null> {
 }
 
 async function doFetchUserProfile(userId: string): Promise<User | null> {
-  const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", userId)
+    .single();
   if (error || !data) {
     // PGRST116 = "no rows returned" — expected during signup before the
     // ProfileBootstrap screen has had a chance to create the row. Suppress.
-    if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching user profile:', error);
+    if (error && error.code !== "PGRST116") {
+      console.error("Error fetching user profile:", error);
     }
     return null;
   }
@@ -309,10 +326,9 @@ async function doFetchUserProfile(userId: string): Promise<User | null> {
 // onAuthStateChange — it deadlocks the auth SDK lock. Defer work via setTimeout(0).
 export function registerAuthListener(): void {
   supabase.auth.onAuthStateChange((event, session) => {
-
     const store = useAuthStore.getState();
 
-    if (event === 'SIGNED_IN' && session) {
+    if (event === "SIGNED_IN" && session) {
       // SIGNED_IN also fires right after supabase.auth.signUp(), before the
       // client has had a chance to upsert the public.users row. We must NOT
       // sign the user out here on a missing profile — that would race with
@@ -321,7 +337,7 @@ export function registerAuthListener(): void {
       store.setSession(session);
       setTimeout(() => {
         fetchUserProfile(session.user.id)
-          .then(user => {
+          .then((user) => {
             if (!user) {
               // Normal on signup — ProfileBootstrap will create the row and call
               // setUser itself. console.log only so this doesn't surface in LogBox.
@@ -335,16 +351,16 @@ export function registerAuthListener(): void {
             }
             useAuthStore.getState().setUser(user);
           })
-          .catch(err => {
-            console.error('Error fetching user profile on SIGNED_IN:', err);
+          .catch((err) => {
+            console.error("Error fetching user profile on SIGNED_IN:", err);
           });
       }, 0);
-    } else if (event === 'TOKEN_REFRESHED' && session) {
+    } else if (event === "TOKEN_REFRESHED" && session) {
       // Periodic token refresh: just update the session. Do NOT refetch the
       // profile — user data hasn't changed and a transient fetch failure must
       // not log the user out mid-session.
       store.setSession(session);
-    } else if (event === 'SIGNED_OUT') {
+    } else if (event === "SIGNED_OUT") {
       store.clearAuth();
     }
   });
