@@ -6,32 +6,32 @@ import { BusinessService } from "@bystrobarista/core/services/BusinessService";
 import { JobService } from "@bystrobarista/core/services/JobService";
 import { AuthService } from "@bystrobarista/core/services/AuthService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
-import {
-  hasPasswordAuth,
-  isAppleOnlyUser,
-} from "@bystrobarista/core/utils/authProvider";
+import { isAppleOnlyUser } from "@bystrobarista/core/utils/authProvider";
 import { STABLE_STORAGE_KEY } from "@bystrobarista/core/config/authStorage";
 import { signInWithApplePopup } from "@/lib/appleAuth";
 import { webStorage } from "@/platform/storage";
 
 const APPLE_SERVICES_ID = process.env.NEXT_PUBLIC_APPLE_SERVICES_ID;
 
-// Port of DeleteAccountScreen with all three re-auth paths: current password
-// (email accounts), emailed OTP (Google/Yandex) and a fresh Apple id_token
-// from the Sign in with Apple popup (Apple accounts — privaterelay aliases
-// can't receive our OTP mail). Without a Services ID configured, Apple users
-// are pointed at the iOS app.
+// Port of DeleteAccountScreen. Two re-auth paths on web: an emailed OTP for
+// every account with a reachable mailbox (email/password, Google, Yandex)
+// and a fresh Apple id_token from the Sign in with Apple popup (privaterelay
+// aliases can't receive our OTP mail). Without a Services ID configured,
+// Apple users are pointed at the iOS app.
 export default function DeleteAccountPage(): React.JSX.Element {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const session = useAuthStore((s) => s.session);
 
-  const passwordPath = hasPasswordAuth(session);
+  // Every non-Apple account — password ones included — confirms with an
+  // emailed code: a session left open on a shared computer must not be enough
+  // to wipe the account, and mail ownership is the strongest check we have.
+  // Apple accounts re-authenticate through the Sign in with Apple popup
+  // because privaterelay aliases can't receive our OTP mail.
   const appleOnly = isAppleOnlyUser(session);
   const applePath = appleOnly && !!APPLE_SERVICES_ID;
-  const otpPath = !passwordPath && !appleOnly;
+  const otpPath = !appleOnly;
 
-  const [password, setPassword] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [appleIdToken, setAppleIdToken] = useState<string | null>(null);
@@ -98,13 +98,11 @@ export default function DeleteAccountPage(): React.JSX.Element {
     }
   };
 
-  const credentialsReady = passwordPath
-    ? password.length > 0
-    : applePath
-      ? appleIdToken !== null
-      : otpPath
-        ? otpCode.trim().length === 6
-        : false;
+  const credentialsReady = applePath
+    ? appleIdToken !== null
+    : otpPath
+      ? otpCode.trim().length === 6
+      : false;
   const canSubmit =
     credentialsReady &&
     confirmText === expectedKeyword &&
@@ -120,11 +118,9 @@ export default function DeleteAccountPage(): React.JSX.Element {
       await useAuthStore
         .getState()
         .deleteAccount(
-          passwordPath
-            ? { password, force }
-            : applePath && appleIdToken
-              ? { appleIdToken, force }
-              : { otpCode: otpCode.trim(), force },
+          applePath && appleIdToken
+            ? { appleIdToken, force }
+            : { otpCode: otpCode.trim(), force },
         );
       await webStorage.removeItem(STABLE_STORAGE_KEY);
       window.location.assign("/auth/login");
@@ -192,21 +188,6 @@ export default function DeleteAccountPage(): React.JSX.Element {
                 {t("settings.delete.forceCheckbox")}
               </label>
             </div>
-          )}
-
-          {passwordPath && (
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium">
-                {t("settings.delete.passwordLabel")}
-              </span>
-              <input
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-input border border-line p-2.5 text-sm"
-              />
-            </label>
           )}
 
           {applePath && (
