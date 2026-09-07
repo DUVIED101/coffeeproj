@@ -6,8 +6,9 @@ import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import { useChatUnreadStore } from "@bystrobarista/core/stores/chatUnreadStore";
 
 // Headless: keeps the chat unread badge fresh — initial fetch, realtime
-// conversation-row updates, and a refetch when the tab wakes up (the
-// WebSocket may have died while it slept). Mounted once in the (app) layout.
+// conversation-row updates while the tab is visible, and a refetch when the
+// tab wakes up. A hidden tab drops its channel: it would only keep a
+// WebSocket and WAL polling busy for nobody. Mounted once in the (app) layout.
 export function ChatUnreadWatcher(): null {
   const user = useAuthStore((s) => s.user);
   const userId = user?.id;
@@ -23,19 +24,34 @@ export function ChatUnreadWatcher(): null {
     const doRefresh = (): void => {
       void refresh(userId, accountType).catch(() => {});
     };
-    doRefresh();
-    const teardown = ChatService.subscribeToUnreadChanges(
-      userId,
-      accountType,
-      doRefresh,
-    );
-    const onVisible = (): void => {
-      if (document.visibilityState === "visible") doRefresh();
+    let teardown: (() => void) | null = null;
+    const listen = (): void => {
+      if (!teardown) {
+        teardown = ChatService.subscribeToUnreadChanges(
+          userId,
+          accountType,
+          doRefresh,
+        );
+      }
     };
-    document.addEventListener("visibilitychange", onVisible);
+    const stopListening = (): void => {
+      teardown?.();
+      teardown = null;
+    };
+    const onVisibility = (): void => {
+      if (document.visibilityState === "visible") {
+        doRefresh();
+        listen();
+      } else {
+        stopListening();
+      }
+    };
+    doRefresh();
+    if (document.visibilityState === "visible") listen();
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
-      teardown();
-      document.removeEventListener("visibilitychange", onVisible);
+      stopListening();
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [userId, accountType, refresh, reset]);
 

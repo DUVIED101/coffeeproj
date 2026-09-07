@@ -8,8 +8,9 @@ import { useNotificationFeedStore } from "@/stores/notificationFeedStore";
 const POLL_INTERVAL_MS = 60_000;
 
 // Headless: loads the feed once per session, keeps the bell badge fresh via
-// realtime inserts, and resubscribes when the tab wakes up (the WebSocket may
-// have died while it slept). Mounted once in the (app) layout.
+// realtime inserts while the tab is visible, and resubscribes when the tab
+// wakes up. A hidden tab drops its channel instead of keeping a WebSocket and
+// WAL polling busy for nobody. Mounted once in the (app) layout.
 export function NotificationFeedWatcher(): null {
   const userId = useAuthStore((s) => s.user?.id) as UserId | undefined;
 
@@ -20,16 +21,16 @@ export function NotificationFeedWatcher(): null {
       return;
     }
     void store.load(userId).catch(() => {});
-    store.startRealtime(userId);
+    if (document.visibilityState === "visible") store.startRealtime(userId);
 
-    const onVisible = (): void => {
-      if (document.visibilityState !== "visible") return;
+    const onVisibility = (): void => {
       const s = useNotificationFeedStore.getState();
       s.stopRealtime();
+      if (document.visibilityState !== "visible") return;
       s.startRealtime(userId);
       void s.load(userId).catch(() => {});
     };
-    document.addEventListener("visibilitychange", onVisible);
+    document.addEventListener("visibilitychange", onVisibility);
 
     // Push isn't guaranteed (denied, unsupported, iOS tab): poll the unread
     // count while the tab is visible so the bell can't drift for long even
@@ -46,7 +47,7 @@ export function NotificationFeedWatcher(): null {
     }, POLL_INTERVAL_MS);
 
     return () => {
-      document.removeEventListener("visibilitychange", onVisible);
+      document.removeEventListener("visibilitychange", onVisibility);
       window.clearInterval(poll);
       useNotificationFeedStore.getState().stopRealtime();
     };

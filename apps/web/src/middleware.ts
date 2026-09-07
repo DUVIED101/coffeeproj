@@ -1,4 +1,5 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import type { JWK } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { STABLE_STORAGE_KEY } from "@bystrobarista/core/config/authStorage";
 import { signPayload, verifyPayload } from "@/lib/signedCookie";
@@ -48,6 +49,33 @@ const isProfileCache = (v: unknown): v is ProfileCache => {
 const matchesAny = (pathname: string, prefixes: string[]): boolean =>
   prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
+// JWKS for local JWT verification, cached per edge isolate so a warm
+// invocation verifies the session without any network call.
+type Jwks = { keys: JWK[] };
+const JWKS_TTL_MS = 10 * 60 * 1000;
+let jwksCache: { jwks: Jwks; fetchedAt: number } | null = null;
+
+async function getJwks(): Promise<Jwks | undefined> {
+  if (jwksCache && Date.now() - jwksCache.fetchedAt < JWKS_TTL_MS) {
+    return jwksCache.jwks;
+  }
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/.well-known/jwks.json`,
+      { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! } },
+    );
+    if (!res.ok) return jwksCache?.jwks;
+    const jwks = (await res.json()) as Jwks;
+    if (!Array.isArray(jwks.keys) || jwks.keys.length === 0) {
+      return jwksCache?.jwks;
+    }
+    jwksCache = { jwks, fetchedAt: Date.now() };
+    return jwks;
+  } catch {
+    return jwksCache?.jwks;
+  }
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -81,13 +109,18 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Local JWT verification (ES256 signing keys) instead of a GoTrue round
+  // trip on every request: when Supabase was slow this timed the whole
+  // middleware out (MIDDLEWARE_INVOCATION_TIMEOUT, 2026-09-07). An expiring
+  // session is still refreshed over the network before verification.
+  const { data: claimsData } = await supabase.auth.getClaims(undefined, {
+    jwks: await getJwks(),
+  });
+  const userId = claimsData?.claims.sub ?? null;
 
   const isPublic = matchesAny(pathname, PUBLIC_PATHS);
 
-  if (!user) {
+  if (!userId) {
     if (isPublic || pathname === "/") return response;
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
@@ -119,7 +152,7 @@ export async function middleware(request: NextRequest) {
     secret && cachedRaw
       ? await verifyPayload(cachedRaw, secret, isProfileCache)
       : null;
-  if (profile && (profile.sub !== user.id || profile.exp <= Date.now()))
+  if (profile && (profile.sub !== userId || profile.exp <= Date.now()))
     profile = null;
   // Never trust a cached INCOMPLETE profile: bootstrap is about to change
   // exactly these fields, and a stale hasConsent=false would bounce the user
@@ -131,10 +164,10 @@ export async function middleware(request: NextRequest) {
     const { data: row } = await supabase
       .from("users")
       .select("account_type, consent_accepted_at")
-      .eq("id", user.id)
+      .eq("id", userId)
       .maybeSingle();
     profile = {
-      sub: user.id,
+      sub: userId,
       accountType:
         row?.account_type === "barista" || row?.account_type === "business"
           ? row.account_type
