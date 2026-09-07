@@ -53,6 +53,10 @@ const matchesAny = (pathname: string, prefixes: string[]): boolean =>
 // invocation verifies the session without any network call.
 type Jwks = { keys: JWK[] };
 const JWKS_TTL_MS = 10 * 60 * 1000;
+// Supabase being slow must cost a page a couple of seconds, not the whole
+// middleware budget.
+const JWKS_FETCH_TIMEOUT_MS = 2500;
+const CLAIMS_TIMEOUT_MS = 6000;
 let jwksCache: { jwks: Jwks; fetchedAt: number } | null = null;
 
 async function getJwks(): Promise<Jwks | undefined> {
@@ -62,7 +66,10 @@ async function getJwks(): Promise<Jwks | undefined> {
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/.well-known/jwks.json`,
-      { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! } },
+      {
+        headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
+        signal: AbortSignal.timeout(JWKS_FETCH_TIMEOUT_MS),
+      },
     );
     if (!res.ok) return jwksCache?.jwks;
     const jwks = (await res.json()) as Jwks;
@@ -113,10 +120,23 @@ export async function middleware(request: NextRequest) {
   // trip on every request: when Supabase was slow this timed the whole
   // middleware out (MIDDLEWARE_INVOCATION_TIMEOUT, 2026-09-07). An expiring
   // session is still refreshed over the network before verification.
-  const { data: claimsData } = await supabase.auth.getClaims(undefined, {
-    jwks: await getJwks(),
-  });
-  const userId = claimsData?.claims.sub ?? null;
+  // No session cookie at all → signed out, and nothing to verify or fetch.
+  const hasSessionCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith(STABLE_STORAGE_KEY));
+  let userId: string | null = null;
+  if (hasSessionCookie) {
+    const verify = async (): Promise<string | null> => {
+      const { data } = await supabase.auth.getClaims(undefined, {
+        jwks: await getJwks(),
+      });
+      return data?.claims.sub ?? null;
+    };
+    const giveUp = new Promise<null>((resolve) =>
+      setTimeout(() => resolve(null), CLAIMS_TIMEOUT_MS),
+    );
+    userId = await Promise.race([verify().catch(() => null), giveUp]);
+  }
 
   const isPublic = matchesAny(pathname, PUBLIC_PATHS);
 
