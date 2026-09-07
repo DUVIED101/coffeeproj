@@ -105,6 +105,7 @@ export function BusinessProfileView(): React.JSX.Element {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const userId = user?.id;
+  const [logoOpen, setLogoOpen] = useState(false);
 
   const businessQuery = useQuery({
     queryKey: ["business", "byOwner", userId],
@@ -167,7 +168,6 @@ export function BusinessProfileView(): React.JSX.Element {
   const reliability = reliabilityQuery.data;
   const branchCount = branchesQuery.data?.length ?? 0;
   const hasBrand = Boolean(business.website) || business.socialLinks.length > 0;
-  const [logoOpen, setLogoOpen] = useState(false);
 
   return (
     <>

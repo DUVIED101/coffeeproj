@@ -15,14 +15,11 @@ import { JobOfferService } from "@bystrobarista/core/services/JobOfferService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import { isMetroAnySelection } from "@bystrobarista/core/config/metroFilter";
 import type { BaristaProfileId, UserId } from "@bystrobarista/core/types/ids";
-import {
-  computeDuration,
-  computeTotalDuration,
-} from "@bystrobarista/core/types/workExperience";
 import { computeMedicalBookStatus } from "@bystrobarista/core/utils/medicalBook";
 import { ReportButton } from "@/components/ReportButton";
 import { StarRow } from "@/components/StarRow";
 import { ImageLightbox } from "@/components/ImageLightbox";
+import { WorkExperienceList } from "@/components/WorkExperienceList";
 import { transformedImageUrl } from "@/lib/imageTransform";
 import { formatDateOnly } from "@/lib/dates";
 
@@ -114,22 +111,6 @@ export default function ViewBaristaProfilePage(): React.JSX.Element {
   );
   const hasOfferableJobs = openJobs.some((j) => !offeredJobIds.has(j.id));
 
-  const formatMonthYear = (year: number, month: number): string =>
-    new Date(year, month - 1, 1).toLocaleDateString(locale, {
-      month: "short",
-      year: "numeric",
-    });
-
-  const totalDuration = computeTotalDuration(
-    workExperiences.map((e) => ({
-      startYear: e.startYear,
-      startMonth: e.startMonth,
-      endYear: e.endYear,
-      endMonth: e.endMonth,
-      isCurrent: e.isCurrent,
-    })),
-  );
-
   const medicalStatus = computeMedicalBookStatus(profile.medicalBookExpiresOn);
   const medicalDate = profile.medicalBookExpiresOn
     ? formatDateOnly(profile.medicalBookExpiresOn, locale, {
@@ -151,11 +132,20 @@ export default function ViewBaristaProfilePage(): React.JSX.Element {
       <div className="rounded-card border border-line bg-white p-4">
         <div className="flex items-center gap-4">
           {profile.avatarUrl ? (
-            <img
-              src={transformedImageUrl(profile.avatarUrl, 160)}
-              alt=""
-              className="h-20 w-20 rounded-full object-cover"
-            />
+            <button
+              type="button"
+              onClick={() =>
+                setLightbox({ photos: [profile.avatarUrl as string], index: 0 })
+              }
+              aria-label={t("viewBarista.viewAvatarA11y")}
+              className="rounded-full"
+            >
+              <img
+                src={transformedImageUrl(profile.avatarUrl, 160)}
+                alt=""
+                className="h-20 w-20 rounded-full object-cover"
+              />
+            </button>
           ) : (
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary text-2xl font-bold text-white">
               {profile.firstName[0]}
@@ -225,62 +215,7 @@ export default function ViewBaristaProfilePage(): React.JSX.Element {
 
       {workExperiences.length > 0 && (
         <div className="mt-4 rounded-card border border-line bg-white p-4">
-          <div className="mb-2 flex items-baseline justify-between">
-            <h2 className="text-base font-semibold">
-              {t("barista.workExperience.title")}
-            </h2>
-            <span className="text-xs text-ink-secondary">
-              {t("barista.workExperience.totalShort", {
-                years: totalDuration.years,
-                months: totalDuration.months,
-              })}
-            </span>
-          </div>
-          {workExperiences.map((experience) => {
-            const duration = computeDuration({
-              startYear: experience.startYear,
-              startMonth: experience.startMonth,
-              endYear: experience.endYear,
-              endMonth: experience.endMonth,
-              isCurrent: experience.isCurrent,
-            });
-            const start = formatMonthYear(
-              experience.startYear,
-              experience.startMonth,
-            );
-            const range =
-              experience.isCurrent ||
-              experience.endYear == null ||
-              experience.endMonth == null
-                ? t("barista.workExperience.currentRange", { start })
-                : t("barista.workExperience.rangeWithEnd", {
-                    start,
-                    end: formatMonthYear(
-                      experience.endYear,
-                      experience.endMonth,
-                    ),
-                  });
-            return (
-              <div
-                key={experience.id}
-                className="border-t border-line py-2.5 first:border-t-0"
-              >
-                <p className="text-sm font-medium">
-                  {experience.position} · {experience.employer}
-                </p>
-                <p className="text-xs text-ink-secondary">
-                  {range} ·{" "}
-                  {t("barista.workExperience.duration", {
-                    years: duration.years,
-                    months: duration.months,
-                  })}
-                </p>
-                {experience.description && (
-                  <p className="mt-1 text-sm">{experience.description}</p>
-                )}
-              </div>
-            );
-          })}
+          <WorkExperienceList experiences={workExperiences} locale={locale} />
         </div>
       )}
 

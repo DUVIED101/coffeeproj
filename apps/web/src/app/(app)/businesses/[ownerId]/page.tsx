@@ -9,9 +9,11 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { BusinessService } from "@bystrobarista/core/services/BusinessService";
 import { ReviewService } from "@bystrobarista/core/services/ReviewService";
+import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import type { UserId } from "@bystrobarista/core/types/ids";
 import { StarRow } from "@/components/StarRow";
 import { ImageLightbox } from "@/components/ImageLightbox";
+import { ReportButton } from "@/components/ReportButton";
 import { transformedImageUrl } from "@/lib/imageTransform";
 import { safeExternalUrl } from "@/lib/safeUrl";
 
@@ -21,6 +23,11 @@ export default function BusinessPublicProfilePage(): React.JSX.Element {
   const { t } = useTranslation();
   const params = useParams<{ ownerId: string }>();
   const ownerId = params.ownerId as UserId;
+  const isBarista = useAuthStore((s) => s.user?.accountType) === "barista";
+  const [lightbox, setLightbox] = useState<{
+    photos: string[];
+    index: number;
+  } | null>(null);
 
   const businessQuery = useQuery({
     queryKey: ["business", "byOwner", ownerId],
@@ -65,10 +72,6 @@ export default function BusinessPublicProfilePage(): React.JSX.Element {
   const aggregate = aggregateQuery.data;
   const reliability = reliabilityQuery.data;
   const branches = branchesQuery.data ?? [];
-  const [lightbox, setLightbox] = useState<{
-    photos: string[];
-    index: number;
-  } | null>(null);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -119,6 +122,17 @@ export default function BusinessPublicProfilePage(): React.JSX.Element {
         >
           {t("businessPublicProfile.viewJobs")}
         </Link>
+        {isBarista && (
+          // Mobile parity: a barista can flag a business from its public
+          // profile, before applying to anything.
+          <div className="mt-3">
+            <ReportButton
+              targetType="business"
+              targetId={business.id}
+              variant="icon"
+            />
+          </div>
+        )}
       </div>
 
       {(business.website || business.socialLinks.length > 0) && (

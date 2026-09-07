@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
@@ -16,7 +16,10 @@ import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import type { Job } from "@bystrobarista/core/types/job";
 import type { UserId } from "@bystrobarista/core/types/ids";
 import { StarRow } from "@/components/StarRow";
+import { BackLink } from "@/components/BackLink";
 import { BusinessJobDetails } from "@/components/BusinessJobDetails";
+import { ImageLightbox } from "@/components/ImageLightbox";
+import { ReportButton } from "@/components/ReportButton";
 import { transformedImageUrl } from "@/lib/imageTransform";
 
 // Same gate as mobile JobDetailsScreen.
@@ -78,6 +81,7 @@ function BaristaJobDetails(): React.JSX.Element {
   const params = useParams<{ jobId: string }>();
   const jobId = params.jobId;
   const userId = useAuthStore((s) => s.user?.id);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const jobQuery = useQuery({
     queryKey: ["jobs", "byId", jobId],
@@ -170,6 +174,7 @@ function BaristaJobDetails(): React.JSX.Element {
 
   return (
     <div className="mx-auto max-w-2xl pb-24">
+      <BackLink fallbackHref="/jobs" label={t("jobDetails.backToJobs")} />
       <h1 className="text-2xl font-bold">{job.title}</h1>
 
       <div className="mt-1 flex items-center gap-2 text-sm text-ink-secondary">
@@ -195,18 +200,36 @@ function BaristaJobDetails(): React.JSX.Element {
         </Link>
       )}
 
+      {/* A barista can flag a posting before (or instead of) applying. */}
+      <div className="mt-2">
+        <ReportButton targetType="job" targetId={job.id} variant="icon" />
+      </div>
+
       {(job.branchPhotos?.length ?? 0) > 0 && (
         <div className="mt-4 flex gap-2 overflow-x-auto">
           {job.branchPhotos!.map((photo, i) => (
-            <img
+            <button
               key={i}
-              src={transformedImageUrl(photo, 160)}
-              alt=""
-              className="h-40 w-40 shrink-0 rounded-card bg-bg-secondary object-cover"
-              loading="lazy"
-            />
+              type="button"
+              onClick={() => setLightboxIndex(i)}
+              className="shrink-0"
+            >
+              <img
+                src={transformedImageUrl(photo, 160)}
+                alt=""
+                className="h-40 w-40 rounded-card bg-bg-secondary object-cover"
+                loading="lazy"
+              />
+            </button>
           ))}
         </div>
+      )}
+      {lightboxIndex !== null && job.branchPhotos && (
+        <ImageLightbox
+          photos={job.branchPhotos}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />
       )}
 
       <section className="mt-6">

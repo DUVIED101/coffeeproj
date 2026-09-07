@@ -12,6 +12,8 @@ import { JobOfferService } from "@bystrobarista/core/services/JobOfferService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import type { Job, JobStatus } from "@bystrobarista/core/types/job";
 import type { JobId } from "@bystrobarista/core/types/ids";
+import { BackLink } from "@/components/BackLink";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { transformedImageUrl } from "@/lib/imageTransform";
 
 // Full weekday names (recurringDays) → the short dayOfWeek.* label keys.
@@ -63,6 +65,7 @@ export function BusinessJobDetails({
   const queryClient = useQueryClient();
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const jobQuery = useQuery({
     queryKey: ["jobs", "byId", jobId],
@@ -145,6 +148,7 @@ export function BusinessJobDetails({
 
   return (
     <div className="mx-auto max-w-2xl pb-16">
+      <BackLink fallbackHref="/dashboard" label={t("jobDetails.backToJobs")} />
       <div className="rounded-card border border-line bg-white p-4">
         <h1 className="text-2xl font-bold">{job.title}</h1>
         <p className="mt-1 font-semibold">{job.businessName}</p>
@@ -181,15 +185,28 @@ export function BusinessJobDetails({
 
       {job.branchPhotos && job.branchPhotos.length > 0 && (
         <div className="mt-4 flex gap-2 overflow-x-auto">
-          {job.branchPhotos.map((url) => (
-            <img
+          {job.branchPhotos.map((url, i) => (
+            <button
               key={url}
-              src={transformedImageUrl(url, 320)}
-              alt=""
-              className="h-36 w-48 shrink-0 rounded-card object-cover"
-            />
+              type="button"
+              onClick={() => setLightboxIndex(i)}
+              className="shrink-0"
+            >
+              <img
+                src={transformedImageUrl(url, 320)}
+                alt=""
+                className="h-36 w-48 rounded-card object-cover"
+              />
+            </button>
           ))}
         </div>
+      )}
+      {lightboxIndex !== null && job.branchPhotos && (
+        <ImageLightbox
+          photos={job.branchPhotos}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />
       )}
 
       <div className="mt-4 rounded-card border border-line bg-white p-4">
