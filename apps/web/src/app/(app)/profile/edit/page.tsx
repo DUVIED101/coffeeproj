@@ -23,6 +23,9 @@ import {
   toCityCode,
   type CityCode,
 } from "@bystrobarista/core/types/city";
+import { normalizePreferredMetroStations } from "@bystrobarista/core/config/metroFilter";
+import { MetroService } from "@bystrobarista/core/utils/metro";
+import { CitySelect } from "@/components/CitySelect";
 import type { BaristaProfileId } from "@bystrobarista/core/types/ids";
 import type { GeoPoint } from "@bystrobarista/core/types/business";
 import {
@@ -215,7 +218,7 @@ function BaristaProfileEditWizard(): React.JSX.Element {
   const handleCityChange = (next: CityCode): void => {
     if (next === city) return;
     setCity(next);
-    setPreferredMetroStations([]);
+    setPreferredMetroStations(normalizePreferredMetroStations(next, []));
   };
 
   const persistCertifications = async (next: string[]): Promise<void> => {
@@ -288,7 +291,10 @@ function BaristaProfileEditWizard(): React.JSX.Element {
         equipmentExperience: selectedEquipment,
         certifications,
         languages: ["Russian"],
-        preferredMetroStations,
+        preferredMetroStations: normalizePreferredMetroStations(
+          city,
+          preferredMetroStations,
+        ),
         preferredShiftTimes: selectedShiftTimes,
         hourlyRateMin: hourlyRateMin ? parseInt(hourlyRateMin, 10) : undefined,
         medicalBookExpiresOn: medicalBookExpiresOn || undefined,
@@ -408,18 +414,12 @@ function BaristaProfileEditWizard(): React.JSX.Element {
               <span className={sectionLabel}>
                 {t("baristaSetup.fieldCity")}
               </span>
-              <div className="flex gap-2">
-                {(["spb", "moscow"] as CityCode[]).map((code) => (
-                  <button
-                    key={code}
-                    type="button"
-                    onClick={() => handleCityChange(code)}
-                    className={chip(city === code)}
-                  >
-                    {t(`city.codes.${code}`)}
-                  </button>
-                ))}
-              </div>
+              <CitySelect
+                value={city}
+                onChange={(code) => {
+                  if (code) handleCityChange(code);
+                }}
+              />
             </div>
             <label className="flex flex-col gap-1">
               <span className={sectionLabel}>
@@ -524,18 +524,20 @@ function BaristaProfileEditWizard(): React.JSX.Element {
 
         {currentStep === 2 && (
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <span className={sectionLabel}>
-                {t("baristaSetup.fieldMetro")}
-              </span>
-              <button
-                type="button"
-                onClick={() => setMetroOpen(true)}
-                className="rounded-input border border-line px-3 py-2 text-left text-sm hover:border-primary"
-              >
-                Ⓜ {metroLabel}
-              </button>
-            </div>
+            {MetroService.hasMetro(city) && (
+              <div className="flex flex-col gap-1">
+                <span className={sectionLabel}>
+                  {t("baristaSetup.fieldMetro")}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setMetroOpen(true)}
+                  className="rounded-input border border-line px-3 py-2 text-left text-sm hover:border-primary"
+                >
+                  Ⓜ {metroLabel}
+                </button>
+              </div>
+            )}
             <div className="flex flex-col gap-1">
               <span className={sectionLabel}>
                 {t("baristaSetup.fieldShiftTimes")}
@@ -725,7 +727,6 @@ function BaristaProfileEditWizard(): React.JSX.Element {
         city={city}
         value={preferredMetroStations}
         userLocation={userLocation}
-        onCityChange={handleCityChange}
         onChange={setPreferredMetroStations}
         onClose={() => setMetroOpen(false)}
       />

@@ -7,7 +7,7 @@ import {
   type MetroStation,
 } from "@bystrobarista/core/utils/metro";
 import { METRO_ANY } from "@bystrobarista/core/config/metroFilter";
-import { CITY_CODES, type CityCode } from "@bystrobarista/core/types/city";
+import { getCityLabel, type CityCode } from "@bystrobarista/core/types/city";
 import type { GeoPoint } from "@bystrobarista/core/types/business";
 
 type Props = {
@@ -15,25 +15,24 @@ type Props = {
   city: CityCode;
   value: string[];
   userLocation?: GeoPoint;
-  onCityChange: (city: CityCode) => void;
   onChange: (stations: string[]) => void;
   onClose: () => void;
 };
 
 const NEARBY_LIMIT = 5;
 
-// Multi-select metro picker mirroring mobile's MetroSelector modal: city
-// tabs, search, nearby-stations section, METRO_ANY sentinel semantics.
+// Multi-select metro picker mirroring mobile's MetroSelector modal: search,
+// nearby-stations section, METRO_ANY sentinel semantics. The city is chosen
+// outside (CitySelect) and only shown in the header here.
 export function MetroFilterModal({
   open,
   city,
   value,
   userLocation,
-  onCityChange,
   onChange,
   onClose,
 }: Props): React.JSX.Element | null {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [query, setQuery] = useState("");
 
   const nearby = useMemo(() => {
@@ -113,7 +112,14 @@ export function MetroFilterModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <h2 className="font-semibold">{t("metro.titleMulti")}</h2>
+          <div>
+            <h2 className="font-semibold">{t("metro.titleMulti")}</h2>
+            <p className="text-xs text-ink-secondary">
+              {t("metro.cityLabel", {
+                name: getCityLabel(city, i18n.language),
+              })}
+            </p>
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -123,29 +129,6 @@ export function MetroFilterModal({
             {value.filter((s) => s !== METRO_ANY).length > 0 &&
               ` (${value.filter((s) => s !== METRO_ANY).length})`}
           </button>
-        </div>
-
-        <div className="flex gap-1 px-4 pt-3">
-          {CITY_CODES.map((code) => (
-            <button
-              key={code}
-              type="button"
-              onClick={() => {
-                if (code !== city) {
-                  onCityChange(code);
-                  onChange([]);
-                  setQuery("");
-                }
-              }}
-              className={`rounded-input px-3 py-1.5 text-sm font-medium ${
-                code === city
-                  ? "bg-primary text-white"
-                  : "bg-bg-secondary text-ink"
-              }`}
-            >
-              {t(`city.codes.${code}`)}
-            </button>
-          ))}
         </div>
 
         <div className="px-4 py-3">

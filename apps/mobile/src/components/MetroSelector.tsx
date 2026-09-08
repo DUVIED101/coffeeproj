@@ -10,17 +10,14 @@ import {
   Pressable,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { MetroService, type MetroStation } from "@bystrobarista/core/utils/metro";
-import { CITY_CODES, type CityCode } from "@bystrobarista/core/types/city";
+import { MetroService, type MetroStation } from '@bystrobarista/core/utils/metro';
+import { getCityLabel, type CityCode } from '@bystrobarista/core/types/city';
 import type { GeoPoint } from '@bystrobarista/core/types/business';
 import { COLORS } from '@bystrobarista/core/config/constants';
 
 const NEARBY_LIMIT = 5;
 
-import {
-  METRO_ANY,
-  isMetroAnySelection,
-} from '@bystrobarista/core/config/metroFilter';
+import { METRO_ANY, isMetroAnySelection } from '@bystrobarista/core/config/metroFilter';
 export { METRO_ANY, isMetroAnySelection };
 
 type StationRow = MetroStation & { distance?: number };
@@ -29,7 +26,6 @@ type CommonProps = {
   placeholder?: string;
   error?: string;
   city: CityCode;
-  onCityChange: (city: CityCode) => void;
   userLocation?: GeoPoint;
   /**
    * When true, hides the "Any station" row. Used for business branches where
@@ -53,16 +49,16 @@ type MultiMetroSelectorProps = CommonProps & {
 type MetroSelectorProps = SingleMetroSelectorProps | MultiMetroSelectorProps;
 
 export const MetroSelector: React.FC<MetroSelectorProps> = props => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const {
     placeholder = t('metro.placeholderSingle'),
     error,
     multiSelect,
     city,
-    onCityChange,
     userLocation,
     hideAnyOption,
   } = props;
+  const hasMetro = MetroService.hasMetro(city);
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -125,12 +121,6 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
       props.onChange(null);
     }
     setIsOpen(false);
-    setSearchQuery('');
-  };
-
-  const handleCityTab = (nextCity: CityCode) => {
-    if (nextCity === city) return;
-    onCityChange(nextCity);
     setSearchQuery('');
   };
 
@@ -207,6 +197,20 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
     );
   };
 
+  if (!hasMetro) {
+    return (
+      <View style={styles.container}>
+        <View
+          style={[styles.selector, styles.selectorDisabled]}
+          accessibilityState={{ disabled: true }}>
+          <Text style={[styles.selectorText, styles.placeholder]} numberOfLines={1}>
+            {t('metro.noMetroInCity')}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <TouchableOpacity
@@ -231,28 +235,17 @@ export const MetroSelector: React.FC<MetroSelectorProps> = props => {
         <Pressable style={styles.modalOverlay} onPress={handleDone}>
           <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {multiSelect ? t('metro.titleMulti') : t('metro.titleSingle')}
-              </Text>
+              <View style={styles.modalTitleBlock}>
+                <Text style={styles.modalTitle}>
+                  {multiSelect ? t('metro.titleMulti') : t('metro.titleSingle')}
+                </Text>
+                <Text style={styles.modalSubtitle}>
+                  {t('metro.cityLabel', { name: getCityLabel(city, i18n.language) })}
+                </Text>
+              </View>
               <TouchableOpacity onPress={handleDone}>
                 <Text style={styles.closeButton}>✕</Text>
               </TouchableOpacity>
-            </View>
-
-            <View style={styles.cityTabs}>
-              {CITY_CODES.map(code => {
-                const active = code === city;
-                return (
-                  <TouchableOpacity
-                    key={code}
-                    style={[styles.cityTab, active && styles.cityTabActive]}
-                    onPress={() => handleCityTab(code)}>
-                    <Text style={[styles.cityTabText, active && styles.cityTabTextActive]}>
-                      {t(`metro.cityTab.${code}`)}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
             </View>
 
             <TextInput
@@ -331,6 +324,9 @@ const styles = StyleSheet.create({
   selectorError: {
     borderColor: COLORS.error,
   },
+  selectorDisabled: {
+    opacity: 0.6,
+  },
   selectorText: {
     fontSize: 14,
     color: COLORS.text,
@@ -376,44 +372,21 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
+  modalTitleBlock: {
+    flex: 1,
+  },
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
   },
+  modalSubtitle: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
   closeButton: {
     fontSize: 24,
     color: '#999',
-  },
-  cityTabs: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: 12,
-    backgroundColor: COLORS.backgroundSecondary,
-    borderRadius: 999,
-    padding: 4,
-  },
-  cityTab: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 999,
-    alignItems: 'center',
-  },
-  cityTabActive: {
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  cityTabText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: COLORS.textSecondary,
-  },
-  cityTabTextActive: {
-    color: COLORS.text,
-    fontWeight: '600',
   },
   searchInput: {
     margin: 16,

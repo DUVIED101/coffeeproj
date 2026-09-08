@@ -20,49 +20,52 @@ export interface MetroLine {
   color: string;
 }
 
-export interface MetroStationsData {
-  spb: MetroStation[];
-  moscow: MetroStation[];
-}
+export type MetroStationsData = Partial<Record<CityCode, MetroStation[]>>;
 
-const typedMetroData = metroData as MetroStationsData;
+const stationsByCity = metroData as MetroStationsData;
 
-const stationsByCity: Record<CityCode, MetroStation[]> = {
-  spb: typedMetroData.spb,
-  moscow: typedMetroData.moscow,
-};
+const EMPTY_STATIONS: readonly MetroStation[] = [];
+
+const stationsFor = (city: CityCode): MetroStation[] =>
+  stationsByCity[city] ?? (EMPTY_STATIONS as MetroStation[]);
+
+export const METRO_CITY_CODES: readonly CityCode[] = Object.keys(stationsByCity) as CityCode[];
 
 export class MetroService {
+  static hasMetro(city: CityCode): boolean {
+    return (stationsByCity[city]?.length ?? 0) > 0;
+  }
+
   static getAllStations(city: CityCode): MetroStation[] {
-    return stationsByCity[city];
+    return stationsFor(city);
   }
 
   static getStationByName(name: string, city: CityCode): MetroStation | undefined {
     const lower = name.toLowerCase();
-    return stationsByCity[city].find(
+    return stationsFor(city).find(
       station => station.name.toLowerCase() === lower || station.nameEn.toLowerCase() === lower
     );
   }
 
   static searchStations(query: string, city: CityCode): MetroStation[] {
     const trimmed = query.trim();
-    if (!trimmed) return stationsByCity[city];
+    if (!trimmed) return stationsFor(city);
     const lower = trimmed.toLowerCase();
-    return stationsByCity[city].filter(
+    return stationsFor(city).filter(
       station =>
         station.name.toLowerCase().includes(lower) || station.nameEn.toLowerCase().includes(lower)
     );
   }
 
   static getStationsByLine(lineName: string, city: CityCode): MetroStation[] {
-    return stationsByCity[city].filter(
+    return stationsFor(city).filter(
       station => station.line === lineName || station.lineEn === lineName
     );
   }
 
   static getUniqueLines(city: CityCode): MetroLine[] {
     const linesMap = new Map<string, MetroLine>();
-    for (const station of stationsByCity[city]) {
+    for (const station of stationsFor(city)) {
       if (!linesMap.has(station.line)) {
         linesMap.set(station.line, {
           name: station.line,
@@ -80,12 +83,13 @@ export class MetroService {
     city: CityCode,
     maxResults: number = 10
   ): Array<MetroStation & { distance: number }> {
-    return stationsByCity[city]
+    return stationsFor(city)
       .filter(
         (
           station
-        ): station is MetroStation & { coordinates: NonNullable<MetroStation['coordinates']> } =>
-          station.coordinates !== undefined
+        ): station is MetroStation & {
+          coordinates: NonNullable<MetroStation['coordinates']>;
+        } => station.coordinates !== undefined
       )
       .map(station => ({
         ...station,

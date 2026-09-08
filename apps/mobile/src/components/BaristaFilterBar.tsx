@@ -11,12 +11,18 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
-import type { BaristaFilters, ShiftTime, DayOfWeek, WorkloadType } from '@bystrobarista/core/types/baristaProfile';
+import type {
+  BaristaFilters,
+  ShiftTime,
+  DayOfWeek,
+  WorkloadType,
+} from '@bystrobarista/core/types/baristaProfile';
 import { DAYS_OF_WEEK, WORKLOAD_TYPES } from '@bystrobarista/core/types/baristaProfile';
 import type { Equipment } from '@bystrobarista/core/types/business';
-import { DEFAULT_CITY, CITY_CODES, type CityCode } from '@bystrobarista/core/types/city';
+import { DEFAULT_CITY, getCityLabel, type CityCode } from '@bystrobarista/core/types/city';
 import { COLORS, EQUIPMENT_TYPES } from '@bystrobarista/core/config/constants';
 import { MetroSelector, METRO_ANY } from './MetroSelector';
+import { CityPickerModal } from './CityPicker';
 
 function toIsoDate(d: Date): string {
   const y = d.getFullYear();
@@ -74,7 +80,7 @@ const dedupe = (values: string[]): string[] => Array.from(new Set(values));
 
 export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
   ({ onFilterChange, currentFilters, branchMetroStations, branchCities }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [showEquipmentModal, setShowEquipmentModal] = useState(false);
     const [showShiftModal, setShowShiftModal] = useState(false);
     const [showExperienceModal, setShowExperienceModal] = useState(false);
@@ -189,13 +195,6 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
       [currentFilters, onFilterChange]
     );
 
-    const handleCityChange = useCallback(
-      (nextCity: CityCode) => {
-        onFilterChange({ ...currentFilters, city: nextCity, metroStations: undefined });
-      },
-      [currentFilters, onFilterChange]
-    );
-
     const handleAvailableFromApply = useCallback(() => {
       onFilterChange({
         ...currentFilters,
@@ -266,8 +265,8 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
       : t('baristaFilterBar.hourlyCapPlaceholder', { defaultValue: 'До ₽/час' });
     const cityLabel = hasCity
       ? t('baristaFilterBar.city', {
-          name: t(`city.codes.${activeCity}`),
-          defaultValue: `Город: ${t(`city.codes.${activeCity}`)}`,
+          name: getCityLabel(activeCity, i18n.language),
+          defaultValue: `Город: ${getCityLabel(activeCity, i18n.language)}`,
         })
       : t('baristaFilterBar.cityPlaceholder', { defaultValue: 'Город' });
 
@@ -307,7 +306,6 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
             <MetroSelector
               multiSelect
               city={activeCity}
-              onCityChange={handleCityChange}
               value={currentFilters.metroStations ?? []}
               onChange={handleMetroChange}
               placeholder={t('baristaFilterBar.metroPlaceholder', { defaultValue: 'Метро' })}
@@ -639,53 +637,13 @@ export const BaristaFilterBar = React.memo<BaristaFilterBarProps>(
           </Pressable>
         </Modal>
 
-        <Modal
+        <CityPickerModal
           visible={showCityModal}
-          animationType="slide"
-          transparent
-          onRequestClose={() => setShowCityModal(false)}>
-          <Pressable style={styles.modalOverlay} onPress={() => setShowCityModal(false)}>
-            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>
-                  {t('baristaFilterBar.chooseCity', { defaultValue: 'Выберите город' })}
-                </Text>
-                <TouchableOpacity onPress={() => setShowCityModal(false)}>
-                  <Text style={styles.closeButton}>✕</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.optionList}>
-                <TouchableOpacity
-                  style={[styles.optionItem, !hasCity && styles.optionItemSelected]}
-                  onPress={() => handleCitySelect(undefined)}>
-                  <Text style={[styles.optionItemText, !hasCity && styles.optionItemTextSelected]}>
-                    {t('baristaFilterBar.cityAny', { defaultValue: 'Любой' })}
-                  </Text>
-                  {!hasCity && <Text style={styles.checkmark}>✓</Text>}
-                </TouchableOpacity>
-                {CITY_CODES.map(code => {
-                  const isSelected = currentFilters.city === code;
-                  return (
-                    <TouchableOpacity
-                      key={code}
-                      style={[styles.optionItem, isSelected && styles.optionItemSelected]}
-                      onPress={() => handleCitySelect(code)}>
-                      <Text
-                        style={[
-                          styles.optionItemText,
-                          isSelected && styles.optionItemTextSelected,
-                        ]}>
-                        {t(`city.codes.${code}`)}
-                      </Text>
-                      {isSelected && <Text style={styles.checkmark}>✓</Text>}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-          </Pressable>
-        </Modal>
+          value={currentFilters.city}
+          onSelect={handleCitySelect}
+          onClose={() => setShowCityModal(false)}
+          allowAny
+        />
 
         <Modal
           visible={showAvailableFromModal}

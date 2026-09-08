@@ -30,7 +30,9 @@ import { PHOTO_LIMIT } from '@bystrobarista/core/utils/storage';
 import { pickPhotos, reportRejections } from '@bystrobarista/core/utils/pickPhotos';
 import { ReviewService } from '@bystrobarista/core/services/ReviewService';
 import { MetroSelector, isMetroAnySelection } from '../../components/MetroSelector';
-import { CityToggle } from '../../components/CityToggle';
+import { CityPicker } from '../../components/CityPicker';
+import { normalizePreferredMetroStations } from '@bystrobarista/core/config/metroFilter';
+import { MetroService } from '@bystrobarista/core/utils/metro';
 import { StarRow } from '../../components/StarRow';
 import { FullscreenImageViewer } from '../../components/FullscreenImageViewer';
 import { pickAndCropAvatar } from '../../utils/imageCrop';
@@ -72,7 +74,7 @@ import { DAYS_OF_WEEK, WORKLOAD_TYPES } from '@bystrobarista/core/types/baristaP
 import {
   DEFAULT_CITY,
   toCityCode,
-  CITY_LABELS_RU,
+  getCityLabel,
   type CityCode,
 } from '@bystrobarista/core/types/city';
 import type { BaristaProfileId, UserId } from '@bystrobarista/core/types/ids';
@@ -97,7 +99,11 @@ type Props = {
 };
 
 type EditableSectionKey =
-  'personal' | 'professional' | 'workExperience' | 'preferences' | 'portfolio';
+  | 'personal'
+  | 'professional'
+  | 'workExperience'
+  | 'preferences'
+  | 'portfolio';
 
 const COMPLETENESS_TO_SECTION: Record<CompletenessItemKey, EditableSectionKey> = {
   basicInfo: 'personal',
@@ -658,7 +664,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
         yearsOfExperience: yearsOfExperience ? parseFloat(yearsOfExperience) : undefined,
         equipmentExperience: selectedEquipment,
         certifications,
-        preferredMetroStations,
+        preferredMetroStations: normalizePreferredMetroStations(city, preferredMetroStations),
         preferredShiftTimes: selectedShiftTimes,
         hourlyRateMin: hourlyRateMin ? parseInt(hourlyRateMin, 10) : undefined,
         medicalBookExpiresOn: medicalBookExpiresOn || undefined,
@@ -846,7 +852,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.name}>
                 {profile.firstName} {profile.lastName}
               </Text>
-              <Text style={styles.city}>{CITY_LABELS_RU[toCityCode(profile.city)]}</Text>
+              <Text style={styles.city}>
+                {getCityLabel(toCityCode(profile.city), i18n.language)}
+              </Text>
               {(() => {
                 const age = yearsBetween(profile.dateOfBirth);
                 return age !== null ? (
@@ -937,11 +945,11 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.label}>
                   {t('baristaProfileScreen.city', { defaultValue: 'Город' })}
                 </Text>
-                <CityToggle
+                <CityPicker
                   value={city}
                   onChange={nextCity => {
                     setCity(nextCity);
-                    setPreferredMetroStations([]);
+                    setPreferredMetroStations(normalizePreferredMetroStations(nextCity, []));
                   }}
                 />
 
@@ -1263,22 +1271,22 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
 
             {isEditing ? (
               <>
-                <Text style={styles.label}>
-                  {t('baristaProfileScreen.preferredMetro', {
-                    defaultValue: 'Предпочитаемые станции метро',
-                  })}
-                </Text>
-                <MetroSelector
-                  multiSelect
-                  city={city}
-                  onCityChange={nextCity => {
-                    setCity(nextCity);
-                    setPreferredMetroStations([]);
-                  }}
-                  value={preferredMetroStations}
-                  onChange={setPreferredMetroStations}
-                  userLocation={userLocation}
-                />
+                {MetroService.hasMetro(city) && (
+                  <>
+                    <Text style={styles.label}>
+                      {t('baristaProfileScreen.preferredMetro', {
+                        defaultValue: 'Предпочитаемые станции метро',
+                      })}
+                    </Text>
+                    <MetroSelector
+                      multiSelect
+                      city={city}
+                      value={preferredMetroStations}
+                      onChange={setPreferredMetroStations}
+                      userLocation={userLocation}
+                    />
+                  </>
+                )}
 
                 <Text style={styles.label}>
                   {t('baristaProfileScreen.preferredShiftTimes', {
@@ -1403,7 +1411,9 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
               </>
             ) : (
               (() => {
-                const hasMetro = profile.preferredMetroStations.length > 0;
+                const hasMetro =
+                  MetroService.hasMetro(toCityCode(profile.city)) &&
+                  profile.preferredMetroStations.length > 0;
                 const hasShifts = profile.preferredShiftTimes.length > 0;
                 const hasRate = profile.hourlyRateMin != null;
                 const hasAvailableFrom = !!profile.availableFromDate;

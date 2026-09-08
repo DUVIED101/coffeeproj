@@ -26,7 +26,14 @@ import {
   type ShiftTime,
   type WorkloadType,
 } from "@bystrobarista/core/types/baristaProfile";
-import { toCityCode, type CityCode } from "@bystrobarista/core/types/city";
+import {
+  getCityLabel,
+  toCityCode,
+  type CityCode,
+} from "@bystrobarista/core/types/city";
+import { normalizePreferredMetroStations } from "@bystrobarista/core/config/metroFilter";
+import { MetroService } from "@bystrobarista/core/utils/metro";
+import { CitySelect } from "@/components/CitySelect";
 import type { GeoPoint } from "@bystrobarista/core/types/business";
 import type { BaristaProfileId, UserId } from "@bystrobarista/core/types/ids";
 import {
@@ -69,7 +76,6 @@ import { transformedImageUrl } from "@/lib/imageTransform";
 const SHIFT_TIMES: ShiftTime[] = ["morning", "afternoon", "evening", "night"];
 const BIO_MAX = 500;
 const RATE_MAX_DIGITS = 6;
-const CITIES: CityCode[] = ["spb", "moscow"];
 
 const sectionTitle = "mb-2 text-base font-semibold";
 const label =
@@ -282,7 +288,10 @@ export default function ProfilePage(): React.JSX.Element {
           : undefined,
         equipmentExperience: form.equipment,
         certifications: profile.certifications,
-        preferredMetroStations: form.metroStations,
+        preferredMetroStations: normalizePreferredMetroStations(
+          form.city,
+          form.metroStations,
+        ),
         preferredShiftTimes: form.shiftTimes,
         hourlyRateMin: form.hourlyRateMin
           ? parseInt(form.hourlyRateMin, 10)
@@ -529,7 +538,7 @@ export default function ProfilePage(): React.JSX.Element {
                   )}
                 </div>
                 <p className="text-sm text-ink-secondary">
-                  {t(`city.codes.${toCityCode(profile.city)}`)}
+                  {getCityLabel(toCityCode(profile.city), i18n.language)}
                   {age !== null &&
                     ` · ${t("baristaProfileScreen.yearsOld", { count: age })}`}
                 </p>
@@ -618,20 +627,20 @@ export default function ProfilePage(): React.JSX.Element {
                 <span className={fieldLabel}>
                   {t("baristaProfileScreen.city")}
                 </span>
-                <div className="mt-1 flex gap-2">
-                  {CITIES.map((code) => (
-                    <button
-                      key={code}
-                      type="button"
-                      onClick={() => {
-                        if (code === form.city) return;
-                        patch({ city: code, metroStations: [] });
-                      }}
-                      className={chip(form.city === code)}
-                    >
-                      {t(`city.codes.${code}`)}
-                    </button>
-                  ))}
+                <div className="mt-1">
+                  <CitySelect
+                    value={form.city}
+                    onChange={(code) => {
+                      if (!code || code === form.city) return;
+                      patch({
+                        city: code,
+                        metroStations: normalizePreferredMetroStations(
+                          code,
+                          [],
+                        ),
+                      });
+                    }}
+                  />
                 </div>
                 <label className={fieldLabel}>
                   {t("baristaProfileScreen.dateOfBirth")}
@@ -931,16 +940,20 @@ export default function ProfilePage(): React.JSX.Element {
             </h2>
             {editing ? (
               <>
-                <span className={fieldLabel}>
-                  {t("baristaProfileScreen.preferredMetro")}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setMetroOpen(true)}
-                  className="mt-1 w-full rounded-input border border-line px-3 py-2 text-left text-sm hover:border-primary"
-                >
-                  Ⓜ {metroLabel}
-                </button>
+                {MetroService.hasMetro(form.city) && (
+                  <>
+                    <span className={fieldLabel}>
+                      {t("baristaProfileScreen.preferredMetro")}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setMetroOpen(true)}
+                      className="mt-1 w-full rounded-input border border-line px-3 py-2 text-left text-sm hover:border-primary"
+                    >
+                      Ⓜ {metroLabel}
+                    </button>
+                  </>
+                )}
                 <span className={fieldLabel}>
                   {t("baristaProfileScreen.preferredShiftTimes")}
                 </span>
@@ -1233,10 +1246,6 @@ export default function ProfilePage(): React.JSX.Element {
               city={form.city}
               value={form.metroStations}
               userLocation={userLocation}
-              onCityChange={(next) => {
-                if (next === form.city) return;
-                patch({ city: next, metroStations: [] });
-              }}
               onChange={(stations) => patch({ metroStations: stations })}
               onClose={() => setMetroOpen(false)}
             />

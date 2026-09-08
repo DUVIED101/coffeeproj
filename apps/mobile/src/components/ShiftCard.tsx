@@ -8,7 +8,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import type { Application, ShiftLifecycleStatus } from '@bystrobarista/core/types/application';
 import type { Job } from '@bystrobarista/core/types/job';
-import { isCityCode } from '@bystrobarista/core/types/city';
+import { getCityLabel, isCityCode } from '@bystrobarista/core/types/city';
 
 type ShiftCardProps = {
   job: Job;
@@ -85,7 +85,7 @@ export const ShiftCard = React.memo<ShiftCardProps>(
             : ''
         : `${job.shiftDetails.startTime}–${job.shiftDetails.endTime}`;
     const cityLabel = isCityCode(job.location.city)
-      ? t(`city.codes.${job.location.city}`)
+      ? getCityLabel(job.location.city, i18n.language)
       : job.location.city;
     const metroOrBranch = job.metroStation || job.branchName || cityLabel;
 

@@ -12,10 +12,10 @@ import {
 import { useTranslation } from 'react-i18next';
 import { COLORS, RADII, EQUIPMENT_TYPES } from '@bystrobarista/core/config/constants';
 import { MetroSelector, METRO_ANY } from './MetroSelector';
-import { CityToggle } from './CityToggle';
+import { CityPicker } from './CityPicker';
 import type { JobType } from '@bystrobarista/core/types/job';
 import type { Equipment } from '@bystrobarista/core/types/business';
-import { DEFAULT_CITY, type CityCode } from "@bystrobarista/core/types/city";
+import { DEFAULT_CITY, type CityCode } from '@bystrobarista/core/types/city';
 
 export type ShiftFilters = {
   jobType?: JobType;
@@ -125,13 +125,12 @@ export const ShiftFilterSheet: React.FC<ShiftFilterSheetProps> = ({
             </View>
 
             <Text style={styles.sectionTitle}>{t('city.title')}</Text>
-            <CityToggle value={draft.city ?? DEFAULT_CITY} onChange={handleCityChange} />
+            <CityPicker value={draft.city ?? DEFAULT_CITY} onChange={handleCityChange} />
 
             <Text style={styles.sectionTitle}>{t('shifts.filter.metro')}</Text>
             <MetroSelector
               multiSelect
               city={draft.city ?? DEFAULT_CITY}
-              onCityChange={handleCityChange}
               value={draft.metroStations ?? []}
               onChange={handleMetroChange}
               placeholder={t('shifts.filter.metroPlaceholder')}

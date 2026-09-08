@@ -4550,5 +4550,735 @@
         "longitude": 37.287276
       }
     }
+  ],
+  "nizhny_novgorod": [
+    {
+      "id": "nn-1-1",
+      "name": "Горьковская",
+      "nameEn": "Gorkovskaya",
+      "line": "Автозаводская",
+      "lineEn": "Avtozavodskaya",
+      "lineColor": "#E50B00",
+      "coordinates": {
+        "latitude": 56.313883,
+        "longitude": 43.994028
+      }
+    },
+    {
+      "id": "nn-1-2",
+      "name": "Московская",
+      "nameEn": "Moskovskaya",
+      "line": "Автозаводская",
+      "lineEn": "Avtozavodskaya",
+      "lineColor": "#E50B00",
+      "coordinates": {
+        "latitude": 56.320995,
+        "longitude": 43.947088
+      }
+    },
+    {
+      "id": "nn-1-3",
+      "name": "Чкаловская",
+      "nameEn": "Chkalovskaya",
+      "line": "Автозаводская",
+      "lineEn": "Avtozavodskaya",
+      "lineColor": "#E50B00",
+      "coordinates": {
+        "latitude": 56.310594,
+        "longitude": 43.937171
+      }
+    },
+    {
+      "id": "nn-1-4",
+      "name": "Ленинская",
+      "nameEn": "Leninskaya",
+      "line": "Автозаводская",
+      "lineEn": "Avtozavodskaya",
+      "lineColor": "#E50B00",
+      "coordinates": {
+        "latitude": 56.299056,
+        "longitude": 43.938154
+      }
+    },
+    {
+      "id": "nn-1-5",
+      "name": "Заречная",
+      "nameEn": "Zarechnaya",
+      "line": "Автозаводская",
+      "lineEn": "Avtozavodskaya",
+      "lineColor": "#E50B00",
+      "coordinates": {
+        "latitude": 56.285142,
+        "longitude": 43.927774
+      }
+    },
+    {
+      "id": "nn-1-6",
+      "name": "Двигатель Революции",
+      "nameEn": "Dvigatel Revolyutsii",
+      "line": "Автозаводская",
+      "lineEn": "Avtozavodskaya",
+      "lineColor": "#E50B00",
+      "coordinates": {
+        "latitude": 56.276461,
+        "longitude": 43.921315
+      }
+    },
+    {
+      "id": "nn-1-7",
+      "name": "Пролетарская",
+      "nameEn": "Proletarskaya",
+      "line": "Автозаводская",
+      "lineEn": "Avtozavodskaya",
+      "lineColor": "#E50B00",
+      "coordinates": {
+        "latitude": 56.266449,
+        "longitude": 43.913272
+      }
+    },
+    {
+      "id": "nn-1-8",
+      "name": "Автозаводская",
+      "nameEn": "Avtozavodskaya",
+      "line": "Автозаводская",
+      "lineEn": "Avtozavodskaya",
+      "lineColor": "#E50B00",
+      "coordinates": {
+        "latitude": 56.257127,
+        "longitude": 43.9009
+      }
+    },
+    {
+      "id": "nn-1-9",
+      "name": "Комсомольская",
+      "nameEn": "Komsomolskaya",
+      "line": "Автозаводская",
+      "lineEn": "Avtozavodskaya",
+      "lineColor": "#E50B00",
+      "coordinates": {
+        "latitude": 56.252899,
+        "longitude": 43.890042
+      }
+    },
+    {
+      "id": "nn-1-10",
+      "name": "Кировская",
+      "nameEn": "Kirovskaya",
+      "line": "Автозаводская",
+      "lineEn": "Avtozavodskaya",
+      "lineColor": "#E50B00",
+      "coordinates": {
+        "latitude": 56.247768,
+        "longitude": 43.876884
+      }
+    },
+    {
+      "id": "nn-1-11",
+      "name": "Парк культуры",
+      "nameEn": "Park Kultury",
+      "line": "Автозаводская",
+      "lineEn": "Avtozavodskaya",
+      "lineColor": "#E50B00",
+      "coordinates": {
+        "latitude": 56.242125,
+        "longitude": 43.858045
+      }
+    },
+    {
+      "id": "nn-2-1",
+      "name": "Стрелка",
+      "nameEn": "Strelka",
+      "line": "Сормовско-Мещерская",
+      "lineEn": "Sormovsko-Meshcherskaya",
+      "lineColor": "#006ABC",
+      "coordinates": {
+        "latitude": 56.33531,
+        "longitude": 43.949575
+      }
+    },
+    {
+      "id": "nn-2-2",
+      "name": "Московская",
+      "nameEn": "Moskovskaya",
+      "line": "Сормовско-Мещерская",
+      "lineEn": "Sormovsko-Meshcherskaya",
+      "lineColor": "#006ABC",
+      "coordinates": {
+        "latitude": 56.320896,
+        "longitude": 43.947173
+      }
+    },
+    {
+      "id": "nn-2-3",
+      "name": "Канавинская",
+      "nameEn": "Kanavinskaya",
+      "line": "Сормовско-Мещерская",
+      "lineEn": "Sormovsko-Meshcherskaya",
+      "lineColor": "#006ABC",
+      "coordinates": {
+        "latitude": 56.320547,
+        "longitude": 43.926508
+      }
+    },
+    {
+      "id": "nn-2-4",
+      "name": "Бурнаковская",
+      "nameEn": "Burnakovskaya",
+      "line": "Сормовско-Мещерская",
+      "lineEn": "Sormovsko-Meshcherskaya",
+      "lineColor": "#006ABC",
+      "coordinates": {
+        "latitude": 56.325732,
+        "longitude": 43.912036
+      }
+    },
+    {
+      "id": "nn-2-5",
+      "name": "Буревестник",
+      "nameEn": "Burevestnik",
+      "line": "Сормовско-Мещерская",
+      "lineEn": "Sormovsko-Meshcherskaya",
+      "lineColor": "#006ABC",
+      "coordinates": {
+        "latitude": 56.333246,
+        "longitude": 43.894817
+      }
+    }
+  ],
+  "kazan": [
+    {
+      "id": "kzn-1-1",
+      "name": "Авиастроительная",
+      "nameEn": "Aviastroitelnaya",
+      "line": "Центральная",
+      "lineEn": "Tsentralnaya",
+      "lineColor": "#E4002B",
+      "coordinates": {
+        "latitude": 55.855691,
+        "longitude": 49.084413
+      }
+    },
+    {
+      "id": "kzn-1-2",
+      "name": "Северный вокзал",
+      "nameEn": "Severny Vokzal",
+      "line": "Центральная",
+      "lineEn": "Tsentralnaya",
+      "lineColor": "#E4002B",
+      "coordinates": {
+        "latitude": 55.841915,
+        "longitude": 49.081833
+      }
+    },
+    {
+      "id": "kzn-1-3",
+      "name": "Яшьлек",
+      "nameEn": "Yashlek",
+      "line": "Центральная",
+      "lineEn": "Tsentralnaya",
+      "lineColor": "#E4002B",
+      "coordinates": {
+        "latitude": 55.828102,
+        "longitude": 49.082451
+      }
+    },
+    {
+      "id": "kzn-1-4",
+      "name": "Козья слобода",
+      "nameEn": "Kozya Sloboda",
+      "line": "Центральная",
+      "lineEn": "Tsentralnaya",
+      "lineColor": "#E4002B",
+      "coordinates": {
+        "latitude": 55.81651,
+        "longitude": 49.098305
+      }
+    },
+    {
+      "id": "kzn-1-5",
+      "name": "Кремлёвская",
+      "nameEn": "Kremlyovskaya",
+      "line": "Центральная",
+      "lineEn": "Tsentralnaya",
+      "lineColor": "#E4002B",
+      "coordinates": {
+        "latitude": 55.795088,
+        "longitude": 49.107206
+      }
+    },
+    {
+      "id": "kzn-1-6",
+      "name": "Площадь Тукая",
+      "nameEn": "Ploshchad Tukaya",
+      "line": "Центральная",
+      "lineEn": "Tsentralnaya",
+      "lineColor": "#E4002B",
+      "coordinates": {
+        "latitude": 55.785571,
+        "longitude": 49.124919
+      }
+    },
+    {
+      "id": "kzn-1-7",
+      "name": "Суконная слобода",
+      "nameEn": "Sukonnaya Sloboda",
+      "line": "Центральная",
+      "lineEn": "Tsentralnaya",
+      "lineColor": "#E4002B",
+      "coordinates": {
+        "latitude": 55.7771,
+        "longitude": 49.142598
+      }
+    },
+    {
+      "id": "kzn-1-8",
+      "name": "Аметьево",
+      "nameEn": "Ametyevo",
+      "line": "Центральная",
+      "lineEn": "Tsentralnaya",
+      "lineColor": "#E4002B",
+      "coordinates": {
+        "latitude": 55.765074,
+        "longitude": 49.16651
+      }
+    },
+    {
+      "id": "kzn-1-9",
+      "name": "Горки",
+      "nameEn": "Gorki",
+      "line": "Центральная",
+      "lineEn": "Tsentralnaya",
+      "lineColor": "#E4002B",
+      "coordinates": {
+        "latitude": 55.760152,
+        "longitude": 49.19089
+      }
+    },
+    {
+      "id": "kzn-1-10",
+      "name": "Проспект Победы",
+      "nameEn": "Prospekt Pobedy",
+      "line": "Центральная",
+      "lineEn": "Tsentralnaya",
+      "lineColor": "#E4002B",
+      "coordinates": {
+        "latitude": 55.749798,
+        "longitude": 49.208321
+      }
+    },
+    {
+      "id": "kzn-1-11",
+      "name": "Дубравная",
+      "nameEn": "Dubravnaya",
+      "line": "Центральная",
+      "lineEn": "Tsentralnaya",
+      "lineColor": "#E4002B",
+      "coordinates": {
+        "latitude": 55.743822,
+        "longitude": 49.218881
+      }
+    }
+  ],
+  "novosibirsk": [
+    {
+      "id": "nsk-1-1",
+      "name": "Заельцовская",
+      "nameEn": "Zayeltsovskaya",
+      "line": "Ленинская",
+      "lineEn": "Leninskaya",
+      "lineColor": "#E42C2C",
+      "coordinates": {
+        "latitude": 55.059438,
+        "longitude": 82.912407
+      }
+    },
+    {
+      "id": "nsk-1-2",
+      "name": "Гагаринская",
+      "nameEn": "Gagarinskaya",
+      "line": "Ленинская",
+      "lineEn": "Leninskaya",
+      "lineColor": "#E42C2C",
+      "coordinates": {
+        "latitude": 55.051143,
+        "longitude": 82.914664
+      }
+    },
+    {
+      "id": "nsk-1-3",
+      "name": "Красный проспект",
+      "nameEn": "Krasny Prospekt",
+      "line": "Ленинская",
+      "lineEn": "Leninskaya",
+      "lineColor": "#E42C2C",
+      "coordinates": {
+        "latitude": 55.041508,
+        "longitude": 82.917269
+      }
+    },
+    {
+      "id": "nsk-1-4",
+      "name": "Площадь Ленина",
+      "nameEn": "Ploshchad Lenina",
+      "line": "Ленинская",
+      "lineEn": "Leninskaya",
+      "lineColor": "#E42C2C",
+      "coordinates": {
+        "latitude": 55.030101,
+        "longitude": 82.9204
+      }
+    },
+    {
+      "id": "nsk-1-5",
+      "name": "Октябрьская",
+      "nameEn": "Oktyabrskaya",
+      "line": "Ленинская",
+      "lineEn": "Leninskaya",
+      "lineColor": "#E42C2C",
+      "coordinates": {
+        "latitude": 55.018911,
+        "longitude": 82.939101
+      }
+    },
+    {
+      "id": "nsk-1-6",
+      "name": "Речной вокзал",
+      "nameEn": "Rechnoy Vokzal",
+      "line": "Ленинская",
+      "lineEn": "Leninskaya",
+      "lineColor": "#E42C2C",
+      "coordinates": {
+        "latitude": 55.008958,
+        "longitude": 82.938363
+      }
+    },
+    {
+      "id": "nsk-1-7",
+      "name": "Спортивная",
+      "nameEn": "Sportivnaya",
+      "line": "Ленинская",
+      "lineEn": "Leninskaya",
+      "lineColor": "#E42C2C",
+      "coordinates": {
+        "latitude": 54.996945,
+        "longitude": 82.920411
+      }
+    },
+    {
+      "id": "nsk-1-8",
+      "name": "Студенческая",
+      "nameEn": "Studencheskaya",
+      "line": "Ленинская",
+      "lineEn": "Leninskaya",
+      "lineColor": "#E42C2C",
+      "coordinates": {
+        "latitude": 54.989346,
+        "longitude": 82.906569
+      }
+    },
+    {
+      "id": "nsk-1-9",
+      "name": "Площадь Маркса",
+      "nameEn": "Ploshchad Marksa",
+      "line": "Ленинская",
+      "lineEn": "Leninskaya",
+      "lineColor": "#E42C2C",
+      "coordinates": {
+        "latitude": 54.983095,
+        "longitude": 82.893026
+      }
+    },
+    {
+      "id": "nsk-2-1",
+      "name": "Золотая Нива",
+      "nameEn": "Zolotaya Niva",
+      "line": "Дзержинская",
+      "lineEn": "Dzerzhinskaya",
+      "lineColor": "#2AA047",
+      "coordinates": {
+        "latitude": 55.037714,
+        "longitude": 82.97677
+      }
+    },
+    {
+      "id": "nsk-2-2",
+      "name": "Берёзовая роща",
+      "nameEn": "Beryozovaya Roshcha",
+      "line": "Дзержинская",
+      "lineEn": "Dzerzhinskaya",
+      "lineColor": "#2AA047",
+      "coordinates": {
+        "latitude": 55.043379,
+        "longitude": 82.953145
+      }
+    },
+    {
+      "id": "nsk-2-3",
+      "name": "Маршала Покрышкина",
+      "nameEn": "Marshala Pokryshkina",
+      "line": "Дзержинская",
+      "lineEn": "Dzerzhinskaya",
+      "lineColor": "#2AA047",
+      "coordinates": {
+        "latitude": 55.043749,
+        "longitude": 82.934988
+      }
+    },
+    {
+      "id": "nsk-2-4",
+      "name": "Сибирская",
+      "nameEn": "Sibirskaya",
+      "line": "Дзержинская",
+      "lineEn": "Dzerzhinskaya",
+      "lineColor": "#2AA047",
+      "coordinates": {
+        "latitude": 55.042368,
+        "longitude": 82.918696
+      }
+    },
+    {
+      "id": "nsk-2-5",
+      "name": "Площадь Гарина-Михайловского",
+      "nameEn": "Ploshchad Garina-Mikhaylovskogo",
+      "line": "Дзержинская",
+      "lineEn": "Dzerzhinskaya",
+      "lineColor": "#2AA047",
+      "coordinates": {
+        "latitude": 55.035416,
+        "longitude": 82.898745
+      }
+    }
+  ],
+  "samara": [
+    {
+      "id": "smr-1-1",
+      "name": "Юнгородок",
+      "nameEn": "Yungorodok",
+      "line": "Первая",
+      "lineEn": "Pervaya",
+      "lineColor": "#D6083B",
+      "coordinates": {
+        "latitude": 53.212474,
+        "longitude": 50.282584
+      }
+    },
+    {
+      "id": "smr-1-2",
+      "name": "Кировская",
+      "nameEn": "Kirovskaya",
+      "line": "Первая",
+      "lineEn": "Pervaya",
+      "lineColor": "#D6083B",
+      "coordinates": {
+        "latitude": 53.211291,
+        "longitude": 50.269532
+      }
+    },
+    {
+      "id": "smr-1-3",
+      "name": "Безымянка",
+      "nameEn": "Bezymyanka",
+      "line": "Первая",
+      "lineEn": "Pervaya",
+      "lineColor": "#D6083B",
+      "coordinates": {
+        "latitude": 53.212837,
+        "longitude": 50.248438
+      }
+    },
+    {
+      "id": "smr-1-4",
+      "name": "Победа",
+      "nameEn": "Pobeda",
+      "line": "Первая",
+      "lineEn": "Pervaya",
+      "lineColor": "#D6083B",
+      "coordinates": {
+        "latitude": 53.206983,
+        "longitude": 50.23577
+      }
+    },
+    {
+      "id": "smr-1-5",
+      "name": "Советская",
+      "nameEn": "Sovetskaya",
+      "line": "Первая",
+      "lineEn": "Pervaya",
+      "lineColor": "#D6083B",
+      "coordinates": {
+        "latitude": 53.201554,
+        "longitude": 50.220441
+      }
+    },
+    {
+      "id": "smr-1-6",
+      "name": "Спортивная",
+      "nameEn": "Sportivnaya",
+      "line": "Первая",
+      "lineEn": "Pervaya",
+      "lineColor": "#D6083B",
+      "coordinates": {
+        "latitude": 53.200956,
+        "longitude": 50.199578
+      }
+    },
+    {
+      "id": "smr-1-7",
+      "name": "Гагаринская",
+      "nameEn": "Gagarinskaya",
+      "line": "Первая",
+      "lineEn": "Pervaya",
+      "lineColor": "#D6083B",
+      "coordinates": {
+        "latitude": 53.200274,
+        "longitude": 50.176512
+      }
+    },
+    {
+      "id": "smr-1-8",
+      "name": "Московская",
+      "nameEn": "Moskovskaya",
+      "line": "Первая",
+      "lineEn": "Pervaya",
+      "lineColor": "#D6083B",
+      "coordinates": {
+        "latitude": 53.202809,
+        "longitude": 50.160496
+      }
+    },
+    {
+      "id": "smr-1-9",
+      "name": "Российская",
+      "nameEn": "Rossiyskaya",
+      "line": "Первая",
+      "lineEn": "Pervaya",
+      "lineColor": "#D6083B",
+      "coordinates": {
+        "latitude": 53.211918,
+        "longitude": 50.148986
+      }
+    },
+    {
+      "id": "smr-1-10",
+      "name": "Алабинская",
+      "nameEn": "Alabinskaya",
+      "line": "Первая",
+      "lineEn": "Pervaya",
+      "lineColor": "#D6083B",
+      "coordinates": {
+        "latitude": 53.209582,
+        "longitude": 50.134186
+      }
+    }
+  ],
+  "yekaterinburg": [
+    {
+      "id": "ekb-1-1",
+      "name": "Проспект Космонавтов",
+      "nameEn": "Prospekt Kosmonavtov",
+      "line": "Уральская",
+      "lineEn": "Uralskaya",
+      "lineColor": "#1C8C3A",
+      "coordinates": {
+        "latitude": 56.901394,
+        "longitude": 60.613932
+      }
+    },
+    {
+      "id": "ekb-1-2",
+      "name": "Уралмаш",
+      "nameEn": "Uralmash",
+      "line": "Уральская",
+      "lineEn": "Uralskaya",
+      "lineColor": "#1C8C3A",
+      "coordinates": {
+        "latitude": 56.888262,
+        "longitude": 60.613371
+      }
+    },
+    {
+      "id": "ekb-1-3",
+      "name": "Машиностроителей",
+      "nameEn": "Mashinostroiteley",
+      "line": "Уральская",
+      "lineEn": "Uralskaya",
+      "lineColor": "#1C8C3A",
+      "coordinates": {
+        "latitude": 56.877034,
+        "longitude": 60.611531
+      }
+    },
+    {
+      "id": "ekb-1-4",
+      "name": "Уральская",
+      "nameEn": "Uralskaya",
+      "line": "Уральская",
+      "lineEn": "Uralskaya",
+      "lineColor": "#1C8C3A",
+      "coordinates": {
+        "latitude": 56.857483,
+        "longitude": 60.600287
+      }
+    },
+    {
+      "id": "ekb-1-5",
+      "name": "Динамо",
+      "nameEn": "Dinamo",
+      "line": "Уральская",
+      "lineEn": "Uralskaya",
+      "lineColor": "#1C8C3A",
+      "coordinates": {
+        "latitude": 56.84762,
+        "longitude": 60.599223
+      }
+    },
+    {
+      "id": "ekb-1-6",
+      "name": "Площадь 1905 года",
+      "nameEn": "Ploshchad 1905 Goda",
+      "line": "Уральская",
+      "lineEn": "Uralskaya",
+      "lineColor": "#1C8C3A",
+      "coordinates": {
+        "latitude": 56.836856,
+        "longitude": 60.599067
+      }
+    },
+    {
+      "id": "ekb-1-7",
+      "name": "Геологическая",
+      "nameEn": "Geologicheskaya",
+      "line": "Уральская",
+      "lineEn": "Uralskaya",
+      "lineColor": "#1C8C3A",
+      "coordinates": {
+        "latitude": 56.827797,
+        "longitude": 60.602147
+      }
+    },
+    {
+      "id": "ekb-1-8",
+      "name": "Чкаловская",
+      "nameEn": "Chkalovskaya",
+      "line": "Уральская",
+      "lineEn": "Uralskaya",
+      "lineColor": "#1C8C3A",
+      "coordinates": {
+        "latitude": 56.807702,
+        "longitude": 60.610126
+      }
+    },
+    {
+      "id": "ekb-1-9",
+      "name": "Ботаническая",
+      "nameEn": "Botanicheskaya",
+      "line": "Уральская",
+      "lineEn": "Uralskaya",
+      "lineColor": "#1C8C3A",
+      "coordinates": {
+        "latitude": 56.797309,
+        "longitude": 60.632077
+      }
+    }
   ]
 }

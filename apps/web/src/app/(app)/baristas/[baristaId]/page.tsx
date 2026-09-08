@@ -14,6 +14,8 @@ import { JobService } from "@bystrobarista/core/services/JobService";
 import { JobOfferService } from "@bystrobarista/core/services/JobOfferService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import { isMetroAnySelection } from "@bystrobarista/core/config/metroFilter";
+import { getCityLabel, isCityCode } from "@bystrobarista/core/types/city";
+import { MetroService } from "@bystrobarista/core/utils/metro";
 import type { BaristaProfileId, UserId } from "@bystrobarista/core/types/ids";
 import { computeMedicalBookStatus } from "@bystrobarista/core/utils/medicalBook";
 import { ReportButton } from "@/components/ReportButton";
@@ -157,7 +159,9 @@ export default function ViewBaristaProfilePage(): React.JSX.Element {
               {profile.firstName} {profile.lastName}
             </p>
             <p className="text-sm text-ink-secondary">
-              {t(`city.codes.${profile.city}`, { defaultValue: profile.city })}
+              {isCityCode(profile.city)
+                ? getCityLabel(profile.city, i18n.language)
+                : profile.city}
             </p>
             {profile.yearsOfExperience != null &&
               profile.yearsOfExperience > 0 && (
@@ -254,22 +258,24 @@ export default function ViewBaristaProfilePage(): React.JSX.Element {
         </span>
       </div>
 
-      {profile.preferredMetroStations.length > 0 && (
-        <div className="mt-4 rounded-card border border-line bg-white p-4">
-          <h2 className={sectionTitle}>{t("viewBarista.preferredMetro")}</h2>
-          <div className="flex flex-wrap gap-1.5">
-            {isMetroAnySelection(profile.preferredMetroStations) ? (
-              <span className={chipClass}>{t("metro.anyOptionTitle")}</span>
-            ) : (
-              profile.preferredMetroStations.map((station) => (
-                <span key={station} className={chipClass}>
-                  {station}
-                </span>
-              ))
-            )}
+      {isCityCode(profile.city) &&
+        MetroService.hasMetro(profile.city) &&
+        profile.preferredMetroStations.length > 0 && (
+          <div className="mt-4 rounded-card border border-line bg-white p-4">
+            <h2 className={sectionTitle}>{t("viewBarista.preferredMetro")}</h2>
+            <div className="flex flex-wrap gap-1.5">
+              {isMetroAnySelection(profile.preferredMetroStations) ? (
+                <span className={chipClass}>{t("metro.anyOptionTitle")}</span>
+              ) : (
+                profile.preferredMetroStations.map((station) => (
+                  <span key={station} className={chipClass}>
+                    {station}
+                  </span>
+                ))
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {profile.preferredShiftTimes.length > 0 && (
         <div className="mt-4 rounded-card border border-line bg-white p-4">

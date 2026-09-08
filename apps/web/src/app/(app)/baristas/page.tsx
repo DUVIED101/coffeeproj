@@ -27,7 +27,8 @@ import {
 } from "@bystrobarista/core/types/baristaProfile";
 import type { Equipment } from "@bystrobarista/core/types/business";
 import type { CityCode } from "@bystrobarista/core/types/city";
-import { CITY_CODES } from "@bystrobarista/core/types/city";
+import { getCityLabel, isCityCode } from "@bystrobarista/core/types/city";
+import { CitySelect } from "@/components/CitySelect";
 import type { UserId } from "@bystrobarista/core/types/ids";
 import type { UserReviewAggregate } from "@bystrobarista/core/types/review";
 import { StarRow } from "@/components/StarRow";
@@ -100,7 +101,9 @@ function BaristaCard({
             {profile.firstName} {profile.lastName}
           </p>
           <p className="text-sm text-ink-secondary">
-            {t(`city.codes.${profile.city}`, { defaultValue: profile.city })}
+            {isCityCode(profile.city)
+              ? getCityLabel(profile.city, i18n.language)
+              : profile.city}
           </p>
           {aggregate && aggregate.reviewCount > 0 ? (
             <StarRow
@@ -403,23 +406,14 @@ export default function BaristasPage(): React.JSX.Element {
             <span className={filterLabel}>
               {t("baristaFilterBar.cityPlaceholder")}
             </span>
-            <div className="flex flex-wrap gap-2">
-              {CITY_CODES.map((code: CityCode) => (
-                <button
-                  key={code}
-                  type="button"
-                  onClick={() =>
-                    setFilters({
-                      ...filters,
-                      city: filters.city === code ? undefined : code,
-                    })
-                  }
-                  className={chip(filters.city === code)}
-                >
-                  {t(`city.codes.${code}`)}
-                </button>
-              ))}
-            </div>
+            <CitySelect
+              value={filters.city}
+              onChange={(code) =>
+                setFilters({ ...filters, city: code, metroStations: undefined })
+              }
+              allowAny
+              className={chip(filters.city !== undefined)}
+            />
           </div>
 
           <label className="flex flex-col gap-1.5">

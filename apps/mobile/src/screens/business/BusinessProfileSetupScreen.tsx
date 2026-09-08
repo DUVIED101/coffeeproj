@@ -18,7 +18,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { BusinessService } from '@bystrobarista/core/services/BusinessService';
 import { ProgressIndicator } from '../../components/ProgressIndicator';
-import { CityToggle } from '../../components/CityToggle';
+import { CityPicker } from '../../components/CityPicker';
+import { MetroService } from '@bystrobarista/core/utils/metro';
 import { MetroSelector } from '../../components/MetroSelector';
 import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
 import { SocialLinksEditor } from '../../components/SocialLinksEditor';
@@ -390,7 +391,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
             address: branchAddress.trim(),
             city: branchCity,
             coordinates,
-            metroStation: branchMetro.trim() || undefined,
+            metroStation: MetroService.hasMetro(branchCity) ? branchMetro.trim() || null : null,
             equipment: branchEquipment,
           })
         : await BusinessService.createBranch({
@@ -399,7 +400,9 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
             address: branchAddress.trim(),
             city: branchCity,
             coordinates,
-            metroStation: branchMetro.trim() || undefined,
+            metroStation: MetroService.hasMetro(branchCity)
+              ? branchMetro.trim() || undefined
+              : undefined,
             equipment: branchEquipment,
           });
 
@@ -738,7 +741,7 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.label}>
                 {t('branches.form.city')} <Text style={styles.required}>*</Text>
               </Text>
-              <CityToggle
+              <CityPicker
                 value={branchCity}
                 onChange={next => {
                   setBranchCity(next);
@@ -749,10 +752,6 @@ export const BusinessProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.label}>{t('branches.form.metro')}</Text>
               <MetroSelector
                 city={branchCity}
-                onCityChange={next => {
-                  setBranchCity(next);
-                  setBranchMetro('');
-                }}
                 value={branchMetro || null}
                 onChange={v => setBranchMetro(v ?? '')}
                 userLocation={addressCoords ?? undefined}

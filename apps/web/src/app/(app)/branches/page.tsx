@@ -20,6 +20,7 @@ import type {
   GeoPoint,
 } from "@bystrobarista/core/types/business";
 import { DEFAULT_CITY, type CityCode } from "@bystrobarista/core/types/city";
+import { CitySelect } from "@/components/CitySelect";
 import { MetroService } from "@bystrobarista/core/utils/metro";
 import { PHOTO_LIMIT } from "@bystrobarista/core/utils/storage";
 import {
@@ -211,8 +212,14 @@ export default function BranchesPage(): React.JSX.Element {
     if (!form.name.trim()) errors.name = t("branches.form.nameRequired");
     if (!form.address.trim())
       errors.address = t("branches.form.addressRequired");
-    if (!form.metroStation.trim())
+    const cityHasMetro = MetroService.hasMetro(form.city);
+    if (cityHasMetro && !form.metroStation.trim())
       errors.metro = t("branches.form.metroRequired");
+    else if (
+      cityHasMetro &&
+      !MetroService.getStationByName(form.metroStation.trim(), form.city)
+    )
+      errors.metro = t("branches.form.metroUnknown");
     if (form.address.trim() && !addressConfirmed) {
       errors.address = t("branches.errors.addressNotConfirmed");
     }
@@ -228,7 +235,7 @@ export default function BranchesPage(): React.JSX.Element {
           address: form.address.trim(),
           city: form.city,
           coordinates: addressCoords as GeoPoint,
-          metroStation: form.metroStation.trim(),
+          metroStation: cityHasMetro ? form.metroStation.trim() : null,
           equipment: form.equipment,
         });
       } else {
@@ -238,7 +245,7 @@ export default function BranchesPage(): React.JSX.Element {
           address: form.address.trim(),
           city: form.city,
           coordinates: addressCoords as GeoPoint,
-          metroStation: form.metroStation.trim(),
+          metroStation: cityHasMetro ? form.metroStation.trim() : undefined,
           equipment: form.equipment,
         });
       }
@@ -383,25 +390,17 @@ export default function BranchesPage(): React.JSX.Element {
 
           <div className="flex flex-col gap-1.5">
             <span className={fieldLabel}>{t("branches.form.city")}</span>
-            <div className="flex gap-2">
-              {(["spb", "moscow"] as CityCode[]).map((code) => (
-                <button
-                  key={code}
-                  type="button"
-                  onClick={() => {
-                    if (code !== form.city) {
-                      geocodedKeyRef.current = null;
-                      setAddressCoords(null);
-                      setLookupStatus("idle");
-                      setForm({ ...form, city: code, metroStation: "" });
-                    }
-                  }}
-                  className={chip(form.city === code)}
-                >
-                  {t(`city.codes.${code}`)}
-                </button>
-              ))}
-            </div>
+            <CitySelect
+              value={form.city}
+              onChange={(code) => {
+                if (code && code !== form.city) {
+                  geocodedKeyRef.current = null;
+                  setAddressCoords(null);
+                  setLookupStatus("idle");
+                  setForm({ ...form, city: code, metroStation: "" });
+                }
+              }}
+            />
           </div>
 
           <label className="flex flex-col gap-1.5">
@@ -436,29 +435,31 @@ export default function BranchesPage(): React.JSX.Element {
             )}
           </label>
 
-          <label className="flex flex-col gap-1.5">
-            <span className={fieldLabel}>{t("branches.form.metro")}</span>
-            <input
-              type="text"
-              list="branch-metro-stations"
-              value={form.metroStation}
-              onChange={(e) =>
-                setForm({ ...form, metroStation: e.target.value })
-              }
-              placeholder={t("metro.searchPlaceholder")}
-              className={inputClass(Boolean(formErrors.metro))}
-            />
-            <datalist id="branch-metro-stations">
-              {stations.map((station) => (
-                <option key={station.id} value={station.name}>
-                  {station.line}
-                </option>
-              ))}
-            </datalist>
-            {formErrors.metro && (
-              <span className="text-xs text-error">{formErrors.metro}</span>
-            )}
-          </label>
+          {MetroService.hasMetro(form.city) && (
+            <label className="flex flex-col gap-1.5">
+              <span className={fieldLabel}>{t("branches.form.metro")}</span>
+              <input
+                type="text"
+                list="branch-metro-stations"
+                value={form.metroStation}
+                onChange={(e) =>
+                  setForm({ ...form, metroStation: e.target.value })
+                }
+                placeholder={t("metro.searchPlaceholder")}
+                className={inputClass(Boolean(formErrors.metro))}
+              />
+              <datalist id="branch-metro-stations">
+                {stations.map((station) => (
+                  <option key={station.id} value={station.name}>
+                    {station.line}
+                  </option>
+                ))}
+              </datalist>
+              {formErrors.metro && (
+                <span className="text-xs text-error">{formErrors.metro}</span>
+              )}
+            </label>
+          )}
 
           <div className="flex flex-col gap-1.5">
             <span className={fieldLabel}>{t("branches.form.equipment")}</span>

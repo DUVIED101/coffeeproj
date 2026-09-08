@@ -43,7 +43,8 @@ import {
   computeTotalDuration,
   type WorkExperience,
 } from '@bystrobarista/core/types/workExperience';
-import { isCityCode } from '@bystrobarista/core/types/city';
+import { getCityLabel, isCityCode } from '@bystrobarista/core/types/city';
+import { MetroService } from '@bystrobarista/core/utils/metro';
 import { TutorialAnchor } from '../../components/tutorial/TutorialAnchor';
 
 type Props = {
@@ -239,7 +240,7 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
               {profile.firstName} {profile.lastName}
             </Text>
             <Text style={styles.city}>
-              {isCityCode(profile.city) ? t(`city.codes.${profile.city}`) : profile.city}
+              {isCityCode(profile.city) ? getCityLabel(profile.city, i18n.language) : profile.city}
             </Text>
             {profile.yearsOfExperience !== undefined && profile.yearsOfExperience > 0 && (
               <Text style={styles.experience}>
@@ -378,28 +379,30 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
           );
         })()}
 
-        {profile.preferredMetroStations.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('viewBarista.preferredMetro')}</Text>
-            {isMetroAnySelection(profile.preferredMetroStations) ? (
-              <View style={styles.chipsContainer}>
-                <View style={styles.chip}>
-                  <Text style={styles.chipText}>
-                    {t('metro.anyOptionTitle', { defaultValue: 'Любая станция' })}
-                  </Text>
-                </View>
-              </View>
-            ) : (
-              <View style={styles.chipsContainer}>
-                {profile.preferredMetroStations.map(station => (
-                  <View key={station} style={styles.chip}>
-                    <Text style={styles.chipText}>{station}</Text>
+        {isCityCode(profile.city) &&
+          MetroService.hasMetro(profile.city) &&
+          profile.preferredMetroStations.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t('viewBarista.preferredMetro')}</Text>
+              {isMetroAnySelection(profile.preferredMetroStations) ? (
+                <View style={styles.chipsContainer}>
+                  <View style={styles.chip}>
+                    <Text style={styles.chipText}>
+                      {t('metro.anyOptionTitle', { defaultValue: 'Любая станция' })}
+                    </Text>
                   </View>
-                ))}
-              </View>
-            )}
-          </View>
-        )}
+                </View>
+              ) : (
+                <View style={styles.chipsContainer}>
+                  {profile.preferredMetroStations.map(station => (
+                    <View key={station} style={styles.chip}>
+                      <Text style={styles.chipText}>{station}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
 
         {profile.preferredShiftTimes.length > 0 && (
           <View style={styles.section}>

@@ -7,6 +7,8 @@ import type { GeoPoint } from "@bystrobarista/core/types/business";
 import { DEFAULT_CITY, type CityCode } from "@bystrobarista/core/types/city";
 import { METRO_ANY } from "@bystrobarista/core/config/metroFilter";
 import { MetroFilterModal } from "./MetroFilterModal";
+import { CitySelect } from "./CitySelect";
+import { MetroService } from "@bystrobarista/core/utils/metro";
 
 type Props = {
   filters: JobFilters;
@@ -79,13 +81,23 @@ export function FilterBar({
         </button>
       ))}
 
-      <button
-        type="button"
-        onClick={() => setMetroOpen(true)}
-        className={chip((filters.metroStations?.length ?? 0) > 0)}
-      >
-        Ⓜ {metroLabel}
-      </button>
+      <CitySelect
+        value={city}
+        onChange={(next) => {
+          if (next) handleCityChange(next);
+        }}
+        className={chip(filters.city !== undefined)}
+      />
+
+      {MetroService.hasMetro(city) && (
+        <button
+          type="button"
+          onClick={() => setMetroOpen(true)}
+          className={chip((filters.metroStations?.length ?? 0) > 0)}
+        >
+          Ⓜ {metroLabel}
+        </button>
+      )}
 
       {userLocation &&
         DISTANCE_OPTIONS_KM.map((km) => (
@@ -161,7 +173,6 @@ export function FilterBar({
         city={city}
         value={metroSelection}
         userLocation={userLocation}
-        onCityChange={handleCityChange}
         onChange={applyMetro}
         onClose={() => setMetroOpen(false)}
       />

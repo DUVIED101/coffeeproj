@@ -61,18 +61,18 @@
     "allSection": "All stations",
     "anyOptionTitle": "Any station",
     "anyOptionSubtitle": "No metro preference",
-    "cityTab": {
-      "spb": "Saint Petersburg",
-      "moscow": "Moscow"
-    }
+    "noMetroInCity": "No metro in this city",
+    "cityLabel": "City: {{name}}"
   },
   "city": {
     "title": "City",
     "placeholder": "Select city",
-    "codes": {
-      "spb": "Saint Petersburg",
-      "moscow": "Moscow"
-    }
+    "searchPlaceholder": "Search city…",
+    "pinnedSection": "Cities with metro",
+    "allSection": "All cities",
+    "noResults": "No cities found",
+    "anyOption": "Any city",
+    "metroBadge": "metro"
   },
   "jobStatus": {
     "open": "Open",
@@ -807,7 +807,8 @@
       "city": "City",
       "metro": "Metro Station",
       "metroRequired": "Metro station is required",
-      "equipment": "Equipment (Optional)"
+      "equipment": "Equipment (Optional)",
+      "metroUnknown": "No such station in this city"
     },
     "errors": {
       "loadFailed": "Failed to load branches",

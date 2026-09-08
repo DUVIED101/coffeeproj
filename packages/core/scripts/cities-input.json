@@ -1,0 +1,1199 @@
+[
+ {
+  "code": "moscow",
+  "nameRu": "Москва",
+  "nameEn": "Moscow",
+  "population": 13274000,
+  "region": null
+ },
+ {
+  "code": "spb",
+  "nameRu": "Санкт-Петербург",
+  "nameEn": "Saint Petersburg",
+  "population": 5653000,
+  "region": null
+ },
+ {
+  "code": "novosibirsk",
+  "nameRu": "Новосибирск",
+  "nameEn": "Novosibirsk",
+  "population": 1637000,
+  "region": null
+ },
+ {
+  "code": "yekaterinburg",
+  "nameRu": "Екатеринбург",
+  "nameEn": "Yekaterinburg",
+  "population": 1548000,
+  "region": null
+ },
+ {
+  "code": "kazan",
+  "nameRu": "Казань",
+  "nameEn": "Kazan",
+  "population": 1330000,
+  "region": null
+ },
+ {
+  "code": "krasnoyarsk",
+  "nameRu": "Красноярск",
+  "nameEn": "Krasnoyarsk",
+  "population": 1212000,
+  "region": null
+ },
+ {
+  "code": "nizhny_novgorod",
+  "nameRu": "Нижний Новгород",
+  "nameEn": "Nizhny Novgorod",
+  "population": 1198000,
+  "region": null
+ },
+ {
+  "code": "chelyabinsk",
+  "nameRu": "Челябинск",
+  "nameEn": "Chelyabinsk",
+  "population": 1177000,
+  "region": null
+ },
+ {
+  "code": "ufa",
+  "nameRu": "Уфа",
+  "nameEn": "Ufa",
+  "population": 1166000,
+  "region": null
+ },
+ {
+  "code": "krasnodar",
+  "nameRu": "Краснодар",
+  "nameEn": "Krasnodar",
+  "population": 1155000,
+  "region": null
+ },
+ {
+  "code": "samara",
+  "nameRu": "Самара",
+  "nameEn": "Samara",
+  "population": 1154000,
+  "region": null
+ },
+ {
+  "code": "rostov_on_don",
+  "nameRu": "Ростов-на-Дону",
+  "nameEn": "Rostov-on-Don",
+  "population": 1143000,
+  "region": null
+ },
+ {
+  "code": "omsk",
+  "nameRu": "Омск",
+  "nameEn": "Omsk",
+  "population": 1101000,
+  "region": null
+ },
+ {
+  "code": "voronezh",
+  "nameRu": "Воронеж",
+  "nameEn": "Voronezh",
+  "population": 1042000,
+  "region": null
+ },
+ {
+  "code": "perm",
+  "nameRu": "Пермь",
+  "nameEn": "Perm",
+  "population": 1028000,
+  "region": null
+ },
+ {
+  "code": "volgograd",
+  "nameRu": "Волгоград",
+  "nameEn": "Volgograd",
+  "population": 1012000,
+  "region": null
+ },
+ {
+  "code": "saratov",
+  "nameRu": "Саратов",
+  "nameEn": "Saratov",
+  "population": 886000,
+  "region": null
+ },
+ {
+  "code": "tyumen",
+  "nameRu": "Тюмень",
+  "nameEn": "Tyumen",
+  "population": 872000,
+  "region": null
+ },
+ {
+  "code": "tolyatti",
+  "nameRu": "Тольятти",
+  "nameEn": "Tolyatti",
+  "population": 663000,
+  "region": null
+ },
+ {
+  "code": "makhachkala",
+  "nameRu": "Махачкала",
+  "nameEn": "Makhachkala",
+  "population": 625000,
+  "region": null
+ },
+ {
+  "code": "barnaul",
+  "nameRu": "Барнаул",
+  "nameEn": "Barnaul",
+  "population": 622000,
+  "region": null
+ },
+ {
+  "code": "izhevsk",
+  "nameRu": "Ижевск",
+  "nameEn": "Izhevsk",
+  "population": 616000,
+  "region": null
+ },
+ {
+  "code": "khabarovsk",
+  "nameRu": "Хабаровск",
+  "nameEn": "Khabarovsk",
+  "population": 616000,
+  "region": null
+ },
+ {
+  "code": "ulyanovsk",
+  "nameRu": "Ульяновск",
+  "nameEn": "Ulyanovsk",
+  "population": 613000,
+  "region": null
+ },
+ {
+  "code": "irkutsk",
+  "nameRu": "Иркутск",
+  "nameEn": "Irkutsk",
+  "population": 606000,
+  "region": null
+ },
+ {
+  "code": "vladivostok",
+  "nameRu": "Владивосток",
+  "nameEn": "Vladivostok",
+  "population": 594000,
+  "region": null
+ },
+ {
+  "code": "yaroslavl",
+  "nameRu": "Ярославль",
+  "nameEn": "Yaroslavl",
+  "population": 564000,
+  "region": null
+ },
+ {
+  "code": "stavropol",
+  "nameRu": "Ставрополь",
+  "nameEn": "Stavropol",
+  "population": 563000,
+  "region": null
+ },
+ {
+  "code": "sevastopol",
+  "nameRu": "Севастополь",
+  "nameEn": "Sevastopol",
+  "population": 558000,
+  "region": null
+ },
+ {
+  "code": "naberezhnye_chelny",
+  "nameRu": "Набережные Челны",
+  "nameEn": "Naberezhnye Chelny",
+  "population": 548000,
+  "region": null
+ },
+ {
+  "code": "tomsk",
+  "nameRu": "Томск",
+  "nameEn": "Tomsk",
+  "population": 545000,
+  "region": null
+ },
+ {
+  "code": "balashikha",
+  "nameRu": "Балашиха",
+  "nameEn": "Balashikha",
+  "population": 544000,
+  "region": null
+ },
+ {
+  "code": "kemerovo",
+  "nameRu": "Кемерово",
+  "nameEn": "Kemerovo",
+  "population": 543000,
+  "region": null
+ },
+ {
+  "code": "orenburg",
+  "nameRu": "Оренбург",
+  "nameEn": "Orenburg",
+  "population": 537000,
+  "region": null
+ },
+ {
+  "code": "novokuznetsk",
+  "nameRu": "Новокузнецк",
+  "nameEn": "Novokuznetsk",
+  "population": 529000,
+  "region": null
+ },
+ {
+  "code": "ryazan",
+  "nameRu": "Рязань",
+  "nameEn": "Ryazan",
+  "population": 519000,
+  "region": null
+ },
+ {
+  "code": "cheboksary",
+  "nameRu": "Чебоксары",
+  "nameEn": "Cheboksary",
+  "population": 497000,
+  "region": null
+ },
+ {
+  "code": "kaliningrad",
+  "nameRu": "Калининград",
+  "nameEn": "Kaliningrad",
+  "population": 489000,
+  "region": null
+ },
+ {
+  "code": "penza",
+  "nameRu": "Пенза",
+  "nameEn": "Penza",
+  "population": 488000,
+  "region": null
+ },
+ {
+  "code": "lipetsk",
+  "nameRu": "Липецк",
+  "nameEn": "Lipetsk",
+  "population": 483000,
+  "region": null
+ },
+ {
+  "code": "kirov",
+  "nameRu": "Киров",
+  "nameEn": "Kirov",
+  "population": 476000,
+  "region": "Кировская область"
+ },
+ {
+  "code": "astrakhan",
+  "nameRu": "Астрахань",
+  "nameEn": "Astrakhan",
+  "population": 466000,
+  "region": null
+ },
+ {
+  "code": "tula",
+  "nameRu": "Тула",
+  "nameEn": "Tula",
+  "population": 457000,
+  "region": null
+ },
+ {
+  "code": "sochi",
+  "nameRu": "Сочи",
+  "nameEn": "Sochi",
+  "population": 445000,
+  "region": null
+ },
+ {
+  "code": "ulan_ude",
+  "nameRu": "Улан-Удэ",
+  "nameEn": "Ulan-Ude",
+  "population": 435000,
+  "region": null
+ },
+ {
+  "code": "kursk",
+  "nameRu": "Курск",
+  "nameEn": "Kursk",
+  "population": 435000,
+  "region": null
+ },
+ {
+  "code": "surgut",
+  "nameRu": "Сургут",
+  "nameEn": "Surgut",
+  "population": 433000,
+  "region": null
+ },
+ {
+  "code": "tver",
+  "nameRu": "Тверь",
+  "nameEn": "Tver",
+  "population": 413000,
+  "region": null
+ },
+ {
+  "code": "magnitogorsk",
+  "nameRu": "Магнитогорск",
+  "nameEn": "Magnitogorsk",
+  "population": 408000,
+  "region": null
+ },
+ {
+  "code": "grozny",
+  "nameRu": "Грозный",
+  "nameEn": "Grozny",
+  "population": 399000,
+  "region": null
+ },
+ {
+  "code": "yakutsk",
+  "nameRu": "Якутск",
+  "nameEn": "Yakutsk",
+  "population": 373000,
+  "region": null
+ },
+ {
+  "code": "bryansk",
+  "nameRu": "Брянск",
+  "nameEn": "Bryansk",
+  "population": 372000,
+  "region": null
+ },
+ {
+  "code": "ivanovo",
+  "nameRu": "Иваново",
+  "nameEn": "Ivanovo",
+  "population": 357000,
+  "region": null
+ },
+ {
+  "code": "vladimir",
+  "nameRu": "Владимир",
+  "nameEn": "Vladimir",
+  "population": 342000,
+  "region": "Владимирская область"
+ },
+ {
+  "code": "chita",
+  "nameRu": "Чита",
+  "nameEn": "Chita",
+  "population": 337000,
+  "region": null
+ },
+ {
+  "code": "simferopol",
+  "nameRu": "Симферополь",
+  "nameEn": "Simferopol",
+  "population": 335000,
+  "region": null
+ },
+ {
+  "code": "nizhny_tagil",
+  "nameRu": "Нижний Тагил",
+  "nameEn": "Nizhny Tagil",
+  "population": 328000,
+  "region": null
+ },
+ {
+  "code": "kaluga",
+  "nameRu": "Калуга",
+  "nameEn": "Kaluga",
+  "population": 325000,
+  "region": null
+ },
+ {
+  "code": "belgorod",
+  "nameRu": "Белгород",
+  "nameEn": "Belgorod",
+  "population": 322000,
+  "region": null
+ },
+ {
+  "code": "podolsk",
+  "nameRu": "Подольск",
+  "nameEn": "Podolsk",
+  "population": 313000,
+  "region": null
+ },
+ {
+  "code": "volzhsky",
+  "nameRu": "Волжский",
+  "nameEn": "Volzhsky",
+  "population": 313000,
+  "region": null
+ },
+ {
+  "code": "vologda",
+  "nameRu": "Вологда",
+  "nameEn": "Vologda",
+  "population": 311000,
+  "region": null
+ },
+ {
+  "code": "smolensk",
+  "nameRu": "Смоленск",
+  "nameEn": "Smolensk",
+  "population": 310000,
+  "region": null
+ },
+ {
+  "code": "saransk",
+  "nameRu": "Саранск",
+  "nameEn": "Saransk",
+  "population": 309000,
+  "region": null
+ },
+ {
+  "code": "kurgan",
+  "nameRu": "Курган",
+  "nameEn": "Kurgan",
+  "population": 301000,
+  "region": "Курганская область"
+ },
+ {
+  "code": "cherepovets",
+  "nameRu": "Череповец",
+  "nameEn": "Cherepovets",
+  "population": 298000,
+  "region": null
+ },
+ {
+  "code": "arkhangelsk",
+  "nameRu": "Архангельск",
+  "nameEn": "Arkhangelsk",
+  "population": 295000,
+  "region": null
+ },
+ {
+  "code": "vladikavkaz",
+  "nameRu": "Владикавказ",
+  "nameEn": "Vladikavkaz",
+  "population": 293000,
+  "region": null
+ },
+ {
+  "code": "nizhnevartovsk",
+  "nameRu": "Нижневартовск",
+  "nameEn": "Nizhnevartovsk",
+  "population": 293000,
+  "region": null
+ },
+ {
+  "code": "oryol",
+  "nameRu": "Орёл",
+  "nameEn": "Oryol",
+  "population": 290000,
+  "region": "Орловская область"
+ },
+ {
+  "code": "yoshkar_ola",
+  "nameRu": "Йошкар-Ола",
+  "nameEn": "Yoshkar-Ola",
+  "population": 285000,
+  "region": null
+ },
+ {
+  "code": "sterlitamak",
+  "nameRu": "Стерлитамак",
+  "nameEn": "Sterlitamak",
+  "population": 280000,
+  "region": null
+ },
+ {
+  "code": "mytishchi",
+  "nameRu": "Мытищи",
+  "nameEn": "Mytishchi",
+  "population": 279000,
+  "region": null
+ },
+ {
+  "code": "kostroma",
+  "nameRu": "Кострома",
+  "nameEn": "Kostroma",
+  "population": 265000,
+  "region": null
+ },
+ {
+  "code": "murmansk",
+  "nameRu": "Мурманск",
+  "nameEn": "Murmansk",
+  "population": 264000,
+  "region": null
+ },
+ {
+  "code": "novorossiysk",
+  "nameRu": "Новороссийск",
+  "nameEn": "Novorossiysk",
+  "population": 262000,
+  "region": null
+ },
+ {
+  "code": "khimki",
+  "nameRu": "Химки",
+  "nameEn": "Khimki",
+  "population": 259000,
+  "region": null
+ },
+ {
+  "code": "tambov",
+  "nameRu": "Тамбов",
+  "nameEn": "Tambov",
+  "population": 255000,
+  "region": null
+ },
+ {
+  "code": "nalchik",
+  "nameRu": "Нальчик",
+  "nameEn": "Nalchik",
+  "population": 246000,
+  "region": null
+ },
+ {
+  "code": "nizhnekamsk",
+  "nameRu": "Нижнекамск",
+  "nameEn": "Nizhnekamsk",
+  "population": 241000,
+  "region": null
+ },
+ {
+  "code": "taganrog",
+  "nameRu": "Таганрог",
+  "nameEn": "Taganrog",
+  "population": 240000,
+  "region": null
+ },
+ {
+  "code": "blagoveshchensk",
+  "nameRu": "Благовещенск",
+  "nameEn": "Blagoveshchensk",
+  "population": 240000,
+  "region": null
+ },
+ {
+  "code": "lyubertsy",
+  "nameRu": "Люберцы",
+  "nameEn": "Lyubertsy",
+  "population": 239000,
+  "region": null
+ },
+ {
+  "code": "petrozavodsk",
+  "nameRu": "Петрозаводск",
+  "nameEn": "Petrozavodsk",
+  "population": 235000,
+  "region": null
+ },
+ {
+  "code": "komsomolsk_on_amur",
+  "nameRu": "Комсомольск-на-Амуре",
+  "nameEn": "Komsomolsk-on-Amur",
+  "population": 234000,
+  "region": null
+ },
+ {
+  "code": "korolyov",
+  "nameRu": "Королёв",
+  "nameEn": "Korolyov",
+  "population": 226000,
+  "region": "Московская область"
+ },
+ {
+  "code": "veliky_novgorod",
+  "nameRu": "Великий Новгород",
+  "nameEn": "Veliky Novgorod",
+  "population": 223000,
+  "region": null
+ },
+ {
+  "code": "engels",
+  "nameRu": "Энгельс",
+  "nameEn": "Engels",
+  "population": 222000,
+  "region": "Саратовская область"
+ },
+ {
+  "code": "bratsk",
+  "nameRu": "Братск",
+  "nameEn": "Bratsk",
+  "population": 219000,
+  "region": null
+ },
+ {
+  "code": "shakhty",
+  "nameRu": "Шахты",
+  "nameEn": "Shakhty",
+  "population": 219000,
+  "region": null
+ },
+ {
+  "code": "syktyvkar",
+  "nameRu": "Сыктывкар",
+  "nameEn": "Syktyvkar",
+  "population": 219000,
+  "region": null
+ },
+ {
+  "code": "angarsk",
+  "nameRu": "Ангарск",
+  "nameEn": "Angarsk",
+  "population": 217000,
+  "region": null
+ },
+ {
+  "code": "stary_oskol",
+  "nameRu": "Старый Оскол",
+  "nameEn": "Stary Oskol",
+  "population": 216000,
+  "region": null
+ },
+ {
+  "code": "dzerzhinsk",
+  "nameRu": "Дзержинск",
+  "nameEn": "Dzerzhinsk",
+  "population": 213000,
+  "region": "Нижегородская область"
+ },
+ {
+  "code": "krasnogorsk",
+  "nameRu": "Красногорск",
+  "nameEn": "Krasnogorsk",
+  "population": 197000,
+  "region": null
+ },
+ {
+  "code": "odintsovo",
+  "nameRu": "Одинцово",
+  "nameEn": "Odintsovo",
+  "population": 190000,
+  "region": null
+ },
+ {
+  "code": "pskov",
+  "nameRu": "Псков",
+  "nameEn": "Pskov",
+  "population": 185000,
+  "region": null
+ },
+ {
+  "code": "orsk",
+  "nameRu": "Орск",
+  "nameEn": "Orsk",
+  "population": 185000,
+  "region": null
+ },
+ {
+  "code": "armavir",
+  "nameRu": "Армавир",
+  "nameEn": "Armavir",
+  "population": 185000,
+  "region": "Краснодарский край"
+ },
+ {
+  "code": "abakan",
+  "nameRu": "Абакан",
+  "nameEn": "Abakan",
+  "population": 184000,
+  "region": null
+ },
+ {
+  "code": "yuzhno_sakhalinsk",
+  "nameRu": "Южно-Сахалинск",
+  "nameEn": "Yuzhno-Sakhalinsk",
+  "population": 182000,
+  "region": null
+ },
+ {
+  "code": "balakovo",
+  "nameRu": "Балаково",
+  "nameEn": "Balakovo",
+  "population": 181000,
+  "region": "Саратовская область"
+ },
+ {
+  "code": "biysk",
+  "nameRu": "Бийск",
+  "nameEn": "Biysk",
+  "population": 179000,
+  "region": null
+ },
+ {
+  "code": "ussuriysk",
+  "nameRu": "Уссурийск",
+  "nameEn": "Ussuriysk",
+  "population": 179000,
+  "region": null
+ },
+ {
+  "code": "norilsk",
+  "nameRu": "Норильск",
+  "nameEn": "Norilsk",
+  "population": 176000,
+  "region": null
+ },
+ {
+  "code": "prokopyevsk",
+  "nameRu": "Прокопьевск",
+  "nameEn": "Prokopyevsk",
+  "population": 170000,
+  "region": null
+ },
+ {
+  "code": "rybinsk",
+  "nameRu": "Рыбинск",
+  "nameEn": "Rybinsk",
+  "population": 170000,
+  "region": null
+ },
+ {
+  "code": "almetyevsk",
+  "nameRu": "Альметьевск",
+  "nameEn": "Almetyevsk",
+  "population": 164000,
+  "region": null
+ },
+ {
+  "code": "volgodonsk",
+  "nameRu": "Волгодонск",
+  "nameEn": "Volgodonsk",
+  "population": 163000,
+  "region": null
+ },
+ {
+  "code": "petropavlovsk_kamchatsky",
+  "nameRu": "Петропавловск-Камчатский",
+  "nameEn": "Petropavlovsk-Kamchatsky",
+  "population": 163000,
+  "region": null
+ },
+ {
+  "code": "khasavyurt",
+  "nameRu": "Хасавюрт",
+  "nameEn": "Khasavyurt",
+  "population": 161000,
+  "region": null
+ },
+ {
+  "code": "novocherkassk",
+  "nameRu": "Новочеркасск",
+  "nameEn": "Novocherkassk",
+  "population": 161000,
+  "region": null
+ },
+ {
+  "code": "kamensk_uralsky",
+  "nameRu": "Каменск-Уральский",
+  "nameEn": "Kamensk-Uralsky",
+  "population": 160000,
+  "region": null
+ },
+ {
+  "code": "syzran",
+  "nameRu": "Сызрань",
+  "nameEn": "Syzran",
+  "population": 160000,
+  "region": null
+ },
+ {
+  "code": "domodedovo",
+  "nameRu": "Домодедово",
+  "nameEn": "Domodedovo",
+  "population": 158000,
+  "region": "Московская область"
+ },
+ {
+  "code": "zlatoust",
+  "nameRu": "Златоуст",
+  "nameEn": "Zlatoust",
+  "population": 157000,
+  "region": "Челябинская область"
+ },
+ {
+  "code": "severodvinsk",
+  "nameRu": "Северодвинск",
+  "nameEn": "Severodvinsk",
+  "population": 155000,
+  "region": null
+ },
+ {
+  "code": "kerch",
+  "nameRu": "Керчь",
+  "nameEn": "Kerch",
+  "population": 151000,
+  "region": null
+ },
+ {
+  "code": "miass",
+  "nameRu": "Миасс",
+  "nameEn": "Miass",
+  "population": 147000,
+  "region": null
+ },
+ {
+  "code": "salavat",
+  "nameRu": "Салават",
+  "nameEn": "Salavat",
+  "population": 145000,
+  "region": null
+ },
+ {
+  "code": "kopeysk",
+  "nameRu": "Копейск",
+  "nameEn": "Kopeysk",
+  "population": 144000,
+  "region": null
+ },
+ {
+  "code": "elektrostal",
+  "nameRu": "Электросталь",
+  "nameEn": "Elektrostal",
+  "population": 143000,
+  "region": null
+ },
+ {
+  "code": "pyatigorsk",
+  "nameRu": "Пятигорск",
+  "nameEn": "Pyatigorsk",
+  "population": 143000,
+  "region": null
+ },
+ {
+  "code": "shchyolkovo",
+  "nameRu": "Щёлково",
+  "nameEn": "Shchyolkovo",
+  "population": 140000,
+  "region": null
+ },
+ {
+  "code": "maykop",
+  "nameRu": "Майкоп",
+  "nameEn": "Maykop",
+  "population": 138000,
+  "region": null
+ },
+ {
+  "code": "serpukhov",
+  "nameRu": "Серпухов",
+  "nameEn": "Serpukhov",
+  "population": 134000,
+  "region": null
+ },
+ {
+  "code": "neftekamsk",
+  "nameRu": "Нефтекамск",
+  "nameEn": "Neftekamsk",
+  "population": 134000,
+  "region": null
+ },
+ {
+  "code": "nakhodka",
+  "nameRu": "Находка",
+  "nameEn": "Nakhodka",
+  "population": 134000,
+  "region": null
+ },
+ {
+  "code": "kaspiysk",
+  "nameRu": "Каспийск",
+  "nameEn": "Kaspiysk",
+  "population": 133000,
+  "region": null
+ },
+ {
+  "code": "obninsk",
+  "nameRu": "Обнинск",
+  "nameEn": "Obninsk",
+  "population": 133000,
+  "region": "Калужская область"
+ },
+ {
+  "code": "berezniki",
+  "nameRu": "Березники",
+  "nameEn": "Berezniki",
+  "population": 133000,
+  "region": null
+ },
+ {
+  "code": "kolomna",
+  "nameRu": "Коломна",
+  "nameEn": "Kolomna",
+  "population": 133000,
+  "region": null
+ },
+ {
+  "code": "kyzyl",
+  "nameRu": "Кызыл",
+  "nameEn": "Kyzyl",
+  "population": 132000,
+  "region": null
+ },
+ {
+  "code": "derbent",
+  "nameRu": "Дербент",
+  "nameEn": "Derbent",
+  "population": 128000,
+  "region": null
+ },
+ {
+  "code": "nazran",
+  "nameRu": "Назрань",
+  "nameEn": "Nazran",
+  "population": 128000,
+  "region": null
+ },
+ {
+  "code": "nefteyugansk",
+  "nameRu": "Нефтеюганск",
+  "nameEn": "Nefteyugansk",
+  "population": 128000,
+  "region": null
+ },
+ {
+  "code": "kovrov",
+  "nameRu": "Ковров",
+  "nameEn": "Kovrov",
+  "population": 128000,
+  "region": null
+ },
+ {
+  "code": "kislovodsk",
+  "nameRu": "Кисловодск",
+  "nameEn": "Kislovodsk",
+  "population": 126000,
+  "region": null
+ },
+ {
+  "code": "bataysk",
+  "nameRu": "Батайск",
+  "nameEn": "Bataysk",
+  "population": 125000,
+  "region": null
+ },
+ {
+  "code": "yessentuki",
+  "nameRu": "Ессентуки",
+  "nameEn": "Yessentuki",
+  "population": 124000,
+  "region": null
+ },
+ {
+  "code": "rubtsovsk",
+  "nameRu": "Рубцовск",
+  "nameEn": "Rubtsovsk",
+  "population": 122000,
+  "region": null
+ },
+ {
+  "code": "novocheboksarsk",
+  "nameRu": "Новочебоксарск",
+  "nameEn": "Novocheboksarsk",
+  "population": 120000,
+  "region": null
+ },
+ {
+  "code": "dolgoprudny",
+  "nameRu": "Долгопрудный",
+  "nameEn": "Dolgoprudny",
+  "population": 119000,
+  "region": null
+ },
+ {
+  "code": "reutov",
+  "nameRu": "Реутов",
+  "nameEn": "Reutov",
+  "population": 118000,
+  "region": null
+ },
+ {
+  "code": "ramenskoye",
+  "nameRu": "Раменское",
+  "nameEn": "Ramenskoye",
+  "population": 117000,
+  "region": null
+ },
+ {
+  "code": "oktyabrsky",
+  "nameRu": "Октябрьский",
+  "nameEn": "Oktyabrsky",
+  "population": 117000,
+  "region": "Республика Башкортостан"
+ },
+ {
+  "code": "murino",
+  "nameRu": "Мурино",
+  "nameEn": "Murino",
+  "population": 116000,
+  "region": "Ленинградская область"
+ },
+ {
+  "code": "novomoskovsk",
+  "nameRu": "Новомосковск",
+  "nameEn": "Novomoskovsk",
+  "population": 116000,
+  "region": "Тульская область"
+ },
+ {
+  "code": "mikhaylovsk",
+  "nameRu": "Михайловск",
+  "nameEn": "Mikhaylovsk",
+  "population": 114000,
+  "region": "Ставропольский край"
+ },
+ {
+  "code": "khanty_mansiysk",
+  "nameRu": "Ханты-Мансийск",
+  "nameEn": "Khanty-Mansiysk",
+  "population": 114000,
+  "region": null
+ },
+ {
+  "code": "nevinnomyssk",
+  "nameRu": "Невинномысск",
+  "nameEn": "Nevinnomyssk",
+  "population": 113000,
+  "region": null
+ },
+ {
+  "code": "cherkessk",
+  "nameRu": "Черкесск",
+  "nameEn": "Cherkessk",
+  "population": 113000,
+  "region": null
+ },
+ {
+  "code": "pushkino",
+  "nameRu": "Пушкино",
+  "nameEn": "Pushkino",
+  "population": 113000,
+  "region": "Московская область"
+ },
+ {
+  "code": "novy_urengoy",
+  "nameRu": "Новый Уренгой",
+  "nameEn": "Novy Urengoy",
+  "population": 112000,
+  "region": null
+ },
+ {
+  "code": "pervouralsk",
+  "nameRu": "Первоуральск",
+  "nameEn": "Pervouralsk",
+  "population": 111000,
+  "region": null
+ },
+ {
+  "code": "zhukovsky",
+  "nameRu": "Жуковский",
+  "nameEn": "Zhukovsky",
+  "population": 110000,
+  "region": "Московская область"
+ },
+ {
+  "code": "vidnoye",
+  "nameRu": "Видное",
+  "nameEn": "Vidnoye",
+  "population": 109000,
+  "region": "Московская область"
+ },
+ {
+  "code": "artyom",
+  "nameRu": "Артём",
+  "nameEn": "Artyom",
+  "population": 108000,
+  "region": "Приморский край"
+ },
+ {
+  "code": "dimitrovgrad",
+  "nameRu": "Димитровград",
+  "nameEn": "Dimitrovgrad",
+  "population": 108000,
+  "region": "Ульяновская область"
+ },
+ {
+  "code": "yevpatoria",
+  "nameRu": "Евпатория",
+  "nameEn": "Yevpatoria",
+  "population": 106000,
+  "region": null
+ },
+ {
+  "code": "seversk",
+  "nameRu": "Северск",
+  "nameEn": "Seversk",
+  "population": 105000,
+  "region": "Томская область"
+ },
+ {
+  "code": "orekhovo_zuyevo",
+  "nameRu": "Орехово-Зуево",
+  "nameEn": "Orekhovo-Zuyevo",
+  "population": 105000,
+  "region": null
+ },
+ {
+  "code": "noyabrsk",
+  "nameRu": "Ноябрьск",
+  "nameEn": "Noyabrsk",
+  "population": 105000,
+  "region": null
+ },
+ {
+  "code": "kamyshin",
+  "nameRu": "Камышин",
+  "nameEn": "Kamyshin",
+  "population": 104000,
+  "region": null
+ },
+ {
+  "code": "elista",
+  "nameRu": "Элиста",
+  "nameEn": "Elista",
+  "population": 104000,
+  "region": null
+ },
+ {
+  "code": "murom",
+  "nameRu": "Муром",
+  "nameEn": "Murom",
+  "population": 104000,
+  "region": null
+ },
+ {
+  "code": "arzamas",
+  "nameRu": "Арзамас",
+  "nameEn": "Arzamas",
+  "population": 104000,
+  "region": null
+ },
+ {
+  "code": "noginsk",
+  "nameRu": "Ногинск",
+  "nameEn": "Noginsk",
+  "population": 103000,
+  "region": "Московская область"
+ },
+ {
+  "code": "berdsk",
+  "nameRu": "Бердск",
+  "nameEn": "Berdsk",
+  "population": 102000,
+  "region": "Новосибирская область"
+ },
+ {
+  "code": "novoshakhtinsk",
+  "nameRu": "Новошахтинск",
+  "nameEn": "Novoshakhtinsk",
+  "population": 101000,
+  "region": null
+ },
+ {
+  "code": "tobolsk",
+  "nameRu": "Тобольск",
+  "nameEn": "Tobolsk",
+  "population": 100000,
+  "region": null
+ }
+]

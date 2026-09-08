@@ -13,9 +13,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import type { JobFilters, JobType } from '@bystrobarista/core/types/job';
 import type { GeoPoint } from '@bystrobarista/core/types/business';
-import { DEFAULT_CITY, type CityCode } from '@bystrobarista/core/types/city';
+import { DEFAULT_CITY, getCityLabel, type CityCode } from '@bystrobarista/core/types/city';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { MetroSelector, METRO_ANY } from './MetroSelector';
+import { CityPickerModal } from './CityPicker';
 
 function toIsoDate(d: Date): string {
   const y = d.getFullYear();
@@ -40,7 +41,8 @@ const DISTANCE_OPTIONS_KM = [5, 10, 25, 50] as const;
 
 export const FilterBar = React.memo<FilterBarProps>(
   ({ onFilterChange, currentFilters, userLocation }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const [showCityModal, setShowCityModal] = useState(false);
     const [showDistanceModal, setShowDistanceModal] = useState(false);
     const [showFromDateModal, setShowFromDateModal] = useState(false);
     const [pendingFromDate, setPendingFromDate] = useState<Date>(() =>
@@ -168,11 +170,22 @@ export const FilterBar = React.memo<FilterBarProps>(
             </Text>
           </TouchableOpacity>
 
+          <TouchableOpacity
+            style={[styles.filterChip, currentFilters.city ? styles.filterChipActive : null]}
+            onPress={() => setShowCityModal(true)}>
+            <Text
+              style={[
+                styles.filterChipText,
+                currentFilters.city ? styles.filterChipTextActive : null,
+              ]}>
+              {getCityLabel(currentFilters.city ?? DEFAULT_CITY, i18n.language)}
+            </Text>
+          </TouchableOpacity>
+
           <View style={styles.metroSelectorContainer}>
             <MetroSelector
               multiSelect
               city={currentFilters.city ?? DEFAULT_CITY}
-              onCityChange={handleCityChange}
               value={currentFilters.metroStations ?? []}
               onChange={handleMetroChange}
               placeholder={t('filters.metroStation')}
@@ -225,6 +238,15 @@ export const FilterBar = React.memo<FilterBarProps>(
             )}
           </TouchableOpacity>
         </ScrollView>
+
+        <CityPickerModal
+          visible={showCityModal}
+          value={currentFilters.city ?? DEFAULT_CITY}
+          onSelect={city => {
+            if (city) handleCityChange(city);
+          }}
+          onClose={() => setShowCityModal(false)}
+        />
 
         <Modal
           visible={showDistanceModal}

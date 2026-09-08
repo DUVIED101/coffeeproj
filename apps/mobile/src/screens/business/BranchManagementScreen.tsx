@@ -26,7 +26,8 @@ import {
   BranchPhotoLimitError,
 } from '@bystrobarista/core/services/BusinessService';
 import { MetroSelector } from '../../components/MetroSelector';
-import { CityToggle } from '../../components/CityToggle';
+import { CityPicker } from '../../components/CityPicker';
+import { MetroService } from '@bystrobarista/core/utils/metro';
 import { BranchPhotoGallery } from '../../components/BranchPhotoGallery';
 import { AddFab } from '../../components/AddFab';
 import { useAuthStore } from '@bystrobarista/core/stores/authStore';
@@ -229,7 +230,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
       setAddressError(null);
     }
 
-    if (!metroStation.trim()) {
+    if (MetroService.hasMetro(city) && !metroStation.trim()) {
       setMetroError(t('branches.form.metroRequired'));
       isValid = false;
     } else {
@@ -320,7 +321,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
           address: trimmedAddress,
           city,
           coordinates,
-          metroStation: metroStation.trim(),
+          metroStation: MetroService.hasMetro(city) ? metroStation.trim() : null,
           equipment: selectedEquipment,
         });
 
@@ -332,7 +333,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
           address: trimmedAddress,
           city,
           coordinates,
-          metroStation: metroStation.trim(),
+          metroStation: MetroService.hasMetro(city) ? metroStation.trim() : undefined,
           equipment: selectedEquipment,
         });
 
@@ -586,7 +587,7 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
                 <Text style={styles.label}>
                   {t('branches.form.city')} <Text style={styles.required}>*</Text>
                 </Text>
-                <CityToggle
+                <CityPicker
                   value={city}
                   onChange={nextCity => {
                     setCity(nextCity);
@@ -597,14 +598,11 @@ export const BranchManagementScreen: React.FC<Props> = ({ route }) => {
 
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>
-                  {t('branches.form.metro')} <Text style={styles.required}>*</Text>
+                  {t('branches.form.metro')}
+                  {MetroService.hasMetro(city) && <Text style={styles.required}> *</Text>}
                 </Text>
                 <MetroSelector
                   city={city}
-                  onCityChange={nextCity => {
-                    setCity(nextCity);
-                    setMetroStation('');
-                  }}
                   value={metroStation || null}
                   onChange={value => {
                     setMetroStation(value ?? '');

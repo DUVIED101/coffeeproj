@@ -22,7 +22,9 @@ import { COLORS } from '@bystrobarista/core/config/constants';
 import { BaristaProfileService } from '@bystrobarista/core/services/BaristaProfileService';
 import { WorkExperienceService } from '@bystrobarista/core/services/WorkExperienceService';
 import { MetroSelector } from '../../components/MetroSelector';
-import { CityToggle } from '../../components/CityToggle';
+import { CityPicker } from '../../components/CityPicker';
+import { normalizePreferredMetroStations } from '@bystrobarista/core/config/metroFilter';
+import { MetroService } from '@bystrobarista/core/utils/metro';
 import { CertificatesEditor } from '../../components/CertificatesEditor';
 import { ProgressIndicator } from '../../components/ProgressIndicator';
 import { WorkExperienceEditor } from '../../components/WorkExperienceEditor';
@@ -251,7 +253,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleCityChange = useCallback((nextCity: CityCode) => {
     setCity(nextCity);
-    setPreferredMetroStations([]);
+    setPreferredMetroStations(normalizePreferredMetroStations(nextCity, []));
   }, []);
 
   const handleNext = () => {
@@ -308,7 +310,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         equipmentExperience: selectedEquipment,
         certifications,
         languages: ['Russian'],
-        preferredMetroStations,
+        preferredMetroStations: normalizePreferredMetroStations(city, preferredMetroStations),
         preferredShiftTimes: selectedShiftTimes,
         hourlyRateMin: hourlyRateMin ? parseInt(hourlyRateMin, 10) : undefined,
         medicalBookExpiresOn: medicalBookExpiresOn || undefined,
@@ -411,7 +413,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               {t('baristaSetup.fieldCity', { defaultValue: 'Город' })}{' '}
               <Text style={styles.required}>*</Text>
             </Text>
-            <CityToggle value={city} onChange={handleCityChange} />
+            <CityPicker value={city} onChange={handleCityChange} />
 
             <Text style={styles.label}>
               {t('baristaSetup.fieldDateOfBirth', {
@@ -623,19 +625,22 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
               })}
             </Text>
 
-            <Text style={styles.label}>
-              {t('baristaSetup.fieldMetro', {
-                defaultValue: 'Предпочитаемые станции метро (опционально)',
-              })}
-            </Text>
-            <MetroSelector
-              multiSelect
-              city={city}
-              onCityChange={handleCityChange}
-              value={preferredMetroStations}
-              onChange={setPreferredMetroStations}
-              userLocation={userLocation}
-            />
+            {MetroService.hasMetro(city) && (
+              <>
+                <Text style={styles.label}>
+                  {t('baristaSetup.fieldMetro', {
+                    defaultValue: 'Предпочитаемые станции метро (опционально)',
+                  })}
+                </Text>
+                <MetroSelector
+                  multiSelect
+                  city={city}
+                  value={preferredMetroStations}
+                  onChange={setPreferredMetroStations}
+                  userLocation={userLocation}
+                />
+              </>
+            )}
 
             <Text style={styles.label}>
               {t('baristaSetup.fieldShiftTimes', {

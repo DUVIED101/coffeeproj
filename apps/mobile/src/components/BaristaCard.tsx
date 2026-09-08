@@ -8,7 +8,7 @@ import type { BaristaProfile } from '@bystrobarista/core/types/baristaProfile';
 import type { UserReviewAggregate } from '@bystrobarista/core/types/review';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { getInitials } from '../utils/getInitials';
-import { isCityCode } from '@bystrobarista/core/types/city';
+import { getCityLabel, isCityCode } from '@bystrobarista/core/types/city';
 import { StarRow } from './StarRow';
 
 type BaristaCardProps = {
@@ -84,7 +84,9 @@ export const BaristaCard = React.memo<BaristaCardProps>(({ profile, onPress, rev
           <Text style={styles.title}>
             {firstName} {lastName}
           </Text>
-          <Text style={styles.subtitle}>{isCityCode(city) ? t(`city.codes.${city}`) : city}</Text>
+          <Text style={styles.subtitle}>
+            {isCityCode(city) ? getCityLabel(city, i18n.language) : city}
+          </Text>
           <View style={styles.ratingRow}>
             {reviewAggregate && reviewAggregate.reviewCount > 0 ? (
               <StarRow

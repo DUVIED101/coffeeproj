@@ -1,4 +1,21 @@
-import { MetroService } from './metro';
+import { CITY_BOUNDS, isInsideBounds, type CityCode } from '../types/city';
+import { METRO_CITY_CODES, MetroService } from './metro';
+
+const NEW_METRO_CITIES: ReadonlyArray<{
+  city: CityCode;
+  stations: number;
+  lines: string[];
+}> = [
+  {
+    city: 'nizhny_novgorod',
+    stations: 16,
+    lines: ['Автозаводская', 'Сормовско-Мещерская'],
+  },
+  { city: 'kazan', stations: 11, lines: ['Центральная'] },
+  { city: 'novosibirsk', stations: 14, lines: ['Ленинская', 'Дзержинская'] },
+  { city: 'samara', stations: 10, lines: ['Первая'] },
+  { city: 'yekaterinburg', stations: 9, lines: ['Уральская'] },
+];
 
 describe('MetroService', () => {
   describe('getAllStations', () => {
@@ -9,6 +26,59 @@ describe('MetroService', () => {
     it('returns the full Moscow list', () => {
       expect(MetroService.getAllStations('moscow')).toHaveLength(304);
     });
+
+    it.each(NEW_METRO_CITIES)(
+      'returns the 2026 station list for $city (Московская counted once per line)',
+      ({ city, stations }) => {
+        expect(MetroService.getAllStations(city)).toHaveLength(stations);
+      }
+    );
+
+    it('returns an empty list for a city without metro instead of throwing', () => {
+      expect(MetroService.getAllStations('krasnodar')).toEqual([]);
+      expect(MetroService.searchStations('Московская', 'krasnodar')).toEqual([]);
+      expect(MetroService.getStationsByDistance(45.03, 38.97, 'krasnodar')).toEqual([]);
+    });
+
+    it('keeps station ids unique across every city', () => {
+      const ids = METRO_CITY_CODES.flatMap(city =>
+        MetroService.getAllStations(city).map(station => station.id)
+      );
+      expect(new Set(ids).size).toBe(ids.length);
+    });
+
+    it('places every station inside the bounds of its own city', () => {
+      const outside = METRO_CITY_CODES.flatMap(city =>
+        MetroService.getAllStations(city)
+          .filter(
+            station =>
+              !station.coordinates ||
+              !isInsideBounds(
+                station.coordinates.latitude,
+                station.coordinates.longitude,
+                CITY_BOUNDS[city]
+              )
+          )
+          .map(station => `${city}:${station.name}`)
+      );
+      expect(outside).toEqual([]);
+    });
+  });
+
+  describe('hasMetro', () => {
+    it('is true exactly for the seven cities with station data', () => {
+      expect([...METRO_CITY_CODES].sort()).toEqual([
+        'kazan',
+        'moscow',
+        'nizhny_novgorod',
+        'novosibirsk',
+        'samara',
+        'spb',
+        'yekaterinburg',
+      ]);
+      expect(MetroService.hasMetro('samara')).toBe(true);
+      expect(MetroService.hasMetro('krasnodar')).toBe(false);
+    });
   });
 
   describe('searchStations', () => {
@@ -18,6 +88,12 @@ describe('MetroService', () => {
 
       expect(moscowResults.map(s => s.line)).toEqual(['Замоскворецкая']);
       expect(spbResults.map(s => s.line)).toEqual(['Невско-Василеостровская']);
+    });
+
+    it('scopes Октябрьская to Novosibirsk without leaking the Moscow station', () => {
+      const novosibirsk = MetroService.searchStations('Октябрьская', 'novosibirsk');
+
+      expect(novosibirsk.map(s => `${s.id}|${s.line}`)).toEqual(['nsk-1-5|Ленинская']);
     });
 
     it('returns the full list when the query is empty', () => {
@@ -55,6 +131,10 @@ describe('MetroService', () => {
         'Троицкая',
         'Солнцевская',
       ]);
+    });
+
+    it.each(NEW_METRO_CITIES)('lists the lines of $city in map order', ({ city, lines }) => {
+      expect(MetroService.getUniqueLines(city).map(line => line.name)).toEqual(lines);
     });
 
     it('lists the 6 real Saint Petersburg lines (no ring line — that is Moscow only)', () => {

@@ -61,18 +61,18 @@
     "allSection": "Все станции",
     "anyOptionTitle": "Любая станция",
     "anyOptionSubtitle": "Без предпочтений по метро",
-    "cityTab": {
-      "spb": "Санкт-Петербург",
-      "moscow": "Москва"
-    }
+    "noMetroInCity": "В этом городе нет метро",
+    "cityLabel": "Город: {{name}}"
   },
   "city": {
     "title": "Город",
     "placeholder": "Выберите город",
-    "codes": {
-      "spb": "Санкт-Петербург",
-      "moscow": "Москва"
-    }
+    "searchPlaceholder": "Поиск города…",
+    "pinnedSection": "Города с метро",
+    "allSection": "Все города",
+    "noResults": "Города не найдены",
+    "anyOption": "Любой город",
+    "metroBadge": "метро"
   },
   "jobStatus": {
     "open": "Открыто",
@@ -816,7 +816,8 @@
       "city": "Город",
       "metro": "Станция метро",
       "metroRequired": "Выберите станцию метро",
-      "equipment": "Оборудование (необязательно)"
+      "equipment": "Оборудование (необязательно)",
+      "metroUnknown": "Такой станции нет в этом городе"
     },
     "errors": {
       "loadFailed": "Не удалось загрузить точки",

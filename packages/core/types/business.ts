@@ -103,7 +103,7 @@ export interface UpdateBranchData {
   address?: string;
   city?: CityCode;
   coordinates?: GeoPoint;
-  metroStation?: string;
+  metroStation?: string | null;
   equipment?: Equipment[];
   operatingHours?: OperatingHours;
   photos?: string[];
