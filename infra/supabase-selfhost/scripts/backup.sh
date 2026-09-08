@@ -9,7 +9,8 @@
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
-set -a; source ./.env; set +a
+envv() { grep -m1 "^$1=" .env | cut -d= -f2-; }
+BACKUP_RCLONE_REMOTE="$(envv BACKUP_RCLONE_REMOTE)"; BACKUP_BUCKET="$(envv BACKUP_BUCKET)"; BACKUP_RETENTION_DAYS="$(envv BACKUP_RETENTION_DAYS)"
 
 readonly STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 readonly OUT="backups/$STAMP"
