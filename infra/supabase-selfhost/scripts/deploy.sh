@@ -55,7 +55,8 @@ fi
 docker compose pull -q
 docker compose up -d --wait --remove-orphans
 install -m 0644 nginx-tuning.conf /etc/nginx/conf.d/00-bystrobarista-tuning.conf
-install -m 0644 nginx-api.conf /etc/nginx/sites-available/supabase-api
+sed "s/__DOMAIN__/\$DOMAIN/g" nginx-api.conf > /etc/nginx/sites-available/supabase-api
+rm -f /etc/nginx/sites-enabled/00-default
 ln -sf /etc/nginx/sites-available/supabase-api /etc/nginx/sites-enabled/supabase-api
 nginx -t && systemctl reload nginx
 # Nightly backup at 03:00 MSK (00:00 UTC).
