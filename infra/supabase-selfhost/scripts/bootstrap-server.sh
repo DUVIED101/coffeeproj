@@ -63,6 +63,13 @@ if ! command -v docker >/dev/null 2>&1; then
   curl -fsSL https://get.docker.com | sh
 fi
 systemctl enable --now docker
+# Docker Hub is rate-limited (and throttled from Russia); Timeweb runs a public mirror.
+if ! grep -q dockerhub.timeweb.cloud /etc/docker/daemon.json 2>/dev/null; then
+  log "Docker Hub mirror (dockerhub.timeweb.cloud)…"
+  mkdir -p /etc/docker
+  printf '{\n  "registry-mirrors": ["https://dockerhub.timeweb.cloud"]\n}\n' > /etc/docker/daemon.json
+  systemctl restart docker
+fi
 
 if [[ ! -f /swapfile ]]; then
   log "2 GB swapfile (safety net for ~10 containers on 8 GB)…"
