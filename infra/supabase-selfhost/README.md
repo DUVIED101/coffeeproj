@@ -44,19 +44,19 @@ curl -fsSL https://raw.githubusercontent.com/DUVIED101/coffeeproj/main/infra/sup
 
 ### SSH from outside Russia
 
-Plain SSH to a Russian IP stalls right after the banner exchange (DPI), from a
-laptop abroad and from the Lithuanian VPS alike. The bootstrap therefore puts
-sshd behind TLS on port 8443 (stunnel, self-signed cert) and the laptop connects
-through `openssl s_client`, which looks like ordinary HTTPS on the wire.
-`scp`, `rsync` and `deploy.sh` all use the same alias:
+Plain SSH works once the server has a "clean" IPv4 (see the lessons below: the
+first IP was filtered on the border). The bootstrap still puts sshd behind TLS
+on port 8443 (stunnel) as a fallback; with a filtered IP add
+`ProxyCommand openssl s_client -quiet -connect %h:8443 -servername ssh.bystrobarista.com 2>/dev/null`
+to the alias, or use the IPv6 address. `scp`, `rsync` and `deploy.sh` all use
+the same alias:
 
 ```
 Host bystrobarista-ru
-  HostName <vds ip>
+  HostName 201.51.11.39
   User root
   IdentityFile ~/.ssh/bystrobarista-vps-rsa
   IdentitiesOnly yes
-  ProxyCommand openssl s_client -quiet -connect %h:8443 -servername ssh.bystrobarista.com 2>/dev/null
 ```
 
 ## 2. Keys and `.env`
@@ -88,7 +88,7 @@ already enabled, the warning is harmless.) Fill in the rest of `.env`:
   names; the values are in the password manager (`APNS_KEY_P8` as one line with `\n`).
 - `sql/vault-secrets.sql`: copy the `.example`, paste `SERVICE_ROLE_KEY` and the VAPID keys.
 - `rclone config` → remote `bb-s3` (type s3, provider Other, endpoint
-  `https://s3.timeweb.cloud`, the bucket from `BACKUP_BUCKET`).
+  `https://s3.twcstorage.ru`, **no region**, the bucket from `BACKUP_BUCKET`).
 
 ## 3. Deploy
 
@@ -112,18 +112,23 @@ Postgres: `ssh -L 5432:127.0.0.1:5432 bystrobarista-ru`, user `postgres`.
 Rehearse on the temporary hostname first, then repeat for real.
 
 ```bash
-# 1. database (roles → schema → data, triggers off; then post-restore + vault)
-CLOUD_DB_URL='postgresql://postgres.zifvfsamfzepxxuxhyhg:<pw>@aws-0-eu-west-1.pooler.supabase.com:5432/postgres' \
-  bash infra/supabase-selfhost/scripts/migrate-from-cloud.sh
-# 2. storage files (186 objects / 70 MB as of 2026-09-07)
-SRC_URL=https://zifvfsamfzepxxuxhyhg.supabase.co SRC_KEY=<cloud service_role> \
-DST_URL=https://api.bystrobarista.com DST_KEY=<self-hosted service_role> \
+# 1. database, on the server (roles → schema → data with triggers off →
+#    managed extras → post-restore → vault). Needs CLOUD_DB_PASSWORD and
+#    CLOUD_DB_HOST=aws-1-eu-west-1.pooler.supabase.com in /root/bystrobarista-secrets.env.
+ssh bystrobarista-ru /opt/bystrobarista/supabase/scripts/migrate-from-cloud.sh
+# 2. storage buckets + files through the API (186 objects / 70 MB as of 2026-09-08);
+#    the service_role key is the same on both sides because the JWT secret is shared.
+KEY=$(ssh bystrobarista-ru "grep -m1 '^SERVICE_ROLE_KEY=' /opt/bystrobarista/supabase/.env | cut -d= -f2-")
+SRC_URL=https://zifvfsamfzepxxuxhyhg.supabase.co SRC_KEY=$KEY \
+DST_URL=https://api.bystrobarista.com DST_KEY=$KEY \
   node infra/supabase-selfhost/scripts/copy-storage.mjs
 # 3. smoke + manual checks (see checklist below)
 ```
 
-Re-running `migrate-from-cloud.sh` on a stack that already holds data will
-fail on duplicate keys: reset with `docker compose down && rm -rf volumes/db/data && deploy.sh`.
+Re-running `migrate-from-cloud.sh` on a stack that already holds data fails on
+duplicate objects: reset first with
+`docker compose down && rm -rf volumes/db/data volumes/storage && docker compose up -d --wait`
+on the server.
 
 Manual checklist after a copy: sign-up with OTP e-mail, Apple / Google / Yandex
 sign-in, job search with distance, avatar upload and `/render/image` thumbnail,
