@@ -60,7 +60,7 @@ rm -f /etc/nginx/sites-enabled/00-default
 ln -sf /etc/nginx/sites-available/supabase-api /etc/nginx/sites-enabled/supabase-api
 nginx -t && systemctl reload nginx
 # Nightly backup at 03:00 MSK (00:00 UTC).
-( crontab -l 2>/dev/null | grep -v 'supabase/scripts/backup.sh' ; echo "0 0 * * * $REMOTE_DIR/scripts/backup.sh >> /var/log/bystrobarista-backup.log 2>&1" ) | crontab -
+( crontab -l 2>/dev/null | grep -v 'supabase/scripts/backup.sh' || true; echo "0 0 * * * $REMOTE_DIR/scripts/backup.sh >> /var/log/bystrobarista-backup.log 2>&1" ) | crontab -
 docker compose ps
 REMOTE
 log "DONE. Smoke test: bash infra/supabase-selfhost/scripts/smoke-test.sh"
