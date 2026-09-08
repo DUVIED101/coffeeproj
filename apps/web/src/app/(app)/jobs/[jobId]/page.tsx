@@ -16,7 +16,6 @@ import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import type { Job } from "@bystrobarista/core/types/job";
 import type { UserId } from "@bystrobarista/core/types/ids";
 import { StarRow } from "@/components/StarRow";
-import { BackLink } from "@/components/BackLink";
 import { BusinessJobDetails } from "@/components/BusinessJobDetails";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { ReportButton } from "@/components/ReportButton";
@@ -230,7 +229,6 @@ function BaristaJobDetails(): React.JSX.Element {
 
   return (
     <div className="mx-auto max-w-2xl pb-24">
-      <BackLink fallbackHref="/jobs" label={t("jobDetails.backToJobs")} />
       <h1 className="text-2xl font-bold">{job.title}</h1>
 
       <div className="mt-1 flex items-center gap-2 text-sm text-ink-secondary">

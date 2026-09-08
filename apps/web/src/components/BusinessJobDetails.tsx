@@ -12,7 +12,6 @@ import { JobOfferService } from "@bystrobarista/core/services/JobOfferService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import type { Job, JobStatus } from "@bystrobarista/core/types/job";
 import type { JobId } from "@bystrobarista/core/types/ids";
-import { BackLink } from "@/components/BackLink";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { transformedImageUrl } from "@/lib/imageTransform";
 
@@ -148,7 +147,6 @@ export function BusinessJobDetails({
 
   return (
     <div className="mx-auto max-w-2xl pb-16">
-      <BackLink fallbackHref="/dashboard" label={t("jobDetails.backToJobs")} />
       <div className="rounded-card border border-line bg-white p-4">
         <h1 className="text-2xl font-bold">{job.title}</h1>
         <p className="mt-1 font-semibold">{job.businessName}</p>
