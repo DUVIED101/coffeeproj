@@ -52,16 +52,99 @@ const statusLabel = (status: string, t: TFunction): string => {
   }
 };
 
-const compensationLine = (job: Job, t: TFunction, locale: string): string => {
-  const amount = `₽${job.compensation.amount.toLocaleString(locale)}`;
+// jobDetails.perHour / perDay / fixed are bare labels ("за час"), not
+// templates — the amount is rendered next to them, never interpolated.
+const compensationTypeLabel = (job: Job, t: TFunction): string => {
   switch (job.compensation.type) {
     case "hourly":
-      return t("jobDetails.perHour", { amount });
+      return t("jobDetails.perHour");
     case "daily":
-      return t("jobDetails.perDay", { amount });
+      return t("jobDetails.perDay");
     default:
-      return amount;
+      return t("jobDetails.fixed");
   }
+};
+
+// Full weekday names (recurringDays) → the short dayOfWeek.* label keys.
+const DAY_SHORT: Record<string, string> = {
+  monday: "mon",
+  tuesday: "tue",
+  wednesday: "wed",
+  thursday: "thu",
+  friday: "fri",
+  saturday: "sat",
+  sunday: "sun",
+};
+
+type ShiftRow = { label: string; value: string };
+
+// Same rows as BusinessJobDetails, keyed under jobDetails.* — those labels
+// end with a colon and carry no placeholders, so value goes beside them.
+const shiftRows = (job: Job, t: TFunction, locale: string): ShiftRow[] => {
+  const shift = job.shiftDetails;
+  const formatDate = (iso: string): string =>
+    new Date(iso).toLocaleDateString(locale);
+  if (shift.kind === "permanent") {
+    return [
+      {
+        label: t("jobDetails.startDatePermanent"),
+        value: shift.startDate
+          ? formatDate(shift.startDate)
+          : t("jobDetails.startDateUnspecified"),
+      },
+      ...(typeof shift.hoursPerWeek === "number"
+        ? [
+            {
+              label: t("jobDetails.hoursPerWeek"),
+              value: String(shift.hoursPerWeek),
+            },
+          ]
+        : []),
+      {
+        label: t("jobDetails.preferredDays"),
+        value:
+          shift.preferredDays && shift.preferredDays.length > 0
+            ? shift.preferredDays
+                .map((d) => t(`createJob.weekdays.${d}`))
+                .join(", ")
+            : t("jobDetails.anyDay"),
+      },
+      ...(shift.scheduleStartTime && shift.scheduleEndTime
+        ? [
+            {
+              label: t("jobDetails.scheduleTimes"),
+              value: `${shift.scheduleStartTime} — ${shift.scheduleEndTime}`,
+            },
+          ]
+        : []),
+    ];
+  }
+  return [
+    {
+      label: t("jobDetails.date"),
+      value: shift.startDate
+        ? shift.endDate && shift.endDate !== shift.startDate
+          ? `${formatDate(shift.startDate)} — ${formatDate(shift.endDate)}`
+          : formatDate(shift.startDate)
+        : t("jobDetails.startDateUnspecified"),
+    },
+    {
+      label: t("jobDetails.time"),
+      value: `${shift.startTime} — ${shift.endTime}`,
+    },
+    ...(shift.isRecurring &&
+    shift.recurringDays &&
+    shift.recurringDays.length > 0
+      ? [
+          {
+            label: t("jobDetails.recurring"),
+            value: shift.recurringDays
+              .map((d) => t(`dayOfWeek.${DAY_SHORT[d] ?? d}`))
+              .join(", "),
+          },
+        ]
+      : []),
+  ];
 };
 
 // Shared route: barista sees the public job view with the apply flow,
@@ -142,35 +225,8 @@ function BaristaJobDetails(): React.JSX.Element {
   const profileTooEmpty =
     profileQuery.isSuccess && completeness < MIN_COMPLETENESS_TO_APPLY;
 
-  const shiftLine =
-    job.shiftDetails.kind === "permanent"
-      ? [
-          job.shiftDetails.startDate &&
-            t("jobDetails.startDatePermanent", {
-              date: new Date(job.shiftDetails.startDate).toLocaleDateString(
-                locale,
-              ),
-            }),
-          typeof job.shiftDetails.hoursPerWeek === "number" &&
-            t("jobDetails.hoursPerWeek", {
-              hours: job.shiftDetails.hoursPerWeek,
-            }),
-          job.shiftDetails.scheduleStartTime &&
-            job.shiftDetails.scheduleEndTime &&
-            t("jobDetails.scheduleTimes", {
-              start: job.shiftDetails.scheduleStartTime,
-              end: job.shiftDetails.scheduleEndTime,
-            }),
-        ]
-          .filter(Boolean)
-          .join(" · ")
-      : [
-          job.shiftDetails.startDate &&
-            `${t("jobDetails.date")}: ${new Date(job.shiftDetails.startDate).toLocaleDateString(locale)}`,
-          `${t("jobDetails.time")}: ${job.shiftDetails.startTime} – ${job.shiftDetails.endTime}`,
-        ]
-          .filter(Boolean)
-          .join(" · ");
+  const rows = shiftRows(job, t, locale);
+  const patterns = job.shiftDetails.customSchedulePatterns ?? [];
 
   return (
     <div className="mx-auto max-w-2xl pb-24">
@@ -236,16 +292,56 @@ function BaristaJobDetails(): React.JSX.Element {
         <h2 className="mb-1 text-base font-semibold">
           {t("jobDetails.compensation")}
         </h2>
-        <p className="text-lg font-semibold text-primary">
-          {compensationLine(job, t, locale)}
+        <p className="text-2xl font-bold text-primary">
+          {job.compensation.amount.toLocaleString(locale)} ₽
         </p>
+        <p className="text-sm text-ink-secondary">
+          {compensationTypeLabel(job, t)}
+        </p>
+        {job.compensation.salesBonusPercent != null && (
+          <div className="flex items-baseline justify-between gap-3 py-1 text-sm">
+            <span className="text-ink-secondary">
+              {t("jobDetails.salesBonus")}
+            </span>
+            <span className="font-medium">
+              {t("jobDetails.salesBonusValue", {
+                percent: job.compensation.salesBonusPercent,
+              })}
+            </span>
+          </div>
+        )}
       </section>
 
       <section className="mt-6">
         <h2 className="mb-1 text-base font-semibold">
           {t("jobDetails.shiftDetails")}
         </h2>
-        <p className="text-sm">{shiftLine}</p>
+        {rows.map((row) => (
+          <div
+            key={row.label}
+            className="flex items-baseline justify-between gap-3 py-1 text-sm"
+          >
+            <span className="text-ink-secondary">{row.label}</span>
+            <span className="text-right font-medium">{row.value}</span>
+          </div>
+        ))}
+        {patterns.length > 0 && (
+          <>
+            <p className="mt-2 text-sm text-ink-secondary">
+              {t("jobDetails.customSchedule")}
+            </p>
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              {patterns.map((pattern) => (
+                <span
+                  key={pattern}
+                  className="rounded-chip bg-bg-secondary px-2.5 py-1 text-xs font-medium"
+                >
+                  {pattern}
+                </span>
+              ))}
+            </div>
+          </>
+        )}
       </section>
 
       {(job.location?.address || job.metroStation) && (

@@ -463,18 +463,7 @@ export default function ProfilePage(): React.JSX.Element {
 
       {isBarista && profile && completeness && (
         <>
-          <div className="relative rounded-card border border-line bg-white p-4">
-            {!editing && (
-              <button
-                type="button"
-                onClick={handleEdit}
-                aria-label={t("baristaProfileScreen.edit")}
-                className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-input border border-line px-3 py-1.5 text-sm font-medium text-primary hover:bg-bg-secondary"
-              >
-                <MdiIcon path={mdiPencilOutline} size={16} />
-                {t("baristaProfileScreen.editProfileLong")}
-              </button>
-            )}
+          <div className="rounded-card border border-line bg-white p-4">
             <div className="flex items-start gap-4">
               <div className="flex flex-col items-center gap-2">
                 {profile.avatarUrl ? (
@@ -517,10 +506,28 @@ export default function ProfilePage(): React.JSX.Element {
                       )}
                 </button>
               </div>
-              <div className="min-w-0 flex-1 pr-28">
-                <p className="text-lg font-semibold">
-                  {profile.firstName} {profile.lastName}
-                </p>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <p className="text-lg font-semibold">
+                    {profile.firstName} {profile.lastName}
+                  </p>
+                  {!editing && (
+                    <button
+                      type="button"
+                      onClick={handleEdit}
+                      aria-label={t("baristaProfileScreen.edit")}
+                      className="inline-flex shrink-0 items-center gap-1.5 rounded-input border border-line px-3 py-1.5 text-sm font-medium text-primary hover:bg-bg-secondary"
+                    >
+                      <MdiIcon path={mdiPencilOutline} size={16} />
+                      <span className="hidden sm:inline">
+                        {t("baristaProfileScreen.editProfileLong")}
+                      </span>
+                      <span className="sm:hidden">
+                        {t("baristaProfileScreen.edit")}
+                      </span>
+                    </button>
+                  )}
+                </div>
                 <p className="text-sm text-ink-secondary">
                   {t(`city.codes.${toCityCode(profile.city)}`)}
                   {age !== null &&
