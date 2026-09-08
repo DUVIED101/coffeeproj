@@ -159,6 +159,37 @@ gets a row with `vault_ok = true`), account deletion, admin OTP login,
   (UptimeRobot or Yandex Monitoring), disk alert at 80 %.
 - Cloudflare / RKN no longer matter for the API: nginx answers from Moscow.
 
+## Lessons from the first rehearsal (2026-09-08)
+
+- **Foreign IPv4 filter.** The first Timeweb IPv4 accepted TCP handshakes from
+  abroad but never delivered data packets (check-host.net: RU nodes 200, ~35 of
+  38 foreign nodes timeout; tcpdump on the box showed the client's first data
+  packet never reaching eth0). Neighbouring IPs were fine. Replacing the IPv4
+  in the panel («Сети» → server → delete IPv4 → issue new) fixed it at once;
+  the swap reboots the server. Check a new IP with one `check-http` before
+  building on it, and avoid port scans / repeated SSH probes from abroad.
+- **IPv6 always worked** (`ssh -6 root@<ipv6>`), plain IPv4 SSH now works too;
+  the stunnel wrapper on :8443 stays as a fallback.
+- **Docker Hub** rate-limits anonymous pulls; bootstrap configures the Timeweb
+  mirror `dockerhub.timeweb.cloud` in `/etc/docker/daemon.json`.
+- **Outbound SMTP 25/465/587 is blocked** by Timeweb; GoTrue talks to Resend on
+  **2587** (STARTTLS). 2465 is implicit TLS and GoTrue hangs on it.
+- **No supabase CLI / pg_dump / Docker on the laptop is needed**: the dump runs
+  inside the `supabase-db` container on the server over the Session pooler
+  (`aws-1-eu-west-1.pooler.supabase.com`, user `postgres.<ref>`; `aws-0` does
+  not know the project). Direct `db.<ref>.supabase.co` is IPv6-only and the
+  containers have no IPv6.
+- **Managed schemas are not in the schema dump.** `sync-managed-extras.sh`
+  copies the `auth.users` trigger, the 16 `storage.objects` policies and the
+  storage grants straight from the cloud. Storage rows are not dumped either
+  (cloud has versioning columns the self-hosted storage-api lacks);
+  `copy-storage.mjs` recreates buckets and objects through the API.
+- Cloud auth tables that matter (users, identities, sessions, refresh_tokens,
+  flow_state, mfa_amr_claims, one_time_tokens) have identical columns on both
+  sides, so sessions survive the move. Empty auth tables drift and are skipped.
+- Rehearsal counts: 188 auth users, 168 profiles, 28 jobs, 22 messages,
+  186 storage objects, 64 RLS policies, 67 triggers, 2 cron jobs, 6 vault secrets.
+
 ## Rollback
 
 Point `api.bystrobarista.com` back at the Lithuanian VPS (185.81.166.243) and
