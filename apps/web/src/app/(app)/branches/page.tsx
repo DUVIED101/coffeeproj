@@ -88,6 +88,18 @@ export default function BranchesPage(): React.JSX.Element {
   const [lookupStatus, setLookupStatus] = useState<LookupStatus>("idle");
   const [addressCoords, setAddressCoords] = useState<GeoPoint | null>(null);
   const geocodedKeyRef = useRef<string | null>(null);
+  const formRef = useRef<HTMLDivElement | null>(null);
+  // The form sits above the list, so "edit" on a branch far down the page
+  // would otherwise open it out of view. Keyed on which branch is open, not
+  // on the form contents, so typing never re-scrolls.
+  const openFormKey = form ? (form.editingBranch?.id ?? "new") : null;
+  useEffect(() => {
+    if (!openFormKey) return;
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    formRef.current?.querySelector<HTMLInputElement>("input")?.focus({
+      preventScroll: true,
+    });
+  }, [openFormKey]);
   const [isSaving, setIsSaving] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
   const [uploadingBranchIds, setUploadingBranchIds] = useState<Set<string>>(
@@ -360,7 +372,10 @@ export default function BranchesPage(): React.JSX.Element {
       )}
 
       {form && (
-        <div className="mb-6 flex flex-col gap-4 rounded-card border border-line bg-white p-4 sm:p-6">
+        <div
+          ref={formRef}
+          className="mb-6 flex flex-col gap-4 rounded-card border border-line bg-white p-4 sm:p-6"
+        >
           <h2 className="text-lg font-semibold">
             {t(
               form.editingBranch
