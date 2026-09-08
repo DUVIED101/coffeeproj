@@ -37,7 +37,8 @@ type NotificationKind =
   | "employment_started"
   | "employment_start_due"
   | "employment_end_requested"
-  | "employment_ended";
+  | "employment_ended"
+  | "job_start_reminder";
 
 type GatedKind =
   | "new_message"
