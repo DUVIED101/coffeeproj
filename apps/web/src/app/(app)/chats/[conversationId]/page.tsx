@@ -246,10 +246,13 @@ export default function ChatConversationPage(): React.JSX.Element {
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-8.5rem)] max-w-2xl flex-col md:h-[calc(100dvh-6.5rem)]">
-      <div className="flex items-center gap-3 border-b border-line pb-3">
+    // Fills exactly the space under the sticky header and above the mobile
+    // tab bar (header 3.3125rem + main padding), so the participant row and
+    // the composer stay pinned and only the messages scroll.
+    <div className="mx-auto flex h-[calc(100dvh-3.3125rem-6.5rem)] max-w-2xl flex-col overflow-hidden md:h-[calc(100dvh-3.3125rem-3rem)]">
+      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-line pb-3 sm:gap-3">
         {profileHref && (
-          <Link href={profileHref} className="flex items-center gap-3">
+          <Link href={profileHref} className="flex min-w-0 items-center gap-3">
             {otherPartyAvatar ? (
               <img
                 src={transformedImageUrl(otherPartyAvatar, 80)}
@@ -261,8 +264,8 @@ export default function ChatConversationPage(): React.JSX.Element {
                 {(otherPartyName ?? "?").charAt(0).toUpperCase()}
               </div>
             )}
-            <div>
-              <p className="text-sm font-semibold">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">
                 {otherPartyName ||
                   conversation.jobTitle ||
                   t("chat.fallbackTitle")}
@@ -295,7 +298,7 @@ export default function ChatConversationPage(): React.JSX.Element {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-4">
+      <div className="min-h-0 flex-1 overflow-y-auto py-4">
         {messages.length === 0 ? (
           <div className="py-16 text-center">
             <p className="mb-1 font-semibold text-ink-secondary">
@@ -376,7 +379,7 @@ export default function ChatConversationPage(): React.JSX.Element {
         )}
 
       {isClosed ? (
-        <div className="rounded-card bg-[#FEF2F2] p-4 text-center">
+        <div className="shrink-0 rounded-card bg-[#FEF2F2] p-4 text-center">
           <p className="font-semibold text-[#991B1B]">
             {t("chat.closed.title")}
           </p>
@@ -387,7 +390,7 @@ export default function ChatConversationPage(): React.JSX.Element {
           </p>
         </div>
       ) : mustWaitForBusiness ? (
-        <div className="rounded-card bg-bg-secondary p-4 text-center">
+        <div className="shrink-0 rounded-card bg-bg-secondary p-4 text-center">
           <p className="font-semibold">{t("chat.waitingForBusiness.title")}</p>
           <p className="text-sm text-ink-secondary">
             {t("chat.waitingForBusiness.subtitle")}
@@ -399,7 +402,7 @@ export default function ChatConversationPage(): React.JSX.Element {
             e.preventDefault();
             void handleSend();
           }}
-          className="flex items-end gap-2 border-t border-line pt-3"
+          className="flex shrink-0 items-end gap-2 border-t border-line pt-3"
         >
           <textarea
             ref={inputRef}

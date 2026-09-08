@@ -12,7 +12,8 @@ type Props = {
 
 // Detail pages are reached from a list, and the browser's own back keeps the
 // list's scroll position; a fresh tab (deep link, notification) has no
-// in-app history, so it goes to the list route instead.
+// in-app history, so it goes to the list route instead. Icon-only on phones,
+// icon + label from md up; sized to sit in the header row.
 export function BackLink({ fallbackHref, label }: Props): React.JSX.Element {
   const router = useRouter();
   const goBack = (): void => {
@@ -23,10 +24,11 @@ export function BackLink({ fallbackHref, label }: Props): React.JSX.Element {
     <button
       type="button"
       onClick={goBack}
-      className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-sm font-medium text-ink-secondary hover:text-ink"
+      aria-label={label}
+      className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full border border-line bg-white px-2 text-sm font-medium text-ink-secondary hover:text-ink md:px-3"
     >
-      <MdiIcon path={mdiArrowLeft} size={18} />
-      {label}
+      <MdiIcon path={mdiArrowLeft} size={20} />
+      <span className="hidden md:inline">{label}</span>
     </button>
   );
 }

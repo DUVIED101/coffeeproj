@@ -1,4 +1,4 @@
-import type { ConversationId } from './chat';
+import type { ConversationId } from "./chat";
 import type {
   ApplicationId,
   DisputeId,
@@ -8,44 +8,46 @@ import type {
   NotificationId,
   ReviewId,
   UserId,
-} from './ids';
+} from "./ids";
 
 type Brand<K, T> = K & { __brand: T };
 
-export type DeviceToken = Brand<string, 'DeviceToken'>;
-export type ApnsEnvironment = 'sandbox' | 'production';
-export type PushEnvironment = ApnsEnvironment | 'web';
-export type PushPlatform = 'ios' | 'android' | 'web';
+export type DeviceToken = Brand<string, "DeviceToken">;
+export type ApnsEnvironment = "sandbox" | "production";
+export type PushEnvironment = ApnsEnvironment | "web";
+export type PushPlatform = "ios" | "android" | "web";
 
 export type NotificationKind =
-  | 'new_message'
-  | 'application_accepted'
-  | 'application_rejected'
-  | 'work_completion_requested'
-  | 'work_completion_confirmed'
-  | 'new_application'
-  | 'application_withdrawn'
-  | 'shift_cancelled'
-  | 'new_review'
-  | 'conversation_started'
-  | 'job_offer_received'
-  | 'job_offer_accepted'
-  | 'job_offer_declined'
-  | 'shift_reminder_24h'
-  | 'shift_reminder_3h'
-  | 'shift_confirmation_required'
-  | 'shift_confirmed'
-  | 'shift_declined'
-  | 'shift_no_response_alert'
-  | 'dispute_filed'
-  | 'employment_started'
-  | 'employment_start_due'
-  | 'employment_end_requested'
-  | 'employment_ended';
+  | "new_message"
+  | "application_accepted"
+  | "application_rejected"
+  | "work_completion_requested"
+  | "work_completion_confirmed"
+  | "new_application"
+  | "application_withdrawn"
+  | "shift_cancelled"
+  | "new_review"
+  | "conversation_started"
+  | "job_offer_received"
+  | "job_offer_accepted"
+  | "job_offer_declined"
+  | "shift_reminder_24h"
+  | "shift_reminder_3h"
+  | "shift_confirmation_required"
+  | "shift_confirmed"
+  | "shift_declined"
+  | "shift_no_response_alert"
+  | "dispute_filed"
+  | "employment_started"
+  | "employment_start_due"
+  | "employment_end_requested"
+  | "employment_ended"
+  | "job_start_reminder";
 
-export const JOB_OFFER_ACTION_ACCEPT = 'JOB_OFFER_ACCEPT';
-export const JOB_OFFER_ACTION_DECLINE = 'JOB_OFFER_DECLINE';
-export type JobOfferActionId = typeof JOB_OFFER_ACTION_ACCEPT | typeof JOB_OFFER_ACTION_DECLINE;
+export const JOB_OFFER_ACTION_ACCEPT = "JOB_OFFER_ACCEPT";
+export const JOB_OFFER_ACTION_DECLINE = "JOB_OFFER_DECLINE";
+export type JobOfferActionId =
+  typeof JOB_OFFER_ACTION_ACCEPT | typeof JOB_OFFER_ACTION_DECLINE;
 
 export type PushNotificationPayload = {
   kind: NotificationKind;
@@ -83,7 +85,7 @@ export type DeviceTokenRow = {
   createdAt: string;
 };
 
-export type NotificationData = NonNullable<PushNotificationPayload['data']>;
+export type NotificationData = NonNullable<PushNotificationPayload["data"]>;
 
 export type Notification = {
   id: NotificationId;

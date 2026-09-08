@@ -104,6 +104,7 @@ const ICON_BY_KIND: Record<NotificationKind, string> = {
   employment_start_due: mdiAccountClockOutline,
   employment_end_requested: mdiAccountAlertOutline,
   employment_ended: mdiAccountOffOutline,
+  job_start_reminder: mdiCalendarClock,
 };
 
 function NotificationCard({

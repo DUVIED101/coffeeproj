@@ -7,6 +7,7 @@ import { mdiBell, mdiBellOutline, mdiCog, mdiCogOutline } from "@mdi/js";
 import { usePathname } from "next/navigation";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import { DesktopNav } from "@/components/AppNav";
+import { BackBar } from "@/components/BackBar";
 import { MdiIcon } from "@/components/MdiIcon";
 import { useNotificationFeedStore } from "@/stores/notificationFeedStore";
 
@@ -61,10 +62,11 @@ export function AppHeader(): React.JSX.Element {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-white">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 md:gap-4">
+        <BackBar />
         <Link
           href="/"
-          className="flex items-center gap-2 text-lg font-bold text-primary"
+          className="flex min-w-0 items-center gap-2 text-lg font-bold text-primary"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="" className="h-7 w-7 rounded-full" />

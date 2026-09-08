@@ -44,6 +44,7 @@ const ICON_BY_KIND: Record<NotificationKind, string> = {
   employment_start_due: 'badge-account-outline',
   employment_end_requested: 'account-off-outline',
   employment_ended: 'account-off-outline',
+  job_start_reminder: 'calendar-clock',
 };
 
 type ToastCardProps = {

@@ -48,6 +48,7 @@ export const notificationHref = (
       return isBusiness ? applicants : "/applications";
     case "new_review":
       return "/profile";
+    case "job_start_reminder":
     case "shift_reminder_24h":
     case "shift_reminder_3h":
     case "employment_started":

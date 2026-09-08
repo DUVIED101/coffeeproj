@@ -7,7 +7,8 @@ import { backTarget } from "@bystrobarista/core/utils/backTarget";
 import { BackLink } from "@/components/BackLink";
 
 // One back arrow for every drill-in page (cards, sub-pages, settings); tab
-// roots render nothing. Lives in the app layout so pages stay unaware of it.
+// roots render nothing. Lives in the sticky header, level with the brand,
+// so it never pushes page content down.
 export function BackBar(): React.JSX.Element | null {
   const { t } = useTranslation();
   const target = backTarget(usePathname());

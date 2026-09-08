@@ -159,6 +159,7 @@ const KNOWN_KINDS: ReadonlySet<NotificationKind> = new Set<NotificationKind>([
   "employment_start_due",
   "employment_end_requested",
   "employment_ended",
+  "job_start_reminder",
 ]);
 
 const JWT_TTL_SECONDS = 3300;
