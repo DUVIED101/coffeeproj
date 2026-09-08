@@ -1,73 +1,78 @@
 #!/usr/bin/env bash
 # Copy the CLOUD project's database into the self-hosted stack (rehearsal or cutover).
-# Run from your laptop. Follows the official "Transferring from platform to
-# self-hosted" guide: roles → schema → data, with triggers disabled during the
-# data load so auth.users rows do not re-fire on_auth_user_created.
+# Runs ON THE SERVER (deploy.sh syncs it there); start it from the laptop with
 #
-#   CLOUD_DB_URL='postgresql://postgres.<ref>:<pw>@aws-0-eu-west-1.pooler.supabase.com:5432/postgres' \
-#     bash infra/supabase-selfhost/scripts/migrate-from-cloud.sh [ssh-host]
+#   ssh bystrobarista-ru /opt/bystrobarista/supabase/scripts/migrate-from-cloud.sh
 #
-# Prerequisites: supabase CLI locally; the remote stack is up (`deploy.sh`)
-# and its sql/vault-secrets.sql is filled in. Storage FILES are copied
-# separately by copy-storage.mjs.
+# The dump is taken with the pg_dump 17 inside the supabase-db container over the
+# cloud Session pooler (IPv4), mirroring what `supabase db dump` does: roles →
+# schema (managed schemas excluded) → data (auth + storage rows included, their
+# migration tables excluded), restored with triggers disabled so auth.users rows
+# do not re-fire on_auth_user_created. Then sql/post-restore.sql and the Vault
+# secrets. Storage FILES are copied separately by copy-storage.mjs.
+#
+# Needs in /root/bystrobarista-secrets.env: CLOUD_DB_PASSWORD (and optionally
+# CLOUD_DB_HOST / CLOUD_DB_USER to override the pooler defaults).
 
 set -euo pipefail
+cd "$(dirname "$0")/.."
 
-readonly HOST="${1:-bystrobarista-ru}"
-readonly REMOTE_DIR="/opt/bystrobarista/supabase"
-: "${CLOUD_DB_URL:?set CLOUD_DB_URL (Dashboard → Connect → Session pooler URI)}"
+readonly SECRETS="/root/bystrobarista-secrets.env"
+getv() { grep -m1 "^$1=" "$SECRETS" | cut -d= -f2- | tr -d '\r'; }
+readonly CLOUD_HOST="${CLOUD_DB_HOST:-$(getv CLOUD_DB_HOST)}"
+readonly CLOUD_USER="${CLOUD_DB_USER:-$(getv CLOUD_DB_USER)}"
+readonly HOST="${CLOUD_HOST:-aws-0-eu-west-1.pooler.supabase.com}"
+readonly USER="${CLOUD_USER:-postgres.zifvfsamfzepxxuxhyhg}"
+readonly PASS="$(getv CLOUD_DB_PASSWORD)"
+[[ -n "$PASS" ]] || { echo "ERROR: CLOUD_DB_PASSWORD missing in $SECRETS" >&2; exit 1; }
 
-log() { printf "[migrate] %s\n" "$*"; }
-DUMP="$(mktemp -d)"
-trap 'rm -rf "$DUMP"' EXIT
+readonly DUMP="backups/cloud-import"
+mkdir -p "$DUMP"
+log() { printf "[migrate %s] %s\n" "$(date -u +%H:%M:%S)" "$*"; }
 
-log "Dumping cloud roles / schema / data into ${DUMP}…"
-supabase db dump --db-url "$CLOUD_DB_URL" -f "$DUMP/roles.sql" --role-only
-supabase db dump --db-url "$CLOUD_DB_URL" -f "$DUMP/schema.sql"
-supabase db dump --db-url "$CLOUD_DB_URL" -f "$DUMP/data.sql" --use-copy --data-only
+# pg_dump / pg_dumpall run inside the db container (Postgres 17, same major as the cloud).
+cloud_dump() { docker exec -i -e PGPASSWORD="$PASS" supabase-db "$@"; }
+readonly MANAGED_SCHEMAS=(auth storage realtime _realtime supabase_functions supabase_migrations extensions graphql graphql_public net pgsodium pgsodium_masks vault cron pgbouncer _analytics _supavisor pgtle topology tiger tiger_data)
+EXCL=(); for s in "${MANAGED_SCHEMAS[@]}"; do EXCL+=(--exclude-schema="$s"); done
+# Data: keep auth + storage rows, drop their service-owned migration tables.
+DATA_EXCL=(); for s in "${MANAGED_SCHEMAS[@]}"; do [[ "$s" == auth || "$s" == storage ]] && continue; DATA_EXCL+=(--exclude-schema="$s"); done
+DATA_EXCL+=(--exclude-table=auth.schema_migrations --exclude-table=auth.audit_log_entries --exclude-table=storage.migrations --exclude-table-data=public.spatial_ref_sys)
 
-log "Sanitising dumps…"
-# Keep the self-hosted passwords of the built-in roles; keep only custom roles.
-grep -v -E "^(CREATE|ALTER) ROLE \"?(postgres|supabase_admin|supabase_auth_admin|supabase_storage_admin|supabase_functions_admin|supabase_read_only_user|supabase_replication_admin|authenticator|anon|authenticated|service_role|dashboard_user|pgbouncer|pgsodium_keyholder|pgsodium_keyiduser|pgsodium_keymaker)\"?\b" \
+log "Dumping roles from $HOST…"
+cloud_dump pg_dumpall -h "$HOST" -p 5432 -U "$USER" -d postgres --roles-only --no-role-passwords > "$DUMP/roles.sql"
+log "Dumping schema (managed schemas excluded)…"
+cloud_dump pg_dump -h "$HOST" -p 5432 -U "$USER" -d postgres --schema-only --no-owner --no-privileges "${EXCL[@]}" > "$DUMP/schema.sql"
+log "Dumping data (auth + storage included, triggers will be disabled on restore)…"
+cloud_dump pg_dump -h "$HOST" -p 5432 -U "$USER" -d postgres --data-only --no-owner "${DATA_EXCL[@]}" > "$DUMP/data.sql"
+ls -la "$DUMP"
+
+log "Sanitising…"
+grep -v -E "^(CREATE|ALTER) ROLE \"?(postgres|supabase_admin|supabase_auth_admin|supabase_storage_admin|supabase_functions_admin|supabase_read_only_user|supabase_replication_admin|supabase_realtime_admin|supabase_etl_admin|authenticator|anon|authenticated|service_role|dashboard_user|pgbouncer|pgsodium_keyholder|pgsodium_keyiduser|pgsodium_keymaker)\"?\b" \
   "$DUMP/roles.sql" > "$DUMP/roles.clean.sql" || true
-# The self-hosted init already owns the realtime publication (post-restore.sql pins its tables).
-grep -v -E "^(CREATE PUBLICATION \"?supabase_realtime|ALTER PUBLICATION \"?supabase_realtime\"? OWNER)" \
+grep -v -E "^(CREATE PUBLICATION \"?supabase_realtime|ALTER PUBLICATION \"?supabase_realtime\"? OWNER|CREATE EXTENSION|COMMENT ON EXTENSION)" \
   "$DUMP/schema.sql" > "$DUMP/schema.clean.sql"
-# Service-owned migration tables must stay as the containers created them.
-awk '
-  /^COPY (auth\.schema_migrations|storage\.migrations|supabase_migrations\.schema_migrations) / {skip=1}
-  skip && /^\\\.$/ {skip=0; next}
-  !skip {print}
-' "$DUMP/data.sql" > "$DUMP/data.clean.sql"
-wc -l "$DUMP"/*.clean.sql
+wc -l "$DUMP"/*.clean.sql "$DUMP/data.sql"
 
-log "Uploading to ${HOST}…"
-ssh "$HOST" "mkdir -p $REMOTE_DIR/backups/cloud-import"
-scp -q "$DUMP"/roles.clean.sql "$DUMP"/schema.clean.sql "$DUMP"/data.clean.sql "$HOST:$REMOTE_DIR/backups/cloud-import/"
-
-log "Restoring on ${HOST}…"
-ssh "$HOST" bash -s <<REMOTE
-set -euo pipefail
-cd $REMOTE_DIR/backups/cloud-import
 PSQL="docker exec -i supabase-db psql -U postgres -d postgres"
-echo "[remote] roles (errors for pre-existing roles are expected)"
-\$PSQL -q < roles.clean.sql || true
-echo "[remote] schema"
-\$PSQL -q -v ON_ERROR_STOP=1 --single-transaction < schema.clean.sql
-echo "[remote] data (triggers disabled)"
-( echo "SET session_replication_role = replica;"; cat data.clean.sql ) \
-  | \$PSQL -q -v ON_ERROR_STOP=1 --single-transaction
-echo "[remote] post-restore (publication, cron, analyze)"
-\$PSQL -v ON_ERROR_STOP=1 < $REMOTE_DIR/sql/post-restore.sql
-if [[ -f $REMOTE_DIR/sql/vault-secrets.sql ]]; then
-  echo "[remote] vault secrets"
-  \$PSQL -q -c "DELETE FROM vault.secrets" >/dev/null
-  \$PSQL -q < $REMOTE_DIR/sql/vault-secrets.sql >/dev/null
+log "Pre-restore (extensions)…"
+$PSQL -q -v ON_ERROR_STOP=1 < sql/pre-restore.sql
+log "Roles (errors for pre-existing roles are expected)…"
+$PSQL -q < "$DUMP/roles.clean.sql" || true
+log "Schema…"
+$PSQL -q -v ON_ERROR_STOP=1 --single-transaction < "$DUMP/schema.clean.sql"
+log "Data (session_replication_role = replica)…"
+( echo "SET session_replication_role = replica;"; cat "$DUMP/data.sql" ) | $PSQL -q -v ON_ERROR_STOP=1 --single-transaction
+log "Post-restore (publication, cron, analyze)…"
+$PSQL -v ON_ERROR_STOP=1 < sql/post-restore.sql
+if [[ -f sql/vault-secrets.sql ]]; then
+  log "Vault secrets…"
+  $PSQL -q -c "DELETE FROM vault.secrets" >/dev/null
+  $PSQL -q < sql/vault-secrets.sql >/dev/null
 else
-  echo "[remote] WARNING: sql/vault-secrets.sql missing — fill it from sql/vault-secrets.sql.example"
+  log "WARNING: sql/vault-secrets.sql missing — fill it from sql/vault-secrets.sql.example"
 fi
-echo "[remote] restarting API services so PostgREST/Realtime reload the schema"
-cd $REMOTE_DIR && docker compose restart rest realtime storage auth >/dev/null && docker compose ps --format 'table {{.Name}}\t{{.Status}}'
-rm -f roles.clean.sql schema.clean.sql data.clean.sql
-REMOTE
-log "DONE. Now copy the Storage files: node infra/supabase-selfhost/scripts/copy-storage.mjs"
+log "Restarting API services so PostgREST/Realtime/Storage reload the schema…"
+docker compose restart rest realtime storage auth >/dev/null
+docker compose ps --format 'table {{.Name}}\t{{.Status}}'
+rm -f "$DUMP"/*.sql
+log "DONE. Next: copy the Storage files with copy-storage.mjs from the laptop."
