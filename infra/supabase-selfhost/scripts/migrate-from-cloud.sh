@@ -34,12 +34,19 @@ log() { printf "[migrate %s] %s\n" "$(date -u +%H:%M:%S)" "$*"; }
 cloud_dump() { docker exec -i -e PGPASSWORD="$PASS" supabase-db "$@"; }
 readonly MANAGED_SCHEMAS=(auth storage realtime _realtime supabase_functions supabase_migrations extensions graphql graphql_public net pgsodium pgsodium_masks vault cron pgbouncer _analytics _supavisor pgtle topology tiger tiger_data)
 EXCL=(); for s in "${MANAGED_SCHEMAS[@]}"; do EXCL+=(--exclude-schema="$s"); done
-# Data: keep auth + storage rows, drop their service-owned migration tables.
-DATA_EXCL=(); for s in "${MANAGED_SCHEMAS[@]}"; do [[ "$s" == auth || "$s" == storage ]] && continue; DATA_EXCL+=(--exclude-schema="$s"); done
-DATA_EXCL+=(--exclude-table=auth.schema_migrations --exclude-table=auth.audit_log_entries --exclude-table=storage.migrations --exclude-table-data=public.spatial_ref_sys)
+# Data: keep the auth tables that carry users and sessions (identical columns on
+# both sides, checked 2026-09-08). Storage rows are NOT dumped: the cloud has
+# versioning columns the self-hosted storage-api lacks, so copy-storage.mjs
+# recreates buckets and objects through the API together with the files. The
+# remaining auth tables are empty in the cloud and drift between GoTrue versions.
+DATA_EXCL=(); for s in "${MANAGED_SCHEMAS[@]}"; do [[ "$s" == auth ]] && continue; DATA_EXCL+=(--exclude-schema="$s"); done
+for t in schema_migrations audit_log_entries custom_oauth_providers instances mfa_challenges mfa_factors oauth_authorizations oauth_client_states oauth_clients oauth_consents saml_providers saml_relay_states sso_domains sso_providers webauthn_challenges webauthn_credentials; do
+  DATA_EXCL+=(--exclude-table="auth.$t")
+done
+DATA_EXCL+=(--exclude-table-data=public.spatial_ref_sys)
 
 log "Dumping roles from $HOST…"
-cloud_dump pg_dumpall -h "$HOST" -p 5432 -U "$USER" -d postgres --roles-only --no-role-passwords > "$DUMP/roles.sql"
+cloud_dump pg_dumpall -h "$HOST" -p 5432 -U "$USER" -l postgres --roles-only --no-role-passwords > "$DUMP/roles.sql"
 log "Dumping schema (managed schemas excluded)…"
 cloud_dump pg_dump -h "$HOST" -p 5432 -U "$USER" -d postgres --schema-only --no-owner --no-privileges "${EXCL[@]}" > "$DUMP/schema.sql"
 log "Dumping data (auth + storage included, triggers will be disabled on restore)…"
@@ -49,8 +56,14 @@ ls -la "$DUMP"
 log "Sanitising…"
 grep -v -E "^(CREATE|ALTER) ROLE \"?(postgres|supabase_admin|supabase_auth_admin|supabase_storage_admin|supabase_functions_admin|supabase_read_only_user|supabase_replication_admin|supabase_realtime_admin|supabase_etl_admin|authenticator|anon|authenticated|service_role|dashboard_user|pgbouncer|pgsodium_keyholder|pgsodium_keyiduser|pgsodium_keymaker)\"?\b" \
   "$DUMP/roles.sql" > "$DUMP/roles.clean.sql" || true
-grep -v -E "^(CREATE PUBLICATION \"?supabase_realtime|ALTER PUBLICATION \"?supabase_realtime\"? OWNER|CREATE EXTENSION|COMMENT ON EXTENSION)" \
-  "$DUMP/schema.sql" > "$DUMP/schema.clean.sql"
+# Event triggers (pgrst_ddl_watch, issue_graphql_placeholder, …) already exist in
+# the self-hosted image and need superuser to recreate; the publication too.
+awk '
+  /^(CREATE|ALTER) EVENT TRIGGER / {skip=1}
+  skip { if ($0 ~ /;[[:space:]]*$/) skip=0; next }
+  /^(CREATE PUBLICATION "?supabase_realtime|ALTER PUBLICATION "?supabase_realtime"? OWNER|CREATE EXTENSION|COMMENT ON EXTENSION)/ {next}
+  {print}
+' "$DUMP/schema.sql" > "$DUMP/schema.clean.sql"
 wc -l "$DUMP"/*.clean.sql "$DUMP/data.sql"
 
 PSQL="docker exec -i supabase-db psql -U postgres -d postgres"
@@ -62,6 +75,8 @@ log "Schema…"
 $PSQL -q -v ON_ERROR_STOP=1 --single-transaction < "$DUMP/schema.clean.sql"
 log "Data (session_replication_role = replica)…"
 ( echo "SET session_replication_role = replica;"; cat "$DUMP/data.sql" ) | $PSQL -q -v ON_ERROR_STOP=1 --single-transaction
+log "Objects in managed schemas (auth.users triggers, storage policies + grants)…"
+scripts/sync-managed-extras.sh
 log "Post-restore (publication, cron, analyze)…"
 $PSQL -v ON_ERROR_STOP=1 < sql/post-restore.sql
 if [[ -f sql/vault-secrets.sql ]]; then

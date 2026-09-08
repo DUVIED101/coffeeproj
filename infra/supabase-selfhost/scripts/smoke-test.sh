@@ -14,7 +14,7 @@ code() { curl -sS --http1.1 -o /dev/null -w '%{http_code}' --max-time 15 "$@"; }
 
 echo "Smoke test against $BASE"
 check "auth health"      200 "$(code "$BASE/auth/v1/health" -H "apikey: $SUPABASE_ANON_KEY")"
-check "jwks has ES256"   yes "$(curl -sS --max-time 15 "$BASE/auth/v1/.well-known/jwks.json" | grep -q '"ES256"' && echo yes || echo no)"
+check "jwks has ES256"   yes "$(curl -sS --http1.1 --max-time 15 "$BASE/auth/v1/.well-known/jwks.json" | grep -q '"ES256"' && echo yes || echo no)"
 check "rest jobs"        200 "$(code "$BASE/rest/v1/jobs?select=id&limit=1" -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY")"
 check "rest search_jobs rpc" 200 "$(code -X POST "$BASE/rest/v1/rpc/search_jobs" -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY" -H 'Content-Type: application/json' -d '{}' )"
 check "storage status"   200 "$(code "$BASE/storage/v1/bucket" -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY")"
