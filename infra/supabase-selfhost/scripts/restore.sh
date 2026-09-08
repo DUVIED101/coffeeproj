@@ -17,7 +17,7 @@ log() { printf "[restore] %s\n" "$*"; }
 WORK="$SRC"
 if [[ "$SRC" == *:* ]]; then
   WORK="$(mktemp -d)"
-  log "Downloading $SRC…"
+  log "Downloading ${SRC}…"
   rclone copy --quiet "$SRC" "$WORK"
 fi
 [[ -f "$WORK/db.dump" ]] || { echo "ERROR: $WORK/db.dump not found" >&2; exit 1; }

@@ -21,7 +21,7 @@ log() { printf "[migrate] %s\n" "$*"; }
 DUMP="$(mktemp -d)"
 trap 'rm -rf "$DUMP"' EXIT
 
-log "Dumping cloud roles / schema / data into $DUMP…"
+log "Dumping cloud roles / schema / data into ${DUMP}…"
 supabase db dump --db-url "$CLOUD_DB_URL" -f "$DUMP/roles.sql" --role-only
 supabase db dump --db-url "$CLOUD_DB_URL" -f "$DUMP/schema.sql"
 supabase db dump --db-url "$CLOUD_DB_URL" -f "$DUMP/data.sql" --use-copy --data-only
@@ -41,11 +41,11 @@ awk '
 ' "$DUMP/data.sql" > "$DUMP/data.clean.sql"
 wc -l "$DUMP"/*.clean.sql
 
-log "Uploading to $HOST…"
+log "Uploading to ${HOST}…"
 ssh "$HOST" "mkdir -p $REMOTE_DIR/backups/cloud-import"
 scp -q "$DUMP"/roles.clean.sql "$DUMP"/schema.clean.sql "$DUMP"/data.clean.sql "$HOST:$REMOTE_DIR/backups/cloud-import/"
 
-log "Restoring on $HOST…"
+log "Restoring on ${HOST}…"
 ssh "$HOST" bash -s <<REMOTE
 set -euo pipefail
 cd $REMOTE_DIR/backups/cloud-import

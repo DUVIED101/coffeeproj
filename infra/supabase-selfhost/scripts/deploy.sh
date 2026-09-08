@@ -24,7 +24,7 @@ die() { printf "[deploy] ERROR: %s\n" "$*" >&2; exit 1; }
 
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
-log "Staging in $STAGE…"
+log "Staging in ${STAGE}…"
 rsync -a --exclude '.env' --exclude 'volumes/db/data' --exclude 'volumes/storage' \
   --exclude 'backups' --exclude 'sql/vault-secrets.sql' "$SRC/" "$STAGE/"
 for fn in "$FUNCTIONS_SRC"/*/; do
@@ -32,7 +32,7 @@ for fn in "$FUNCTIONS_SRC"/*/; do
   rsync -a --delete "$fn" "$STAGE/volumes/functions/$name/"
 done
 
-log "Syncing to $HOST:$REMOTE_DIR…"
+log "Syncing to $HOST:${REMOTE_DIR}…"
 ssh "$HOST" "mkdir -p $REMOTE_DIR"
 rsync -az --delete \
   --exclude '.env' --exclude 'volumes/db/data' --exclude 'volumes/storage' \

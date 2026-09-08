@@ -81,7 +81,7 @@ ufw --force enable >/dev/null
 systemctl enable --now fail2ban
 
 PUBLIC_IP="$(curl -fsS https://api.ipify.org)"
-log "Public IP: $PUBLIC_IP; checking DNS for $DOMAIN…"
+log "Public IP: $PUBLIC_IP; checking DNS for ${DOMAIN}…"
 DNS_OK=0
 for try in {1..12}; do
   if dig +short "$DOMAIN" @1.1.1.1 | grep -qx "$PUBLIC_IP"; then DNS_OK=1; log "DNS OK"; break; fi
@@ -104,7 +104,7 @@ systemctl reload nginx
 HOOK
 chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
 
-log "App dir $APP_DIR…"
+log "App dir ${APP_DIR}…"
 mkdir -p "$APP_DIR" "$APP_DIR/backups"
 rm -f /etc/nginx/sites-enabled/default
 

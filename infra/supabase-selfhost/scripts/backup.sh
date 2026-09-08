@@ -31,7 +31,7 @@ sha256sum "$OUT"/* > "$OUT/SHA256SUMS"
 du -sh "$OUT"
 
 if rclone listremotes | grep -q "^${REMOTE%%:*}:$"; then
-  log "Uploading to $REMOTE/$STAMP…"
+  log "Uploading to $REMOTE/${STAMP}…"
   rclone copy --quiet "$OUT" "$REMOTE/$STAMP"
   log "Pruning remote copies older than ${RETENTION}d…"
   rclone delete --quiet --min-age "${RETENTION}d" "$REMOTE" && rclone rmdirs --quiet --leave-root "$REMOTE" || true
