@@ -45,6 +45,13 @@ set -euo pipefail
 cd $REMOTE_DIR
 [[ -f .env ]] || { echo "ERROR: $REMOTE_DIR/.env missing — copy .env.example and fill it in." >&2; exit 1; }
 chmod +x volumes/api/envoy/docker-entrypoint.sh scripts/*.sh utils/*.sh
+DOMAIN="\$(grep '^SUPABASE_PUBLIC_URL=' .env | cut -d= -f2- | sed 's|https\\?://||')"
+if [[ ! -d "/etc/letsencrypt/live/\$DOMAIN" ]]; then
+  echo "[remote] issuing TLS cert for \$DOMAIN (nginx stopped briefly)…"
+  systemctl stop nginx
+  certbot certonly --standalone -d "\$DOMAIN" -m support@bystrobarista.com --agree-tos --non-interactive
+  systemctl start nginx
+fi
 docker compose pull -q
 docker compose up -d --wait --remove-orphans
 install -m 0644 nginx-tuning.conf /etc/nginx/conf.d/00-bystrobarista-tuning.conf

@@ -37,9 +37,26 @@ except `main/` + `deno.jsonc`, `sql/vault-secrets.sql`, `backups/`.
 ```bash
 # DNS first: A record api.bystrobarista.com → <vds ip> (for a rehearsal use
 # api-new.bystrobarista.com and DOMAIN=api-new… below). TTL 60.
-scp infra/supabase-selfhost/scripts/bootstrap-server.sh root@<ip>:/tmp/
-ssh root@<ip> 'DOMAIN=api.bystrobarista.com bash /tmp/bootstrap-server.sh'
-# add to ~/.ssh/config:  Host bystrobarista-ru  HostName <ip>  User root
+# In the provider's browser console, logged in as root:
+curl -fsSL https://raw.githubusercontent.com/DUVIED101/coffeeproj/main/infra/supabase-selfhost/scripts/bootstrap-server.sh \
+  | DOMAIN=api.bystrobarista.com bash
+```
+
+### SSH from outside Russia
+
+Plain SSH to a Russian IP stalls right after the banner exchange (DPI), from a
+laptop abroad and from the Lithuanian VPS alike. The bootstrap therefore puts
+sshd behind TLS on port 8443 (stunnel, self-signed cert) and the laptop connects
+through `openssl s_client`, which looks like ordinary HTTPS on the wire.
+`scp`, `rsync` and `deploy.sh` all use the same alias:
+
+```
+Host bystrobarista-ru
+  HostName <vds ip>
+  User root
+  IdentityFile ~/.ssh/bystrobarista-vps-rsa
+  IdentitiesOnly yes
+  ProxyCommand openssl s_client -quiet -connect %h:8443 -servername ssh.bystrobarista.com 2>/dev/null
 ```
 
 ## 2. Keys and `.env`
