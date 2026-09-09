@@ -195,24 +195,21 @@ function App(): React.JSX.Element {
     const bootstrap = async (): Promise<void> => {
       // migrateSessionKey must finish before any supabase.auth call reads
       // storage, otherwise existing users boot signed-out and the listener
-      // misses their initial SIGNED_IN event.
-      try {
-        await migrateSessionKey();
-      } catch (error) {
-        console.warn('session-key migration failed', error);
-      }
-      // Listener attaches AFTER migration so it doesn't race supabase-js's
-      // own async initialize().
-      try {
-        registerAuthListener();
-      } catch (error) {
-        console.warn('auth-listener registration failed', error);
-      }
-      try {
-        await initI18n();
-      } catch (error) {
-        console.warn('i18n init failed', error);
-      }
+      // misses their initial SIGNED_IN event. The listener attaches AFTER
+      // migration so it doesn't race supabase-js's own async initialize().
+      const sessionReady = migrateSessionKey()
+        .catch(error => console.warn('session-key migration failed', error))
+        .then(() => {
+          try {
+            registerAuthListener();
+          } catch (error) {
+            console.warn('auth-listener registration failed', error);
+          }
+        });
+      // i18n only reads its own storage key, so its round-trip overlaps the
+      // session one instead of queueing behind it.
+      const i18nReady = initI18n().catch(error => console.warn('i18n init failed', error));
+      await Promise.all([sessionReady, i18nReady]);
     };
     const hardTimeout = new Promise<void>(resolve =>
       setTimeout(resolve, BOOTSTRAP_HARD_TIMEOUT_MS)

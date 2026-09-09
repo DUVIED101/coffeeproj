@@ -1,11 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { BaristaFeedScreen } from '../screens/business/BaristaFeedScreen';
-import { ViewBaristaProfileScreen } from '../screens/business/ViewBaristaProfileScreen';
-import { OfferJobScreen } from '../screens/business/OfferJobScreen';
-import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
-import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
 import { COLORS } from '@bystrobarista/core/config/constants';
 
 export type BusinessSearchStackParamList = {
@@ -33,27 +28,31 @@ export const BusinessSearchStack: React.FC = () => {
       }}>
       <Stack.Screen
         name="BaristaFeed"
-        component={BaristaFeedScreen}
+        getComponent={() => require('../screens/business/BaristaFeedScreen').BaristaFeedScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
         name="ViewBaristaProfile"
-        component={ViewBaristaProfileScreen}
+        getComponent={() =>
+          require('../screens/business/ViewBaristaProfileScreen').ViewBaristaProfileScreen
+        }
         options={{ title: t('nav.viewBaristaProfile') }}
       />
       <Stack.Screen
         name="OfferJob"
-        component={OfferJobScreen}
+        getComponent={() => require('../screens/business/OfferJobScreen').OfferJobScreen}
         options={{ title: t('nav.offerJob') }}
       />
       <Stack.Screen
         name="UserReviews"
-        component={UserReviewsScreen}
+        getComponent={() => require('../screens/shared/UserReviewsScreen').UserReviewsScreen}
         options={{ title: t('nav.userReviews') }}
       />
       <Stack.Screen
         name="NotificationFeed"
-        component={NotificationFeedScreen}
+        getComponent={() =>
+          require('../screens/notifications/NotificationFeedScreen').NotificationFeedScreen
+        }
         options={{ title: t('notifications.feed.title'), headerShown: false }}
       />
     </Stack.Navigator>

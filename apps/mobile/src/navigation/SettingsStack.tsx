@@ -1,22 +1,5 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SettingsScreen } from '../screens/settings/SettingsScreen';
-import { LanguageScreen } from '../screens/settings/LanguageScreen';
-import { ChangePasswordScreen } from '../screens/settings/ChangePasswordScreen';
-import { NotificationsScreen } from '../screens/settings/NotificationsScreen';
-import { DeleteAccountScreen } from '../screens/settings/DeleteAccountScreen';
-import { VisibilityScreen } from '../screens/settings/VisibilityScreen';
-import { BlockedUsersScreen } from '../screens/settings/BlockedUsersScreen';
-import { DocumentsScreen } from '../screens/settings/DocumentsScreen';
-import { TermsScreen } from '../screens/settings/TermsScreen';
-import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
-import { PersonalDataPolicyScreen } from '../screens/settings/PersonalDataPolicyScreen';
-import { DataConsentScreen } from '../screens/settings/DataConsentScreen';
-import { SupportScreen } from '../screens/settings/SupportScreen';
-import { MyReportsScreen } from '../screens/settings/MyReportsScreen';
-import { MyDisputesScreen } from '../screens/shared/MyDisputesScreen';
-import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
-import { DiagnosticScreen } from '../screens/settings/DiagnosticScreen';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { useTranslation } from 'react-i18next';
 
@@ -53,27 +36,79 @@ export const SettingsStack: React.FC = () => {
         headerTintColor: COLORS.text,
         headerShadowVisible: false,
       }}>
-      <Stack.Screen name="SettingsHome" component={SettingsScreen} />
-      <Stack.Screen name="Language" component={LanguageScreen} />
-      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
-      <Stack.Screen name="Notifications" component={NotificationsScreen} />
-      <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
-      <Stack.Screen name="Visibility" component={VisibilityScreen} />
-      <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} />
-      <Stack.Screen name="Documents" component={DocumentsScreen} />
-      <Stack.Screen name="Terms" component={TermsScreen} />
-      <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
-      <Stack.Screen name="PersonalDataPolicy" component={PersonalDataPolicyScreen} />
-      <Stack.Screen name="DataConsent" component={DataConsentScreen} />
-      <Stack.Screen name="Support" component={SupportScreen} />
-      <Stack.Screen name="MyDisputes" component={MyDisputesScreen} />
-      <Stack.Screen name="MyReports" component={MyReportsScreen} />
+      <Stack.Screen
+        name="SettingsHome"
+        getComponent={() => require('../screens/settings/SettingsScreen').SettingsScreen}
+      />
+      <Stack.Screen
+        name="Language"
+        getComponent={() => require('../screens/settings/LanguageScreen').LanguageScreen}
+      />
+      <Stack.Screen
+        name="ChangePassword"
+        getComponent={() =>
+          require('../screens/settings/ChangePasswordScreen').ChangePasswordScreen
+        }
+      />
+      <Stack.Screen
+        name="Notifications"
+        getComponent={() => require('../screens/settings/NotificationsScreen').NotificationsScreen}
+      />
+      <Stack.Screen
+        name="DeleteAccount"
+        getComponent={() => require('../screens/settings/DeleteAccountScreen').DeleteAccountScreen}
+      />
+      <Stack.Screen
+        name="Visibility"
+        getComponent={() => require('../screens/settings/VisibilityScreen').VisibilityScreen}
+      />
+      <Stack.Screen
+        name="BlockedUsers"
+        getComponent={() => require('../screens/settings/BlockedUsersScreen').BlockedUsersScreen}
+      />
+      <Stack.Screen
+        name="Documents"
+        getComponent={() => require('../screens/settings/DocumentsScreen').DocumentsScreen}
+      />
+      <Stack.Screen
+        name="Terms"
+        getComponent={() => require('../screens/settings/TermsScreen').TermsScreen}
+      />
+      <Stack.Screen
+        name="PrivacyPolicy"
+        getComponent={() => require('../screens/settings/PrivacyPolicyScreen').PrivacyPolicyScreen}
+      />
+      <Stack.Screen
+        name="PersonalDataPolicy"
+        getComponent={() =>
+          require('../screens/settings/PersonalDataPolicyScreen').PersonalDataPolicyScreen
+        }
+      />
+      <Stack.Screen
+        name="DataConsent"
+        getComponent={() => require('../screens/settings/DataConsentScreen').DataConsentScreen}
+      />
+      <Stack.Screen
+        name="Support"
+        getComponent={() => require('../screens/settings/SupportScreen').SupportScreen}
+      />
+      <Stack.Screen
+        name="MyDisputes"
+        getComponent={() => require('../screens/shared/MyDisputesScreen').MyDisputesScreen}
+      />
+      <Stack.Screen
+        name="MyReports"
+        getComponent={() => require('../screens/settings/MyReportsScreen').MyReportsScreen}
+      />
       <Stack.Screen
         name="DisputeDetails"
-        component={DisputeDetailsScreen}
+        getComponent={() => require('../screens/shared/DisputeDetailsScreen').DisputeDetailsScreen}
         options={{ title: t('disputes.detailsTitle') }}
       />
-      <Stack.Screen name="Diagnostic" component={DiagnosticScreen} />
+      <Stack.Screen
+        name="Diagnostic"
+        getComponent={() => require('../screens/settings/DiagnosticScreen').DiagnosticScreen}
+      />
     </Stack.Navigator>
   );
 };

@@ -1,14 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { BaristaProfileScreen } from '../screens/barista/BaristaProfileScreen';
-import { BaristaProfileSetupScreen } from '../screens/barista/BaristaProfileSetupScreen';
-import { ShiftHistoryScreen } from '../screens/barista/ShiftHistoryScreen';
-import { ApplicationDetailsScreen } from '../screens/barista/ApplicationDetailsScreen';
-import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
-import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
-import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
-import { SettingsStack, type SettingsStackParamList } from "./SettingsStack";
+import { SettingsStack, type SettingsStackParamList } from './SettingsStack';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { Application } from '@bystrobarista/core/types/application';
@@ -39,37 +32,43 @@ export const ProfileStack: React.FC = () => {
       }}>
       <Stack.Screen
         name="BaristaProfile"
-        component={BaristaProfileScreen}
+        getComponent={() => require('../screens/barista/BaristaProfileScreen').BaristaProfileScreen}
         options={{ title: t('nav.tabs.profile'), headerShown: false }}
       />
       <Stack.Screen
         name="BaristaProfileSetup"
-        component={BaristaProfileSetupScreen}
+        getComponent={() =>
+          require('../screens/barista/BaristaProfileSetupScreen').BaristaProfileSetupScreen
+        }
         options={{ title: t('nav.completeProfile') }}
       />
       <Stack.Screen
         name="ShiftHistory"
-        component={ShiftHistoryScreen}
+        getComponent={() => require('../screens/barista/ShiftHistoryScreen').ShiftHistoryScreen}
         options={{ title: t('nav.shiftHistory') }}
       />
       <Stack.Screen
         name="ApplicationDetails"
-        component={ApplicationDetailsScreen}
+        getComponent={() =>
+          require('../screens/barista/ApplicationDetailsScreen').ApplicationDetailsScreen
+        }
         options={{ title: t('nav.applicationDetails') }}
       />
       <Stack.Screen
         name="UserReviews"
-        component={UserReviewsScreen}
+        getComponent={() => require('../screens/shared/UserReviewsScreen').UserReviewsScreen}
         options={{ title: t('userReviews.title', { defaultValue: 'Все отзывы' }) }}
       />
       <Stack.Screen
         name="NotificationFeed"
-        component={NotificationFeedScreen}
+        getComponent={() =>
+          require('../screens/notifications/NotificationFeedScreen').NotificationFeedScreen
+        }
         options={{ title: t('notifications.feed.title'), headerShown: false }}
       />
       <Stack.Screen
         name="DisputeDetails"
-        component={DisputeDetailsScreen}
+        getComponent={() => require('../screens/shared/DisputeDetailsScreen').DisputeDetailsScreen}
         options={{ title: t('disputes.detailsTitle', { defaultValue: 'Жалоба' }) }}
       />
       <Stack.Screen name="Settings" component={SettingsStack} options={{ headerShown: false }} />

@@ -1,8 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { getPlatform } from '../platform';
-import en from './en.json';
-import ru from './ru.json';
 
 const LANG_STORAGE_KEY = 'app.language';
 
@@ -25,15 +23,27 @@ async function resolveInitialLanguage(): Promise<SupportedLanguage> {
   return 'ru';
 }
 
+// Russian is the fallback, so it is always parsed; the other bundle (~75 KB
+// of JSON) is only parsed when someone actually switches to it.
+const loadBundle = (lang: SupportedLanguage): Record<string, unknown> =>
+  lang === 'en' ? require('./en.json') : require('./ru.json');
+
+function ensureBundle(lang: SupportedLanguage): void {
+  if (!i18n.hasResourceBundle(lang, 'translation')) {
+    i18n.addResourceBundle(lang, 'translation', loadBundle(lang));
+  }
+}
+
 export async function initI18n(): Promise<void> {
   if (i18n.isInitialized) return;
   const lng = await resolveInitialLanguage();
+  const resources: Record<string, { translation: Record<string, unknown> }> = {
+    ru: { translation: loadBundle('ru') },
+  };
+  if (lng !== 'ru') resources[lng] = { translation: loadBundle(lng) };
   await i18n.use(initReactI18next).init({
     compatibilityJSON: 'v4',
-    resources: {
-      ru: { translation: ru },
-      en: { translation: en },
-    },
+    resources,
     lng,
     fallbackLng: 'ru',
     interpolation: { escapeValue: false },
@@ -42,6 +52,7 @@ export async function initI18n(): Promise<void> {
 }
 
 export async function changeLanguage(lang: SupportedLanguage): Promise<void> {
+  ensureBundle(lang);
   await i18n.changeLanguage(lang);
   try {
     await getPlatform().storage.setItem(LANG_STORAGE_KEY, lang);

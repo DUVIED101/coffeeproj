@@ -1,14 +1,5 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { AccountTypeScreen } from '../screens/auth/AccountTypeScreen';
-import { SignupScreen } from '../screens/auth/SignupScreen';
-import { LoginScreen } from '../screens/auth/LoginScreen';
-import { PasswordResetScreen } from '../screens/auth/PasswordResetScreen';
-import { EmailVerificationScreen } from '../screens/auth/EmailVerificationScreen';
-import { DiagnosticScreen } from '../screens/settings/DiagnosticScreen';
-import { TermsScreen } from '../screens/settings/TermsScreen';
-import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
-import { DataConsentScreen } from '../screens/settings/DataConsentScreen';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import type { AccountType } from '@bystrobarista/core/types';
 
@@ -34,15 +25,35 @@ export const AuthStack: React.FC = () => {
         headerShown: false,
         animation: 'slide_from_right',
       }}>
-      <Stack.Screen name="AccountType" component={AccountTypeScreen} />
-      <Stack.Screen name="Signup" component={SignupScreen} />
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="PasswordReset" component={PasswordResetScreen} />
-      <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
-      <Stack.Screen name="Diagnostic" component={DiagnosticScreen} />
+      <Stack.Screen
+        name="AccountType"
+        getComponent={() => require('../screens/auth/AccountTypeScreen').AccountTypeScreen}
+      />
+      <Stack.Screen
+        name="Signup"
+        getComponent={() => require('../screens/auth/SignupScreen').SignupScreen}
+      />
+      <Stack.Screen
+        name="Login"
+        getComponent={() => require('../screens/auth/LoginScreen').LoginScreen}
+      />
+      <Stack.Screen
+        name="PasswordReset"
+        getComponent={() => require('../screens/auth/PasswordResetScreen').PasswordResetScreen}
+      />
+      <Stack.Screen
+        name="EmailVerification"
+        getComponent={() =>
+          require('../screens/auth/EmailVerificationScreen').EmailVerificationScreen
+        }
+      />
+      <Stack.Screen
+        name="Diagnostic"
+        getComponent={() => require('../screens/settings/DiagnosticScreen').DiagnosticScreen}
+      />
       <Stack.Screen
         name="Terms"
-        component={TermsScreen}
+        getComponent={() => require('../screens/settings/TermsScreen').TermsScreen}
         options={{
           headerShown: true,
           headerStyle: { backgroundColor: COLORS.background },
@@ -52,7 +63,7 @@ export const AuthStack: React.FC = () => {
       />
       <Stack.Screen
         name="PrivacyPolicy"
-        component={PrivacyPolicyScreen}
+        getComponent={() => require('../screens/settings/PrivacyPolicyScreen').PrivacyPolicyScreen}
         options={{
           headerShown: true,
           headerStyle: { backgroundColor: COLORS.background },
@@ -62,7 +73,7 @@ export const AuthStack: React.FC = () => {
       />
       <Stack.Screen
         name="DataConsent"
-        component={DataConsentScreen}
+        getComponent={() => require('../screens/settings/DataConsentScreen').DataConsentScreen}
         options={{
           headerShown: true,
           headerStyle: { backgroundColor: COLORS.background },

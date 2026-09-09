@@ -357,6 +357,31 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
     [navigation]
   );
 
+  const renderJob = useCallback(
+    ({ item, index }: { item: Job; index: number }) =>
+      index === 0 ? (
+        <TutorialAnchor tutorialKey="business.firstJob">
+          <JobCard job={item} onPress={handleJobPress} />
+        </TutorialAnchor>
+      ) : (
+        <JobCard job={item} onPress={handleJobPress} />
+      ),
+    [handleJobPress]
+  );
+
+  const renderShift = useCallback(
+    ({ item }: { item: ShiftEntry }) => (
+      <ShiftCard
+        job={item.job}
+        applications={item.applications}
+        lifecycle={item.lifecycle}
+        onPressApplicants={handleShiftCardPressApplicants}
+        onPressAcceptedChat={handleShiftCardPressChat}
+      />
+    ),
+    [handleShiftCardPressApplicants, handleShiftCardPressChat]
+  );
+
   const filteredJobs = useMemo(
     () => jobs.filter(job => job.status === selectedStatus),
     [jobs, selectedStatus]
@@ -517,15 +542,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
         <FlatList
           data={filteredJobs}
           keyExtractor={item => item.id}
-          renderItem={({ item, index }) =>
-            index === 0 ? (
-              <TutorialAnchor tutorialKey="business.firstJob">
-                <JobCard job={item} onPress={handleJobPress} />
-              </TutorialAnchor>
-            ) : (
-              <JobCard job={item} onPress={handleJobPress} />
-            )
-          }
+          renderItem={renderJob}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={isRefreshingJobs} onRefresh={handleRefreshJobs} />
@@ -621,15 +638,7 @@ export const BusinessHomeScreen: React.FC<BusinessHomeScreenProps> = ({ navigati
         <FlatList
           data={filteredShiftEntries}
           keyExtractor={item => item.job.id}
-          renderItem={({ item }) => (
-            <ShiftCard
-              job={item.job}
-              applications={item.applications}
-              lifecycle={item.lifecycle}
-              onPressApplicants={handleShiftCardPressApplicants}
-              onPressAcceptedChat={handleShiftCardPressChat}
-            />
-          )}
+          renderItem={renderShift}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={isRefreshingShifts} onRefresh={handleRefreshShifts} />

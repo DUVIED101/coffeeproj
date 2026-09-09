@@ -1,21 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { JobFeedScreen } from '../screens/barista/JobFeedScreen';
 import { ScreenHeaderWithActions } from '../components/ScreenHeaderWithActions';
-import { JobDetailsScreen } from '../screens/barista/JobDetailsScreen';
-import { ApplyScreen } from '../screens/barista/ApplyScreen';
-import { ApplicationsScreen } from '../screens/barista/ApplicationsScreen';
-import { ApplicationDetailsScreen } from '../screens/barista/ApplicationDetailsScreen';
-import { ShiftHistoryScreen } from '../screens/barista/ShiftHistoryScreen';
-import { BaristaProfileScreen } from '../screens/barista/BaristaProfileScreen';
-import { BaristaProfileSetupScreen } from '../screens/barista/BaristaProfileSetupScreen';
-import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
-import { BusinessJobsScreen } from '../screens/barista/BusinessJobsScreen';
-import { BusinessPublicProfileScreen } from '../screens/barista/BusinessPublicProfileScreen';
-import { JobOfferScreen } from '../screens/barista/JobOfferScreen';
-import { DisputeFormScreen } from '../screens/shared/DisputeFormScreen';
-import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
 import { useNotificationFeedStore } from '../stores/notificationFeedStore';
 import type { Job } from '@bystrobarista/core/types';
 import type { Application } from '@bystrobarista/core/types/application';
@@ -51,74 +37,82 @@ export const BaristaStack: React.FC = () => {
       }}>
       <Stack.Screen
         name="JobFeed"
-        component={JobFeedScreen}
+        getComponent={() => require('../screens/barista/JobFeedScreen').JobFeedScreen}
         options={({ navigation }) => ({
           header: () => <JobFeedHeader navigation={navigation} />,
         })}
       />
       <Stack.Screen
         name="JobDetails"
-        component={JobDetailsScreen}
+        getComponent={() => require('../screens/barista/JobDetailsScreen').JobDetailsScreen}
         options={{ title: t('nav.jobDetails') }}
       />
       <Stack.Screen
         name="Apply"
-        component={ApplyScreen}
+        getComponent={() => require('../screens/barista/ApplyScreen').ApplyScreen}
         options={{ title: t('nav.applyForJob') }}
       />
       <Stack.Screen
         name="Applications"
-        component={ApplicationsScreen}
+        getComponent={() => require('../screens/barista/ApplicationsScreen').ApplicationsScreen}
         options={{ title: t('nav.myApplications') }}
       />
       <Stack.Screen
         name="ApplicationDetails"
-        component={ApplicationDetailsScreen}
+        getComponent={() =>
+          require('../screens/barista/ApplicationDetailsScreen').ApplicationDetailsScreen
+        }
         options={{ title: t('nav.applicationDetails') }}
       />
       <Stack.Screen
         name="ShiftHistory"
-        component={ShiftHistoryScreen}
+        getComponent={() => require('../screens/barista/ShiftHistoryScreen').ShiftHistoryScreen}
         options={{ title: t('nav.shiftHistory') }}
       />
       <Stack.Screen
         name="BaristaProfile"
-        component={BaristaProfileScreen}
+        getComponent={() => require('../screens/barista/BaristaProfileScreen').BaristaProfileScreen}
         options={{ title: t('nav.baristaProfile') }}
       />
       <Stack.Screen
         name="BaristaProfileSetup"
-        component={BaristaProfileSetupScreen}
+        getComponent={() =>
+          require('../screens/barista/BaristaProfileSetupScreen').BaristaProfileSetupScreen
+        }
         options={{ title: t('nav.completeProfile') }}
       />
       <Stack.Screen
         name="NotificationFeed"
-        component={NotificationFeedScreen}
+        getComponent={() =>
+          require('../screens/notifications/NotificationFeedScreen').NotificationFeedScreen
+        }
         options={{ title: t('notifications.feed.title'), headerShown: false }}
       />
       <Stack.Screen
         name="BusinessJobs"
-        component={BusinessJobsScreen}
+        getComponent={() => require('../screens/barista/BusinessJobsScreen').BusinessJobsScreen}
         options={{ title: t('nav.businessJobs') }}
       />
       <Stack.Screen
         name="BusinessPublicProfile"
-        component={BusinessPublicProfileScreen}
+        getComponent={() =>
+          require('../screens/barista/BusinessPublicProfileScreen').BusinessPublicProfileScreen
+        }
         options={{ title: t('nav.businessPublicProfile') }}
       />
       <Stack.Screen
         name="JobOffer"
-        component={JobOfferScreen}
+        getComponent={() => require('../screens/barista/JobOfferScreen').JobOfferScreen}
         options={{ title: t('nav.jobOffer') }}
       />
       <Stack.Screen
         name="DisputeForm"
-        component={DisputeFormScreen}
+        getComponent={() => require('../screens/shared/DisputeFormScreen').DisputeFormScreen}
         options={{ title: t('disputes.formTitle') }}
       />
       <Stack.Screen
         name="DisputeDetails"
-        component={DisputeDetailsScreen}
+        getComponent={() => require('../screens/shared/DisputeDetailsScreen').DisputeDetailsScreen}
         options={{ title: t('disputes.detailsTitle') }}
       />
     </Stack.Navigator>

@@ -1,13 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { ChatsTabletScreen } from '../screens/_tablet/ChatsTabletScreen';
-import { ChatScreen } from '../screens/chat/ChatScreen';
-import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
-import { ViewBaristaProfileScreen } from '../screens/business/ViewBaristaProfileScreen';
-import { BusinessPublicProfileScreen } from '../screens/barista/BusinessPublicProfileScreen';
-import { BusinessJobsScreen } from '../screens/barista/BusinessJobsScreen';
-import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import type { ChatsStackParamList } from './ChatsStack';
 
@@ -26,33 +19,43 @@ export const ChatsStackTablet: React.FC = () => {
       }}>
       <Stack.Screen
         name="ConversationsList"
-        component={ChatsTabletScreen}
+        getComponent={() => require('../screens/_tablet/ChatsTabletScreen').ChatsTabletScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen name="Chat" component={ChatScreen} options={{ title: t('nav.chat') }} />
+      <Stack.Screen
+        name="Chat"
+        getComponent={() => require('../screens/chat/ChatScreen').ChatScreen}
+        options={{ title: t('nav.chat') }}
+      />
       <Stack.Screen
         name="NotificationFeed"
-        component={NotificationFeedScreen}
+        getComponent={() =>
+          require('../screens/notifications/NotificationFeedScreen').NotificationFeedScreen
+        }
         options={{ title: t('notifications.feed.title'), headerShown: false }}
       />
       <Stack.Screen
         name="ViewBaristaProfile"
-        component={ViewBaristaProfileScreen}
+        getComponent={() =>
+          require('../screens/business/ViewBaristaProfileScreen').ViewBaristaProfileScreen
+        }
         options={{ title: t('nav.viewBaristaProfile') }}
       />
       <Stack.Screen
         name="BusinessPublicProfile"
-        component={BusinessPublicProfileScreen}
+        getComponent={() =>
+          require('../screens/barista/BusinessPublicProfileScreen').BusinessPublicProfileScreen
+        }
         options={{ title: t('nav.businessPublicProfile') }}
       />
       <Stack.Screen
         name="BusinessJobs"
-        component={BusinessJobsScreen}
+        getComponent={() => require('../screens/barista/BusinessJobsScreen').BusinessJobsScreen}
         options={{ title: t('nav.businessJobs') }}
       />
       <Stack.Screen
         name="UserReviews"
-        component={UserReviewsScreen}
+        getComponent={() => require('../screens/shared/UserReviewsScreen').UserReviewsScreen}
         options={{ title: t('nav.userReviews') }}
       />
     </Stack.Navigator>

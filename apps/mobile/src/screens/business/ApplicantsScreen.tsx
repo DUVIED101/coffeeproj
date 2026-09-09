@@ -511,17 +511,11 @@ export const ApplicantsScreen: React.FC<Props> = ({ navigation, route }) => {
       const completedIds = data.filter(a => a.status === 'completed').map(a => a.id);
       if (completedIds.length > 0) {
         try {
-          const reviewedSet = new Set<string>();
-          await Promise.all(
-            completedIds.map(async id => {
-              const review = await ReviewService.getReviewByApplication(
-                id as ApplicationId,
-                'business'
-              );
-              if (review) reviewedSet.add(id);
-            })
+          const reviews = await ReviewService.getReviewsByApplications(
+            completedIds as ApplicationId[],
+            'business'
           );
-          setReviewedIds(reviewedSet);
+          setReviewedIds(new Set<string>(reviews.keys()));
         } catch (err) {
           console.error('Error fetching review state:', err);
         }

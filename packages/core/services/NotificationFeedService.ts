@@ -2,7 +2,11 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../config/supabase';
 import type { ConversationId } from '@bystrobarista/core/types/chat';
 import type { JobOfferId, NotificationId, UserId } from '@bystrobarista/core/types/ids';
-import type { Notification, NotificationData, NotificationKind } from '@bystrobarista/core/types/notification';
+import type {
+  Notification,
+  NotificationData,
+  NotificationKind,
+} from '@bystrobarista/core/types/notification';
 
 type NotificationRow = {
   id: string;
@@ -149,7 +153,9 @@ export const NotificationFeedService: NotificationFeedServiceProtocol = {
       .subscribe();
   },
 
+  // removeChannel() both leaves the topic and frees the client's channel slot;
+  // a bare unsubscribe() leaves an orphan in the registry on every reconnect.
   unsubscribe(channel) {
-    channel.unsubscribe();
+    void supabase.removeChannel(channel);
   },
 };

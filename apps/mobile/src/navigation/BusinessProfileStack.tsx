@@ -1,14 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { BusinessProfileScreen } from '../screens/business/BusinessProfileScreen';
-import { BusinessProfileSetupScreen } from '../screens/business/BusinessProfileSetupScreen';
-import { BranchManagementScreen } from '../screens/business/BranchManagementScreen';
-import { BusinessReviewsScreen } from '../screens/business/BusinessReviewsScreen';
-import { UserReviewsScreen } from '../screens/shared/UserReviewsScreen';
-import { NotificationFeedScreen } from '../screens/notifications/NotificationFeedScreen';
-import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
-import { SettingsStack, type SettingsStackParamList } from "./SettingsStack";
+import { SettingsStack, type SettingsStackParamList } from './SettingsStack';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
@@ -37,37 +30,47 @@ export const BusinessProfileStack: React.FC = () => {
       }}>
       <Stack.Screen
         name="BusinessProfileHome"
-        component={BusinessProfileScreen}
+        getComponent={() =>
+          require('../screens/business/BusinessProfileScreen').BusinessProfileScreen
+        }
         options={{ headerShown: false }}
       />
       <Stack.Screen
         name="BusinessProfileSetup"
-        component={BusinessProfileSetupScreen}
+        getComponent={() =>
+          require('../screens/business/BusinessProfileSetupScreen').BusinessProfileSetupScreen
+        }
         options={{ title: t('nav.editBusinessProfile') }}
       />
       <Stack.Screen
         name="BranchManagement"
-        component={BranchManagementScreen}
+        getComponent={() =>
+          require('../screens/business/BranchManagementScreen').BranchManagementScreen
+        }
         options={{ title: t('nav.branches') }}
       />
       <Stack.Screen
         name="BusinessReviews"
-        component={BusinessReviewsScreen}
+        getComponent={() =>
+          require('../screens/business/BusinessReviewsScreen').BusinessReviewsScreen
+        }
         options={{ title: t('nav.businessReviews') }}
       />
       <Stack.Screen
         name="UserReviews"
-        component={UserReviewsScreen}
+        getComponent={() => require('../screens/shared/UserReviewsScreen').UserReviewsScreen}
         options={{ title: t('nav.userReviews') }}
       />
       <Stack.Screen
         name="NotificationFeed"
-        component={NotificationFeedScreen}
+        getComponent={() =>
+          require('../screens/notifications/NotificationFeedScreen').NotificationFeedScreen
+        }
         options={{ title: t('notifications.feed.title'), headerShown: false }}
       />
       <Stack.Screen
         name="DisputeDetails"
-        component={DisputeDetailsScreen}
+        getComponent={() => require('../screens/shared/DisputeDetailsScreen').DisputeDetailsScreen}
         options={{ title: t('disputes.detailsTitle', { defaultValue: 'Жалоба' }) }}
       />
       <Stack.Screen name="Settings" component={SettingsStack} options={{ headerShown: false }} />

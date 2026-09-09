@@ -1,11 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { ApplicationsTabletScreen } from '../screens/_tablet/ApplicationsTabletScreen';
-import { ApplicationDetailsScreen } from '../screens/barista/ApplicationDetailsScreen';
-import { JobDetailsScreen } from '../screens/barista/JobDetailsScreen';
-import { BusinessPublicProfileScreen } from '../screens/barista/BusinessPublicProfileScreen';
-import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
 import type { ApplicationsStackParamList } from './ApplicationsStack';
 
 const Stack = createNativeStackNavigator<ApplicationsStackParamList>();
@@ -18,27 +13,33 @@ export const ApplicationsStackTablet: React.FC = () => {
       screenOptions={{ headerShown: true, headerBackTitleVisible: false }}>
       <Stack.Screen
         name="ApplicationsList"
-        component={ApplicationsTabletScreen}
+        getComponent={() =>
+          require('../screens/_tablet/ApplicationsTabletScreen').ApplicationsTabletScreen
+        }
         options={{ title: t('nav.myApplications') }}
       />
       <Stack.Screen
         name="ApplicationDetails"
-        component={ApplicationDetailsScreen}
+        getComponent={() =>
+          require('../screens/barista/ApplicationDetailsScreen').ApplicationDetailsScreen
+        }
         options={{ title: t('nav.applicationDetails') }}
       />
       <Stack.Screen
         name="JobDetails"
-        component={JobDetailsScreen}
+        getComponent={() => require('../screens/barista/JobDetailsScreen').JobDetailsScreen}
         options={{ title: t('nav.jobDetails') }}
       />
       <Stack.Screen
         name="BusinessPublicProfile"
-        component={BusinessPublicProfileScreen}
+        getComponent={() =>
+          require('../screens/barista/BusinessPublicProfileScreen').BusinessPublicProfileScreen
+        }
         options={{ title: t('nav.businessPublicProfile') }}
       />
       <Stack.Screen
         name="DisputeDetails"
-        component={DisputeDetailsScreen}
+        getComponent={() => require('../screens/shared/DisputeDetailsScreen').DisputeDetailsScreen}
         options={{ title: t('disputes.detailsTitle') }}
       />
     </Stack.Navigator>
