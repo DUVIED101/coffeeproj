@@ -2,6 +2,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import React from "react";
+import { CookieNotice } from "@/components/CookieNotice";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -38,7 +39,10 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <CookieNotice />
+        </Providers>
         <Analytics />
         <SpeedInsights />
       </body>

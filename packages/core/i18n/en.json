@@ -1884,5 +1884,10 @@
         }
       }
     }
+  },
+  "cookies": {
+    "notice": "The web version uses only strictly necessary cookies: to keep you signed in and remember your language and profile role. Analytics works without cookies.",
+    "more": "Learn more",
+    "accept": "Got it"
   }
 }

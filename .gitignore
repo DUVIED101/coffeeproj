@@ -92,3 +92,6 @@ infra/supabase-selfhost/volumes/functions/*
 !infra/supabase-selfhost/volumes/functions/deno.jsonc
 infra/supabase-selfhost/backups/
 infra/supabase-selfhost/sql/vault-secrets.sql
+
+# Session worktrees
+.claude/worktrees/

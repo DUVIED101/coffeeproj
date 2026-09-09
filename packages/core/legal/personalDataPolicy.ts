@@ -1,22 +1,22 @@
-// Extracted verbatim from mobile PersonalDataPolicyScreen.tsx — single source for both apps.
+// Single source for mobile, web and the landing (admin/src/app/personal-data).
 export const PERSONAL_DATA_POLICY_BODY = {
-  ru: `Дата вступления в силу: 12 июня 2026 г.
+  ru: `Дата вступления в силу: 15 сентября 2026 г. (заменяет редакцию от 12 июня 2026 г.)
 
 1. ОБЩИЕ ПОЛОЖЕНИЯ
 Настоящая Политика в отношении обработки персональных данных (далее — Политика) составлена в соответствии с требованиями Федерального закона от 27.07.2006 № 152-ФЗ «О персональных данных» (далее — Закон о персональных данных) и определяет порядок обработки персональных данных и меры по обеспечению безопасности персональных данных, предпринимаемые Хаитом Даниилом Давидовичем (далее — Оператор).
 1.1. Оператор ставит своей важнейшей целью и условием осуществления своей деятельности соблюдение прав и свобод человека и гражданина при обработке его персональных данных, в том числе защиты прав на неприкосновенность частной жизни, личную и семейную тайну.
-1.2. Настоящая Политика применяется ко всей информации, которую Оператор может получить о пользователях мобильного приложения «БыстроБариста» (далее — Приложение) и связанного с ним сайта bystrobarista.com.
+1.2. Настоящая Политика применяется ко всей информации, которую Оператор может получить о пользователях мобильного приложения «БыстроБариста» (далее — Приложение), его веб-версии по адресу app.bystrobarista.com (далее — Веб-версия) и сайта bystrobarista.com (далее вместе — Сервис).
 
 2. ОСНОВНЫЕ ПОНЯТИЯ, ИСПОЛЬЗУЕМЫЕ В ПОЛИТИКЕ
 2.1. Автоматизированная обработка персональных данных — обработка персональных данных с помощью средств вычислительной техники.
 2.2. Блокирование персональных данных — временное прекращение обработки персональных данных (за исключением случаев, если обработка необходима для уточнения персональных данных).
-2.3. Приложение — программа для ЭВМ «БыстроБариста», предназначенная для подбора персонала в кофейной индустрии, доступная для установки на мобильные устройства Пользователей в магазинах приложений.
+2.3. Приложение — программа для ЭВМ «БыстроБариста», предназначенная для подбора персонала в кофейной индустрии, доступная для установки на мобильные устройства Пользователей в магазинах приложений; Веб-версия — та же программа, доступная через браузер по адресу app.bystrobarista.com.
 2.4. Информационная система персональных данных — совокупность содержащихся в базах данных персональных данных и обеспечивающих их обработку информационных технологий и технических средств.
 2.5. Обезличивание персональных данных — действия, в результате которых невозможно определить без использования дополнительной информации принадлежность персональных данных конкретному Пользователю или иному субъекту персональных данных.
 2.6. Обработка персональных данных — любое действие (операция) или совокупность действий (операций), совершаемых с использованием средств автоматизации или без использования таких средств с персональными данными, включая сбор, запись, систематизацию, накопление, хранение, уточнение (обновление, изменение), извлечение, использование, передачу (распространение, предоставление, доступ), обезличивание, блокирование, удаление, уничтожение персональных данных.
 2.7. Оператор — государственный орган, муниципальный орган, юридическое или физическое лицо, самостоятельно или совместно с другими лицами организующие и/или осуществляющие обработку персональных данных, а также определяющие цели обработки персональных данных, состав персональных данных, подлежащих обработке, действия (операции), совершаемые с персональными данными.
-2.8. Персональные данные — любая информация, относящаяся прямо или косвенно к определенному или определяемому Пользователю Приложения.
-2.9. Пользователь — любое физическое лицо, использующее Приложение, в том числе зарегистрировавшее аккаунт в роли «бариста» или «бизнес».
+2.8. Персональные данные — любая информация, относящаяся прямо или косвенно к определенному или определяемому Пользователю Сервиса.
+2.9. Пользователь — любое физическое лицо, использующее Сервис, в том числе зарегистрировавшее аккаунт в роли «бариста» или «бизнес».
 2.10. Предоставление персональных данных — действия, направленные на раскрытие персональных данных определенному лицу или определенному кругу лиц.
 2.11. Распространение персональных данных — любые действия, направленные на раскрытие персональных данных неопределенному кругу лиц.
 2.12. Трансграничная передача персональных данных — передача персональных данных на территорию иностранного государства органу власти иностранного государства, иностранному физическому или иностранному юридическому лицу.
@@ -60,21 +60,21 @@ export const PERSONAL_DATA_POLICY_BODY = {
 
 6. ЦЕЛИ ОБРАБОТКИ И СОСТАВ ПЕРСОНАЛЬНЫХ ДАННЫХ
 6.1. Цели обработки персональных данных:
-— регистрация и аутентификация Пользователя в Приложении;
+— регистрация и аутентификация Пользователя в Сервисе;
 — подбор вакансий и кандидатов в кофейной индустрии и обеспечение взаимодействия сторон (отклики, чаты, согласование смен);
-— обеспечение безопасности Сервиса, борьба с мошенничеством и нарушениями правил Приложения;
+— обеспечение безопасности Сервиса, борьба с мошенничеством и нарушениями правил Сервиса;
 — рассмотрение жалоб и принятие модераторских решений;
-— отправка функциональных push-уведомлений (новое сообщение, отклик, статус смены); рекламные уведомления не отправляются;
+— отправка функциональных уведомлений: push-уведомлений и служебных писем (код подтверждения, восстановление пароля, новое сообщение, отклик, статус смены); рекламные уведомления не отправляются;
 — исполнение требований законодательства Российской Федерации.
 6.2. Состав обрабатываемых персональных данных:
-— адрес электронной почты, имя, выбранная роль (бариста / бизнес), пароль (хранится в зашифрованном виде);
+— адрес электронной почты, имя, выбранная роль (бариста / бизнес), пароль (хранится в виде криптографического хэша);
 — сведения профиля: фотография, опыт работы, навыки, предпочтения по графику; для бизнеса — название заведения, адрес, фото, ИНН/ОГРН (при верификации);
-— содержание откликов, чатов, отзывов и жалоб, поданных в Приложении;
-— приблизительные координаты устройства (только во время использования Приложения и только с согласия Пользователя);
-— технические данные: идентификатор устройства, версия ОС, журналы сбоев, push-токен;
+— содержание откликов, чатов, отзывов и жалоб, поданных в Сервисе;
+— приблизительные координаты устройства (только во время использования Сервиса и только с разрешения Пользователя);
+— технические данные: идентификатор устройства, версия ОС и браузера, журналы сбоев, IP-адрес, дата и время доступа, push-токен или подписка на браузерные push-уведомления, cookie сессии Веб-версии;
 — при входе через сторонние сервисы (Apple, Google, Яндекс) — идентификатор аккаунта и адрес электронной почты, предоставленный провайдером.
-6.3. Правовые основания: Федеральный закон от 27.07.2006 № 152-ФЗ «О персональных данных», Федеральный закон от 27.07.2006 № 149-ФЗ «Об информации, информационных технологиях и о защите информации», согласие субъекта персональных данных, заключённый с субъектом договор (Условия использования Приложения).
-6.4. Специальные категории персональных данных (раса, национальность, политические взгляды, религиозные или философские убеждения, состояние здоровья, интимная жизнь) Оператором не запрашиваются и не обрабатываются.
+6.3. Правовые основания: Федеральный закон от 27.07.2006 № 152-ФЗ «О персональных данных», Федеральный закон от 27.07.2006 № 149-ФЗ «Об информации, информационных технологиях и о защите информации», согласие субъекта персональных данных, заключённый с субъектом договор (Условия использования Сервиса).
+6.4. Специальные категории персональных данных (раса, национальность, политические взгляды, религиозные или философские убеждения, состояние здоровья, интимная жизнь) и биометрические персональные данные Оператором не запрашиваются и не обрабатываются.
 
 7. УСЛОВИЯ ОБРАБОТКИ ПЕРСОНАЛЬНЫХ ДАННЫХ
 7.1. Обработка персональных данных осуществляется с согласия субъекта персональных данных на обработку его персональных данных.
@@ -86,16 +86,19 @@ export const PERSONAL_DATA_POLICY_BODY = {
 
 8. ПОРЯДОК СБОРА, ХРАНЕНИЯ, ПЕРЕДАЧИ И ДРУГИХ ВИДОВ ОБРАБОТКИ
 Безопасность персональных данных, которые обрабатываются Оператором, обеспечивается путем реализации правовых, организационных и технических мер, необходимых для выполнения в полном объеме требований действующего законодательства в области защиты персональных данных.
-8.1. Оператор обеспечивает сохранность персональных данных и принимает все возможные меры, исключающие доступ к персональным данным неуполномоченных лиц. Данные передаются по защищённому каналу (TLS) и хранятся в зашифрованном виде.
+8.1. Оператор обеспечивает сохранность персональных данных и принимает все возможные меры, исключающие доступ к персональным данным неуполномоченных лиц. Данные передаются по защищённому каналу (TLS). База данных Сервиса, загруженные файлы и резервные копии размещаются на серверах на территории Российской Федерации (центры обработки данных в Москве и Санкт-Петербурге, инфраструктура АО «Таймвэб» (Timeweb Cloud)); доступ к серверам ограничен ключами, резервные копии хранятся в защищённом хранилище того же поставщика.
 8.2. Персональные данные Пользователя не будут переданы третьим лицам, за исключением случаев:
-— передачи поставщику облачной инфраструктуры (Supabase Inc.) — для хранения и обработки данных;
-— передачи провайдерам входа (Apple, Google, Яндекс) — при использовании Пользователем соответствующего способа авторизации;
-— передачи Apple Push Notification Service — для доставки push-уведомлений;
+— передачи АО «Таймвэб» (Россия) — поставщику хостинга и облачной инфраструктуры, на которой размещены база данных, файлы и резервные копии Сервиса;
+— передачи провайдерам входа Apple Inc. (США), Google LLC (США), ООО «ЯНДЕКС» (Россия) — при использовании Пользователем соответствующего способа авторизации;
+— передачи службам доставки push-уведомлений: Apple Push Notification Service (Apple Inc., США) для Приложения; push-службам браузеров Google LLC, Apple Inc., Mozilla Corporation (США) для Веб-версии, при этом содержимое браузерных уведомлений шифруется на стороне Оператора;
+— передачи Resend Inc. (США) — сервису доставки электронной почты, для отправки служебных писем;
+— передачи Vercel Inc. (США) — поставщику хостинга Веб-версии и сайта bystrobarista.com: запросы Пользователя (IP-адрес, cookie сессии, данные отображаемых страниц) обрабатываются серверами Vercel транзитно, без сохранения в базах данных Vercel; Vercel Analytics собирает обезличенную статистику посещений без использования cookie;
+— передачи ООО «ЯНДЕКС» (Россия) — картографическому сервису, адресов заведений и координат для отображения карты;
 — передачи государственным органам — по законному требованию;
 — случаев, когда субъектом персональных данных дано отдельное согласие на передачу данных третьему лицу.
 Оператор не продаёт персональные данные и не передаёт их в рекламных целях.
-8.3. В случае выявления неточностей в персональных данных Пользователь может актуализировать их самостоятельно через Приложение (раздел «Профиль») либо путем направления Оператору уведомления на адрес электронной почты bystrobarista@gmail.com с пометкой «Актуализация персональных данных».
-8.4. Срок обработки персональных данных определяется достижением целей, для которых были собраны персональные данные, если иной срок не предусмотрен договором или действующим законодательством. Пользователь может в любой момент отозвать своё согласие на обработку персональных данных, направив Оператору уведомление по адресу bystrobarista@gmail.com с пометкой «Отзыв согласия на обработку персональных данных», либо удалив аккаунт в разделе Настройки → Удалить аккаунт. После удаления аккаунта персональные данные удаляются в течение 30 дней, за исключением сведений, которые Оператор обязан хранить по закону.
+8.3. В случае выявления неточностей в персональных данных Пользователь может актуализировать их самостоятельно через Сервис (раздел «Профиль») либо путем направления Оператору уведомления на адрес электронной почты bystrobarista@gmail.com с пометкой «Актуализация персональных данных».
+8.4. Срок обработки персональных данных определяется достижением целей, для которых были собраны персональные данные, если иной срок не предусмотрен договором или действующим законодательством. Пользователь может в любой момент отозвать своё согласие на обработку персональных данных, направив Оператору уведомление по адресу bystrobarista@gmail.com с пометкой «Отзыв согласия на обработку персональных данных», либо удалив аккаунт в разделе Настройки → Удалить аккаунт. После удаления аккаунта персональные данные удаляются в течение 30 дней, за исключением сведений, которые Оператор обязан хранить по закону; из резервных копий данные удаляются по истечении срока их хранения (не более 14 дней).
 8.5. Вся информация, которая собирается сторонними сервисами, в том числе платежными системами, средствами связи и другими поставщиками услуг, хранится и обрабатывается указанными лицами (Операторами) в соответствии с их Пользовательским соглашением и Политикой конфиденциальности. Оператор не несёт ответственности за действия третьих лиц, в том числе указанных в настоящем пункте поставщиков услуг.
 8.6. Оператор при обработке персональных данных обеспечивает их конфиденциальность.
 8.7. Оператор осуществляет хранение персональных данных в форме, позволяющей определить субъекта персональных данных, не дольше, чем этого требуют цели обработки персональных данных, если срок хранения персональных данных не установлен федеральным законом или договором.
@@ -105,9 +108,11 @@ export const PERSONAL_DATA_POLICY_BODY = {
 9.1. Оператор осуществляет сбор, запись, систематизацию, накопление, хранение, уточнение (обновление, изменение), извлечение, использование, передачу (распространение, предоставление, доступ), обезличивание, блокирование, удаление и уничтожение персональных данных.
 9.2. Оператор осуществляет автоматизированную обработку персональных данных с получением и/или передачей полученной информации по информационно-телекоммуникационным сетям.
 
-10. ТРАНСГРАНИЧНАЯ ПЕРЕДАЧА ПЕРСОНАЛЬНЫХ ДАННЫХ
-10.1. Оператор до начала осуществления деятельности по трансграничной передаче персональных данных обязан уведомить уполномоченный орган по защите прав субъектов персональных данных о своем намерении осуществлять трансграничную передачу персональных данных.
-10.2. Оператор до подачи вышеуказанного уведомления обязан получить от органов власти иностранного государства, иностранных физических лиц, иностранных юридических лиц, которым планируется трансграничная передача персональных данных, соответствующие сведения.
+10. ЛОКАЛИЗАЦИЯ И ТРАНСГРАНИЧНАЯ ПЕРЕДАЧА ПЕРСОНАЛЬНЫХ ДАННЫХ
+10.1. Запись, систематизация, накопление, хранение, уточнение (обновление, изменение) и извлечение персональных данных граждан Российской Федерации осуществляются с использованием баз данных, находящихся на территории Российской Федерации (пункт 8.1 настоящей Политики), в соответствии с частью 5 статьи 18 Закона о персональных данных.
+10.2. Трансграничная передача персональных данных осуществляется только следующим иностранным лицам и только в объёме, необходимом для соответствующей функции Сервиса: Apple Inc. и Google LLC (США) — авторизация через Apple / Google и доставка push-уведомлений; Mozilla Corporation (США) — доставка браузерных push-уведомлений; Resend Inc. (США) — доставка служебных писем; Vercel Inc. (США) — транзитная обработка запросов к Веб-версии и сайту.
+10.3. Оператор уведомляет уполномоченный орган по защите прав субъектов персональных данных (Роскомнадзор) о намерении осуществлять трансграничную передачу персональных данных в порядке, установленном статьёй 12 Закона о персональных данных, и до подачи уведомления получает от указанных иностранных лиц сведения, предусмотренные частью 5 статьи 12 Закона о персональных данных.
+10.4. Персональные данные не передаются иностранным лицам для хранения в качестве основной базы данных, в рекламных целях или для формирования профилей Пользователей.
 
 11. КОНФИДЕНЦИАЛЬНОСТЬ ПЕРСОНАЛЬНЫХ ДАННЫХ
 Оператор и иные лица, получившие доступ к персональным данным, обязаны не раскрывать третьим лицам и не распространять персональные данные без согласия субъекта персональных данных, если иное не предусмотрено федеральным законом.
@@ -115,24 +120,24 @@ export const PERSONAL_DATA_POLICY_BODY = {
 12. ЗАКЛЮЧИТЕЛЬНЫЕ ПОЛОЖЕНИЯ
 12.1. Пользователь может получить любые разъяснения по интересующим вопросам, касающимся обработки его персональных данных, обратившись к Оператору с помощью электронной почты bystrobarista@gmail.com.
 12.2. В данном документе будут отражены любые изменения политики обработки персональных данных Оператором. Политика действует бессрочно до замены её новой версией.
-12.3. Актуальная версия Политики в свободном доступе расположена в Приложении в разделе Настройки → О приложении, а также в сети Интернет по адресу https://bystrobarista.com/privacy-policy/.`,
-  en: `Effective date: 12 June 2026.
+12.3. Актуальная версия Политики в свободном доступе расположена в Приложении и Веб-версии в разделе Настройки → Документы, а также в сети Интернет по адресу https://bystrobarista.com/personal-data.`,
+  en: `Effective date: 15 September 2026 (replaces the edition of 12 June 2026).
 
 1. GENERAL PROVISIONS
 This Personal Data Processing Policy ("Policy") is drafted in accordance with Federal Law No. 152-FZ of 27 July 2006 "On Personal Data" ("Personal Data Law") and defines the procedure for processing personal data and the security measures taken by Daniil Davidovich Khait ("Operator").
 1.1. The Operator's top priority is to respect human and civil rights and freedoms when processing personal data, including the right to privacy and the protection of personal and family secrets.
-1.2. This Policy applies to all information that the Operator may obtain about users of the BystroBarista mobile application ("App") and the associated website bystrobarista.com.
+1.2. This Policy applies to all information that the Operator may obtain about users of the BystroBarista mobile application ("App"), its web version at app.bystrobarista.com ("Web Version") and the website bystrobarista.com (together, the "Service").
 
 2. KEY TERMS
 2.1. Automated processing of personal data — processing of personal data by means of computing devices.
 2.2. Blocking of personal data — temporary suspension of personal data processing (except where processing is necessary to clarify the data).
-2.3. App — the BystroBarista computer program for matching coffee-industry staff, available for installation on Users' mobile devices through app stores.
+2.3. App — the BystroBarista computer program for matching coffee-industry staff, available for installation on Users' mobile devices through app stores; Web Version — the same program available in a browser at app.bystrobarista.com.
 2.4. Personal data information system — a set of personal data contained in databases and the information technology and technical means that process them.
 2.5. Depersonalization of personal data — actions that make it impossible, without the use of additional information, to attribute personal data to a specific User or other data subject.
 2.6. Processing of personal data — any action (operation) or set of actions (operations) performed with personal data, with or without the use of automation, including collection, recording, systematization, accumulation, storage, clarification, retrieval, use, transfer, depersonalization, blocking, deletion, destruction.
 2.7. Operator — a state body, municipal body, legal entity, or individual that, alone or jointly with others, organizes and/or carries out the processing of personal data and determines the purposes, composition, and operations of such processing.
-2.8. Personal data — any information that relates directly or indirectly to an identified or identifiable User of the App.
-2.9. User — any natural person who uses the App, including a person who has registered an account in the "barista" or "business" role.
+2.8. Personal data — any information that relates directly or indirectly to an identified or identifiable User of the Service.
+2.9. User — any natural person who uses the Service, including a person who has registered an account in the "barista" or "business" role.
 2.10. Providing personal data — actions aimed at disclosing personal data to a specific person or a defined group of persons.
 2.11. Distribution of personal data — any actions aimed at disclosing personal data to an undefined group of persons.
 2.12. Cross-border transfer of personal data — transfer of personal data to the territory of a foreign state, to a foreign authority, foreign natural person, or foreign legal entity.
@@ -176,21 +181,21 @@ This Personal Data Processing Policy ("Policy") is drafted in accordance with Fe
 
 6. PURPOSES AND COMPOSITION OF PROCESSED DATA
 6.1. Purposes:
-— User registration and authentication in the App;
+— User registration and authentication in the Service;
 — matching vacancies and candidates and enabling communication (applications, chats, shift coordination);
 — security of the Service, fraud and abuse prevention;
 — review of complaints and moderation decisions;
-— delivery of functional push notifications (new message, application, shift status); promotional notifications are not sent;
+— delivery of functional notifications: push notifications and service e-mails (confirmation code, password recovery, new message, application, shift status); promotional notifications are not sent;
 — compliance with the laws of the Russian Federation.
 6.2. Composition of processed personal data:
-— email address, name, selected role (barista / business), password (stored hashed);
+— email address, name, selected role (barista / business), password (stored as a cryptographic hash);
 — profile data: photo, work experience, skills, schedule preferences; for businesses — venue name, address, photos, tax IDs (during verification);
-— content of applications, chats, reviews, and complaints submitted in the App;
-— approximate device coordinates (only while the App is in use and only with the User's consent);
-— technical data: device identifier, OS version, crash logs, push token;
+— content of applications, chats, reviews, and complaints submitted in the Service;
+— approximate device coordinates (only while the Service is in use and only with the User's permission);
+— technical data: device identifier, OS and browser version, crash logs, IP address, date and time of access, push token or browser push subscription, Web Version session cookie;
 — when signing in via third-party providers (Apple, Google, Yandex) — the account identifier and email address provided by the provider.
-6.3. Legal grounds: Federal Law No. 152-FZ of 27 July 2006 "On Personal Data"; Federal Law No. 149-FZ of 27 July 2006 "On Information, Information Technologies and Information Protection"; the data subject's consent; a contract with the data subject (the App's Terms of Service).
-6.4. Special categories of personal data (race, ethnicity, political views, religious or philosophical beliefs, health, intimate life) are not requested or processed by the Operator.
+6.3. Legal grounds: Federal Law No. 152-FZ of 27 July 2006 "On Personal Data"; Federal Law No. 149-FZ of 27 July 2006 "On Information, Information Technologies and Information Protection"; the data subject's consent; a contract with the data subject (the Service's Terms of Service).
+6.4. Special categories of personal data (race, ethnicity, political views, religious or philosophical beliefs, health, intimate life) and biometric personal data are not requested or processed by the Operator.
 
 7. CONDITIONS OF PROCESSING
 7.1. Personal data is processed with the data subject's consent.
@@ -202,16 +207,19 @@ This Personal Data Processing Policy ("Policy") is drafted in accordance with Fe
 
 8. PROCEDURES FOR COLLECTION, STORAGE, TRANSFER, AND OTHER PROCESSING
 The security of personal data processed by the Operator is ensured through legal, organizational, and technical measures necessary to comply in full with the requirements of applicable data protection law.
-8.1. The Operator ensures the safety of personal data and takes all possible measures to prevent access by unauthorized persons. Data is transmitted over a secure channel (TLS) and stored in encrypted form.
+8.1. The Operator ensures the safety of personal data and takes all possible measures to prevent access by unauthorized persons. Data is transmitted over a secure channel (TLS). The Service database, uploaded files and backups are hosted on servers located in the Russian Federation (data centres in Moscow and Saint Petersburg, infrastructure of JSC "Timeweb" (Timeweb Cloud)); server access is restricted to key-based authentication, and backups are kept in the same provider's protected storage.
 8.2. The User's personal data will not be transferred to third parties except:
-— transfer to the cloud infrastructure provider (Supabase Inc.) for storage and processing;
-— transfer to sign-in providers (Apple, Google, Yandex) when the User uses the corresponding sign-in method;
-— transfer to Apple Push Notification Service for push delivery;
+— transfer to JSC "Timeweb" (Russia) — hosting and cloud infrastructure provider on which the Service database, files and backups are stored;
+— transfer to sign-in providers Apple Inc. (USA), Google LLC (USA), Yandex LLC (Russia) when the User uses the corresponding sign-in method;
+— transfer to push delivery services: Apple Push Notification Service (Apple Inc., USA) for the App; browser push services of Google LLC, Apple Inc., Mozilla Corporation (USA) for the Web Version, where the content of browser notifications is encrypted on the Operator's side;
+— transfer to Resend Inc. (USA) — e-mail delivery service, for sending service e-mails;
+— transfer to Vercel Inc. (USA) — hosting provider of the Web Version and the website bystrobarista.com: the User's requests (IP address, session cookie, data of the rendered pages) are processed by Vercel servers in transit, without being stored in Vercel databases; Vercel Analytics collects anonymized visit statistics without cookies;
+— transfer to Yandex LLC (Russia) — map service — of venue addresses and coordinates for displaying the map;
 — transfer to government authorities upon lawful request;
 — cases in which the data subject has given a separate consent to transfer data to a third party.
 The Operator does not sell personal data and does not transfer it for advertising purposes.
-8.3. If inaccuracies are found in personal data, the User can update them independently in the App (Profile section) or by sending the Operator a notice at bystrobarista@gmail.com marked "Update of personal data".
-8.4. The term of personal data processing is determined by the achievement of the purposes for which the personal data was collected, unless a different term is set by contract or by applicable law. The User may at any time withdraw consent to the processing of personal data by sending a notice to bystrobarista@gmail.com marked "Withdrawal of consent to personal data processing", or by deleting the account in Settings → Delete account. After account deletion, personal data is removed within 30 days, except for data that the Operator is legally required to retain.
+8.3. If inaccuracies are found in personal data, the User can update them independently in the Service (Profile section) or by sending the Operator a notice at bystrobarista@gmail.com marked "Update of personal data".
+8.4. The term of personal data processing is determined by the achievement of the purposes for which the personal data was collected, unless a different term is set by contract or by applicable law. The User may at any time withdraw consent to the processing of personal data by sending a notice to bystrobarista@gmail.com marked "Withdrawal of consent to personal data processing", or by deleting the account in Settings → Delete account. After account deletion, personal data is removed within 30 days, except for data that the Operator is legally required to retain; data is removed from backups when their retention period expires (no more than 14 days).
 8.5. All information collected by third-party services, including payment systems, communication tools, and other service providers, is stored and processed by those persons (Operators) in accordance with their User Agreements and Privacy Policies. The Operator is not responsible for the actions of third parties, including the service providers mentioned in this clause.
 8.6. The Operator ensures the confidentiality of personal data during processing.
 8.7. The Operator stores personal data in a form that allows identification of the subject no longer than required by the purposes of processing, unless the retention period is set by federal law or contract.
@@ -221,9 +229,11 @@ The Operator does not sell personal data and does not transfer it for advertisin
 9.1. The Operator performs collection, recording, systematization, accumulation, storage, clarification, retrieval, use, transfer, depersonalization, blocking, deletion, and destruction of personal data.
 9.2. The Operator performs automated processing of personal data with the receipt and/or transfer of the information via information and telecommunications networks.
 
-10. CROSS-BORDER TRANSFER OF PERSONAL DATA
-10.1. Before commencing cross-border transfer of personal data, the Operator is required to notify the authorized body for the protection of data subjects' rights of its intent to carry out such transfers.
-10.2. Before submitting the above notification, the Operator is required to obtain the relevant information from the foreign authorities, foreign natural persons, or foreign legal entities to whom cross-border transfer of personal data is planned.
+10. LOCALIZATION AND CROSS-BORDER TRANSFER OF PERSONAL DATA
+10.1. Recording, systematization, accumulation, storage, clarification (updating, modification) and retrieval of personal data of citizens of the Russian Federation are carried out using databases located in the Russian Federation (clause 8.1 of this Policy), in accordance with part 5 of Article 18 of the Personal Data Law.
+10.2. Cross-border transfer of personal data is carried out only to the following foreign persons and only to the extent necessary for the corresponding function of the Service: Apple Inc. and Google LLC (USA) — sign-in via Apple / Google and delivery of push notifications; Mozilla Corporation (USA) — delivery of browser push notifications; Resend Inc. (USA) — delivery of service e-mails; Vercel Inc. (USA) — in-transit processing of requests to the Web Version and the website.
+10.3. The Operator notifies the authorized body for the protection of data subjects' rights (Roskomnadzor) of its intent to carry out cross-border transfer of personal data in the manner set out in Article 12 of the Personal Data Law, and before submitting the notification obtains from the foreign persons listed above the information required by part 5 of Article 12 of the Personal Data Law.
+10.4. Personal data is not transferred to foreign persons for storage as the primary database, for advertising purposes, or for building User profiles.
 
 11. CONFIDENTIALITY OF PERSONAL DATA
 The Operator and other persons who have gained access to personal data are required not to disclose personal data to third parties and not to distribute it without the data subject's consent, unless otherwise provided by federal law.
@@ -231,5 +241,5 @@ The Operator and other persons who have gained access to personal data are requi
 12. FINAL PROVISIONS
 12.1. The User may obtain any clarifications on issues concerning the processing of personal data by contacting the Operator at bystrobarista@gmail.com.
 12.2. Any changes to the Operator's personal data processing policy will be reflected in this document. The Policy is valid indefinitely until it is replaced by a new version.
-12.3. The current version of the Policy is freely available in the App in Settings → About, and on the Internet at https://bystrobarista.com/privacy-policy/.`,
+12.3. The current version of the Policy is freely available in the App and the Web Version under Settings → Documents, and on the Internet at https://bystrobarista.com/personal-data.`,
 } as const;

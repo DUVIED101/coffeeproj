@@ -195,6 +195,28 @@ gets a row with `vault_ok = true`), account deletion, admin OTP login,
 - Rehearsal counts: 188 auth users, 168 profiles, 28 jobs, 22 messages,
   186 storage objects, 64 RLS policies, 67 triggers, 2 cron jobs, 6 vault secrets.
 
+## Legal documents
+
+The four documents in `packages/core/legal/*.ts` (RU + EN) are the single
+source for the app, the web version and the landing. Their effective dates
+are pinned in `packages/core/config/legalVersions.ts`; bumping a version
+sends every user through the re-consent gate on next sign-in, and
+`legalVersions.spec.ts` fails when a version and the headline date drift.
+The landing (`admin/src/app/{privacy,terms,consent,personal-data}/page.tsx`)
+carries a generated copy of the RU bodies: regenerate it whenever a body
+changes (the generator is the python snippet in the 2026-09 legal commit; keep
+the `BODY` string byte-identical to `ru`).
+
+The 2026-09-15 editions describe the Timeweb hosting, the reduced cross-border
+list (Apple, Google, Mozilla, Resend, Vercel) and the web cookies, so they
+must go live together with the cutover:
+
+1. Merge branch `legal/ru-hosting` in this repo and in `admin/` right after
+   the DNS switch (step 4 of §5); Vercel deploys both.
+2. Ship an iOS build from `main` (the version bump lives in core, old builds
+   keep the old texts and do not gate).
+3. Add the cross-border recipients to the Роскомнадзор notification.
+
 ## Rollback
 
 Point `api.bystrobarista.com` back at the Lithuanian VPS (185.81.166.243) and
