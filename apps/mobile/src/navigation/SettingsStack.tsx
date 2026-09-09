@@ -13,6 +13,7 @@ import { PrivacyPolicyScreen } from '../screens/settings/PrivacyPolicyScreen';
 import { PersonalDataPolicyScreen } from '../screens/settings/PersonalDataPolicyScreen';
 import { DataConsentScreen } from '../screens/settings/DataConsentScreen';
 import { SupportScreen } from '../screens/settings/SupportScreen';
+import { MyReportsScreen } from '../screens/settings/MyReportsScreen';
 import { MyDisputesScreen } from '../screens/shared/MyDisputesScreen';
 import { DisputeDetailsScreen } from '../screens/shared/DisputeDetailsScreen';
 import { DiagnosticScreen } from '../screens/settings/DiagnosticScreen';
@@ -34,6 +35,7 @@ export type SettingsStackParamList = {
   DataConsent: undefined;
   Support: undefined;
   MyDisputes: undefined;
+  MyReports: undefined;
   DisputeDetails: { applicationId?: string; disputeId?: string };
   Diagnostic: undefined;
 };
@@ -65,6 +67,7 @@ export const SettingsStack: React.FC = () => {
       <Stack.Screen name="DataConsent" component={DataConsentScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
       <Stack.Screen name="MyDisputes" component={MyDisputesScreen} />
+      <Stack.Screen name="MyReports" component={MyReportsScreen} />
       <Stack.Screen
         name="DisputeDetails"
         component={DisputeDetailsScreen}

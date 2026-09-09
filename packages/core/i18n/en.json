@@ -1493,6 +1493,7 @@
       "visibility": "Profile Visibility",
       "blockedUsers": "Blocked Users",
       "myDisputes": "My Complaints",
+      "myReports": "Abuse reports",
       "documents": "Documents",
       "terms": "Terms of Service",
       "privacyPolicy": "Privacy Policy",
@@ -1678,6 +1679,26 @@
       "aborted": "Request cancelled"
     },
     "unknown": "Something went wrong. Please try again"
+  },
+  "myReports": {
+    "title": "Abuse reports",
+    "empty": "You have not filed any abuse reports yet",
+    "pending": "Under moderator review",
+    "reply": "Moderator reply",
+    "target": {
+      "user": "about a user",
+      "business": "about a business",
+      "branch": "about a branch",
+      "job": "about a job",
+      "message": "about a message",
+      "review": "about a review"
+    },
+    "outcome": {
+      "no_violation": "No violation found",
+      "warning": "Warning issued",
+      "suspension": "Account suspended",
+      "ban": "Account banned"
+    }
   },
   "report": {
     "buttonLabel": "Report",

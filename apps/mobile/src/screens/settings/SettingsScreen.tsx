@@ -187,6 +187,12 @@ export const SettingsScreen: React.FC = () => {
             onPress={() => navigation.navigate('MyDisputes')}
             showChevron
           />
+          <View style={styles.separator} />
+          <SettingsRow
+            label={t('settings.items.myReports')}
+            onPress={() => navigation.navigate('MyReports')}
+            showChevron
+          />
         </View>
 
         <Text style={styles.sectionHeader}>{t('settings.sections.dangerZone').toUpperCase()}</Text>

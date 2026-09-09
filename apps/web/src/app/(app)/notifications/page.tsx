@@ -29,6 +29,9 @@ import {
   mdiMessageTextOutline,
   mdiStarOutline,
   mdiTrashCanOutline,
+  mdiShieldCheckOutline,
+  mdiShieldAccountOutline,
+  mdiBullhornOutline,
 } from "@mdi/js";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import type { ConversationId } from "@bystrobarista/core/types/chat";
@@ -105,6 +108,9 @@ const ICON_BY_KIND: Record<NotificationKind, string> = {
   employment_end_requested: mdiAccountAlertOutline,
   employment_ended: mdiAccountOffOutline,
   job_start_reminder: mdiCalendarClock,
+  report_resolved: mdiShieldCheckOutline,
+  admin_dm: mdiShieldAccountOutline,
+  broadcast: mdiBullhornOutline,
 };
 
 function NotificationCard({

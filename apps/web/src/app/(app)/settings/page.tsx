@@ -176,6 +176,7 @@ export default function SettingsPage(): React.JSX.Element {
 
       <Section title={t("settings.sections.activity")}>
         <Row label={t("settings.items.myDisputes")} href="/disputes" />
+        <Row label={t("settings.items.myReports")} href="/settings/reports" />
       </Section>
 
       <Section title={t("settings.sections.dangerZone")}>

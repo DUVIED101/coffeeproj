@@ -38,7 +38,10 @@ type NotificationKind =
   | "employment_start_due"
   | "employment_end_requested"
   | "employment_ended"
-  | "job_start_reminder";
+  | "job_start_reminder"
+  | "report_resolved"
+  | "admin_dm"
+  | "broadcast";
 
 type GatedKind =
   | "new_message"
@@ -161,6 +164,9 @@ const KNOWN_KINDS: ReadonlySet<NotificationKind> = new Set<NotificationKind>([
   "employment_end_requested",
   "employment_ended",
   "job_start_reminder",
+  "report_resolved",
+  "admin_dm",
+  "broadcast",
 ]);
 
 const JWT_TTL_SECONDS = 3300;

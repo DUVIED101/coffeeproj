@@ -72,6 +72,11 @@ export const notificationHref = (
     }
     case "dispute_filed":
       return data.disputeId ? `/disputes/${data.disputeId}` : "/disputes";
+    case "report_resolved":
+      return "/settings/reports";
+    case "admin_dm":
+    case "broadcast":
+      return "/notifications";
     default:
       return home;
   }

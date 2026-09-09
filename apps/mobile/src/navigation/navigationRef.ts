@@ -131,6 +131,16 @@ export const dispatchPayload = (payload: PushNotificationPayload): void => {
     return;
   }
 
+  if (kind === 'report_resolved') {
+    navigateTab('Profile', { screen: 'Settings', params: { screen: 'MyReports' } });
+    return;
+  }
+
+  if (kind === 'admin_dm' || kind === 'broadcast') {
+    navigateTab('Profile', { screen: 'NotificationFeed' });
+    return;
+  }
+
   if (kind === 'dispute_filed') {
     if (disputeId) {
       navigateTab('Profile', { screen: 'DisputeDetails', params: { disputeId } });

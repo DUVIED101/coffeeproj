@@ -82,6 +82,9 @@ const ICON_BY_KIND: Record<NotificationKind, string> = {
   employment_end_requested: 'account-off-outline',
   employment_ended: 'account-off-outline',
   job_start_reminder: 'calendar-clock',
+  report_resolved: 'shield-check-outline',
+  admin_dm: 'shield-account-outline',
+  broadcast: 'bullhorn-outline',
 };
 
 const formatTimestamp = (date: Date): string => {

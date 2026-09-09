@@ -1,31 +1,22 @@
 // Barista Profile Types
 
-import type { Equipment } from "./business";
-import type { CityCode } from "./city";
-import type { WorkExperience } from "./workExperience";
+import type { Equipment } from './business';
+import type { CityCode } from './city';
+import type { WorkExperience } from './workExperience';
 
-export type ShiftTime = "morning" | "afternoon" | "evening" | "night";
+export type ShiftTime = 'morning' | 'afternoon' | 'evening' | 'night';
 
-export type DayOfWeek = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+export type DayOfWeek = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 
-export type WorkloadType =
-  "full_time" | "part_time" | "freelance" | "weekends_only" | "flexible";
+export type WorkloadType = 'full_time' | 'part_time' | 'freelance' | 'weekends_only' | 'flexible';
 
-export const DAYS_OF_WEEK: DayOfWeek[] = [
-  "mon",
-  "tue",
-  "wed",
-  "thu",
-  "fri",
-  "sat",
-  "sun",
-];
+export const DAYS_OF_WEEK: DayOfWeek[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 export const WORKLOAD_TYPES: WorkloadType[] = [
-  "full_time",
-  "part_time",
-  "freelance",
-  "weekends_only",
-  "flexible",
+  'full_time',
+  'part_time',
+  'freelance',
+  'weekends_only',
+  'flexible',
 ];
 
 export interface BaristaProfile {
@@ -97,10 +88,7 @@ export interface CreateBaristaProfileData {
 }
 
 export interface UpdateBaristaProfileData extends Partial<
-  Omit<
-    BaristaProfile,
-    "id" | "userId" | "createdAt" | "updatedAt" | "profileCompleteness"
-  >
+  Omit<BaristaProfile, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'profileCompleteness'>
 > {}
 
 export type BaristaFilters = {

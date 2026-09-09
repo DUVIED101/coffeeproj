@@ -90,6 +90,7 @@ const EXPECTED_MAPPED_ROW: BaristaProfile = {
   availableFromDate: '2026-05-01',
   availableDays: ['mon', 'tue', 'wed'] as BaristaProfile['availableDays'],
   workloadTypes: ['part_time', 'flexible'] as BaristaProfile['workloadTypes'],
+  preferredSchedulePatterns: [],
   portfolioPhotos: ['https://cdn.example/photo-1.jpg'],
   isActivelyLooking: true,
   profileCompleteness: 85,

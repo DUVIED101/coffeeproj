@@ -11,8 +11,21 @@ export class ReportService {
       reasonCode: row.reason_code,
       details: row.details ?? null,
       status: row.status,
+      outcome: row.outcome ?? null,
+      resolutionNote: row.resolution_note ?? null,
+      resolvedAt: row.resolved_at ?? null,
       createdAt: row.created_at,
     };
+  }
+
+  /** The caller's own reports, newest first (RLS scopes the select). */
+  static async listMyReports(): Promise<UserReport[]> {
+    const { data, error } = await supabase
+      .from('user_reports')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(row => this.mapDatabaseReport(row));
   }
 
   /**
