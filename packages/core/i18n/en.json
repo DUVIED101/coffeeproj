@@ -1596,6 +1596,8 @@
       "supportTitle": "Support",
       "supportEmail": "bystrobarista@gmail.com",
       "supportContactHint": "Contact us:",
+      "supportTelegramUrl": "https://t.me/bystrobarista",
+      "supportTelegramLabel": "Telegram: @bystrobarista",
       "appVersion": "App Version"
     }
   },
@@ -1691,6 +1693,9 @@
       "other": "Other"
     },
     "detailsPlaceholder": "Additional details (optional, up to 500 chars)",
+    "attachmentsPrefix": "If your report needs photos or screenshots, ",
+    "attachmentsLink": "contact support",
+    "attachmentsSuffix": ".",
     "submit": "Submit",
     "cancel": "Cancel",
     "success": "Thanks. Your report was sent to moderators.",

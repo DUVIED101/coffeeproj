@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getPlatform } from "@bystrobarista/core/platform";
@@ -68,6 +69,17 @@ export function ReportDialog({
         </h2>
         <p className="mb-3 text-sm text-ink-secondary">
           {t("report.subtitle")}
+        </p>
+        <p className="mb-3 rounded-input bg-bg-secondary px-3 py-2 text-xs text-ink-secondary">
+          {t("report.attachmentsPrefix")}
+          <Link
+            href="/settings/support"
+            onClick={onClose}
+            className="font-medium text-primary underline underline-offset-2"
+          >
+            {t("report.attachmentsLink")}
+          </Link>
+          {t("report.attachmentsSuffix")}
         </p>
         <p className="mb-2 text-xs font-medium text-ink-secondary">
           {t("report.chooseReason")}

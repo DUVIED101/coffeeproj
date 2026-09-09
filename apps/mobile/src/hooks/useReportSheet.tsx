@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -13,6 +13,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { ReportService } from '@bystrobarista/core/services/ReportService';
+import { navigateTab } from '../navigation/navigationRef';
 import type { ReportReasonCode, ReportTargetType } from '@bystrobarista/core/types';
 import { showSuccessToast } from '../stores/errorToastStore';
 import { handleApiError } from '../utils/handleApiError';
@@ -83,6 +84,19 @@ const ReportSheet = memo<SheetProps>(({ target, onClose }) => {
         <View style={styles.sheet}>
           <Text style={styles.title}>{t('report.title')}</Text>
           <Text style={styles.subtitle}>{t('report.subtitle')}</Text>
+          <Text style={styles.notice}>
+            {t('report.attachmentsPrefix')}
+            <Text
+              style={styles.noticeLink}
+              accessibilityRole="link"
+              onPress={() => {
+                handleClose();
+                navigateTab('Profile', { screen: 'Settings', params: { screen: 'Support' } });
+              }}>
+              {t('report.attachmentsLink')}
+            </Text>
+            {t('report.attachmentsSuffix')}
+          </Text>
 
           <Text style={styles.sectionLabel}>{t('report.chooseReason')}</Text>
           <View style={styles.reasonGrid}>
@@ -185,6 +199,20 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     marginTop: 4,
     marginBottom: 16,
+  },
+  notice: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    backgroundColor: COLORS.backgroundSecondary,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 16,
+  },
+  noticeLink: {
+    color: COLORS.primary,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   sectionLabel: {
     fontSize: 13,

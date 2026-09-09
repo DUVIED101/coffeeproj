@@ -16,12 +16,22 @@ export default function SupportPage(): React.JSX.Element {
       <p className="mb-4 text-sm text-ink-secondary">
         {t("settings.legal.supportContactHint")}
       </p>
-      <a
-        href={`mailto:${email}`}
-        className="inline-block rounded-card bg-primary px-6 py-3 text-sm font-semibold text-white"
-      >
-        {email}
-      </a>
+      <div className="flex flex-wrap gap-3">
+        <a
+          href={`mailto:${email}`}
+          className="inline-block rounded-card bg-primary px-6 py-3 text-sm font-semibold text-white"
+        >
+          {email}
+        </a>
+        <a
+          href={t("settings.legal.supportTelegramUrl")}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block rounded-card border border-primary px-6 py-3 text-sm font-semibold text-primary"
+        >
+          {t("settings.legal.supportTelegramLabel")}
+        </a>
+      </div>
       <p className="mt-8 text-xs text-ink-secondary">
         {t("settings.legal.appVersion")}: {WEB_APP_VERSION}
       </p>

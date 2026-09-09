@@ -16,6 +16,14 @@ export const SupportScreen: React.FC = () => {
 
   const email = t('settings.legal.supportEmail');
 
+  const openTelegram = async () => {
+    try {
+      await Linking.openURL(t('settings.legal.supportTelegramUrl'));
+    } catch (err) {
+      console.error('Error opening Telegram:', err);
+    }
+  };
+
   const openMail = async () => {
     try {
       await Linking.openURL(`mailto:${email}`);
@@ -31,6 +39,11 @@ export const SupportScreen: React.FC = () => {
         <View style={styles.card}>
           <TouchableOpacity activeOpacity={0.6} style={styles.row} onPress={openMail}>
             <Text style={styles.rowLabel}>{email}</Text>
+            <Text style={styles.chevron}>{'>'}</Text>
+          </TouchableOpacity>
+          <View style={styles.separator} />
+          <TouchableOpacity activeOpacity={0.6} style={styles.row} onPress={openTelegram}>
+            <Text style={styles.rowLabel}>{t('settings.legal.supportTelegramLabel')}</Text>
             <Text style={styles.chevron}>{'>'}</Text>
           </TouchableOpacity>
         </View>
@@ -72,6 +85,11 @@ const styles = StyleSheet.create({
   rowLabel: {
     fontSize: 16,
     color: COLORS.primary,
+  },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: COLORS.border,
+    marginLeft: 16,
   },
   chevron: {
     fontSize: 18,

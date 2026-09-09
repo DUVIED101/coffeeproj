@@ -1617,6 +1617,8 @@
       "supportTitle": "Поддержка",
       "supportEmail": "bystrobarista@gmail.com",
       "supportContactHint": "Свяжитесь с нами:",
+      "supportTelegramUrl": "https://t.me/bystrobarista",
+      "supportTelegramLabel": "Telegram: @bystrobarista",
       "appVersion": "Версия приложения"
     }
   },
@@ -1712,6 +1714,9 @@
       "other": "Другое"
     },
     "detailsPlaceholder": "Подробности (необязательно, до 500 знаков)",
+    "attachmentsPrefix": "Если к жалобе нужно приложить фото или скриншоты, ",
+    "attachmentsLink": "обратитесь в службу поддержки",
+    "attachmentsSuffix": ".",
     "submit": "Отправить",
     "cancel": "Отмена",
     "success": "Спасибо. Жалоба отправлена модераторам.",
