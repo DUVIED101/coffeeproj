@@ -62,11 +62,11 @@ export function AppHeader(): React.JSX.Element {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-white">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 md:gap-4">
+      <div className="group mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 md:gap-4">
         <BackBar />
         <Link
           href="/"
-          className="flex min-w-0 items-center gap-2 text-lg font-bold text-primary"
+          className="flex shrink-0 items-center gap-2 text-lg font-bold text-primary"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -74,7 +74,11 @@ export function AppHeader(): React.JSX.Element {
             alt=""
             className="h-7 w-7 shrink-0 rounded-full"
           />
-          <span className="truncate">БыстроБариста</span>
+          {/* Whole word or nothing: on a phone with a back arrow present the
+              name no longer fits, so only the logo stays. */}
+          <span className="whitespace-nowrap max-sm:group-has-[[data-back]]:hidden">
+            БыстроБариста
+          </span>
         </Link>
         <DesktopNav />
         <div className="flex shrink-0 items-center gap-2">

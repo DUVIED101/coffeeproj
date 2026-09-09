@@ -23,6 +23,7 @@ export function BackLink({ fallbackHref, label }: Props): React.JSX.Element {
   return (
     <button
       type="button"
+      data-back
       onClick={goBack}
       aria-label={label}
       className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full border border-line bg-white px-2 text-sm font-medium text-ink-secondary hover:text-ink lg:px-3"
