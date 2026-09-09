@@ -1,14 +1,14 @@
-"use client";
-
+import type { Metadata } from "next";
 import React from "react";
-import { DATA_CONSENT_BODY } from "@bystrobarista/core/legal/dataConsent";
-import { LegalDocument } from "@/components/LegalDocument";
+import { OG_IMAGE } from "@/lib/site";
+import { DataConsentDocument } from "./DataConsentDocument";
 
-export default function PublicDataConsentPage(): React.JSX.Element {
-  return (
-    <LegalDocument
-      titleKey="settings.legal.dataConsentTitle"
-      body={DATA_CONSENT_BODY}
-    />
-  );
+export const metadata: Metadata = {
+  title: "Согласие на обработку персональных данных",
+  alternates: { canonical: "/data-consent" },
+  openGraph: { url: "/data-consent", images: [OG_IMAGE] },
+};
+
+export default function Page(): React.JSX.Element {
+  return <DataConsentDocument />;
 }

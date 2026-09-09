@@ -1,14 +1,14 @@
-"use client";
-
+import type { Metadata } from "next";
 import React from "react";
-import { PERSONAL_DATA_POLICY_BODY } from "@bystrobarista/core/legal/personalDataPolicy";
-import { LegalDocument } from "@/components/LegalDocument";
+import { OG_IMAGE } from "@/lib/site";
+import { PersonalDataDocument } from "./PersonalDataDocument";
 
-export default function PublicPersonalDataPage(): React.JSX.Element {
-  return (
-    <LegalDocument
-      titleKey="settings.legal.personalDataPolicyTitle"
-      body={PERSONAL_DATA_POLICY_BODY}
-    />
-  );
+export const metadata: Metadata = {
+  title: "Политика обработки персональных данных",
+  alternates: { canonical: "/personal-data" },
+  openGraph: { url: "/personal-data", images: [OG_IMAGE] },
+};
+
+export default function Page(): React.JSX.Element {
+  return <PersonalDataDocument />;
 }

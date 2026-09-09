@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
-
-const SITE = "https://app.bystrobarista.com";
+import { SITE_URL } from "@/lib/site";
 
 // Only publicly reachable pages belong here. Everything behind auth is
 // disallowed in robots.ts and must never be listed.
@@ -15,7 +14,7 @@ const PUBLIC_PATHS = [
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
   return PUBLIC_PATHS.map((path) => ({
-    url: `${SITE}${path}`,
+    url: `${SITE_URL}${path}`,
     lastModified,
     changeFrequency: path === "/" ? "weekly" : "yearly",
     priority: path === "/" ? 1 : 0.3,

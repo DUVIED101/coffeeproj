@@ -2,17 +2,24 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import React from "react";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "БыстроБариста",
-    template: "%s — БыстроБариста",
+    default: SITE_NAME,
+    template: `%s — ${SITE_NAME}`,
   },
-  description:
-    "Биржа смен для бариста и кофеен: находите смены рядом, публикуйте вакансии, договаривайтесь в чате.",
-  metadataBase: new URL("https://app.bystrobarista.com"),
+  description: SITE_DESCRIPTION,
+  metadataBase: new URL(SITE_URL),
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    siteName: SITE_NAME,
+    url: "/",
+  },
+  twitter: { card: "summary_large_image" },
   manifest: "/manifest.webmanifest",
   // Favicon and Apple touch icon come from app/icon.png and app/apple-icon.png
   // (Next file conventions); the PWA icons live in the manifest.

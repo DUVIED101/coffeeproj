@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import React from "react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 // RSC root: authed users go straight to their home surface; everyone else
 // sees the public landing (SEO-indexed, no client JS needed).

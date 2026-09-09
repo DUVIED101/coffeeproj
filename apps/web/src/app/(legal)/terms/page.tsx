@@ -1,11 +1,14 @@
-"use client";
-
+import type { Metadata } from "next";
 import React from "react";
-import { TERMS_BODY } from "@bystrobarista/core/legal/terms";
-import { LegalDocument } from "@/components/LegalDocument";
+import { OG_IMAGE } from "@/lib/site";
+import { TermsDocument } from "./TermsDocument";
 
-export default function PublicTermsPage(): React.JSX.Element {
-  return (
-    <LegalDocument titleKey="settings.legal.termsTitle" body={TERMS_BODY} />
-  );
+export const metadata: Metadata = {
+  title: "Условия использования",
+  alternates: { canonical: "/terms" },
+  openGraph: { url: "/terms", images: [OG_IMAGE] },
+};
+
+export default function Page(): React.JSX.Element {
+  return <TermsDocument />;
 }
