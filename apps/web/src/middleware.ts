@@ -23,6 +23,7 @@ const PUBLIC_PATHS = [
   "/data-consent",
   "/robots.txt",
   "/sitemap.xml",
+  "/opengraph-image",
 ];
 
 // Role scoping mirrors mobile's MainTabs split. Shared paths (/jobs,
