@@ -53,6 +53,7 @@ import type {
   WorkloadType,
 } from '@bystrobarista/core/types/baristaProfile';
 import { DAYS_OF_WEEK, WORKLOAD_TYPES } from '@bystrobarista/core/types/baristaProfile';
+import { SCHEDULE_PATTERN_PRESETS } from '@bystrobarista/core/config/schedulePatterns';
 import { DEFAULT_CITY, toCityCode, type CityCode } from '@bystrobarista/core/types/city';
 import type { BaristaProfileId } from '@bystrobarista/core/types/ids';
 import {
@@ -118,6 +119,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const [showAvailableFromPicker, setShowAvailableFromPicker] = useState(false);
   const [availableDays, setAvailableDays] = useState<DayOfWeek[]>([]);
   const [workloadTypes, setWorkloadTypes] = useState<WorkloadType[]>([]);
+  const [preferredSchedulePatterns, setPreferredSchedulePatterns] = useState<string[]>([]);
 
   const [workExperiences, setWorkExperiences] = useState<WorkExperienceDraft[]>([]);
   const [workExperienceErrors, setWorkExperienceErrors] = useState<
@@ -171,6 +173,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         setMedicalBookExpiresOn(profile.medicalBookExpiresOn ?? '');
         setAvailableFromDate(profile.availableFromDate ?? '');
         setAvailableDays(profile.availableDays ?? []);
+        setPreferredSchedulePatterns(profile.preferredSchedulePatterns ?? []);
         setWorkloadTypes(profile.workloadTypes ?? []);
 
         const existingExperiences = await WorkExperienceService.listForProfile(
@@ -216,6 +219,12 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const toggleWorkloadType = useCallback((workload: WorkloadType) => {
     setWorkloadTypes(prev =>
       prev.includes(workload) ? prev.filter(w => w !== workload) : [...prev, workload]
+    );
+  }, []);
+
+  const toggleSchedulePattern = useCallback((pattern: string) => {
+    setPreferredSchedulePatterns(prev =>
+      prev.includes(pattern) ? prev.filter(p => p !== pattern) : [...prev, pattern]
     );
   }, []);
 
@@ -317,6 +326,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         availableFromDate: availableFromDate || undefined,
         availableDays,
         workloadTypes,
+        preferredSchedulePatterns,
       };
 
       let profileId: BaristaProfileId;
@@ -751,6 +761,30 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                       availableDays.includes(day) && styles.dayChipTextSelected,
                     ]}>
                     {t(`dayOfWeek.${day}`)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.label}>{t('baristaSetup.fieldSchedulePatterns')}</Text>
+            <Text style={styles.medicalBookHelper}>
+              {t('baristaSetup.fieldSchedulePatternsHint')}
+            </Text>
+            <View style={styles.chipsContainer}>
+              {SCHEDULE_PATTERN_PRESETS.map(pattern => (
+                <TouchableOpacity
+                  key={pattern}
+                  style={[
+                    styles.chip,
+                    preferredSchedulePatterns.includes(pattern) && styles.chipSelected,
+                  ]}
+                  onPress={() => toggleSchedulePattern(pattern)}>
+                  <Text
+                    style={[
+                      styles.chipText,
+                      preferredSchedulePatterns.includes(pattern) && styles.chipTextSelected,
+                    ]}>
+                    {pattern}
                   </Text>
                 </TouchableOpacity>
               ))}

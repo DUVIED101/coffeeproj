@@ -480,6 +480,19 @@ export const ViewBaristaProfileScreen: React.FC<Props> = ({ navigation, route })
           </View>
         )}
 
+        {profile.preferredSchedulePatterns.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('baristaSetup.fieldSchedulePatterns')}</Text>
+            <View style={styles.chipsContainer}>
+              {profile.preferredSchedulePatterns.map(pattern => (
+                <View key={pattern} style={styles.chip}>
+                  <Text style={styles.chipText}>{pattern}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
         {profile.portfolioPhotos.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('viewBarista.portfolio')}</Text>

@@ -344,6 +344,21 @@ export default function ViewBaristaProfilePage(): React.JSX.Element {
         </div>
       )}
 
+      {profile.preferredSchedulePatterns.length > 0 && (
+        <div className="mt-4 rounded-card border border-line bg-white p-4">
+          <h2 className={sectionTitle}>
+            {t("baristaSetup.fieldSchedulePatterns")}
+          </h2>
+          <div className="flex flex-wrap gap-1.5">
+            {profile.preferredSchedulePatterns.map((pattern) => (
+              <span key={pattern} className={chipClass}>
+                {pattern}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {profile.portfolioPhotos.length > 0 && (
         <div className="mt-4 rounded-card border border-line bg-white p-4">
           <h2 className={sectionTitle}>{t("viewBarista.portfolio")}</h2>

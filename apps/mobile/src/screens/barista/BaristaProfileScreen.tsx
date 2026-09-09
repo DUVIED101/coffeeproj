@@ -71,6 +71,7 @@ import type {
   WorkloadType,
 } from '@bystrobarista/core/types/baristaProfile';
 import { DAYS_OF_WEEK, WORKLOAD_TYPES } from '@bystrobarista/core/types/baristaProfile';
+import { SCHEDULE_PATTERN_PRESETS } from '@bystrobarista/core/config/schedulePatterns';
 import {
   DEFAULT_CITY,
   toCityCode,
@@ -99,11 +100,7 @@ type Props = {
 };
 
 type EditableSectionKey =
-  | 'personal'
-  | 'professional'
-  | 'workExperience'
-  | 'preferences'
-  | 'portfolio';
+  'personal' | 'professional' | 'workExperience' | 'preferences' | 'portfolio';
 
 const COMPLETENESS_TO_SECTION: Record<CompletenessItemKey, EditableSectionKey> = {
   basicInfo: 'personal',
@@ -240,6 +237,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [showAvailableFromPicker, setShowAvailableFromPicker] = useState(false);
   const [availableDays, setAvailableDays] = useState<DayOfWeek[]>([]);
   const [workloadTypes, setWorkloadTypes] = useState<WorkloadType[]>([]);
+  const [preferredSchedulePatterns, setPreferredSchedulePatterns] = useState<string[]>([]);
   const [workExperienceDrafts, setWorkExperienceDrafts] = useState<WorkExperienceDraft[]>([]);
   const [workExperienceErrors, setWorkExperienceErrors] = useState<
     ReadonlyArray<ReadonlyArray<WorkExperienceFieldError>>
@@ -375,6 +373,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
     setAvailableFromDate(profileData.availableFromDate ?? '');
     setAvailableDays(profileData.availableDays ?? []);
     setWorkloadTypes(profileData.workloadTypes ?? []);
+    setPreferredSchedulePatterns(profileData.preferredSchedulePatterns ?? []);
     setMedicalBookExpiresOn(profileData.medicalBookExpiresOn ?? '');
     setIsActivelyLooking(profileData.isActivelyLooking);
     setWorkExperienceDrafts(
@@ -406,6 +405,12 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   const toggleAvailableDay = useCallback((day: DayOfWeek) => {
     setAvailableDays(prev => (prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]));
+  }, []);
+
+  const toggleSchedulePattern = useCallback((pattern: string) => {
+    setPreferredSchedulePatterns(prev =>
+      prev.includes(pattern) ? prev.filter(p => p !== pattern) : [...prev, pattern]
+    );
   }, []);
 
   const toggleWorkloadType = useCallback((workload: WorkloadType) => {
@@ -671,6 +676,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
         availableFromDate: availableFromDate || undefined,
         availableDays,
         workloadTypes,
+        preferredSchedulePatterns,
         isActivelyLooking,
       });
 
@@ -1408,6 +1414,30 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                     </TouchableOpacity>
                   ))}
                 </View>
+
+                <Text style={styles.label}>{t('baristaSetup.fieldSchedulePatterns')}</Text>
+                <Text style={styles.medicalBookHelper}>
+                  {t('baristaSetup.fieldSchedulePatternsHint')}
+                </Text>
+                <View style={styles.chipsContainer}>
+                  {SCHEDULE_PATTERN_PRESETS.map(pattern => (
+                    <TouchableOpacity
+                      key={pattern}
+                      style={[
+                        styles.chip,
+                        preferredSchedulePatterns.includes(pattern) && styles.chipSelected,
+                      ]}
+                      onPress={() => toggleSchedulePattern(pattern)}>
+                      <Text
+                        style={[
+                          styles.chipText,
+                          preferredSchedulePatterns.includes(pattern) && styles.chipTextSelected,
+                        ]}>
+                        {pattern}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </>
             ) : (
               (() => {
@@ -1419,6 +1449,7 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                 const hasAvailableFrom = !!profile.availableFromDate;
                 const hasWorkload = profile.workloadTypes.length > 0;
                 const hasDays = profile.availableDays.length > 0;
+                const hasSchedule = profile.preferredSchedulePatterns.length > 0;
                 if (
                   !hasMetro &&
                   !hasShifts &&
@@ -1522,6 +1553,20 @@ export const BaristaProfileScreen: React.FC<Props> = ({ navigation }) => {
                               </View>
                             );
                           })}
+                        </View>
+                      </>
+                    )}
+                    {hasSchedule && (
+                      <>
+                        <Text style={styles.label}>{t('baristaSetup.fieldSchedulePatterns')}</Text>
+                        <View style={styles.chipsContainer}>
+                          {profile.preferredSchedulePatterns.map(pattern => (
+                            <View key={pattern} style={[styles.chip, styles.chipSelected]}>
+                              <Text style={[styles.chipText, styles.chipTextSelected]}>
+                                {pattern}
+                              </Text>
+                            </View>
+                          ))}
                         </View>
                       </>
                     )}

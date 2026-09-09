@@ -388,7 +388,9 @@
     "fieldAvailableFrom": "Когда готов выйти",
     "fieldAvailableFromPlaceholder": "Выберите дату",
     "fieldWorkloadTypes": "Формат работы",
-    "fieldAvailableDays": "Дни недели"
+    "fieldAvailableDays": "Дни недели",
+    "fieldSchedulePatterns": "Предпочтительный график",
+    "fieldSchedulePatternsHint": "Рабочие дни / выходные, например 5/2"
   },
   "baristaProfileScreen": {
     "title": "Профиль",

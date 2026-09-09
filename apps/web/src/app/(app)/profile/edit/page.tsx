@@ -10,6 +10,7 @@ import { WorkExperienceService } from "@bystrobarista/core/services/WorkExperien
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import { EQUIPMENT_CATEGORIES } from "@bystrobarista/core/config/constants";
 import { METRO_ANY } from "@bystrobarista/core/config/metroFilter";
+import { SCHEDULE_PATTERN_PRESETS } from "@bystrobarista/core/config/schedulePatterns";
 import {
   DAYS_OF_WEEK,
   WORKLOAD_TYPES,
@@ -120,6 +121,7 @@ function BaristaProfileEditWizard(): React.JSX.Element {
   const [availableFromDate, setAvailableFromDate] = useState("");
   const [availableDays, setAvailableDays] = useState<DayOfWeek[]>([]);
   const [workloadTypes, setWorkloadTypes] = useState<WorkloadType[]>([]);
+  const [schedulePatterns, setSchedulePatterns] = useState<string[]>([]);
   const [certifications, setCertifications] = useState<string[]>([]);
   const [certDraft, setCertDraft] = useState("");
   const [workExperiences, setWorkExperiences] = useState<WorkExperienceDraft[]>(
@@ -182,6 +184,7 @@ function BaristaProfileEditWizard(): React.JSX.Element {
           setAvailableFromDate(profile.availableFromDate ?? "");
           setAvailableDays(profile.availableDays ?? []);
           setWorkloadTypes(profile.workloadTypes ?? []);
+          setSchedulePatterns(profile.preferredSchedulePatterns ?? []);
           const experiences = await WorkExperienceService.listForProfile(
             profile.id as BaristaProfileId,
           );
@@ -301,6 +304,7 @@ function BaristaProfileEditWizard(): React.JSX.Element {
         availableFromDate: availableFromDate || undefined,
         availableDays,
         workloadTypes,
+        preferredSchedulePatterns: schedulePatterns,
       };
       const profile = existingProfile
         ? await BaristaProfileService.updateProfile(user.id, profileData)
@@ -620,6 +624,28 @@ function BaristaProfileEditWizard(): React.JSX.Element {
                     className={chip(availableDays.includes(day))}
                   >
                     {t(`dayOfWeek.${day}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className={sectionLabel}>
+                {t("baristaSetup.fieldSchedulePatterns")}
+              </span>
+              <span className="text-xs text-ink-secondary">
+                {t("baristaSetup.fieldSchedulePatternsHint")}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {SCHEDULE_PATTERN_PRESETS.map((pattern) => (
+                  <button
+                    key={pattern}
+                    type="button"
+                    onClick={() =>
+                      setSchedulePatterns(toggleIn(schedulePatterns, pattern))
+                    }
+                    className={chip(schedulePatterns.includes(pattern))}
+                  >
+                    {pattern}
                   </button>
                 ))}
               </div>

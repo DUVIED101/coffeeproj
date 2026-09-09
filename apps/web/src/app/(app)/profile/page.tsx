@@ -14,6 +14,7 @@ import { ReviewService } from "@bystrobarista/core/services/ReviewService";
 import { WorkExperienceService } from "@bystrobarista/core/services/WorkExperienceService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import { EQUIPMENT_CATEGORIES } from "@bystrobarista/core/config/constants";
+import { SCHEDULE_PATTERN_PRESETS } from "@bystrobarista/core/config/schedulePatterns";
 import {
   METRO_ANY,
   isMetroAnySelection,
@@ -124,6 +125,7 @@ type Form = {
   availableFromDate: string;
   availableDays: DayOfWeek[];
   workloadTypes: WorkloadType[];
+  schedulePatterns: string[];
   isActivelyLooking: boolean;
   workExperiences: WorkExperienceDraft[];
 };
@@ -148,6 +150,7 @@ const formFromProfile = (
   availableFromDate: profile.availableFromDate ?? "",
   availableDays: profile.availableDays ?? [],
   workloadTypes: profile.workloadTypes ?? [],
+  schedulePatterns: profile.preferredSchedulePatterns ?? [],
   isActivelyLooking: profile.isActivelyLooking,
   workExperiences: experiences.map((e) => ({
     id: e.id,
@@ -300,6 +303,7 @@ export default function ProfilePage(): React.JSX.Element {
         availableFromDate: form.availableFromDate || undefined,
         availableDays: form.availableDays,
         workloadTypes: form.workloadTypes,
+        preferredSchedulePatterns: form.schedulePatterns,
         isActivelyLooking: form.isActivelyLooking,
       });
       await WorkExperienceService.replaceAll(
@@ -1050,6 +1054,31 @@ export default function ProfilePage(): React.JSX.Element {
                     </button>
                   ))}
                 </div>
+                <span className={fieldLabel}>
+                  {t("baristaSetup.fieldSchedulePatterns")}
+                </span>
+                <span className="block text-xs text-ink-secondary">
+                  {t("baristaSetup.fieldSchedulePatternsHint")}
+                </span>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  {SCHEDULE_PATTERN_PRESETS.map((pattern) => (
+                    <button
+                      key={pattern}
+                      type="button"
+                      onClick={() =>
+                        patch({
+                          schedulePatterns: toggleIn(
+                            form.schedulePatterns,
+                            pattern,
+                          ),
+                        })
+                      }
+                      className={chip(form.schedulePatterns.includes(pattern))}
+                    >
+                      {pattern}
+                    </button>
+                  ))}
+                </div>
                 <label className="mt-4 flex cursor-pointer items-center justify-between border-t border-line pt-3 text-sm font-medium">
                   {t("baristaProfileScreen.actively")}
                   <input
@@ -1067,7 +1096,8 @@ export default function ProfilePage(): React.JSX.Element {
               profile.hourlyRateMin == null &&
               !profile.availableFromDate &&
               profile.workloadTypes.length === 0 &&
-              profile.availableDays.length === 0 ? (
+              profile.availableDays.length === 0 &&
+              profile.preferredSchedulePatterns.length === 0 ? (
               <p className="text-sm text-ink-secondary">
                 {t("common.notSpecified")}
               </p>
@@ -1140,6 +1170,16 @@ export default function ProfilePage(): React.JSX.Element {
                       {profile.availableDays
                         .map((d) => t(`dayOfWeek.${d}`))
                         .join(", ")}
+                    </p>
+                  </>
+                )}
+                {profile.preferredSchedulePatterns.length > 0 && (
+                  <>
+                    <p className={label}>
+                      {t("baristaSetup.fieldSchedulePatterns")}
+                    </p>
+                    <p className="text-sm">
+                      {profile.preferredSchedulePatterns.join(", ")}
                     </p>
                   </>
                 )}

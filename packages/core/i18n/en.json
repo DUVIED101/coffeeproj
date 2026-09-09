@@ -384,7 +384,9 @@
     "fieldAvailableFrom": "Ready to start from",
     "fieldAvailableFromPlaceholder": "Pick a date",
     "fieldWorkloadTypes": "Workload",
-    "fieldAvailableDays": "Available days"
+    "fieldAvailableDays": "Available days",
+    "fieldSchedulePatterns": "Preferred schedule",
+    "fieldSchedulePatternsHint": "Working days / days off, e.g. 5/2"
   },
   "baristaProfileScreen": {
     "title": "Profile",

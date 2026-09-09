@@ -1,28 +1,30 @@
-import { supabase } from '../config/supabase';
-import { getPlatform } from '../platform';
+import { supabase } from "../config/supabase";
+import { getPlatform } from "../platform";
 import type {
   BaristaProfile,
   CreateBaristaProfileData,
   ReliabilityScore,
   UpdateBaristaProfileData,
-} from '@bystrobarista/core/types/baristaProfile';
-import type { UserId } from '@bystrobarista/core/types/ids';
-import { canAddPhoto, PHOTO_LIMIT } from '@bystrobarista/core/utils/storage';
+} from "@bystrobarista/core/types/baristaProfile";
+import type { UserId } from "@bystrobarista/core/types/ids";
+import { canAddPhoto, PHOTO_LIMIT } from "@bystrobarista/core/utils/storage";
 
 // Detect "column not found in schema cache" so we can degrade gracefully when
 // migration 071 (medical_book_expires_on) hasn't been applied yet. PostgREST
 // returns PGRST204 plus a message naming the missing column.
 const isMissingMedicalBookColumn = (e: unknown): boolean => {
   const code = (e as { code?: string } | null)?.code;
-  const message = (e as { message?: string } | null)?.message ?? '';
-  return code === 'PGRST204' && message.includes('medical_book_expires_on');
+  const message = (e as { message?: string } | null)?.message ?? "";
+  return code === "PGRST204" && message.includes("medical_book_expires_on");
 };
 
 export class BaristaProfileService {
   /**
    * Create a new barista profile
    */
-  static async createProfile(data: CreateBaristaProfileData): Promise<BaristaProfile> {
+  static async createProfile(
+    data: CreateBaristaProfileData,
+  ): Promise<BaristaProfile> {
     try {
       const baseRow: Record<string, unknown> = {
         user_id: data.userId,
@@ -42,13 +44,14 @@ export class BaristaProfileService {
         available_from_date: data.availableFromDate,
         available_days: data.availableDays ?? [],
         workload_types: data.workloadTypes ?? [],
+        preferred_schedule_patterns: data.preferredSchedulePatterns ?? [],
       };
       if (data.medicalBookExpiresOn !== undefined) {
         baseRow.medical_book_expires_on = data.medicalBookExpiresOn;
       }
 
       let { data: profile, error } = await supabase
-        .from('barista_profiles')
+        .from("barista_profiles")
         .insert(baseRow)
         .select()
         .single();
@@ -58,25 +61,29 @@ export class BaristaProfileService {
       // create / edit their profile.
       if (error && isMissingMedicalBookColumn(error)) {
         console.warn(
-          '[BaristaProfileService] medical_book_expires_on column not found; ' +
-            'apply migration 071_barista_medical_book.sql. Saving without it.'
+          "[BaristaProfileService] medical_book_expires_on column not found; " +
+            "apply migration 071_barista_medical_book.sql. Saving without it.",
         );
         delete baseRow.medical_book_expires_on;
-        const retry = await supabase.from('barista_profiles').insert(baseRow).select().single();
+        const retry = await supabase
+          .from("barista_profiles")
+          .insert(baseRow)
+          .select()
+          .single();
         profile = retry.data;
         error = retry.error;
       }
 
       if (error) throw error;
-      if (!profile) throw new Error('Failed to create profile');
+      if (!profile) throw new Error("Failed to create profile");
 
       // profile_completeness is maintained by a DB trigger (migration 032).
       const updatedProfile = await this.getProfileByUserId(data.userId);
-      if (!updatedProfile) throw new Error('Failed to retrieve profile');
+      if (!updatedProfile) throw new Error("Failed to retrieve profile");
 
       return updatedProfile;
     } catch (error) {
-      console.error('Error in createProfile:', error);
+      console.error("Error in createProfile:", error);
       throw error;
     }
   }
@@ -84,14 +91,16 @@ export class BaristaProfileService {
   /**
    * Get barista profile by user ID
    */
-  static async getProfileByUserId(userId: string): Promise<BaristaProfile | null> {
+  static async getProfileByUserId(
+    userId: string,
+  ): Promise<BaristaProfile | null> {
     try {
       // maybeSingle: "no profile yet" is the normal pre-setup state and must
       // not surface as a PGRST116/406 on the wire.
       const { data, error } = await supabase
-        .from('barista_profiles')
-        .select('*')
-        .eq('user_id', userId)
+        .from("barista_profiles")
+        .select("*")
+        .eq("user_id", userId)
         .maybeSingle();
 
       if (error) {
@@ -100,7 +109,7 @@ export class BaristaProfileService {
 
       return data ? this.mapProfile(data) : null;
     } catch (error) {
-      console.error('Error in getProfileByUserId:', error);
+      console.error("Error in getProfileByUserId:", error);
       throw error;
     }
   }
@@ -110,7 +119,7 @@ export class BaristaProfileService {
    */
   static async updateProfile(
     userId: string,
-    updates: UpdateBaristaProfileData
+    updates: UpdateBaristaProfileData,
   ): Promise<BaristaProfile> {
     try {
       const dbUpdates: any = {};
@@ -163,6 +172,10 @@ export class BaristaProfileService {
       if (updates.workloadTypes !== undefined) {
         dbUpdates.workload_types = updates.workloadTypes;
       }
+      if (updates.preferredSchedulePatterns !== undefined) {
+        dbUpdates.preferred_schedule_patterns =
+          updates.preferredSchedulePatterns;
+      }
       if (updates.isActivelyLooking !== undefined) {
         dbUpdates.is_actively_looking = updates.isActivelyLooking;
       }
@@ -173,26 +186,27 @@ export class BaristaProfileService {
         dbUpdates.portfolio_photos = updates.portfolioPhotos;
       }
       if (updates.medicalBookExpiresOn !== undefined) {
-        dbUpdates.medical_book_expires_on = updates.medicalBookExpiresOn ?? null;
+        dbUpdates.medical_book_expires_on =
+          updates.medicalBookExpiresOn ?? null;
       }
 
       let { data: profile, error } = await supabase
-        .from('barista_profiles')
+        .from("barista_profiles")
         .update(dbUpdates)
-        .eq('user_id', userId)
+        .eq("user_id", userId)
         .select()
         .single();
 
       if (error && isMissingMedicalBookColumn(error)) {
         console.warn(
-          '[BaristaProfileService] medical_book_expires_on column not found; ' +
-            'apply migration 071_barista_medical_book.sql. Saving without it.'
+          "[BaristaProfileService] medical_book_expires_on column not found; " +
+            "apply migration 071_barista_medical_book.sql. Saving without it.",
         );
         delete dbUpdates.medical_book_expires_on;
         const retry = await supabase
-          .from('barista_profiles')
+          .from("barista_profiles")
           .update(dbUpdates)
-          .eq('user_id', userId)
+          .eq("user_id", userId)
           .select()
           .single();
         profile = retry.data;
@@ -200,15 +214,15 @@ export class BaristaProfileService {
       }
 
       if (error) throw error;
-      if (!profile) throw new Error('Failed to update profile');
+      if (!profile) throw new Error("Failed to update profile");
 
       // profile_completeness is maintained by a DB trigger (migration 032).
       const updatedProfile = await this.getProfileByUserId(userId);
-      if (!updatedProfile) throw new Error('Failed to retrieve profile');
+      if (!updatedProfile) throw new Error("Failed to retrieve profile");
 
       return updatedProfile;
     } catch (error) {
-      console.error('Error in updateProfile:', error);
+      console.error("Error in updateProfile:", error);
       throw error;
     }
   }
@@ -218,47 +232,48 @@ export class BaristaProfileService {
    */
   static async uploadAvatar(userId: string, photoUri: string): Promise<string> {
     try {
-      console.log('[uploadAvatar] Starting upload, userId:', userId);
-      console.log('[uploadAvatar] Photo URI:', photoUri);
+      console.log("[uploadAvatar] Starting upload, userId:", userId);
+      console.log("[uploadAvatar] Photo URI:", photoUri);
 
       const fileName = `${userId}/avatar_${Date.now()}.jpg`;
-      console.log('[uploadAvatar] File name:', fileName);
+      console.log("[uploadAvatar] File name:", fileName);
 
-      console.log('[uploadAvatar] Reading file as ArrayBuffer...');
-      const arrayBuffer = await getPlatform().photoPicker.readAsArrayBuffer(photoUri);
+      console.log("[uploadAvatar] Reading file as ArrayBuffer...");
+      const arrayBuffer =
+        await getPlatform().photoPicker.readAsArrayBuffer(photoUri);
 
-      console.log('[uploadAvatar] Uploading to Supabase Storage...');
+      console.log("[uploadAvatar] Uploading to Supabase Storage...");
       const { data, error } = await supabase.storage
-        .from('barista-avatars')
+        .from("barista-avatars")
         .upload(fileName, arrayBuffer, {
-          contentType: 'image/jpeg',
-          cacheControl: '3600',
+          contentType: "image/jpeg",
+          cacheControl: "3600",
           upsert: false,
         });
 
       if (error) {
-        console.error('[uploadAvatar] Supabase upload error:', error);
+        console.error("[uploadAvatar] Supabase upload error:", error);
         throw error;
       }
 
-      console.log('[uploadAvatar] Upload successful, data:', data);
+      console.log("[uploadAvatar] Upload successful, data:", data);
 
       const {
         data: { publicUrl },
-      } = supabase.storage.from('barista-avatars').getPublicUrl(fileName);
+      } = supabase.storage.from("barista-avatars").getPublicUrl(fileName);
 
-      console.log('[uploadAvatar] Public URL:', publicUrl);
+      console.log("[uploadAvatar] Public URL:", publicUrl);
 
-      console.log('[uploadAvatar] Updating profile with avatar URL...');
+      console.log("[uploadAvatar] Updating profile with avatar URL...");
       await supabase
-        .from('barista_profiles')
+        .from("barista_profiles")
         .update({ avatar_url: publicUrl })
-        .eq('user_id', userId);
+        .eq("user_id", userId);
 
-      console.log('[uploadAvatar] Profile updated successfully!');
+      console.log("[uploadAvatar] Profile updated successfully!");
       return publicUrl;
     } catch (error) {
-      console.error('[uploadAvatar] Error:', error);
+      console.error("[uploadAvatar] Error:", error);
       throw error;
     }
   }
@@ -267,23 +282,27 @@ export class BaristaProfileService {
    * Upload portfolio photo. Enforces the 5-photo limit on the client;
    * a DB CHECK is the backstop (migration 045).
    */
-  static async uploadPortfolioPhoto(userId: string, photoUri: string): Promise<string> {
+  static async uploadPortfolioPhoto(
+    userId: string,
+    photoUri: string,
+  ): Promise<string> {
     try {
       const profile = await this.getProfileByUserId(userId);
-      if (!profile) throw new Error('Profile not found');
+      if (!profile) throw new Error("Profile not found");
       if (!canAddPhoto(profile.portfolioPhotos)) {
         throw new PortfolioPhotoLimitError();
       }
 
       const fileName = `${userId}/portfolio_${Date.now()}.jpg`;
 
-      const arrayBuffer = await getPlatform().photoPicker.readAsArrayBuffer(photoUri);
+      const arrayBuffer =
+        await getPlatform().photoPicker.readAsArrayBuffer(photoUri);
 
       const { error } = await supabase.storage
-        .from('barista-portfolios')
+        .from("barista-portfolios")
         .upload(fileName, arrayBuffer, {
-          contentType: 'image/jpeg',
-          cacheControl: '3600',
+          contentType: "image/jpeg",
+          cacheControl: "3600",
           upsert: false,
         });
 
@@ -291,17 +310,17 @@ export class BaristaProfileService {
 
       const {
         data: { publicUrl },
-      } = supabase.storage.from('barista-portfolios').getPublicUrl(fileName);
+      } = supabase.storage.from("barista-portfolios").getPublicUrl(fileName);
 
       const updatedPhotos = [...profile.portfolioPhotos, publicUrl];
       await supabase
-        .from('barista_profiles')
+        .from("barista_profiles")
         .update({ portfolio_photos: updatedPhotos })
-        .eq('user_id', userId);
+        .eq("user_id", userId);
 
       return publicUrl;
     } catch (error) {
-      console.error('Error in uploadPortfolioPhoto:', error);
+      console.error("Error in uploadPortfolioPhoto:", error);
       throw error;
     }
   }
@@ -310,14 +329,19 @@ export class BaristaProfileService {
    * Remove a portfolio photo URL from the barista profile. Storage object is
    * left in place (soft-tombstone) so stale joined readers don't 404.
    */
-  static async removePortfolioPhoto(userId: string, photoUrl: string): Promise<void> {
+  static async removePortfolioPhoto(
+    userId: string,
+    photoUrl: string,
+  ): Promise<void> {
     const profile = await this.getProfileByUserId(userId);
-    if (!profile) throw new Error('Profile not found');
-    const nextPhotos = profile.portfolioPhotos.filter(url => url !== photoUrl);
+    if (!profile) throw new Error("Profile not found");
+    const nextPhotos = profile.portfolioPhotos.filter(
+      (url) => url !== photoUrl,
+    );
     const { error } = await supabase
-      .from('barista_profiles')
+      .from("barista_profiles")
       .update({ portfolio_photos: nextPhotos })
-      .eq('user_id', userId);
+      .eq("user_id", userId);
     if (error) throw error;
   }
 
@@ -326,16 +350,20 @@ export class BaristaProfileService {
    * Does NOT touch barista_profiles — caller decides when to persist the list
    * (during initial signup the profile row may not exist yet).
    */
-  static async uploadCertificateFile(userId: string, photoUri: string): Promise<string> {
+  static async uploadCertificateFile(
+    userId: string,
+    photoUri: string,
+  ): Promise<string> {
     const fileName = `${userId}/certificates/cert_${Date.now()}.jpg`;
 
-    const arrayBuffer = await getPlatform().photoPicker.readAsArrayBuffer(photoUri);
+    const arrayBuffer =
+      await getPlatform().photoPicker.readAsArrayBuffer(photoUri);
 
     const { error } = await supabase.storage
-      .from('barista-portfolios')
+      .from("barista-portfolios")
       .upload(fileName, arrayBuffer, {
-        contentType: 'image/jpeg',
-        cacheControl: '3600',
+        contentType: "image/jpeg",
+        cacheControl: "3600",
         upsert: false,
       });
 
@@ -343,29 +371,32 @@ export class BaristaProfileService {
 
     const {
       data: { publicUrl },
-    } = supabase.storage.from('barista-portfolios').getPublicUrl(fileName);
+    } = supabase.storage.from("barista-portfolios").getPublicUrl(fileName);
 
     return publicUrl;
   }
 
-  static async uploadCertificate(userId: string, photoUri: string): Promise<string> {
+  static async uploadCertificate(
+    userId: string,
+    photoUri: string,
+  ): Promise<string> {
     try {
       const publicUrl = await this.uploadCertificateFile(userId, photoUri);
 
       const profile = await this.getProfileByUserId(userId);
-      if (!profile) throw new Error('Profile not found');
+      if (!profile) throw new Error("Profile not found");
 
       const updated = [...profile.certifications, publicUrl];
       const { error: updateError } = await supabase
-        .from('barista_profiles')
+        .from("barista_profiles")
         .update({ certifications: updated })
-        .eq('user_id', userId);
+        .eq("user_id", userId);
 
       if (updateError) throw updateError;
 
       return publicUrl;
     } catch (error) {
-      console.error('Error in uploadCertificate:', error);
+      console.error("Error in uploadCertificate:", error);
       throw error;
     }
   }
@@ -373,21 +404,26 @@ export class BaristaProfileService {
   /**
    * Replace the certifications array (used to remove an entry).
    */
-  static async setCertifications(userId: string, certifications: string[]): Promise<void> {
+  static async setCertifications(
+    userId: string,
+    certifications: string[],
+  ): Promise<void> {
     const { error } = await supabase
-      .from('barista_profiles')
+      .from("barista_profiles")
       .update({ certifications })
-      .eq('user_id', userId);
+      .eq("user_id", userId);
 
     if (error) throw error;
   }
 
-  static async getReliabilityScore(userId: UserId): Promise<ReliabilityScore | null> {
+  static async getReliabilityScore(
+    userId: UserId,
+  ): Promise<ReliabilityScore | null> {
     // RPC replaces the prior `.from('barista_reliability')` view read. The
     // function is STABLE SECURITY DEFINER with a pinned search_path — same
     // behaviour, with the security_definer_view advisor flag retired.
     const { data, error } = await supabase
-      .rpc('get_barista_reliability', { p_user_id: userId })
+      .rpc("get_barista_reliability", { p_user_id: userId })
       .maybeSingle<{
         incidents_30d: number | null;
         reliability_score: number | null;
@@ -424,6 +460,7 @@ export class BaristaProfileService {
       availableFromDate: db.available_from_date,
       availableDays: db.available_days || [],
       workloadTypes: db.workload_types || [],
+      preferredSchedulePatterns: db.preferred_schedule_patterns || [],
       portfolioPhotos: db.portfolio_photos || [],
       medicalBookExpiresOn: db.medical_book_expires_on ?? undefined,
       isActivelyLooking: db.is_actively_looking,
@@ -437,6 +474,6 @@ export class BaristaProfileService {
 export class PortfolioPhotoLimitError extends Error {
   constructor() {
     super(`Portfolio photo limit (${PHOTO_LIMIT}) reached`);
-    this.name = 'PortfolioPhotoLimitError';
+    this.name = "PortfolioPhotoLimitError";
   }
 }
