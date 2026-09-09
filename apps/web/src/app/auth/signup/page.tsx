@@ -60,7 +60,10 @@ export default function SignupPage(): React.JSX.Element {
         </button>
         <p className="text-center text-sm text-ink-secondary">
           {t("auth.accountType.haveAccount")}
-          <Link href="/auth/login" className="text-primary">
+          <Link
+            href="/auth/login"
+            className="text-primary underline underline-offset-2"
+          >
             {t("auth.accountType.loginLink")}
           </Link>
         </p>
@@ -214,7 +217,10 @@ export default function SignupPage(): React.JSX.Element {
       />
       <p className="text-center text-sm text-ink-secondary">
         {t("auth.signup.haveAccount")}
-        <Link href="/auth/login" className="text-primary">
+        <Link
+          href="/auth/login"
+          className="text-primary underline underline-offset-2"
+        >
           {t("auth.signup.loginLink")}
         </Link>
       </p>

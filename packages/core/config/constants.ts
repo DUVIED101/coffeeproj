@@ -99,7 +99,7 @@ export const COLORS = {
   background: '#FFFFFF',
   backgroundSecondary: '#F5F5F5',
   text: '#2C3E50',
-  textSecondary: '#7F8C8D',
+  textSecondary: '#5F6F70', // 5.3:1 on white — WCAG AA for body text
   border: '#E0E0E0',
   success: '#27AE60',
   error: '#E74C3C',

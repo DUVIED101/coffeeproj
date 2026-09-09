@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -68,11 +69,13 @@ export function AppHeader(): React.JSX.Element {
           href="/"
           className="flex shrink-0 items-center gap-2 text-lg font-bold text-primary"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/logo.png"
             alt=""
-            className="h-7 w-7 shrink-0 rounded-full"
+            width={28}
+            height={28}
+            className="shrink-0 rounded-full"
+            priority
           />
           {/* Whole word or nothing: on a phone with a back arrow present the
               name no longer fits, so only the logo stays. */}

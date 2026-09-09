@@ -93,12 +93,18 @@ function LoginForm(): React.JSX.Element {
       <SubmitButton label={t("auth.login.cta")} loading={submitting} />
       <SocialAuthButtons next={next} />
       <div className="flex flex-col gap-2 text-center text-sm">
-        <Link href="/auth/password-reset" className="text-primary">
+        <Link
+          href="/auth/password-reset"
+          className="text-primary underline underline-offset-2"
+        >
           {t("auth.login.forgotPassword")}
         </Link>
         <p className="text-ink-secondary">
           {t("auth.login.noAccount")}{" "}
-          <Link href="/auth/signup" className="text-primary">
+          <Link
+            href="/auth/signup"
+            className="text-primary underline underline-offset-2"
+          >
             {t("auth.login.signupLink")}
           </Link>
         </p>

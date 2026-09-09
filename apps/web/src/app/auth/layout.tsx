@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
@@ -12,13 +13,19 @@ export default function AuthLayout({
         href="/"
         className="mb-8 flex items-center gap-2.5 text-2xl font-bold text-primary"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.png" alt="" className="h-9 w-9 rounded-full" />
+        <Image
+          src="/logo.png"
+          alt=""
+          width={36}
+          height={36}
+          className="rounded-full"
+          priority
+        />
         БыстроБариста
       </Link>
-      <div className="w-full max-w-md rounded-card bg-white p-6 shadow-sm">
+      <main className="w-full max-w-md rounded-card bg-white p-6 shadow-sm">
         {children}
-      </div>
+      </main>
     </div>
   );
 }

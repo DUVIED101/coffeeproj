@@ -78,6 +78,28 @@ const syncStash = async (
 // Google mints an id_token in the browser via Identity Services (falls back
 // to Supabase's hosted OAuth when the script can't load); Yandex goes
 // through our own code-flow routes. All three end on /auth/bootstrap.
+
+// Runs `task` once the document has loaded and the main thread is idle
+// (Safari has no requestIdleCallback, so a macrotask after load stands in).
+function afterIdle(task: () => void): () => void {
+  let idleId: number | undefined;
+  let timerId: number | undefined;
+  const start = (): void => {
+    if (typeof window.requestIdleCallback === "function") {
+      idleId = window.requestIdleCallback(task);
+    } else {
+      timerId = window.setTimeout(task, 0);
+    }
+  };
+  if (document.readyState === "complete") start();
+  else window.addEventListener("load", start, { once: true });
+  return () => {
+    window.removeEventListener("load", start);
+    if (idleId !== undefined) window.cancelIdleCallback(idleId);
+    if (timerId !== undefined) window.clearTimeout(timerId);
+  };
+}
+
 export function SocialAuthButtons({
   accountType,
   consentAccepted = false,
@@ -137,35 +159,42 @@ export function SocialAuthButtons({
 
   // Preload the provider SDKs so the click → popup hop stays inside the
   // browser's user-activation window (Safari blocks late window.open calls).
+  // They wait for the page to go idle first: on a slow connection the two
+  // third-party scripts otherwise compete with the form's own chunks.
   useEffect(() => {
     if (SOCIAL_AUTH_DISABLED) return;
-    if (APPLE_SERVICES_ID) void loadAppleAuth().catch(() => {});
-    if (!GOOGLE_WEB_CLIENT_ID) return;
     let cancelled = false;
-    void (async () => {
-      try {
-        const [api, nonce] = await Promise.all([
-          loadGoogleIdentity(),
-          createGoogleNonce(),
-        ]);
-        if (cancelled) return;
-        googleNonce.current = nonce;
-        api.initialize({
-          client_id: GOOGLE_WEB_CLIENT_ID,
-          callback: (response) => void finishGoogleIdToken(response.credential),
-          nonce: nonce.hashed,
-          itp_support: true,
-          ux_mode: "popup",
-          auto_select: false,
-        });
-        setGsi("ready");
-      } catch (err) {
-        console.warn("google identity services unavailable:", err);
-        if (!cancelled) setGsi("unavailable");
-      }
-    })();
+    const stopWaiting = afterIdle(() => {
+      if (cancelled) return;
+      if (APPLE_SERVICES_ID) void loadAppleAuth().catch(() => {});
+      if (!GOOGLE_WEB_CLIENT_ID) return;
+      void (async () => {
+        try {
+          const [api, nonce] = await Promise.all([
+            loadGoogleIdentity(),
+            createGoogleNonce(),
+          ]);
+          if (cancelled) return;
+          googleNonce.current = nonce;
+          api.initialize({
+            client_id: GOOGLE_WEB_CLIENT_ID,
+            callback: (response) =>
+              void finishGoogleIdToken(response.credential),
+            nonce: nonce.hashed,
+            itp_support: true,
+            ux_mode: "popup",
+            auto_select: false,
+          });
+          setGsi("ready");
+        } catch (err) {
+          console.warn("google identity services unavailable:", err);
+          if (!cancelled) setGsi("unavailable");
+        }
+      })();
+    });
     return () => {
       cancelled = true;
+      stopWaiting();
     };
   }, [finishGoogleIdToken]);
 

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
@@ -19,8 +20,14 @@ export default function NotFound(): React.JSX.Element {
             href="/"
             className="flex items-center gap-2 text-lg font-bold text-primary"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="" className="h-7 w-7 rounded-full" />
+            <Image
+              src="/logo.png"
+              alt=""
+              width={28}
+              height={28}
+              className="rounded-full"
+              priority
+            />
             БыстроБариста
           </Link>
         </div>
