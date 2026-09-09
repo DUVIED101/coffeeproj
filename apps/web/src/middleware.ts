@@ -1,7 +1,15 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import {
+  combineChunks,
+  createServerClient,
+  type CookieOptions,
+} from "@supabase/ssr";
 import type { JWK } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { STABLE_STORAGE_KEY } from "@bystrobarista/core/config/authStorage";
+import {
+  readJwtClaims,
+  type JwtClaims,
+} from "@bystrobarista/core/utils/jwtClaims";
 import { signPayload, verifyPayload } from "@/lib/signedCookie";
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
@@ -24,7 +32,25 @@ const BARISTA_ONLY = ["/applications", "/offers", "/shifts", "/businesses"];
 const BUSINESS_ONLY = ["/dashboard", "/baristas", "/branches", "/shift-alerts"];
 
 const PROFILE_COOKIE = "bb_profile";
-const PROFILE_TTL_MS = 5 * 60 * 1000;
+// Only a complete profile (role + consent) is ever cached, and the role is
+// locked after bootstrap, so a long TTL is safe.
+const PROFILE_TTL_MS = 30 * 60 * 1000;
+// Every Supabase call in here is bounded: a stalled database must cost a
+// page load about a second, never the whole middleware budget, and it must
+// never bounce a user with a valid session to the login page.
+const JWKS_TTL_MS = 60 * 60 * 1000;
+const JWKS_FETCH_TIMEOUT_MS = 1500;
+const CLAIMS_TIMEOUT_MS = 2500;
+const PROFILE_TIMEOUT_MS = 2000;
+// Refresh the session in the middleware only when the token is this close
+// to expiry; the browser client refreshes itself the rest of the time.
+const REFRESH_MARGIN_MS = 60 * 1000;
+
+const withTimeout = <T>(work: Promise<T>, ms: number): Promise<T | null> =>
+  Promise.race([
+    work.catch(() => null),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+  ]);
 
 type ProfileCache = {
   sub: string;
@@ -52,11 +78,6 @@ const matchesAny = (pathname: string, prefixes: string[]): boolean =>
 // JWKS for local JWT verification, cached per edge isolate so a warm
 // invocation verifies the session without any network call.
 type Jwks = { keys: JWK[] };
-const JWKS_TTL_MS = 10 * 60 * 1000;
-// Supabase being slow must cost a page a couple of seconds, not the whole
-// middleware budget.
-const JWKS_FETCH_TIMEOUT_MS = 2500;
-const CLAIMS_TIMEOUT_MS = 6000;
 let jwksCache: { jwks: Jwks; fetchedAt: number } | null = null;
 
 async function getJwks(): Promise<Jwks | undefined> {
@@ -80,6 +101,28 @@ async function getJwks(): Promise<Jwks | undefined> {
     return jwks;
   } catch {
     return jwksCache?.jwks;
+  }
+}
+
+type SessionClaims = JwtClaims & { token: string };
+
+// Session cookie → access token claims, no network. Handles the chunked
+// cookie layout (@supabase/ssr splits large sessions into .0, .1, …).
+async function readSessionClaims(
+  request: NextRequest,
+): Promise<SessionClaims | null> {
+  const raw = await combineChunks(
+    STABLE_STORAGE_KEY,
+    (name) => request.cookies.get(name)?.value ?? null,
+  );
+  if (!raw) return null;
+  try {
+    const session = JSON.parse(raw) as { access_token?: unknown };
+    if (typeof session.access_token !== "string") return null;
+    const claims = readJwtClaims(session.access_token);
+    return claims ? { ...claims, token: session.access_token } : null;
+  } catch {
+    return null;
   }
 }
 
@@ -116,26 +159,36 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  // Local JWT verification (ES256 signing keys) instead of a GoTrue round
-  // trip on every request: when Supabase was slow this timed the whole
-  // middleware out (MIDDLEWARE_INVOCATION_TIMEOUT, 2026-09-07). An expiring
-  // session is still refreshed over the network before verification.
-  // No session cookie at all → signed out, and nothing to verify or fetch.
-  const hasSessionCookie = request.cookies
-    .getAll()
-    .some((c) => c.name.startsWith(STABLE_STORAGE_KEY));
+  // The session cookie is read by hand so a token that is nowhere near
+  // expiry never triggers supabase-js's refresh path. ES256 tokens are
+  // verified locally against the cached JWKS; when Supabase cannot be
+  // reached in time (JWKS fetch, refresh) the unverified subject still
+  // routes the request: the middleware only picks a page shell, every byte
+  // of data behind it is guarded by RLS with the real token. Signed-out is
+  // reserved for "no cookie" and "expired and not refreshable".
+  const claims = await readSessionClaims(request);
   let userId: string | null = null;
-  if (hasSessionCookie) {
-    const verify = async (): Promise<string | null> => {
-      const { data } = await supabase.auth.getClaims(undefined, {
-        jwks: await getJwks(),
-      });
-      return data?.claims.sub ?? null;
-    };
-    const giveUp = new Promise<null>((resolve) =>
-      setTimeout(() => resolve(null), CLAIMS_TIMEOUT_MS),
-    );
-    userId = await Promise.race([verify().catch(() => null), giveUp]);
+  if (claims) {
+    const expiresAt = claims.exp * 1000;
+    const needsRefresh = expiresAt < Date.now() + REFRESH_MARGIN_MS;
+    if (needsRefresh) {
+      const refreshed = await withTimeout(
+        supabase.auth.getClaims(undefined, { jwks: await getJwks() }),
+        CLAIMS_TIMEOUT_MS,
+      );
+      userId =
+        refreshed?.data?.claims.sub ??
+        (expiresAt > Date.now() ? claims.sub : null);
+    } else {
+      const jwks = claims.alg.startsWith("ES") ? await getJwks() : undefined;
+      const verified = jwks
+        ? await withTimeout(
+            supabase.auth.getClaims(claims.token, { jwks }),
+            CLAIMS_TIMEOUT_MS,
+          )
+        : null;
+      userId = verified?.data?.claims.sub ?? claims.sub;
+    }
   }
 
   const isPublic = matchesAny(pathname, PUBLIC_PATHS);
@@ -181,11 +234,21 @@ export async function middleware(request: NextRequest) {
   if (profile && (!profile.accountType || !profile.hasConsent)) profile = null;
 
   if (!profile) {
-    const { data: row } = await supabase
-      .from("users")
-      .select("account_type, consent_accepted_at")
-      .eq("id", userId)
-      .maybeSingle();
+    const result = await withTimeout(
+      Promise.resolve(
+        supabase
+          .from("users")
+          .select("account_type, consent_accepted_at")
+          .eq("id", userId)
+          .maybeSingle(),
+      ),
+      PROFILE_TIMEOUT_MS,
+    );
+    // Database unreachable: serve the page as requested instead of hanging
+    // or guessing a role. The client-side auth store re-checks consent and
+    // bans on its own, and the next request retries the lookup.
+    if (!result) return response;
+    const row = result.data;
     profile = {
       sub: userId,
       accountType:
