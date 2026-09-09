@@ -123,7 +123,10 @@ export function DesktopNav(): React.JSX.Element {
   const items = useNavItems();
 
   return (
-    <nav className="hidden gap-1 md:flex" aria-label="Основная навигация">
+    <nav
+      className="hidden shrink-0 gap-1 md:flex"
+      aria-label="Основная навигация"
+    >
       {items.map((item) => {
         const active = isActivePath(pathname, item.href);
         return (
@@ -131,6 +134,8 @@ export function DesktopNav(): React.JSX.Element {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
+            aria-label={item.label}
+            title={item.label}
             data-tour={TOUR_KEY_BY_HREF[item.href]}
             className={`flex items-center gap-1.5 rounded-input px-3 py-1.5 text-sm font-medium ${
               active
@@ -142,7 +147,9 @@ export function DesktopNav(): React.JSX.Element {
               <MdiIcon path={active ? item.iconActive : item.icon} size={18} />
               <NavBadge count={item.badgeCount ?? 0} />
             </span>
-            {item.label}
+            {/* Icons only at md: with the back arrow, brand and header
+                actions the labels no longer fit until lg. */}
+            <span className="hidden lg:inline">{item.label}</span>
           </Link>
         );
       })}

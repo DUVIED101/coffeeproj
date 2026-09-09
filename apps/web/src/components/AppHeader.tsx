@@ -69,13 +69,17 @@ export function AppHeader(): React.JSX.Element {
           className="flex min-w-0 items-center gap-2 text-lg font-bold text-primary"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="" className="h-7 w-7 rounded-full" />
-          БыстроБариста
+          <img
+            src="/logo.png"
+            alt=""
+            className="h-7 w-7 shrink-0 rounded-full"
+          />
+          <span className="truncate">БыстроБариста</span>
         </Link>
         <DesktopNav />
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {user?.email && (
-            <span className="hidden text-sm text-ink-secondary lg:inline">
+            <span className="hidden text-sm text-ink-secondary xl:inline">
               {user.email}
             </span>
           )}
