@@ -154,6 +154,31 @@ gets a row with `vault_ok = true`), account deletion, admin OTP login,
    (they call `supabase.co` directly); ship a release with
    `SUPABASE_URL=https://api.bystrobarista.com`, then pause and delete the project.
 
+### Cutover log, 2026-09-10
+
+Done in ~25 minutes without waiting for DNS:
+
+1. Cloud writes frozen with a PostgREST pre-request function on `authenticator`
+   (`pgrst.db_pre_request` → raises `PT503` for every non-GET request except
+   POST `/rpc/` of STABLE functions). `default_transaction_read_only` does NOT
+   work: PostgREST opens mutations with an explicit `READ WRITE`. GoTrue and
+   Storage roles are reserved on the cloud and cannot be frozen; the counters
+   (users, objects, messages, jobs) matched on both sides afterwards.
+2. `.env` switched from `api-new` to `api`, stack reset, `migrate-from-cloud.sh`,
+   `copy-storage.mjs` against `api-new` (still served by nginx at that point).
+3. The LT VPS certificate for `api.bystrobarista.com` copied into
+   `/etc/letsencrypt/live/api.bystrobarista.com/` so `deploy.sh` skipped certbot
+   and installed the `api` vhost right away; the LT `supabase-proxy` upstream
+   repointed at 201.51.11.39 (`infra/oracle-nginx-supabase-proxy.conf`), which
+   moved all `api.` traffic to the new box before the DNS change.
+4. DNS `api` → 201.51.11.39; then `certbot certonly --standalone` on the new box
+   to replace the copied certificate with one that renews here.
+5. Vercel `NEXT_PUBLIC_SUPABASE_URL` for web + admin, legal branches merged.
+
+The cloud project stays frozen (read-only) for old non-RU iOS builds until it
+is paused: unfreezing it would split writes between two databases.
+To unfreeze: `ALTER ROLE authenticator RESET pgrst.db_pre_request; NOTIFY pgrst, 'reload config';`
+
 ## 6. Backups, restore, monitoring
 
 - `scripts/backup.sh` runs nightly (cron installed by `deploy.sh`): roles, custom-format
