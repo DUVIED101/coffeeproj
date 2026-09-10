@@ -1918,8 +1918,9 @@
     }
   },
   "cookies": {
-    "notice": "The web version uses only strictly necessary cookies: to keep you signed in and remember your language and profile role. Analytics works without cookies.",
-    "more": "Learn more",
-    "accept": "Got it"
+    "title": "Cookie consent",
+    "notice": "The web version uses only strictly necessary cookies: to keep you signed in and remember your language and profile role. By clicking “I agree” you consent to their use under the Privacy Policy. Signing in is impossible without cookies.",
+    "more": "Privacy Policy",
+    "accept": "I agree"
   }
 }

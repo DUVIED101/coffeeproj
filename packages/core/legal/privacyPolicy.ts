@@ -170,9 +170,9 @@ Cookie третьих лиц для рекламы или отслеживани
 
 Сайт не устанавливает cookie при просмотре. Сервис Vercel Analytics собирает обезличенную статистику посещений без cookie. Раздел администрирования сайта доступен только уполномоченным лицам Оператора и использует cookie сессии для их входа.
 
-10.4. Уведомление и управление
+10.4. Согласие и управление
 
-При первом посещении Веб-версии и сайта Вам показывается уведомление об использовании cookie. Строго необходимые cookie устанавливаются на основании договора с Вами (Условия использования) и не требуют отдельного согласия. Вы можете удалить cookie или запретить их установку в настройках браузера; в этом случае вход в учётную запись в Веб-версии будет невозможен, а Приложение продолжит работать.
+При первом посещении Веб-версии Вам показывается баннер с описанием используемых cookie. Нажимая кнопку «Принимаю», Вы даёте согласие на использование перечисленных в п. 10.2 cookie и хранилища браузера. Факт согласия, его дата и редакция Политики, под которой оно дано, сохраняются в хранилище Вашего браузера; при выходе новой редакции Политики согласие запрашивается повторно. До нажатия кнопки cookie сессии не устанавливаются, поскольку они создаются только при входе в учётную запись. Вы можете отозвать согласие, удалив cookie и данные сайта в настройках браузера или запретив их установку; в этом случае вход в учётную запись в Веб-версии будет невозможен, а Приложение продолжит работать. Сайт bystrobarista.com при просмотре cookie не устанавливает (п. 10.3), поэтому показываемое на нём уведомление носит информационный характер и согласия не требует.
 
 10.5. Как долго хранятся эти данные и кто имеет к ним доступ
 
@@ -361,9 +361,9 @@ No third-party advertising or tracking cookies are used in the Web Version. Verc
 
 The website does not set cookies when browsed. Vercel Analytics collects anonymized visit statistics without cookies. The website's administration area is available only to the Operator's authorized persons and uses a session cookie for their sign-in.
 
-10.4. Notice and control
+10.4. Consent and control
 
-On Your first visit to the Web Version and the website You are shown a cookie notice. Strictly necessary cookies are set on the basis of the contract with You (Terms of Service) and do not require separate consent. You can delete cookies or block them in Your browser settings; in that case signing in to the Web Version will be impossible, while the App will keep working.
+On Your first visit to the Web Version You are shown a banner describing the cookies in use. By clicking “I agree” You consent to the use of the cookies and browser storage listed in clause 10.2. The fact of consent, its date and the edition of this Policy it was given under are kept in Your browser storage; a new edition of the Policy asks for consent again. No session cookies are set before You click the button, because they are only created when You sign in. You may withdraw consent by deleting cookies and site data in Your browser settings or by blocking them; in that case signing in to the Web Version will be impossible, while the App will keep working. The website bystrobarista.com sets no cookies while browsing (clause 10.3), so the notice shown there is informational and requires no consent.
 
 10.5. How long this data is stored and who has access to it
 

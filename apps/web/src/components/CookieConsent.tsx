@@ -3,41 +3,54 @@
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { LEGAL_DOCUMENT_VERSIONS } from "@bystrobarista/core/config/legalVersions";
+import {
+  COOKIE_CONSENT_STORAGE_KEY,
+  isCookieConsentCurrent,
+  serializeCookieConsent,
+} from "@bystrobarista/core/utils/cookieConsent";
 
-const ACK_KEY = "bb_cookie_notice_ack";
+// Consent is tied to the privacy policy edition (§10.4): a new edition asks
+// again. Session cookies only appear on sign-in, so nothing is set before
+// the visitor agrees.
+const POLICY_VERSION = LEGAL_DOCUMENT_VERSIONS.privacy;
 
-function readAck(): boolean {
+function hasCurrentConsent(): boolean {
   try {
-    return window.localStorage.getItem(ACK_KEY) === "1";
+    return isCookieConsentCurrent(
+      window.localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY),
+      POLICY_VERSION,
+    );
   } catch {
     return true;
   }
 }
 
-function writeAck(): void {
+function storeConsent(): void {
   try {
-    window.localStorage.setItem(ACK_KEY, "1");
+    window.localStorage.setItem(
+      COOKIE_CONSENT_STORAGE_KEY,
+      serializeCookieConsent(POLICY_VERSION, new Date()),
+    );
   } catch {
-    // Storage blocked: the notice simply shows again next visit.
+    // Storage blocked: the banner simply shows again next visit.
   }
 }
 
-// Strictly-necessary cookies only (privacy policy §10.2), so this is a
-// notice with an acknowledgement, not an opt-in gate.
-export function CookieNotice(): React.JSX.Element | null {
+export function CookieConsent(): React.JSX.Element | null {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    setVisible(!readAck());
+    setVisible(!hasCurrentConsent());
   }, []);
 
   if (!visible) return null;
 
   return (
     <div
-      role="region"
-      aria-label={t("cookies.notice")}
+      role="dialog"
+      aria-label={t("cookies.title")}
       className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-white p-4 shadow-lg"
     >
       <div className="mx-auto flex max-w-2xl flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
@@ -50,7 +63,7 @@ export function CookieNotice(): React.JSX.Element | null {
         <button
           type="button"
           onClick={() => {
-            writeAck();
+            storeConsent();
             setVisible(false);
           }}
           className="shrink-0 rounded-lg bg-primary px-4 py-2 font-semibold text-white"
