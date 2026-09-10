@@ -79,13 +79,24 @@ if [[ ! -f /swapfile ]]; then
   echo 'vm.swappiness=10' > /etc/sysctl.d/90-bystrobarista.conf
 fi
 
-log "Firewall: 22, 80, 443, 8443 only…"
+log "Firewall: 22, 80, 443, 8443 only (Timeweb's Zabbix agent on 10050 from its servers)…"
 ufw allow OpenSSH >/dev/null
 ufw allow 80/tcp >/dev/null
 ufw allow 443/tcp >/dev/null
 ufw allow 8443/tcp >/dev/null
+ufw delete allow 10050/tcp >/dev/null 2>&1 || true
+for ip in 92.53.116.12 92.53.116.111 92.53.116.119; do
+  ufw allow from "$ip" to any port 10050 proto tcp comment "timeweb zabbix" >/dev/null
+done
 ufw --force enable >/dev/null
 systemctl enable --now fail2ban
+
+# Timeweb images ship root password login; keys only from here on. The file
+# sorts before cloud-init's 50-*.conf because sshd keeps the first value seen.
+log "SSH: keys only…"
+printf 'PasswordAuthentication no\nKbdInteractiveAuthentication no\nPermitRootLogin prohibit-password\n' \
+  > /etc/ssh/sshd_config.d/10-bystrobarista.conf
+sshd -t && systemctl reload ssh
 
 PUBLIC_IP="$(curl -fsS https://api.ipify.org)"
 log "Public IP: $PUBLIC_IP; checking DNS for ${DOMAIN}…"

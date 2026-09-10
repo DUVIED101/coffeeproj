@@ -49,7 +49,8 @@ DOMAIN="\$(grep '^SUPABASE_PUBLIC_URL=' .env | cut -d= -f2- | sed 's|https\\?://
 if [[ ! -d "/etc/letsencrypt/live/\$DOMAIN" ]]; then
   echo "[remote] issuing TLS cert for \$DOMAIN (nginx stopped briefly)…"
   systemctl stop nginx
-  certbot certonly --standalone -d "\$DOMAIN" -m support@bystrobarista.com --agree-tos --non-interactive
+  certbot certonly --standalone -d "\$DOMAIN" -m support@bystrobarista.com --agree-tos --non-interactive \\
+    --pre-hook 'systemctl stop nginx' --post-hook 'systemctl start nginx'
   systemctl start nginx
 fi
 docker compose pull -q
