@@ -165,8 +165,12 @@ services:
       GOTRUE_RATE_LIMIT_EMAIL_SENT: ${RATE_LIMIT_EMAIL_SENT:-60}
       GOTRUE_RATE_LIMIT_TOKEN_REFRESH: "150"
       GOTRUE_RATE_LIMIT_VERIFY: "60"
-      # Apple / Google id_token sign-in passes a hashed nonce; keep the check on.
-      GOTRUE_EXTERNAL_SKIP_NONCE_CHECK: "false"
+      # Nonce checks are per provider (there is no global switch). Apple id_token
+      # sign-in passes a hashed nonce on both platforms, so its check stays on.
+      # Google: the iOS SDK issues no nonce and Google Identity Services on the
+      # web sometimes drops it, which fails as "Passed nonce and nonce in
+      # id_token should either both exist or not" — skip it like the cloud did.
+      GOTRUE_EXTERNAL_GOOGLE_SKIP_NONCE_CHECK: "true"
 
       # SMTP (Resend)
       GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL}
