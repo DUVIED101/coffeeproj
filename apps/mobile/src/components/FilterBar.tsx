@@ -13,7 +13,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import type { JobFilters, JobType } from '@bystrobarista/core/types/job';
 import type { GeoPoint } from '@bystrobarista/core/types/business';
-import { DEFAULT_CITY, getCityLabel, type CityCode } from '@bystrobarista/core/types/city';
+import { getCityLabel, type CityCode } from '@bystrobarista/core/types/city';
+import { MetroService } from '@bystrobarista/core/utils/metro';
 import { COLORS } from '@bystrobarista/core/config/constants';
 import { MetroSelector, METRO_ANY } from './MetroSelector';
 import { CityPickerModal } from './CityPicker';
@@ -73,7 +74,7 @@ export const FilterBar = React.memo<FilterBarProps>(
     );
 
     const handleCityChange = useCallback(
-      (nextCity: CityCode) => {
+      (nextCity: CityCode | undefined) => {
         onFilterChange({
           ...currentFilters,
           city: nextCity,
@@ -178,20 +179,24 @@ export const FilterBar = React.memo<FilterBarProps>(
                 styles.filterChipText,
                 currentFilters.city ? styles.filterChipTextActive : null,
               ]}>
-              {getCityLabel(currentFilters.city ?? DEFAULT_CITY, i18n.language)}
+              {currentFilters.city
+                ? getCityLabel(currentFilters.city, i18n.language)
+                : t('city.title')}
             </Text>
           </TouchableOpacity>
 
-          <View style={styles.metroSelectorContainer}>
-            <MetroSelector
-              multiSelect
-              city={currentFilters.city ?? DEFAULT_CITY}
-              value={currentFilters.metroStations ?? []}
-              onChange={handleMetroChange}
-              placeholder={t('filters.metroStation')}
-              userLocation={userLocation}
-            />
-          </View>
+          {currentFilters.city && MetroService.hasMetro(currentFilters.city) && (
+            <View style={styles.metroSelectorContainer}>
+              <MetroSelector
+                multiSelect
+                city={currentFilters.city}
+                value={currentFilters.metroStations ?? []}
+                onChange={handleMetroChange}
+                placeholder={t('filters.metroStation')}
+                userLocation={userLocation}
+              />
+            </View>
+          )}
 
           {userLocation && (
             <TouchableOpacity
@@ -241,11 +246,10 @@ export const FilterBar = React.memo<FilterBarProps>(
 
         <CityPickerModal
           visible={showCityModal}
-          value={currentFilters.city ?? DEFAULT_CITY}
-          onSelect={city => {
-            if (city) handleCityChange(city);
-          }}
+          value={currentFilters.city}
+          onSelect={handleCityChange}
           onClose={() => setShowCityModal(false)}
+          allowAny
         />
 
         <Modal

@@ -162,21 +162,38 @@ export const CityPickerModal: React.FC<CityPickerModalProps> = ({
   );
 };
 
-type CityPickerProps = {
+type RequiredCityPickerProps = {
+  allowAny?: false;
   value: CityCode;
   onChange: (city: CityCode) => void;
   error?: string;
 };
 
-export const CityPicker: React.FC<CityPickerProps> = ({ value, onChange, error }) => {
-  const { i18n } = useTranslation();
+type OptionalCityPickerProps = {
+  /** Adds an "Any city" row; `undefined` means no city filter. */
+  allowAny: true;
+  value: CityCode | undefined;
+  onChange: (city: CityCode | undefined) => void;
+  error?: string;
+};
+
+type CityPickerProps = RequiredCityPickerProps | OptionalCityPickerProps;
+
+export const CityPicker: React.FC<CityPickerProps> = props => {
+  const { value, error } = props;
+  const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSelect = useCallback(
     (city: CityCode | undefined) => {
-      if (city && city !== value) onChange(city);
+      if (city === value) return;
+      if (props.allowAny) {
+        props.onChange(city);
+      } else if (city) {
+        props.onChange(city);
+      }
     },
-    [onChange, value]
+    [props, value]
   );
 
   return (
@@ -186,7 +203,7 @@ export const CityPicker: React.FC<CityPickerProps> = ({ value, onChange, error }
         onPress={() => setIsOpen(true)}
         accessibilityRole="button">
         <Text style={styles.selectorText} numberOfLines={1}>
-          {getCityLabel(value, i18n.language)}
+          {value ? getCityLabel(value, i18n.language) : t('city.anyOption')}
         </Text>
         <Text style={styles.selectorChevron}>›</Text>
       </TouchableOpacity>
@@ -196,6 +213,7 @@ export const CityPicker: React.FC<CityPickerProps> = ({ value, onChange, error }
         value={value}
         onSelect={handleSelect}
         onClose={() => setIsOpen(false)}
+        allowAny={props.allowAny}
       />
     </View>
   );

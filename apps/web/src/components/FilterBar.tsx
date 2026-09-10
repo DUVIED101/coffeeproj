@@ -4,7 +4,7 @@ import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { JobFilters } from "@bystrobarista/core/types/job";
 import type { GeoPoint } from "@bystrobarista/core/types/business";
-import { DEFAULT_CITY, type CityCode } from "@bystrobarista/core/types/city";
+import type { CityCode } from "@bystrobarista/core/types/city";
 import { METRO_ANY } from "@bystrobarista/core/config/metroFilter";
 import { MetroFilterModal } from "./MetroFilterModal";
 import { CitySelect } from "./CitySelect";
@@ -39,7 +39,7 @@ export function FilterBar({
   const locale = i18n.language === "ru" ? "ru-RU" : "en-US";
   const [metroOpen, setMetroOpen] = useState(false);
   const [metroSelection, setMetroSelection] = useState<string[]>([]);
-  const [city, setCity] = useState<CityCode>(filters.city ?? DEFAULT_CITY);
+  const [city, setCity] = useState<CityCode | undefined>(filters.city);
 
   const applyMetro = (stations: string[]): void => {
     setMetroSelection(stations);
@@ -51,7 +51,7 @@ export function FilterBar({
     });
   };
 
-  const handleCityChange = (next: CityCode): void => {
+  const handleCityChange = (next: CityCode | undefined): void => {
     setCity(next);
     setMetroSelection([]);
     onChange({ ...filters, city: next, metroStations: undefined });
@@ -83,13 +83,12 @@ export function FilterBar({
 
       <CitySelect
         value={city}
-        onChange={(next) => {
-          if (next) handleCityChange(next);
-        }}
+        onChange={handleCityChange}
+        allowAny
         className={chip(filters.city !== undefined)}
       />
 
-      {MetroService.hasMetro(city) && (
+      {city && MetroService.hasMetro(city) && (
         <button
           type="button"
           onClick={() => setMetroOpen(true)}
@@ -153,12 +152,14 @@ export function FilterBar({
       />
 
       {(filters.jobType ||
+        filters.city ||
         filters.metroStations?.length ||
         filters.maxDistance ||
         filters.startDateMinimum) && (
         <button
           type="button"
           onClick={() => {
+            setCity(undefined);
             setMetroSelection([]);
             onChange({});
           }}
@@ -168,14 +169,16 @@ export function FilterBar({
         </button>
       )}
 
-      <MetroFilterModal
-        open={metroOpen}
-        city={city}
-        value={metroSelection}
-        userLocation={userLocation}
-        onChange={applyMetro}
-        onClose={() => setMetroOpen(false)}
-      />
+      {city && (
+        <MetroFilterModal
+          open={metroOpen}
+          city={city}
+          value={metroSelection}
+          userLocation={userLocation}
+          onChange={applyMetro}
+          onClose={() => setMetroOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -15,7 +15,8 @@ import { MetroSelector, METRO_ANY } from './MetroSelector';
 import { CityPicker } from './CityPicker';
 import type { JobType } from '@bystrobarista/core/types/job';
 import type { Equipment } from '@bystrobarista/core/types/business';
-import { DEFAULT_CITY, type CityCode } from '@bystrobarista/core/types/city';
+import type { CityCode } from '@bystrobarista/core/types/city';
+import { MetroService } from '@bystrobarista/core/utils/metro';
 
 export type ShiftFilters = {
   jobType?: JobType;
@@ -67,7 +68,7 @@ export const ShiftFilterSheet: React.FC<ShiftFilterSheetProps> = ({
     }));
   }, []);
 
-  const handleCityChange = useCallback((nextCity: CityCode) => {
+  const handleCityChange = useCallback((nextCity: CityCode | undefined) => {
     setDraft(prev => ({ ...prev, city: nextCity, metroStations: undefined }));
   }, []);
 
@@ -125,16 +126,20 @@ export const ShiftFilterSheet: React.FC<ShiftFilterSheetProps> = ({
             </View>
 
             <Text style={styles.sectionTitle}>{t('city.title')}</Text>
-            <CityPicker value={draft.city ?? DEFAULT_CITY} onChange={handleCityChange} />
+            <CityPicker allowAny value={draft.city} onChange={handleCityChange} />
 
-            <Text style={styles.sectionTitle}>{t('shifts.filter.metro')}</Text>
-            <MetroSelector
-              multiSelect
-              city={draft.city ?? DEFAULT_CITY}
-              value={draft.metroStations ?? []}
-              onChange={handleMetroChange}
-              placeholder={t('shifts.filter.metroPlaceholder')}
-            />
+            {draft.city && MetroService.hasMetro(draft.city) && (
+              <>
+                <Text style={styles.sectionTitle}>{t('shifts.filter.metro')}</Text>
+                <MetroSelector
+                  multiSelect
+                  city={draft.city}
+                  value={draft.metroStations ?? []}
+                  onChange={handleMetroChange}
+                  placeholder={t('shifts.filter.metroPlaceholder')}
+                />
+              </>
+            )}
 
             <Text style={styles.sectionTitle}>{t('shifts.filter.equipment')}</Text>
             <View style={styles.equipmentGrid}>
