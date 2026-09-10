@@ -23,6 +23,7 @@ import {
   RADII,
   SHOW_PLATFORM_FEE,
 } from '@bystrobarista/core/config/constants';
+import { parseSchedulePattern } from '@bystrobarista/core/config/schedulePatterns';
 import { JobService } from '@bystrobarista/core/services/JobService';
 import { BusinessService } from '@bystrobarista/core/services/BusinessService';
 import { useAuthStore } from '@bystrobarista/core/stores/authStore';
@@ -59,13 +60,6 @@ const DAY_NAMES = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'satu
 // Custom schedule patterns are edited as two single-digit fields joined by
 // "/". We still store them as a plain string ("5/2") — this helper only
 // mediates the split UI, so persisted values stay simple and human-readable.
-const parseSchedulePattern = (raw: string): { on: string; off: string } => {
-  const [rawOn = '', rawOff = ''] = raw.split('/');
-  return {
-    on: rawOn.replace(/\D/g, '').slice(0, 1),
-    off: rawOff.replace(/\D/g, '').slice(0, 1),
-  };
-};
 
 const parseTimeString = (time: string): Date => {
   const [h, m] = time.split(':').map(Number);

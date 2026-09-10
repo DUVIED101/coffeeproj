@@ -14,7 +14,12 @@ import { ReviewService } from "@bystrobarista/core/services/ReviewService";
 import { WorkExperienceService } from "@bystrobarista/core/services/WorkExperienceService";
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import { EQUIPMENT_CATEGORIES } from "@bystrobarista/core/config/constants";
-import { SCHEDULE_PATTERN_PRESETS } from "@bystrobarista/core/config/schedulePatterns";
+import {
+  SCHEDULE_PATTERN_DRAFT,
+  isSchedulePattern,
+  parseSchedulePattern,
+  withSchedulePart,
+} from "@bystrobarista/core/config/schedulePatterns";
 import {
   METRO_ANY,
   isMetroAnySelection,
@@ -245,6 +250,8 @@ export default function ProfilePage(): React.JSX.Element {
 
   const patch = (next: Partial<Form>): void =>
     setForm((prev) => (prev ? { ...prev, ...next } : prev));
+  const setSchedulePatterns = (next: string[]): void =>
+    patch({ schedulePatterns: next });
 
   const refreshProfile = (): Promise<void> =>
     queryClient.invalidateQueries({ queryKey: ["baristaProfile"] });
@@ -303,7 +310,8 @@ export default function ProfilePage(): React.JSX.Element {
         availableFromDate: form.availableFromDate || undefined,
         availableDays: form.availableDays,
         workloadTypes: form.workloadTypes,
-        preferredSchedulePatterns: form.schedulePatterns,
+        preferredSchedulePatterns:
+          form.schedulePatterns.filter(isSchedulePattern),
         isActivelyLooking: form.isActivelyLooking,
       });
       await WorkExperienceService.replaceAll(
@@ -1060,24 +1068,66 @@ export default function ProfilePage(): React.JSX.Element {
                 <span className="block text-xs text-ink-secondary">
                   {t("baristaSetup.fieldSchedulePatternsHint")}
                 </span>
-                <div className="mt-1 flex flex-wrap gap-2">
-                  {SCHEDULE_PATTERN_PRESETS.map((pattern) => (
-                    <button
-                      key={pattern}
-                      type="button"
-                      onClick={() =>
-                        patch({
-                          schedulePatterns: toggleIn(
-                            form.schedulePatterns,
-                            pattern,
-                          ),
-                        })
-                      }
-                      className={chip(form.schedulePatterns.includes(pattern))}
-                    >
-                      {pattern}
-                    </button>
-                  ))}
+                <div className="mt-1 flex flex-col gap-2">
+                  {form.schedulePatterns.map((pattern, index) => {
+                    const parts = parseSchedulePattern(pattern);
+                    const setPart = (side: "on" | "off", raw: string): void =>
+                      setSchedulePatterns(
+                        form.schedulePatterns.map((p, i) =>
+                          i === index ? withSchedulePart(p, side, raw) : p,
+                        ),
+                      );
+                    return (
+                      <div key={index} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={1}
+                          value={parts.on}
+                          placeholder="5"
+                          aria-label={t("baristaSetup.schedulePatternOn")}
+                          onChange={(e) => setPart("on", e.target.value)}
+                          className="w-14 rounded-input border border-line px-2 py-2 text-center text-sm outline-none focus:border-primary"
+                        />
+                        <span className="text-ink-secondary">/</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={1}
+                          value={parts.off}
+                          placeholder="2"
+                          aria-label={t("baristaSetup.schedulePatternOff")}
+                          onChange={(e) => setPart("off", e.target.value)}
+                          className="w-14 rounded-input border border-line px-2 py-2 text-center text-sm outline-none focus:border-primary"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSchedulePatterns(
+                              form.schedulePatterns.filter(
+                                (_, i) => i !== index,
+                              ),
+                            )
+                          }
+                          className="text-sm font-medium text-error"
+                        >
+                          {t("baristaSetup.removeSchedulePattern")}
+                        </button>
+                      </div>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSchedulePatterns([
+                        ...form.schedulePatterns,
+                        SCHEDULE_PATTERN_DRAFT,
+                      ])
+                    }
+                    className="self-start text-sm font-medium text-primary"
+                  >
+                    {t("baristaSetup.addSchedulePattern")}
+                  </button>
                 </div>
                 <label className="mt-4 flex cursor-pointer items-center justify-between border-t border-line pt-3 text-sm font-medium">
                   {t("baristaProfileScreen.actively")}

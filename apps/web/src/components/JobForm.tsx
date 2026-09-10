@@ -14,6 +14,7 @@ import {
   SHOW_PLATFORM_FEE,
   PLATFORM_FEE_RATE,
 } from "@bystrobarista/core/config/constants";
+import { parseSchedulePattern } from "@bystrobarista/core/config/schedulePatterns";
 import type {
   CompensationType,
   CreateJobData,
@@ -61,13 +62,6 @@ const HOURS_PER_WEEK_MAX = 80;
 
 // Same screen-local helpers as mobile's CreateJobScreen (see that file for
 // rationale) — patterns stay stored as plain "5/2" strings.
-const parseSchedulePattern = (raw: string): { on: string; off: string } => {
-  const [rawOn = "", rawOff = ""] = raw.split("/");
-  return {
-    on: rawOn.replace(/\D/g, "").slice(0, 1),
-    off: rawOff.replace(/\D/g, "").slice(0, 1),
-  };
-};
 
 const sanitizeHoursPerWeekInput = (input: string): string => {
   const cleaned = input.replace(/,/g, ".").replace(/[^\d.]/g, "");

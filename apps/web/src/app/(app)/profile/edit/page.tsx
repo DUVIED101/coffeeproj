@@ -10,7 +10,12 @@ import { WorkExperienceService } from "@bystrobarista/core/services/WorkExperien
 import { useAuthStore } from "@bystrobarista/core/stores/authStore";
 import { EQUIPMENT_CATEGORIES } from "@bystrobarista/core/config/constants";
 import { METRO_ANY } from "@bystrobarista/core/config/metroFilter";
-import { SCHEDULE_PATTERN_PRESETS } from "@bystrobarista/core/config/schedulePatterns";
+import {
+  SCHEDULE_PATTERN_DRAFT,
+  isSchedulePattern,
+  parseSchedulePattern,
+  withSchedulePart,
+} from "@bystrobarista/core/config/schedulePatterns";
 import {
   DAYS_OF_WEEK,
   WORKLOAD_TYPES,
@@ -304,7 +309,7 @@ function BaristaProfileEditWizard(): React.JSX.Element {
         availableFromDate: availableFromDate || undefined,
         availableDays,
         workloadTypes,
-        preferredSchedulePatterns: schedulePatterns,
+        preferredSchedulePatterns: schedulePatterns.filter(isSchedulePattern),
       };
       const profile = existingProfile
         ? await BaristaProfileService.updateProfile(user.id, profileData)
@@ -635,19 +640,64 @@ function BaristaProfileEditWizard(): React.JSX.Element {
               <span className="text-xs text-ink-secondary">
                 {t("baristaSetup.fieldSchedulePatternsHint")}
               </span>
-              <div className="flex flex-wrap gap-2">
-                {SCHEDULE_PATTERN_PRESETS.map((pattern) => (
-                  <button
-                    key={pattern}
-                    type="button"
-                    onClick={() =>
-                      setSchedulePatterns(toggleIn(schedulePatterns, pattern))
-                    }
-                    className={chip(schedulePatterns.includes(pattern))}
-                  >
-                    {pattern}
-                  </button>
-                ))}
+              <div className="flex flex-col gap-2">
+                {schedulePatterns.map((pattern, index) => {
+                  const parts = parseSchedulePattern(pattern);
+                  const setPart = (side: "on" | "off", raw: string): void =>
+                    setSchedulePatterns(
+                      schedulePatterns.map((p, i) =>
+                        i === index ? withSchedulePart(p, side, raw) : p,
+                      ),
+                    );
+                  return (
+                    <div key={index} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={parts.on}
+                        placeholder="5"
+                        aria-label={t("baristaSetup.schedulePatternOn")}
+                        onChange={(e) => setPart("on", e.target.value)}
+                        className="w-14 rounded-input border border-line px-2 py-2 text-center text-sm outline-none focus:border-primary"
+                      />
+                      <span className="text-ink-secondary">/</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={parts.off}
+                        placeholder="2"
+                        aria-label={t("baristaSetup.schedulePatternOff")}
+                        onChange={(e) => setPart("off", e.target.value)}
+                        className="w-14 rounded-input border border-line px-2 py-2 text-center text-sm outline-none focus:border-primary"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSchedulePatterns(
+                            schedulePatterns.filter((_, i) => i !== index),
+                          )
+                        }
+                        className="text-sm font-medium text-error"
+                      >
+                        {t("baristaSetup.removeSchedulePattern")}
+                      </button>
+                    </div>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSchedulePatterns([
+                      ...schedulePatterns,
+                      SCHEDULE_PATTERN_DRAFT,
+                    ])
+                  }
+                  className="self-start text-sm font-medium text-primary"
+                >
+                  {t("baristaSetup.addSchedulePattern")}
+                </button>
               </div>
             </div>
           </div>

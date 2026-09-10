@@ -386,7 +386,11 @@
     "fieldWorkloadTypes": "Workload",
     "fieldAvailableDays": "Available days",
     "fieldSchedulePatterns": "Preferred schedule",
-    "fieldSchedulePatternsHint": "Working days / days off, e.g. 5/2"
+    "fieldSchedulePatternsHint": "Enter two digits: working days / days off, e.g. 5/2 or 2/2. You can add several options.",
+    "addSchedulePattern": "+ Add schedule",
+    "removeSchedulePattern": "Remove",
+    "schedulePatternOn": "Working days",
+    "schedulePatternOff": "Days off"
   },
   "baristaProfileScreen": {
     "title": "Profile",

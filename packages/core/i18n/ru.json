@@ -390,7 +390,11 @@
     "fieldWorkloadTypes": "Формат работы",
     "fieldAvailableDays": "Дни недели",
     "fieldSchedulePatterns": "Предпочтительный график",
-    "fieldSchedulePatternsHint": "Рабочие дни / выходные, например 5/2"
+    "fieldSchedulePatternsHint": "Введите цифры: сколько рабочих дней / сколько выходных. Например, 5/2 или 2/2. Можно добавить несколько вариантов.",
+    "addSchedulePattern": "+ Добавить график",
+    "removeSchedulePattern": "Удалить",
+    "schedulePatternOn": "Рабочих дней",
+    "schedulePatternOff": "Выходных"
   },
   "baristaProfileScreen": {
     "title": "Профиль",

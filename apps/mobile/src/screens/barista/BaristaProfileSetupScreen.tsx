@@ -18,7 +18,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '@bystrobarista/core/config/constants';
+import { COLORS, RADII } from '@bystrobarista/core/config/constants';
 import { BaristaProfileService } from '@bystrobarista/core/services/BaristaProfileService';
 import { WorkExperienceService } from '@bystrobarista/core/services/WorkExperienceService';
 import { MetroSelector } from '../../components/MetroSelector';
@@ -53,7 +53,12 @@ import type {
   WorkloadType,
 } from '@bystrobarista/core/types/baristaProfile';
 import { DAYS_OF_WEEK, WORKLOAD_TYPES } from '@bystrobarista/core/types/baristaProfile';
-import { SCHEDULE_PATTERN_PRESETS } from '@bystrobarista/core/config/schedulePatterns';
+import {
+  SCHEDULE_PATTERN_DRAFT,
+  isSchedulePattern,
+  parseSchedulePattern,
+  withSchedulePart,
+} from '@bystrobarista/core/config/schedulePatterns';
 import { DEFAULT_CITY, toCityCode, type CityCode } from '@bystrobarista/core/types/city';
 import type { BaristaProfileId } from '@bystrobarista/core/types/ids';
 import {
@@ -222,9 +227,17 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
     );
   }, []);
 
-  const toggleSchedulePattern = useCallback((pattern: string) => {
+  const addSchedulePattern = useCallback(() => {
+    setPreferredSchedulePatterns(prev => [...prev, SCHEDULE_PATTERN_DRAFT]);
+  }, []);
+
+  const removeSchedulePattern = useCallback((index: number) => {
+    setPreferredSchedulePatterns(prev => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const setSchedulePart = useCallback((index: number, side: 'on' | 'off', raw: string) => {
     setPreferredSchedulePatterns(prev =>
-      prev.includes(pattern) ? prev.filter(p => p !== pattern) : [...prev, pattern]
+      prev.map((pattern, i) => (i === index ? withSchedulePart(pattern, side, raw) : pattern))
     );
   }, []);
 
@@ -326,7 +339,7 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         availableFromDate: availableFromDate || undefined,
         availableDays,
         workloadTypes,
-        preferredSchedulePatterns,
+        preferredSchedulePatterns: preferredSchedulePatterns.filter(isSchedulePattern),
       };
 
       let profileId: BaristaProfileId;
@@ -770,25 +783,47 @@ export const BaristaProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.medicalBookHelper}>
               {t('baristaSetup.fieldSchedulePatternsHint')}
             </Text>
-            <View style={styles.chipsContainer}>
-              {SCHEDULE_PATTERN_PRESETS.map(pattern => (
-                <TouchableOpacity
-                  key={pattern}
-                  style={[
-                    styles.chip,
-                    preferredSchedulePatterns.includes(pattern) && styles.chipSelected,
-                  ]}
-                  onPress={() => toggleSchedulePattern(pattern)}>
-                  <Text
-                    style={[
-                      styles.chipText,
-                      preferredSchedulePatterns.includes(pattern) && styles.chipTextSelected,
-                    ]}>
-                    {pattern}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            {preferredSchedulePatterns.map((pattern, index) => {
+              const parts = parseSchedulePattern(pattern);
+              return (
+                <View key={index} style={styles.schedulePatternRow}>
+                  <TextInput
+                    style={[styles.input, styles.schedulePatternInput]}
+                    keyboardType="number-pad"
+                    maxLength={1}
+                    value={parts.on}
+                    placeholder="5"
+                    accessibilityLabel={t('baristaSetup.schedulePatternOn')}
+                    onChangeText={text => setSchedulePart(index, 'on', text)}
+                  />
+                  <Text style={styles.schedulePatternSlash}>/</Text>
+                  <TextInput
+                    style={[styles.input, styles.schedulePatternInput]}
+                    keyboardType="number-pad"
+                    maxLength={1}
+                    value={parts.off}
+                    placeholder="2"
+                    accessibilityLabel={t('baristaSetup.schedulePatternOff')}
+                    onChangeText={text => setSchedulePart(index, 'off', text)}
+                  />
+                  <View style={styles.schedulePatternSpacer} />
+                  <TouchableOpacity
+                    style={styles.removeButton}
+                    accessibilityRole="button"
+                    onPress={() => removeSchedulePattern(index)}>
+                    <Text style={styles.removeButtonText}>
+                      {t('baristaSetup.removeSchedulePattern')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
+            <TouchableOpacity
+              style={styles.addButton}
+              accessibilityRole="button"
+              onPress={addSchedulePattern}>
+              <Text style={styles.addButtonText}>{t('baristaSetup.addSchedulePattern')}</Text>
+            </TouchableOpacity>
           </View>
         );
 
@@ -1107,6 +1142,45 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'right',
     marginTop: 4,
+  },
+  schedulePatternRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  schedulePatternInput: {
+    width: 60,
+    marginBottom: 0,
+    textAlign: 'center',
+    fontVariant: ['tabular-nums'],
+  },
+  schedulePatternSlash: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  schedulePatternSpacer: {
+    flex: 1,
+  },
+  removeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: COLORS.error,
+    borderRadius: RADII.input,
+  },
+  removeButtonText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  addButton: {
+    paddingVertical: 10,
+    alignItems: 'flex-start',
+  },
+  addButtonText: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: '600',
   },
   chipsContainer: {
     flexDirection: 'row',
