@@ -193,7 +193,7 @@ export default function SignupPage(): React.JSX.Element {
           <span>
             {t("auth.signup.consent.dataProcessingPrefix")}
             <Link
-              href="/personal-data"
+              href="/data-consent"
               target="_blank"
               className="text-primary underline"
             >
