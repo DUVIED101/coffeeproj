@@ -18,11 +18,18 @@ export class ReportService {
     };
   }
 
-  /** The caller's own reports, newest first (RLS scopes the select). */
+  /**
+   * The caller's own reports, newest first. RLS also lets admins read every
+   * report, so the reporter filter is explicit — an admin using the app must
+   * see only what they filed themselves.
+   */
   static async listMyReports(): Promise<UserReport[]> {
+    const userId = (await supabase.auth.getUser()).data.user?.id;
+    if (!userId) return [];
     const { data, error } = await supabase
       .from('user_reports')
       .select('*')
+      .eq('reporter_id', userId)
       .order('created_at', { ascending: false });
     if (error) throw error;
     return (data ?? []).map(row => this.mapDatabaseReport(row));
